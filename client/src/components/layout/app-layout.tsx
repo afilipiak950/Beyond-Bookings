@@ -126,7 +126,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
         {/* Ultra-Modern Main Content Area */}
         <main className="flex-1 overflow-auto relative">
           <div className="w-full h-full animate-fadeInUp">
-            <div className="w-full h-full neo-card rounded-none relative overflow-hidden animate-scaleIn shimmer-effect">
+            <div className="w-full h-full neo-card rounded-none relative overflow-hidden animate-scaleIn">
               {/* Content Glow Effect */}
               <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-transparent to-green-500/5 pointer-events-none" />
               
