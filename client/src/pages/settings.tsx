@@ -129,44 +129,6 @@ export default function Settings() {
             </CardContent>
           </Card>
 
-          {/* API Settings */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Database className="h-5 w-5 mr-2" />
-                API & Integrations
-              </CardTitle>
-              <CardDescription>
-                Configure external API integrations
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="booking-api">Booking.com API Key</Label>
-                <Input
-                  id="booking-api"
-                  type="password"
-                  placeholder="Enter your API key"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Used for real-time price scraping
-                </p>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="google-api">Google Hotels API Key</Label>
-                <Input
-                  id="google-api"
-                  type="password"
-                  placeholder="Enter your API key"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Used for hotel data enrichment
-                </p>
-              </div>
-              <Button className="w-full">Save API Settings</Button>
-            </CardContent>
-          </Card>
-
           {/* Admin Settings */}
           {isAdmin && (
             <Card>
