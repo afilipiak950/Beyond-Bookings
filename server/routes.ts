@@ -429,6 +429,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Export OCR analysis report
+  app.post('/api/ocr/export', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id.toString();
+      const { analysisIds } = req.body;
+      
+      // Get analyses to export
+      const analyses = analysisIds 
+        ? await Promise.all(analysisIds.map((id: string) => storage.getOcrAnalysis(parseInt(id), userId)))
+        : await storage.getOcrAnalyses(userId);
+
+      // Generate PDF content (mock implementation)
+      const reportContent = `
+OCR Analysis Report
+Generated: ${new Date().toLocaleDateString()}
+Total Files: ${analyses.length}
+
+Files Analyzed:
+${analyses.map(analysis => `
+- ${analysis?.fileName}
+  Status: ${analysis?.insights ? 'Completed' : 'Pending'}
+  Processing Time: ${analysis?.processingTime || 0}s
+  Summary: ${analysis?.insights?.summary || 'No insights available'}
+`).join('\n')}
+
+Key Metrics Summary:
+${analyses.filter(a => a?.insights).map(analysis => 
+  analysis?.insights?.keyMetrics.map(metric => 
+    `${metric.metric}: ${metric.value} ${metric.change || ''}`
+  ).join('\n')
+).join('\n')}
+      `;
+
+      // Create PDF buffer (in production, use a proper PDF library)
+      const buffer = Buffer.from(reportContent, 'utf-8');
+      
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', 'attachment; filename=ocr-analysis-report.pdf');
+      res.send(buffer);
+    } catch (error) {
+      console.error("Error exporting report:", error);
+      res.status(500).json({ message: "Failed to export report" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

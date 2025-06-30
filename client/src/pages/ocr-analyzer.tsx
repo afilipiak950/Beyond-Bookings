@@ -80,10 +80,18 @@ export default function OCRAnalyzer() {
     mutationFn: async (file: File) => {
       const formData = new FormData();
       formData.append('file', file);
-      return apiRequest('/api/ocr/upload', {
+      
+      const response = await fetch('/api/ocr/upload', {
         method: 'POST',
         body: formData,
+        credentials: 'include',
       });
+      
+      if (!response.ok) {
+        throw new Error(`Upload failed: ${response.statusText}`);
+      }
+      
+      return response.json();
     },
     onSuccess: (data) => {
       toast({
@@ -104,9 +112,16 @@ export default function OCRAnalyzer() {
   // OCR analysis mutation
   const analyzeMutation = useMutation({
     mutationFn: async (fileId: string) => {
-      return apiRequest(`/api/ocr/analyze/${fileId}`, {
+      const response = await fetch(`/api/ocr/analyze/${fileId}`, {
         method: 'POST',
+        credentials: 'include',
       });
+      
+      if (!response.ok) {
+        throw new Error(`Analysis failed: ${response.statusText}`);
+      }
+      
+      return response.json();
     },
     onSuccess: () => {
       toast({
@@ -127,9 +142,16 @@ export default function OCRAnalyzer() {
   // Delete analysis mutation
   const deleteMutation = useMutation({
     mutationFn: async (analysisId: string) => {
-      return apiRequest(`/api/ocr/analysis/${analysisId}`, {
+      const response = await fetch(`/api/ocr/analysis/${analysisId}`, {
         method: 'DELETE',
+        credentials: 'include',
       });
+      
+      if (!response.ok) {
+        throw new Error(`Delete failed: ${response.statusText}`);
+      }
+      
+      return response.json();
     },
     onSuccess: () => {
       toast({
@@ -197,6 +219,115 @@ export default function OCRAnalyzer() {
     }
   };
 
+  // Export functionality
+  const handleExportReport = async () => {
+    try {
+      const response = await fetch('/api/ocr/export', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ 
+          analysisIds: selectedFile ? [selectedFile] : analysesData.map(a => a.id) 
+        }),
+      });
+
+      if (!response.ok) throw new Error('Export failed');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ocr-analysis-report-${new Date().toISOString().split('T')[0]}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast({
+        title: "Export successful",
+        description: "Report has been downloaded successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Export failed",
+        description: "Failed to generate report",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Bulk analysis functionality
+  const handleBulkAnalyze = async () => {
+    const pendingAnalyses = analysesData.filter(a => !a.insights);
+    
+    if (pendingAnalyses.length === 0) {
+      toast({
+        title: "No pending analyses",
+        description: "All files have already been analyzed",
+      });
+      return;
+    }
+
+    try {
+      // Process all pending analyses in parallel
+      const promises = pendingAnalyses.map(analysis => 
+        analyzeMutation.mutateAsync(analysis.id)
+      );
+
+      await Promise.all(promises);
+      
+      toast({
+        title: "Bulk analysis completed",
+        description: `Successfully analyzed ${pendingAnalyses.length} files`,
+      });
+    } catch (error) {
+      toast({
+        title: "Bulk analysis failed",
+        description: "Some files could not be analyzed",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // File upload from New Calculation button
+  const handleNewCalculation = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.xlsx,.xls';
+    input.multiple = true;
+    input.onchange = (e) => {
+      const files = (e.target as HTMLInputElement).files;
+      if (files) {
+        Array.from(files).forEach(file => uploadMutation.mutate(file));
+      }
+    };
+    input.click();
+  };
+
+  // View analysis in new tab
+  const handleViewAnalysis = (analysis: OCRAnalysis) => {
+    setSelectedFile(analysis.id);
+    toast({
+      title: "Analysis selected",
+      description: `Viewing analysis for ${analysis.fileName}`,
+    });
+  };
+
+  // Download extracted text
+  const handleDownloadText = (analysis: OCRAnalysis) => {
+    if (!analysis.extractedText) return;
+    
+    const blob = new Blob([analysis.extractedText], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${analysis.fileName}-extracted-text.txt`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  };
+
   const selectedAnalysis = analysesData.find(a => a.id === selectedFile);
 
   return (
@@ -214,13 +345,20 @@ export default function OCRAnalyzer() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline">
+            <Button 
+              variant="outline"
+              onClick={handleExportReport}
+              disabled={analysesData.length === 0}
+            >
               <Download className="h-4 w-4 mr-2" />
               Export Report
             </Button>
-            <Button>
+            <Button
+              onClick={handleBulkAnalyze}
+              disabled={analyseMutation.isPending || analysesData.filter(a => !a.insights).length === 0}
+            >
               <Zap className="h-4 w-4 mr-2" />
-              Bulk Analyze
+              {analyseMutation.isPending ? 'Analyzing...' : 'Bulk Analyze'}
             </Button>
           </div>
         </div>
