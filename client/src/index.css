@@ -19,6 +19,12 @@
   --secondary-foreground: hsl(0, 0%, 100%);
   --accent: hsl(156, 73%, 59%);
   --accent-foreground: hsl(0, 0%, 100%);
+  
+  /* Custom button gradient variables */
+  --button-gradient-from: hsl(208, 88%, 52%);
+  --button-gradient-to: hsl(156, 73%, 59%);
+  --button-gradient-hover-from: hsl(208, 88%, 47%);
+  --button-gradient-hover-to: hsl(156, 73%, 54%);
   --destructive: hsl(0, 84.2%, 60.2%);
   --destructive-foreground: hsl(210, 40%, 98%);
   --ring: hsl(240, 10%, 3.9%);
@@ -111,6 +117,84 @@
 
 .animation-delay-4000 {
   animation-delay: 4s;
+}
+
+/* Global Beyond Bookings Button Styling */
+.btn-primary, 
+button[data-variant="default"],
+button:not([data-variant]):not([data-variant="outline"]):not([data-variant="ghost"]):not([data-variant="link"]):not([data-variant="secondary"]):not([data-variant="destructive"]) {
+  background: linear-gradient(135deg, var(--button-gradient-from), var(--button-gradient-to)) !important;
+  color: white !important;
+  border: none !important;
+  font-weight: 600 !important;
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3) !important;
+  transition: all 0.3s ease !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.btn-primary:hover,
+button[data-variant="default"]:hover,
+button:not([data-variant]):not([data-variant="outline"]):not([data-variant="ghost"]):not([data-variant="link"]):not([data-variant="secondary"]):not([data-variant="destructive"]):hover {
+  background: linear-gradient(135deg, var(--button-gradient-hover-from), var(--button-gradient-hover-to)) !important;
+  transform: translateY(-2px) scale(1.02) !important;
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4) !important;
+}
+
+.btn-primary:active,
+button[data-variant="default"]:active,
+button:not([data-variant]):not([data-variant="outline"]):not([data-variant="ghost"]):not([data-variant="link"]):not([data-variant="secondary"]):not([data-variant="destructive"]):active {
+  transform: translateY(0) scale(0.98) !important;
+}
+
+/* Button shimmer effect */
+.btn-primary::before,
+button[data-variant="default"]::before,
+button:not([data-variant]):not([data-variant="outline"]):not([data-variant="ghost"]):not([data-variant="link"]):not([data-variant="secondary"]):not([data-variant="destructive"])::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s;
+}
+
+.btn-primary:hover::before,
+button[data-variant="default"]:hover::before,
+button:not([data-variant]):not([data-variant="outline"]):not([data-variant="ghost"]):not([data-variant="link"]):not([data-variant="secondary"]):not([data-variant="destructive"]):hover::before {
+  left: 100%;
+}
+
+/* Secondary button styling */
+button[data-variant="outline"] {
+  background: transparent !important;
+  border: 2px solid var(--button-gradient-from) !important;
+  color: var(--button-gradient-from) !important;
+  font-weight: 600 !important;
+  transition: all 0.3s ease !important;
+}
+
+button[data-variant="outline"]:hover {
+  background: linear-gradient(135deg, var(--button-gradient-from), var(--button-gradient-to)) !important;
+  color: white !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3) !important;
+}
+
+/* Ghost button styling */
+button[data-variant="ghost"] {
+  background: transparent !important;
+  color: var(--button-gradient-from) !important;
+  border: none !important;
+  font-weight: 500 !important;
+  transition: all 0.3s ease !important;
+}
+
+button[data-variant="ghost"]:hover {
+  background: rgba(59, 130, 246, 0.1) !important;
+  color: var(--button-gradient-from) !important;
 }
 
 .dark {

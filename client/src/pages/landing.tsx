@@ -19,7 +19,7 @@ export default function Landing() {
             </div>
             <h1 className="text-xl font-bold text-primary dark:text-white">Beyond Bookings</h1>
           </div>
-          <Button onClick={handleLogin} size="lg" className="bg-secondary hover:bg-secondary/90 text-secondary-foreground">
+          <Button onClick={handleLogin} size="lg" className="btn-primary">
             Sign In
           </Button>
         </div>
@@ -35,7 +35,7 @@ export default function Landing() {
             Optimize your hotel pricing strategies with our advanced AI platform. 
             Get real-time market insights, automated calculations, and intelligent recommendations - built for hoteliers by Beyond Bookings.
           </p>
-          <Button onClick={handleLogin} size="lg" className="bg-secondary hover:bg-secondary/90 text-secondary-foreground text-lg px-8 py-6">
+          <Button onClick={handleLogin} size="lg" className="btn-primary text-lg px-8 py-6">
             Get Started Today
           </Button>
         </div>
