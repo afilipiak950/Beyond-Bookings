@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
+import AppLayout from "@/components/layout/app-layout";
 import { 
   Calculator,
   Search,
@@ -20,278 +21,268 @@ import {
   TrendingUp
 } from "lucide-react";
 import { formatCurrency, formatPercentage } from "@/lib/pricing";
+import type { PricingCalculation } from "@shared/schema";
 
 export default function Calculations() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortBy, setSortBy] = useState("createdAt");
+  const [sortBy, setSortBy] = useState<"date" | "hotel" | "revenue" | "profit">("date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
-  const { data: calculations = [], isLoading } = useQuery({
+  const { data: calculations, isLoading } = useQuery({
     queryKey: ["/api/pricing-calculations"],
+    retry: false,
   });
 
+  const calculationsData = calculations as PricingCalculation[] || [];
+
   // Filter and sort calculations
-  const filteredCalculations = calculations
-    .filter((calc: any) => 
+  const filteredCalculations = calculationsData
+    .filter(calc => 
       calc.hotelName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      calc.notes?.toLowerCase().includes(searchTerm.toLowerCase())
+      calc.hotelUrl?.toLowerCase().includes(searchTerm.toLowerCase())
     )
-    .sort((a: any, b: any) => {
-      const aValue = a[sortBy];
-      const bValue = b[sortBy];
+    .sort((a, b) => {
+      let aValue, bValue;
+      switch (sortBy) {
+        case "hotel":
+          aValue = a.hotelName || "";
+          bValue = b.hotelName || "";
+          break;
+        case "revenue":
+          aValue = a.totalPrice || 0;
+          bValue = b.totalPrice || 0;
+          break;
+        case "profit":
+          aValue = a.profitMargin || 0;
+          bValue = b.profitMargin || 0;
+          break;
+        default:
+          aValue = new Date(a.createdAt || 0).getTime();
+          bValue = new Date(b.createdAt || 0).getTime();
+      }
+      
       if (sortOrder === "asc") {
         return aValue > bValue ? 1 : -1;
       }
       return aValue < bValue ? 1 : -1;
     });
 
-  const handleSort = (field: string) => {
-    if (sortBy === field) {
-      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-    } else {
-      setSortBy(field);
-      setSortOrder("desc");
-    }
-  };
+  // Calculate statistics
+  const totalCalculations = calculationsData.length;
+  const totalRevenue = calculationsData.reduce((sum, calc) => sum + (calc.totalPrice || 0), 0);
+  const totalProfit = calculationsData.reduce((sum, calc) => sum + (calc.profitMargin || 0), 0);
+  const uniqueHotels = new Set(calculationsData.map(calc => calc.hotelName)).size;
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit"
-    });
-  };
-
-  const getStatusBadge = (calculation: any) => {
-    const margin = calculation.profitMargin;
-    if (margin > 50) return { variant: "default" as const, text: "High Profit" };
+  const getStatusBadge = (profitMargin: number) => {
+    const margin = profitMargin || 0;
+    if (margin > 30) return { variant: "default" as const, text: "High Profit" };
     if (margin > 20) return { variant: "secondary" as const, text: "Good Profit" };
     return { variant: "outline" as const, text: "Low Profit" };
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
-            <Calculator className="h-8 w-8 text-blue-600" />
-            All Calculations
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Manage and review your pricing calculations
-          </p>
-        </div>
-        <Button className="flex items-center gap-2">
-          <Plus className="h-4 w-4" />
-          New Calculation
-        </Button>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Total Calculations</p>
-                <p className="text-2xl font-bold">{calculations.length}</p>
-              </div>
+    <AppLayout>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
               <Calculator className="h-8 w-8 text-blue-600" />
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Avg. Revenue</p>
-                <p className="text-2xl font-bold">
-                  {calculations.length > 0 ? formatCurrency(
-                    calculations.reduce((acc: number, calc: any) => acc + calc.voucherPrice, 0) / calculations.length
-                  ) : "€0"}
-                </p>
-              </div>
-              <DollarSign className="h-8 w-8 text-green-600" />
-            </div>
-          </CardContent>
-        </Card>
+              All Calculations
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              Manage and review all your pricing calculations
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline">
+              <Download className="h-4 w-4 mr-2" />
+              Export All
+            </Button>
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              New Calculation
+            </Button>
+          </div>
+        </div>
 
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Avg. Profit</p>
-                <p className="text-2xl font-bold">
-                  {calculations.length > 0 ? formatCurrency(
-                    calculations.reduce((acc: number, calc: any) => acc + calc.profitMargin, 0) / calculations.length
-                  ) : "€0"}
-                </p>
-              </div>
-              <TrendingUp className="h-8 w-8 text-purple-600" />
-            </div>
-          </CardContent>
-        </Card>
+        {/* Statistics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Calculations</CardTitle>
+              <Calculator className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{totalCalculations}</div>
+              <p className="text-xs text-muted-foreground">Active pricing models</p>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Hotels</p>
-                <p className="text-2xl font-bold">
-                  {new Set(calculations.map((calc: any) => calc.hotelName)).size}
-                </p>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{formatCurrency(totalRevenue)}</div>
+              <p className="text-xs text-muted-foreground">Combined revenue potential</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Average Profit</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {formatCurrency(totalCalculations > 0 ? totalProfit / totalCalculations : 0)}
               </div>
-              <Building2 className="h-8 w-8 text-orange-600" />
+              <p className="text-xs text-muted-foreground">Per calculation</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Unique Hotels</CardTitle>
+              <Building2 className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{uniqueHotels}</div>
+              <p className="text-xs text-muted-foreground">Properties analyzed</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Search and Filter */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>Pricing Calculations</CardTitle>
+              <div className="flex items-center gap-2">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                  <Input
+                    placeholder="Search hotels..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 w-64"
+                  />
+                </div>
+                <Button variant="outline" size="sm">
+                  <Filter className="h-4 w-4 mr-2" />
+                  Filter
+                </Button>
+              </div>
             </div>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="space-y-4">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="animate-pulse">
+                    <div className="h-20 bg-muted rounded-lg"></div>
+                  </div>
+                ))}
+              </div>
+            ) : filteredCalculations.length > 0 ? (
+              <div className="space-y-4">
+                {/* Table Header */}
+                <div className="grid grid-cols-12 gap-4 py-3 px-4 bg-muted/50 rounded-lg font-medium text-sm">
+                  <div className="col-span-3 flex items-center gap-2 cursor-pointer" onClick={() => setSortBy("hotel")}>
+                    Hotel Name
+                    <ArrowUpDown className="h-3 w-3" />
+                  </div>
+                  <div className="col-span-2 flex items-center gap-2 cursor-pointer" onClick={() => setSortBy("revenue")}>
+                    Revenue
+                    <ArrowUpDown className="h-3 w-3" />
+                  </div>
+                  <div className="col-span-2 flex items-center gap-2 cursor-pointer" onClick={() => setSortBy("profit")}>
+                    Profit
+                    <ArrowUpDown className="h-3 w-3" />
+                  </div>
+                  <div className="col-span-2">VAT Amount</div>
+                  <div className="col-span-2 flex items-center gap-2 cursor-pointer" onClick={() => setSortBy("date")}>
+                    Date Created
+                    <ArrowUpDown className="h-3 w-3" />
+                  </div>
+                  <div className="col-span-1">Actions</div>
+                </div>
+
+                {/* Table Rows */}
+                {filteredCalculations.map((calculation) => {
+                  const status = getStatusBadge(calculation.profitMargin || 0);
+                  return (
+                    <div key={calculation.id} className="grid grid-cols-12 gap-4 py-4 px-4 border rounded-lg hover:bg-muted/50 transition-colors">
+                      <div className="col-span-3">
+                        <div className="font-medium">{calculation.hotelName || "Unnamed Hotel"}</div>
+                        <div className="text-sm text-muted-foreground truncate">
+                          {calculation.hotelUrl || "No URL provided"}
+                        </div>
+                        <Badge variant={status.variant} className="mt-1">
+                          {status.text}
+                        </Badge>
+                      </div>
+                      <div className="col-span-2">
+                        <div className="font-medium">{formatCurrency(calculation.totalPrice || 0)}</div>
+                        <div className="text-sm text-muted-foreground">
+                          Base: {formatCurrency(calculation.voucherPrice || 0)}
+                        </div>
+                      </div>
+                      <div className="col-span-2">
+                        <div className="font-medium">{formatCurrency(calculation.profitMargin || 0)}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {formatPercentage((calculation.profitMargin || 0) / (calculation.totalPrice || 1) * 100)}
+                        </div>
+                      </div>
+                      <div className="col-span-2">
+                        <div className="font-medium">{formatCurrency(calculation.vatAmount || 0)}</div>
+                        <div className="text-sm text-muted-foreground">
+                          Rate: {calculation.vatRate || 0}%
+                        </div>
+                      </div>
+                      <div className="col-span-2">
+                        <div className="font-medium">
+                          {new Date(calculation.createdAt || 0).toLocaleDateString()}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {new Date(calculation.createdAt || 0).toLocaleTimeString()}
+                        </div>
+                      </div>
+                      <div className="col-span-1">
+                        <div className="flex items-center gap-1">
+                          <Button variant="ghost" size="sm">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <Calculator className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No calculations found</h3>
+                <p className="text-muted-foreground mb-4">
+                  {searchTerm ? "Try adjusting your search terms" : "Start by creating your first pricing calculation"}
+                </p>
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create First Calculation
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
-
-      {/* Filters and Search */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row gap-4 items-center">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search calculations by hotel name or notes..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm">
-                <Filter className="h-4 w-4 mr-2" />
-                Filter
-              </Button>
-              <Button variant="outline" size="sm">
-                <Download className="h-4 w-4 mr-2" />
-                Export
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Calculations Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Calculation History</CardTitle>
-          <CardDescription>
-            {filteredCalculations.length} calculation{filteredCalculations.length !== 1 ? 's' : ''} found
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="space-y-4">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="h-16 bg-muted animate-pulse rounded-lg" />
-              ))}
-            </div>
-          ) : filteredCalculations.length > 0 ? (
-            <div className="space-y-4">
-              {/* Table Header */}
-              <div className="grid grid-cols-1 md:grid-cols-6 gap-4 p-3 bg-muted/50 rounded-lg text-sm font-medium text-muted-foreground">
-                <button 
-                  onClick={() => handleSort("hotelName")}
-                  className="flex items-center gap-1 text-left hover:text-foreground"
-                >
-                  Hotel <ArrowUpDown className="h-3 w-3" />
-                </button>
-                <button 
-                  onClick={() => handleSort("voucherPrice")}
-                  className="flex items-center gap-1 text-left hover:text-foreground"
-                >
-                  Revenue <ArrowUpDown className="h-3 w-3" />
-                </button>
-                <button 
-                  onClick={() => handleSort("profitMargin")}
-                  className="flex items-center gap-1 text-left hover:text-foreground"
-                >
-                  Profit <ArrowUpDown className="h-3 w-3" />
-                </button>
-                <span>Status</span>
-                <button 
-                  onClick={() => handleSort("createdAt")}
-                  className="flex items-center gap-1 text-left hover:text-foreground"
-                >
-                  Date <ArrowUpDown className="h-3 w-3" />
-                </button>
-                <span>Actions</span>
-              </div>
-
-              {/* Table Rows */}
-              {filteredCalculations.map((calculation: any, index: number) => {
-                const status = getStatusBadge(calculation);
-                return (
-                  <div 
-                    key={calculation.id || index} 
-                    className="grid grid-cols-1 md:grid-cols-6 gap-4 p-4 border rounded-lg hover:bg-muted/30 transition-colors"
-                  >
-                    <div className="flex flex-col">
-                      <span className="font-medium">{calculation.hotelName || "Unnamed Hotel"}</span>
-                      <span className="text-sm text-muted-foreground">
-                        {calculation.hotelStars}★ • {calculation.roomCount} rooms
-                      </span>
-                    </div>
-                    
-                    <div className="flex flex-col">
-                      <span className="font-medium">{formatCurrency(calculation.voucherPrice)}</span>
-                      <span className="text-sm text-muted-foreground">
-                        VAT: {formatCurrency(calculation.vatAmount)}
-                      </span>
-                    </div>
-
-                    <div className="flex flex-col">
-                      <span className="font-medium text-green-600">{formatCurrency(calculation.profitMargin)}</span>
-                      <span className="text-sm text-muted-foreground">
-                        {formatPercentage(calculation.profitMargin / calculation.voucherPrice * 100)}%
-                      </span>
-                    </div>
-
-                    <div>
-                      <Badge variant={status.variant}>{status.text}</Badge>
-                    </div>
-
-                    <div className="flex flex-col">
-                      <span className="text-sm">{formatDate(calculation.createdAt || new Date().toISOString())}</span>
-                    </div>
-
-                    <div className="flex gap-2">
-                      <Button variant="ghost" size="sm">
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm">
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="text-center py-12">
-              <Calculator className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No calculations found</h3>
-              <p className="text-muted-foreground mb-4">
-                {searchTerm ? "Try adjusting your search terms" : "Start by creating your first pricing calculation"}
-              </p>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Create First Calculation
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+    </AppLayout>
   );
 }

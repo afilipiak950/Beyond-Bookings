@@ -113,7 +113,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Pricing calculation routes
   app.get('/api/pricing-calculations', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id.toString();
       const calculations = await storage.getPricingCalculations(userId);
       res.json(calculations);
     } catch (error) {
