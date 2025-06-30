@@ -221,15 +221,13 @@ button:not([data-variant]):not([data-variant="outline"]):not([data-variant="ghos
 .btn-primary:hover,
 button[data-variant="default"]:not([data-sidebar]):hover,
 button:not([data-variant]):not([data-variant="outline"]):not([data-variant="ghost"]):not([data-variant="link"]):not([data-variant="secondary"]):not([data-variant="destructive"]):not([data-sidebar]):hover {
-  background: linear-gradient(135deg, var(--button-gradient-hover-from), var(--button-gradient-hover-to)) !important;
-  transform: translateY(-1px) !important;
-  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.3) !important;
+  /* No hover effects */
 }
 
 .btn-primary:active,
 button[data-variant="default"]:not([data-sidebar]):active,
 button:not([data-variant]):not([data-variant="outline"]):not([data-variant="ghost"]):not([data-variant="link"]):not([data-variant="secondary"]):not([data-variant="destructive"]):not([data-sidebar]):active {
-  transform: translateY(0) !important;
+  /* No active effects */
 }
 
 /* Button shimmer effect */
@@ -277,11 +275,7 @@ button:not([data-variant]):not([data-variant="outline"]):not([data-variant="ghos
 }
 
 .neo-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 
-    0 12px 20px -5px rgba(0, 0, 0, 0.08),
-    0 6px 8px -5px rgba(0, 0, 0, 0.03),
-    0 0 15px rgba(59, 130, 246, 0.08);
+  /* No hover effects */
 }
 
 .gradient-text {
@@ -336,8 +330,7 @@ button:not([data-variant]):not([data-variant="outline"]):not([data-variant="ghos
 }
 
 .interactive-hover:hover {
-  transform: translateY(-1px);
-  filter: brightness(1.05);
+  /* No hover effects */
 }
 
 /* Secondary button styling */
