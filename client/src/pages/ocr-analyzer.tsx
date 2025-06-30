@@ -67,9 +67,21 @@ export default function OCRAnalyzer() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch analyses
+  // Fetch analyses with proper credentials
   const { data: analyses, isLoading: analysesLoading } = useQuery({
     queryKey: ["/api/ocr-analyses"],
+    queryFn: async () => {
+      const response = await fetch('/api/ocr-analyses', {
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Please log in to access OCR analysis');
+        }
+        throw new Error('Failed to fetch analyses');
+      }
+      return response.json();
+    },
     retry: false,
   });
 
