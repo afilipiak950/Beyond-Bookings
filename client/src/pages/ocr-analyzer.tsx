@@ -355,10 +355,10 @@ export default function OCRAnalyzer() {
             </Button>
             <Button
               onClick={handleBulkAnalyze}
-              disabled={analyseMutation.isPending || analysesData.filter(a => !a.insights).length === 0}
+              disabled={analyzeMutation.isPending || analysesData.filter(a => !a.insights).length === 0}
             >
               <Zap className="h-4 w-4 mr-2" />
-              {analyseMutation.isPending ? 'Analyzing...' : 'Bulk Analyze'}
+              {analyzeMutation.isPending ? 'Analyzing...' : 'Bulk Analyze'}
             </Button>
           </div>
         </div>
@@ -618,15 +618,25 @@ export default function OCRAnalyzer() {
                     </TabsContent>
 
                     <TabsContent value="text" className="space-y-4">
-                      <div>
+                      <div className="flex items-center justify-between">
                         <Label htmlFor="extracted-text">Extracted Text Content</Label>
-                        <Textarea
-                          id="extracted-text"
-                          value={selectedAnalysis.extractedText || 'No text extracted yet...'}
-                          readOnly
-                          className="mt-2 min-h-[400px] font-mono text-sm"
-                        />
+                        {selectedAnalysis.extractedText && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDownloadText(selectedAnalysis)}
+                          >
+                            <Download className="h-4 w-4 mr-2" />
+                            Download Text
+                          </Button>
+                        )}
                       </div>
+                      <Textarea
+                        id="extracted-text"
+                        value={selectedAnalysis.extractedText || 'No text extracted yet...'}
+                        readOnly
+                        className="min-h-[400px] font-mono text-sm"
+                      />
                     </TabsContent>
 
                     <TabsContent value="metrics" className="space-y-4">
