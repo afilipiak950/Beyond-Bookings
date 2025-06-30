@@ -117,22 +117,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="container mx-auto px-4 py-16 text-center">
-        <Card className="max-w-2xl mx-auto">
-          <CardHeader>
-            <CardTitle className="text-2xl">Ready to Transform Your Pricing Strategy?</CardTitle>
-            <CardDescription className="text-lg">
-              Join the leading hotel pricing intelligence platform trusted by professionals worldwide.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={handleLogin} size="lg" className="w-full sm:w-auto">
-              Start Free Trial
-            </Button>
-          </CardContent>
-        </Card>
-      </section>
+
     </div>
   );
 }
