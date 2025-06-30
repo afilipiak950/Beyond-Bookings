@@ -84,14 +84,14 @@
   }
   
   .excel-input:focus {
-    @apply border-primary ring-primary/20;
+    @apply border-primary ring-primary ring-opacity-20;
   }
   
   .excel-input.error {
-    @apply border-destructive ring-destructive/20;
+    @apply border-destructive ring-destructive ring-opacity-20;
   }
   
   .excel-input.success {
-    @apply border-accent ring-accent/20;
+    @apply border-accent ring-accent ring-opacity-20;
   }
 }

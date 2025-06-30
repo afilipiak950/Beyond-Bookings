@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useTheme } from "next-themes";
-import { Settings, Moon, Sun, Bell, Shield, Database } from "lucide-react";
+import { Settings as SettingsIcon, Moon, Sun, Bell, Shield, Database } from "lucide-react";
 
 export default function Settings() {
   const { toast } = useToast();
@@ -42,7 +42,7 @@ export default function Settings() {
     return null;
   }
 
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = (user as any)?.role === 'admin';
 
   return (
     <AppLayout>
@@ -60,7 +60,7 @@ export default function Settings() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
-                <Settings className="h-5 w-5 mr-2" />
+                <SettingsIcon className="h-5 w-5 mr-2" />
                 Appearance
               </CardTitle>
               <CardDescription>

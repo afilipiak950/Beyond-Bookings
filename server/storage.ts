@@ -88,7 +88,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteUser(id: string): Promise<boolean> {
     const result = await db.delete(users).where(eq(users.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Hotel operations
@@ -127,7 +127,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteHotel(id: number): Promise<boolean> {
     const result = await db.delete(hotels).where(eq(hotels.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   async scrapeHotelData(url: string): Promise<any> {
@@ -163,7 +163,7 @@ export class DatabaseStorage implements IStorage {
 
       return mockData;
     } catch (error) {
-      throw new Error(`Failed to scrape hotel data: ${error.message}`);
+      throw new Error(`Failed to scrape hotel data: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -225,7 +225,7 @@ export class DatabaseStorage implements IStorage {
         eq(pricingCalculations.id, id),
         eq(pricingCalculations.userId, userId)
       ));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Feedback operations
