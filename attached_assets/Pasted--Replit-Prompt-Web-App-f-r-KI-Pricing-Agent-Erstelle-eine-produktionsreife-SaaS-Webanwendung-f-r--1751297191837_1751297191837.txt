@@ -1,0 +1,97 @@
+🧠 Replit Prompt: Web-App für KI-Pricing-Agent
+Erstelle eine produktionsreife SaaS-Webanwendung für einen "KI-Pricing-Agenten" für die Hotellerie auf Replit. Die App soll die Funktionalität einer bestehenden Excel-Kalkulation (Datei 1111 Pricing Master_leer.xlsm) replizieren und erweitern.
+
+🔐 1. Login-System
+Zugang: admin / admin123
+
+Rollenverwaltung: Admin kann Nutzer anlegen/löschen; normale Nutzer bearbeiten nur Angebote
+
+Session- und Token-Handling
+
+🎨 2. Frontend (React + TailwindCSS)
+Sidebar mit Navigation:
+
+Dashboard
+
+Pricing Agent
+
+Kundenverwaltung
+
+Reports
+
+Settings
+
+Profil
+
+Logout
+
+Excel-ähnliche Ansicht mit Feldern für:
+
+Hotel-URL (automatische Infosuche)
+
+Hotelname (wenn vorhanden)
+
+Sterne, Zimmeranzahl, Auslastung
+
+Durchschnittlicher Preis (Scraping möglich)
+
+Gutscheinpreis
+
+operative Kosten
+
+Mehrwertsteuerberechnung (7%/19%)
+
+Mouse-over-Infos zu jedem Feld
+
+PDF & Excel-Export für Angebotsdokumente
+
+🧮 3. Backend (FastAPI)
+Kalkulationsengine zur Nachbildung der Excel-Formeln
+
+Scraping-Pipeline (Google Hotels, Booking.com, Website)
+
+Pinecone-Vectorsuche für ähnliche Cases
+
+Feedback-System: Nutzer müssen Korrekturen begründen
+
+Lerneffekt: Speicherung aller Entscheidungen + Begründungen
+
+HubSpot API-Integration für Datenübergabe
+
+🧠 4. Datenbank
+Neon PostgreSQL:
+
+Hotel-Masterdaten
+
+historische Pricing-Fälle
+
+Benutzerlogins & Feedbacks
+
+Pinecone Vektor-Datenbank:
+
+Hoteldaten in Vektorform zur Ähnlichkeitssuche
+
+🚀 5. Deployment (Replit)
+Replit Dev Environment mit kollaborativem Zugriff
+
+GitHub-Repo-Anbindung
+
+Tägliches Deployment inkl. Statusanzeige & Logs
+
+💡 6. UX/Details
+Mobile-optimiert (Tablet-fähig)
+
+Dark-/Lightmode
+
+Real-time Validierung
+
+Notification-System für Admins (z.B. „Neues Feedback verfügbar“)
+
+🧩 7. Zukünftige Erweiterungen
+Smart-Contract-Export (Phase 3)
+
+Self-Service-Portal für Hoteliers (Phase 2)
+
+Technologien: React 18+, TailwindCSS 3+, FastAPI 0.110+, PostgreSQL 15+, Pinecone API
+Ziel: Modular, skalierbar, zukunftssicher & dokumentiert mit Fokus auf AI-Integration
+
