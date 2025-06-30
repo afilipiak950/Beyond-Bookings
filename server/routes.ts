@@ -296,6 +296,139 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Configure multer for file uploads
+  const upload = multer({
+    dest: 'uploads/',
+    limits: {
+      fileSize: 50 * 1024 * 1024, // 50MB limit
+    },
+    fileFilter: (req, file, cb) => {
+      const allowedTypes = [
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/vnd.ms-excel'
+      ];
+      if (allowedTypes.includes(file.mimetype)) {
+        cb(null, true);
+      } else {
+        cb(new Error('Only Excel files are allowed'));
+      }
+    }
+  });
+
+  // OCR Analysis routes
+  app.get('/api/ocr-analyses', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id.toString();
+      const analyses = await storage.getOcrAnalyses(userId);
+      res.json(analyses);
+    } catch (error) {
+      console.error("Error fetching OCR analyses:", error);
+      res.status(500).json({ message: "Failed to fetch OCR analyses" });
+    }
+  });
+
+  app.post('/api/ocr/upload', requireAuth, upload.single('file'), async (req: any, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+
+      const userId = req.user.id.toString();
+      const analysis = await storage.createOcrAnalysis({
+        userId,
+        fileName: req.file.originalname,
+        filePath: req.file.path,
+        fileSize: req.file.size,
+        status: 'pending'
+      });
+
+      res.json(analysis);
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      res.status(500).json({ message: "Failed to upload file" });
+    }
+  });
+
+  app.post('/api/ocr/analyze/:id', requireAuth, async (req: any, res) => {
+    try {
+      const analysisId = parseInt(req.params.id);
+      const userId = req.user.id.toString();
+      
+      // Get the analysis
+      const analysis = await storage.getOcrAnalysis(analysisId, userId);
+      if (!analysis) {
+        return res.status(404).json({ message: "Analysis not found" });
+      }
+
+      // Mock OCR processing with Mistral API integration
+      // In production, this would make actual API calls to Mistral
+      const mockInsights = {
+        summary: "This Excel file contains hotel pricing data with revenue trends showing seasonal patterns. Key performance indicators suggest strong Q4 performance with room occupancy rates averaging 78%.",
+        keyMetrics: [
+          { metric: "Total Revenue", value: "€125,450", change: "+12.3%" },
+          { metric: "Avg Room Rate", value: "€89.50", change: "+5.7%" },
+          { metric: "Occupancy Rate", value: "78%", change: "+2.1%" },
+          { metric: "RevPAR", value: "€69.81", change: "+8.2%" }
+        ],
+        recommendations: [
+          "Increase pricing during peak season months (July-August) by 15-20%",
+          "Implement dynamic pricing strategy for weekends",
+          "Focus marketing efforts on corporate bookings for weekdays",
+          "Consider package deals for longer stays to improve occupancy"
+        ],
+        trends: [
+          {
+            category: "Revenue Growth",
+            trend: "up" as const,
+            description: "Consistent upward trend in monthly revenue over the past quarter"
+          },
+          {
+            category: "Seasonal Demand",
+            trend: "stable" as const,
+            description: "Predictable seasonal patterns with summer peaks"
+          },
+          {
+            category: "Market Competition",
+            trend: "down" as const,
+            description: "Competitive pricing pressure in the local market"
+          }
+        ]
+      };
+
+      const extractedText = "Hotel Revenue Data\nMonth\tRevenue\tOccupancy\nJan\t€10,500\t65%\nFeb\t€12,200\t70%\nMar\t€15,800\t78%\n...";
+
+      // Update the analysis with results
+      const updatedAnalysis = await storage.updateOcrAnalysis(analysisId, userId, {
+        status: 'completed',
+        extractedText,
+        insights: mockInsights,
+        processingTime: 4.2
+      });
+
+      res.json(updatedAnalysis);
+    } catch (error) {
+      console.error("Error analyzing file:", error);
+      res.status(500).json({ message: "Failed to analyze file" });
+    }
+  });
+
+  app.delete('/api/ocr/analysis/:id', requireAuth, async (req: any, res) => {
+    try {
+      const analysisId = parseInt(req.params.id);
+      const userId = req.user.id.toString();
+      
+      const success = await storage.deleteOcrAnalysis(analysisId, userId);
+      if (!success) {
+        return res.status(404).json({ message: "Analysis not found" });
+      }
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting analysis:", error);
+      res.status(500).json({ message: "Failed to delete analysis" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
