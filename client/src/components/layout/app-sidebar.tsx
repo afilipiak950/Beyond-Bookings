@@ -87,6 +87,7 @@ export default function AppSidebar({ className }: SidebarProps) {
         <Button
           variant="ghost"
           size="sm"
+          data-sidebar="true"
           onClick={() => setIsCollapsed(!isCollapsed)}
           className="text-sidebar-foreground hover:bg-sidebar-accent"
         >
@@ -104,6 +105,7 @@ export default function AppSidebar({ className }: SidebarProps) {
             <Button
               key={item.name}
               variant={isActive ? "default" : "ghost"}
+              data-sidebar="true"
               className={cn(
                 "w-full justify-start h-auto p-3",
                 isActive 
@@ -157,6 +159,7 @@ export default function AppSidebar({ className }: SidebarProps) {
         <div className="space-y-1">
           <Button
             variant="ghost"
+            data-sidebar="true"
             className={cn(
               "w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
               isCollapsed && "px-3"
@@ -169,6 +172,7 @@ export default function AppSidebar({ className }: SidebarProps) {
           
           <Button
             variant="ghost"
+            data-sidebar="true"
             className={cn(
               "w-full justify-start text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20",
               isCollapsed && "px-3"
