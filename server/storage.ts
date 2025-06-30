@@ -3,6 +3,7 @@ import {
   hotels,
   pricingCalculations,
   feedback,
+  ocrAnalyses,
   type User,
   type UpsertUser,
   type Hotel,
@@ -11,6 +12,8 @@ import {
   type InsertPricingCalculation,
   type Feedback,
   type InsertFeedback,
+  type OcrAnalysis,
+  type InsertOcrAnalysis,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and } from "drizzle-orm";
@@ -47,6 +50,13 @@ export interface IStorage {
   // Export operations
   exportToPDF(calculationId: number, userId: string): Promise<Buffer>;
   exportToExcel(calculationId: number, userId: string): Promise<Buffer>;
+
+  // OCR Analysis operations
+  getOcrAnalyses(userId: string): Promise<OcrAnalysis[]>;
+  getOcrAnalysis(id: number, userId: string): Promise<OcrAnalysis | undefined>;
+  createOcrAnalysis(analysis: InsertOcrAnalysis): Promise<OcrAnalysis>;
+  updateOcrAnalysis(id: number, userId: string, analysis: Partial<InsertOcrAnalysis>): Promise<OcrAnalysis | undefined>;
+  deleteOcrAnalysis(id: number, userId: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -298,6 +308,41 @@ ${calculation.hotelName},${calculation.hotelUrl || ''},${calculation.stars || ''
     // For now, return a CSV buffer
     // In production, this would be a proper Excel buffer
     return Buffer.from(excelContent, 'utf-8');
+  }
+
+  // OCR Analysis operations
+  async getOcrAnalyses(userId: string): Promise<OcrAnalysis[]> {
+    const analyses = await db.select().from(ocrAnalyses)
+      .where(eq(ocrAnalyses.userId, userId))
+      .orderBy(desc(ocrAnalyses.createdAt));
+    return analyses;
+  }
+
+  async getOcrAnalysis(id: number, userId: string): Promise<OcrAnalysis | undefined> {
+    const [analysis] = await db.select().from(ocrAnalyses)
+      .where(and(eq(ocrAnalyses.id, id), eq(ocrAnalyses.userId, userId)));
+    return analysis;
+  }
+
+  async createOcrAnalysis(analysisData: InsertOcrAnalysis): Promise<OcrAnalysis> {
+    const [analysis] = await db.insert(ocrAnalyses)
+      .values(analysisData)
+      .returning();
+    return analysis;
+  }
+
+  async updateOcrAnalysis(id: number, userId: string, analysisData: Partial<InsertOcrAnalysis>): Promise<OcrAnalysis | undefined> {
+    const [analysis] = await db.update(ocrAnalyses)
+      .set({ ...analysisData, updatedAt: new Date() })
+      .where(and(eq(ocrAnalyses.id, id), eq(ocrAnalyses.userId, userId)))
+      .returning();
+    return analysis;
+  }
+
+  async deleteOcrAnalysis(id: number, userId: string): Promise<boolean> {
+    const result = await db.delete(ocrAnalyses)
+      .where(and(eq(ocrAnalyses.id, id), eq(ocrAnalyses.userId, userId)));
+    return result.rowCount > 0;
   }
 }
 

@@ -2,8 +2,11 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { requireAuth, hashPassword, comparePassword } from "./localAuth";
-import { insertPricingCalculationSchema, insertFeedbackSchema } from "@shared/schema";
+import { insertPricingCalculationSchema, insertFeedbackSchema, insertOcrAnalysisSchema } from "@shared/schema";
 import { z } from "zod";
+import multer from "multer";
+import path from "path";
+import fs from "fs/promises";
 
 // Login/Register schemas
 const loginSchema = z.object({
