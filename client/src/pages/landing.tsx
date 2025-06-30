@@ -17,7 +17,7 @@ export default function Landing() {
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
               <Calculator className="h-4 w-4 text-primary-foreground" />
             </div>
-            <h1 className="text-xl font-bold text-primary dark:text-white">KI-Pricing Agent</h1>
+            <h1 className="text-xl font-bold text-primary dark:text-white">Beyond Bookings</h1>
           </div>
           <Button onClick={handleLogin} size="lg" className="bg-secondary hover:bg-secondary/90 text-secondary-foreground">
             Sign In
