@@ -51,6 +51,13 @@ const navigation = [
     gradient: "from-indigo-500 to-blue-500",
   },
   {
+    name: "OCR Analyzer",
+    href: "/ocr-analyzer",
+    icon: FileText,
+    description: "AI-powered Excel file analysis",
+    gradient: "from-emerald-500 to-teal-500",
+  },
+  {
     name: "Hotel Database",
     href: "/customer-management",
     icon: Database,

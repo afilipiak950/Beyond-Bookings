@@ -141,3 +141,47 @@ export const insertFeedbackSchema = createInsertSchema(feedback).omit({
 
 export type InsertFeedback = z.infer<typeof insertFeedbackSchema>;
 export type Feedback = typeof feedback.$inferSelect;
+
+// OCR Analysis table
+export const ocrAnalyses = pgTable("ocr_analyses", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull(),
+  fileName: varchar("file_name").notNull(),
+  filePath: varchar("file_path").notNull(),
+  fileSize: integer("file_size").notNull(),
+  extractedText: text("extracted_text"),
+  insights: jsonb("insights").$type<{
+    summary: string;
+    keyMetrics: Array<{
+      metric: string;
+      value: string;
+      change?: string;
+    }>;
+    recommendations: string[];
+    trends: Array<{
+      category: string;
+      trend: 'up' | 'down' | 'stable';
+      description: string;
+    }>;
+  }>(),
+  status: varchar("status", { enum: ["pending", "processing", "completed", "error"] }).default("pending"),
+  processingTime: integer("processing_time"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const ocrAnalysesRelations = relations(ocrAnalyses, ({ one }) => ({
+  user: one(users, {
+    fields: [ocrAnalyses.userId],
+    references: [users.id],
+  }),
+}));
+
+export const insertOcrAnalysisSchema = createInsertSchema(ocrAnalyses).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertOcrAnalysis = z.infer<typeof insertOcrAnalysisSchema>;
+export type OcrAnalysis = typeof ocrAnalyses.$inferSelect;
