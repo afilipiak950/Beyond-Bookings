@@ -53,7 +53,7 @@ export const hotels = pgTable("hotels", {
 // Pricing calculations table
 export const pricingCalculations = pgTable("pricing_calculations", {
   id: serial("id").primaryKey(),
-  userId: varchar("user_id").notNull().references(() => users.id),
+  userId: integer("user_id").notNull().references(() => users.id),
   hotelId: integer("hotel_id").references(() => hotels.id),
   hotelName: text("hotel_name").notNull(),
   hotelUrl: text("hotel_url"),
