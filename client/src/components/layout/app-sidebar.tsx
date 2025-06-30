@@ -103,15 +103,6 @@ export default function AppSidebar({ className }: SidebarProps) {
             </div>
           </div>
         )}
-        <Button
-          variant="ghost"
-          size="sm"
-          data-sidebar="true"
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="interactive-hover glass-card border-0 p-2"
-        >
-          <Menu className="h-4 w-4" />
-        </Button>
       </div>
 
       {/* Ultra-Modern Navigation */}
