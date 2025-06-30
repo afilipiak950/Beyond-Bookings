@@ -10,6 +10,7 @@ import Landing from "@/pages/landing";
 import Login from "@/pages/login";
 import Dashboard from "@/pages/dashboard";
 import PricingAgent from "@/pages/pricing-agent";
+import Calculations from "@/pages/calculations";
 import CustomerManagement from "@/pages/customer-management";
 import Reports from "@/pages/reports";
 import Settings from "@/pages/settings";
@@ -27,6 +28,7 @@ function Router() {
         <>
           <Route path="/" component={Dashboard} />
           <Route path="/pricing-agent" component={PricingAgent} />
+          <Route path="/calculations" component={Calculations} />
           <Route path="/customer-management" component={CustomerManagement} />
           <Route path="/reports" component={Reports} />
           <Route path="/settings" component={Settings} />

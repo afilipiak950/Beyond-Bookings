@@ -44,6 +44,13 @@ const navigation = [
     gradient: "from-purple-500 to-pink-500",
   },
   {
+    name: "Calculations",
+    href: "/calculations",
+    icon: Calculator,
+    description: "View all pricing calculations",
+    gradient: "from-indigo-500 to-blue-500",
+  },
+  {
     name: "Hotel Database",
     href: "/customer-management",
     icon: Database,
