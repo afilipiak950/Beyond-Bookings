@@ -99,8 +99,7 @@ export default function AppSidebar({ className }: SidebarProps) {
               <Zap className="h-5 w-5 text-white" />
             </div>
             <div className="flex flex-col">
-              <h1 className="text-lg font-bold gradient-text">Beyond Bookings</h1>
-              <span className="text-xs text-muted-foreground">AI Powered Platform</span>
+              <h1 className="text-base font-bold gradient-text">Beyond Bookings</h1>
             </div>
           </div>
         )}
