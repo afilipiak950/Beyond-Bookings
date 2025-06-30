@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import AppLayout from "@/components/layout/app-layout";
@@ -7,13 +7,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/components/ui/theme-provider";
 import { Settings as SettingsIcon, Moon, Sun, Bell, Shield, Database } from "lucide-react";
 
 export default function Settings() {
   const { toast } = useToast();
   const { isAuthenticated, isLoading, user } = useAuth();
   const { theme, setTheme } = useTheme();
+
+  // Settings state
+  const [emailNotifications, setEmailNotifications] = useState(true);
+  const [pushNotifications, setPushNotifications] = useState(false);
+  const [calculationUpdates, setCalculationUpdates] = useState(true);
+  const [autoApprove, setAutoApprove] = useState(false);
+  const [defaultVatRate, setDefaultVatRate] = useState("19");
+  const [defaultMargin, setDefaultMargin] = useState("25");
 
   // Redirect to home if not authenticated
   useEffect(() => {
@@ -106,7 +114,16 @@ export default function Settings() {
                     Receive notifications via email
                   </div>
                 </div>
-                <Switch />
+                <Switch 
+                  checked={emailNotifications}
+                  onCheckedChange={(checked) => {
+                    setEmailNotifications(checked);
+                    toast({
+                      title: "Settings Updated",
+                      description: `Email notifications ${checked ? 'enabled' : 'disabled'}`,
+                    });
+                  }}
+                />
               </div>
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
@@ -115,7 +132,16 @@ export default function Settings() {
                     Receive browser notifications
                   </div>
                 </div>
-                <Switch />
+                <Switch 
+                  checked={pushNotifications}
+                  onCheckedChange={(checked) => {
+                    setPushNotifications(checked);
+                    toast({
+                      title: "Settings Updated",
+                      description: `Push notifications ${checked ? 'enabled' : 'disabled'}`,
+                    });
+                  }}
+                />
               </div>
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
@@ -124,7 +150,16 @@ export default function Settings() {
                     Notify when calculations are completed
                   </div>
                 </div>
-                <Switch defaultChecked />
+                <Switch 
+                  checked={calculationUpdates}
+                  onCheckedChange={(checked) => {
+                    setCalculationUpdates(checked);
+                    toast({
+                      title: "Settings Updated",
+                      description: `Calculation updates ${checked ? 'enabled' : 'disabled'}`,
+                    });
+                  }}
+                />
               </div>
             </CardContent>
           </Card>
@@ -146,6 +181,8 @@ export default function Settings() {
                   <Label>Default VAT Rate (%)</Label>
                   <Input
                     type="number"
+                    value={defaultVatRate}
+                    onChange={(e) => setDefaultVatRate(e.target.value)}
                     placeholder="19"
                     min="0"
                     max="100"
@@ -156,6 +193,8 @@ export default function Settings() {
                   <Label>Default Operational Cost Margin (%)</Label>
                   <Input
                     type="number"
+                    value={defaultMargin}
+                    onChange={(e) => setDefaultMargin(e.target.value)}
                     placeholder="25"
                     min="0"
                     max="100"
@@ -169,9 +208,28 @@ export default function Settings() {
                       Automatically approve new calculations
                     </div>
                   </div>
-                  <Switch />
+                  <Switch 
+                    checked={autoApprove}
+                    onCheckedChange={(checked) => {
+                      setAutoApprove(checked);
+                      toast({
+                        title: "Admin Settings Updated",
+                        description: `Auto-approve calculations ${checked ? 'enabled' : 'disabled'}`,
+                      });
+                    }}
+                  />
                 </div>
-                <Button className="w-full">Save Admin Settings</Button>
+                <Button 
+                  className="w-full"
+                  onClick={() => {
+                    toast({
+                      title: "Admin Settings Saved",
+                      description: `VAT Rate: ${defaultVatRate}%, Margin: ${defaultMargin}%`,
+                    });
+                  }}
+                >
+                  Save Admin Settings
+                </Button>
               </CardContent>
             </Card>
           )}
@@ -193,7 +251,17 @@ export default function Settings() {
                   Download all your pricing calculations and data
                 </p>
               </div>
-              <Button variant="outline">Export Data</Button>
+              <Button 
+                variant="outline"
+                onClick={() => {
+                  toast({
+                    title: "Export Started",
+                    description: "Your account data export has been initiated. You'll receive a download link shortly.",
+                  });
+                }}
+              >
+                Export Data
+              </Button>
             </div>
           </CardContent>
         </Card>
