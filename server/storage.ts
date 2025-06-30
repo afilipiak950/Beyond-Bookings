@@ -17,12 +17,13 @@ import { eq, desc, and } from "drizzle-orm";
 
 // Interface for storage operations
 export interface IStorage {
-  // User operations (mandatory for Replit Auth)
-  getUser(id: string): Promise<User | undefined>;
-  upsertUser(user: UpsertUser): Promise<User>;
+  // User operations for local authentication
+  getUser(id: number): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
+  createUser(user: UpsertUser): Promise<User>;
   getAllUsers(): Promise<User[]>;
   createUserByAdmin(user: UpsertUser): Promise<User>;
-  deleteUser(id: string): Promise<boolean>;
+  deleteUser(id: number): Promise<boolean>;
 
   // Hotel operations
   getHotels(): Promise<Hotel[]>;
@@ -50,22 +51,20 @@ export interface IStorage {
 
 export class DatabaseStorage implements IStorage {
   // User operations (mandatory for Replit Auth)
-  async getUser(id: string): Promise<User | undefined> {
+  async getUser(id: number): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
   }
 
-  async upsertUser(userData: UpsertUser): Promise<User> {
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user;
+  }
+
+  async createUser(userData: UpsertUser): Promise<User> {
     const [user] = await db
       .insert(users)
       .values(userData)
-      .onConflictDoUpdate({
-        target: users.id,
-        set: {
-          ...userData,
-          updatedAt: new Date(),
-        },
-      })
       .returning();
     return user;
   }
