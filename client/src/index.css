@@ -119,10 +119,10 @@
   animation-delay: 4s;
 }
 
-/* Global Beyond Bookings Button Styling */
+/* Global Beyond Bookings Button Styling - Exclude sidebar buttons */
 .btn-primary, 
-button[data-variant="default"],
-button:not([data-variant]):not([data-variant="outline"]):not([data-variant="ghost"]):not([data-variant="link"]):not([data-variant="secondary"]):not([data-variant="destructive"]) {
+button[data-variant="default"]:not([data-sidebar]),
+button:not([data-variant]):not([data-variant="outline"]):not([data-variant="ghost"]):not([data-variant="link"]):not([data-variant="secondary"]):not([data-variant="destructive"]):not([data-sidebar]) {
   background: linear-gradient(135deg, var(--button-gradient-from), var(--button-gradient-to)) !important;
   color: white !important;
   border: none !important;
@@ -134,23 +134,23 @@ button:not([data-variant]):not([data-variant="outline"]):not([data-variant="ghos
 }
 
 .btn-primary:hover,
-button[data-variant="default"]:hover,
-button:not([data-variant]):not([data-variant="outline"]):not([data-variant="ghost"]):not([data-variant="link"]):not([data-variant="secondary"]):not([data-variant="destructive"]):hover {
+button[data-variant="default"]:not([data-sidebar]):hover,
+button:not([data-variant]):not([data-variant="outline"]):not([data-variant="ghost"]):not([data-variant="link"]):not([data-variant="secondary"]):not([data-variant="destructive"]):not([data-sidebar]):hover {
   background: linear-gradient(135deg, var(--button-gradient-hover-from), var(--button-gradient-hover-to)) !important;
   transform: translateY(-2px) scale(1.02) !important;
   box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4) !important;
 }
 
 .btn-primary:active,
-button[data-variant="default"]:active,
-button:not([data-variant]):not([data-variant="outline"]):not([data-variant="ghost"]):not([data-variant="link"]):not([data-variant="secondary"]):not([data-variant="destructive"]):active {
+button[data-variant="default"]:not([data-sidebar]):active,
+button:not([data-variant]):not([data-variant="outline"]):not([data-variant="ghost"]):not([data-variant="link"]):not([data-variant="secondary"]):not([data-variant="destructive"]):not([data-sidebar]):active {
   transform: translateY(0) scale(0.98) !important;
 }
 
 /* Button shimmer effect */
 .btn-primary::before,
-button[data-variant="default"]::before,
-button:not([data-variant]):not([data-variant="outline"]):not([data-variant="ghost"]):not([data-variant="link"]):not([data-variant="secondary"]):not([data-variant="destructive"])::before {
+button[data-variant="default"]:not([data-sidebar])::before,
+button:not([data-variant]):not([data-variant="outline"]):not([data-variant="ghost"]):not([data-variant="link"]):not([data-variant="secondary"]):not([data-variant="destructive"]):not([data-sidebar])::before {
   content: '';
   position: absolute;
   top: 0;
@@ -162,8 +162,8 @@ button:not([data-variant]):not([data-variant="outline"]):not([data-variant="ghos
 }
 
 .btn-primary:hover::before,
-button[data-variant="default"]:hover::before,
-button:not([data-variant]):not([data-variant="outline"]):not([data-variant="ghost"]):not([data-variant="link"]):not([data-variant="secondary"]):not([data-variant="destructive"]):hover::before {
+button[data-variant="default"]:not([data-sidebar]):hover::before,
+button:not([data-variant]):not([data-variant="outline"]):not([data-variant="ghost"]):not([data-variant="link"]):not([data-variant="secondary"]):not([data-variant="destructive"]):not([data-sidebar]):hover::before {
   left: 100%;
 }
 

@@ -81,7 +81,7 @@ export default function AppSidebar({ className }: SidebarProps) {
             <div className="w-8 h-8 bg-sidebar-primary rounded-lg flex items-center justify-center">
               <Calculator className="h-4 w-4 text-sidebar-primary-foreground" />
             </div>
-            <h1 className="text-lg font-semibold text-sidebar-foreground">KI-Pricing</h1>
+            <h1 className="text-lg font-semibold text-sidebar-foreground">Beyond Bookings</h1>
           </div>
         )}
         <Button
@@ -90,7 +90,7 @@ export default function AppSidebar({ className }: SidebarProps) {
           onClick={() => setIsCollapsed(!isCollapsed)}
           className="text-sidebar-foreground hover:bg-sidebar-accent"
         >
-          {isCollapsed ? <Menu className="h-4 w-4" /> : <X className="h-4 w-4" />}
+          <Menu className="h-4 w-4" />
         </Button>
       </div>
 
