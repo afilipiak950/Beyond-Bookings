@@ -133,6 +133,11 @@ Changelog:
   - Created custom login/register pages with form validation
   - Updated database schema to support local user management
   - Implemented Express session management for authentication state
+- June 30, 2025. Updated design to match Beyond Bookings branding
+  - Applied signature blue (#3B82F6) and green (#4ADE80) color scheme
+  - Updated all primary and secondary colors throughout the application
+  - Modified landing page and login page to reflect Beyond Bookings identity
+  - Enhanced chart colors and sidebar styling with brand colors
 ```
 
 ## User Preferences
