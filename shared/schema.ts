@@ -76,7 +76,7 @@ export const pricingCalculations = pgTable("pricing_calculations", {
 // Feedback table for pricing corrections
 export const feedback = pgTable("feedback", {
   id: serial("id").primaryKey(),
-  userId: varchar("user_id").notNull().references(() => users.id),
+  userId: integer("user_id").notNull().references(() => users.id),
   calculationId: integer("calculation_id").notNull().references(() => pricingCalculations.id),
   originalValue: decimal("original_value", { precision: 10, scale: 2 }).notNull(),
   correctedValue: decimal("corrected_value", { precision: 10, scale: 2 }).notNull(),

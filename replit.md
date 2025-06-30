@@ -29,10 +29,11 @@ KI Pricing Agent is a production-ready SaaS web application for hotel pricing in
 ## Key Components
 
 ### Authentication System
-- **Provider**: Replit OIDC authentication
-- **Session Management**: PostgreSQL-backed sessions with connect-pg-simple
+- **Provider**: Local email/password authentication
+- **Session Management**: Express sessions with PostgreSQL storage
 - **Authorization**: Role-based access control (admin/user roles)
-- **Security**: Secure cookies, CSRF protection, session timeouts
+- **Security**: Bcrypt password hashing, secure cookies, session management
+- **Login Flow**: Custom login/register pages with form validation
 
 ### Pricing Calculator
 - **Core Feature**: Excel-like pricing calculations with real-time updates
@@ -127,6 +128,11 @@ KI Pricing Agent is a production-ready SaaS web application for hotel pricing in
 ```
 Changelog:
 - June 30, 2025. Initial setup
+- June 30, 2025. Replaced Replit OIDC authentication with local email/password authentication system
+  - Added bcrypt password hashing for security
+  - Created custom login/register pages with form validation
+  - Updated database schema to support local user management
+  - Implemented Express session management for authentication state
 ```
 
 ## User Preferences
