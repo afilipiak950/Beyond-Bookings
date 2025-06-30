@@ -132,7 +132,7 @@ export default function Reports() {
                   Create pricing calculations to generate reports
                 </p>
                 <Button>
-                  <Calculator className="h-4 w-4 mr-2" />
+                  <FileText className="h-4 w-4 mr-2" />
                   Create First Calculation
                 </Button>
               </div>
