@@ -3,6 +3,7 @@
 @tailwind utilities;
 
 :root {
+  /* Ultra-Modern Design System */
   --background: hsl(0, 0%, 100%);
   --foreground: hsl(240, 10%, 3.9%);
   --muted: hsl(240, 4.8%, 95.9%);
@@ -20,31 +21,46 @@
   --accent: hsl(156, 73%, 59%);
   --accent-foreground: hsl(0, 0%, 100%);
   
-  /* Custom button gradient variables */
+  /* Advanced Gradients & Effects */
   --button-gradient-from: hsl(208, 88%, 52%);
   --button-gradient-to: hsl(156, 73%, 59%);
   --button-gradient-hover-from: hsl(208, 88%, 47%);
   --button-gradient-hover-to: hsl(156, 73%, 54%);
+  --glass-gradient: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+  --glass-border: linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1));
+  --neo-shadow: 0 8px 32px rgba(0,0,0,0.1);
+  --glow-blue: 0 0 20px rgba(59, 130, 246, 0.3);
+  --glow-green: 0 0 20px rgba(74, 222, 128, 0.3);
+  --mesh-gradient: radial-gradient(circle at 25% 25%, rgba(59, 130, 246, 0.1) 0%, transparent 50%), 
+                   radial-gradient(circle at 75% 75%, rgba(74, 222, 128, 0.1) 0%, transparent 50%);
+  
   --destructive: hsl(0, 84.2%, 60.2%);
   --destructive-foreground: hsl(210, 40%, 98%);
   --ring: hsl(240, 10%, 3.9%);
-  --radius: 0.5rem;
+  --radius: 0.75rem;
   --chart-1: hsl(208, 88%, 52%);
   --chart-2: hsl(156, 73%, 59%);
   --chart-3: hsl(208, 70%, 65%);
   --chart-4: hsl(156, 60%, 70%);
   --chart-5: hsl(208, 60%, 75%);
-  --sidebar-background: hsl(0, 0%, 100%);
+  
+  /* Futuristic Sidebar */
+  --sidebar-background: linear-gradient(145deg, #fafafa, #f0f0f0);
   --sidebar-foreground: hsl(240, 5.3%, 26.1%);
   --sidebar-primary: hsl(208, 88%, 52%);
   --sidebar-primary-foreground: hsl(210, 40%, 98%);
-  --sidebar-accent: hsl(156, 73%, 59%);
+  --sidebar-accent: rgba(59, 130, 246, 0.1);
   --sidebar-accent-foreground: hsl(240, 5.9%, 10%);
-  --sidebar-border: hsl(240, 5.9%, 90%);
+  --sidebar-border: rgba(255,255,255,0.2);
   --sidebar-ring: hsl(240, 10%, 3.9%);
+  
+  /* Animation Variables */
+  --bounce-in: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --smooth-out: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --elastic: cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-/* Custom animations for modern login screen */
+/* Ultra-Modern Animations */
 @keyframes float {
   0%, 100% { transform: translateY(0px) rotate(0deg); }
   50% { transform: translateY(-20px) rotate(180deg); }
@@ -89,12 +105,81 @@
   50% { opacity: 0.5; transform: scale(1.2); }
 }
 
+@keyframes morphGradient {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
+  50% { box-shadow: 0 0 40px rgba(74, 222, 128, 0.5), 0 0 80px rgba(59, 130, 246, 0.2); }
+}
+
+@keyframes cardHover {
+  from { transform: translateY(0) scale(1); }
+  to { transform: translateY(-4px) scale(1.02); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
 .animate-fadeInUp {
-  animation: fadeInUp 0.8s ease-out;
+  animation: fadeInUp 0.8s var(--bounce-in);
 }
 
 .animate-slideInUp {
-  animation: slideInUp 0.6s ease-out;
+  animation: slideInUp 0.6s var(--elastic);
+}
+
+.animate-slideInRight {
+  animation: slideInRight 0.6s var(--smooth-out);
+}
+
+.animate-slideInLeft {
+  animation: slideInLeft 0.6s var(--smooth-out);
+}
+
+.animate-scaleIn {
+  animation: scaleIn 0.5s var(--bounce-in);
+}
+
+.animate-cardHover {
+  animation: cardHover 0.3s var(--smooth-out);
+}
+
+.animate-glowPulse {
+  animation: glowPulse 3s infinite;
+}
+
+.animate-morphGradient {
+  animation: morphGradient 4s ease infinite;
+  background-size: 200% 200%;
+}
+
+.animate-breathe {
+  animation: breathe 4s ease-in-out infinite;
 }
 
 .animate-fadeIn {
@@ -165,6 +250,94 @@ button:not([data-variant]):not([data-variant="outline"]):not([data-variant="ghos
 button[data-variant="default"]:not([data-sidebar]):hover::before,
 button:not([data-variant]):not([data-variant="outline"]):not([data-variant="ghost"]):not([data-variant="link"]):not([data-variant="secondary"]):not([data-variant="destructive"]):not([data-sidebar]):hover::before {
   left: 100%;
+}
+
+/* Ultra-Modern Glass Effects */
+.glass-card {
+  background: var(--glass-gradient);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: var(--neo-shadow);
+}
+
+.glass-nav {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.neo-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: 
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: all 0.3s var(--smooth-out);
+}
+
+.neo-card:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04),
+    0 0 20px rgba(59, 130, 246, 0.1);
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, var(--button-gradient-from), var(--button-gradient-to));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.mesh-bg {
+  background: var(--mesh-gradient);
+}
+
+.glow-border {
+  position: relative;
+  overflow: hidden;
+}
+
+.glow-border::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(45deg, 
+    var(--button-gradient-from), 
+    var(--button-gradient-to), 
+    var(--button-gradient-from));
+  border-radius: inherit;
+  z-index: -1;
+  animation: morphGradient 3s linear infinite;
+  background-size: 300% 300%;
+}
+
+.shimmer-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer-effect::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  animation: shimmer 2s infinite;
+}
+
+.interactive-hover {
+  transition: all 0.3s var(--smooth-out);
+  cursor: pointer;
+}
+
+.interactive-hover:hover {
+  transform: translateY(-2px) scale(1.02);
+  filter: brightness(1.1);
 }
 
 /* Secondary button styling */
