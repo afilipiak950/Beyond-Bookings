@@ -1,28 +1,91 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { requireAuth, hashPassword, comparePassword } from "./localAuth";
 import { insertPricingCalculationSchema, insertFeedbackSchema } from "@shared/schema";
 import { z } from "zod";
 
-export async function registerRoutes(app: Express): Promise<Server> {
-  // Auth middleware
-  await setupAuth(app);
+// Login/Register schemas
+const loginSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6)
+});
 
+const registerSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6),
+  firstName: z.string().optional(),
+  lastName: z.string().optional()
+});
+
+export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+  app.post('/api/auth/login', async (req, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      res.json(user);
+      const { email, password } = loginSchema.parse(req.body);
+      
+      const user = await storage.getUserByEmail(email);
+      if (!user || !await comparePassword(password, user.password)) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+
+      req.session.userId = user.id;
+      res.json({
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role
+      });
     } catch (error) {
-      console.error("Error fetching user:", error);
-      res.status(500).json({ message: "Failed to fetch user" });
+      console.error("Login error:", error);
+      res.status(400).json({ message: "Invalid login data" });
     }
   });
 
+  app.post('/api/auth/register', async (req, res) => {
+    try {
+      const { email, password, firstName, lastName } = registerSchema.parse(req.body);
+      
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ message: "User already exists" });
+      }
+
+      const hashedPassword = await hashPassword(password);
+      const user = await storage.createUser({
+        email,
+        password: hashedPassword,
+        firstName: firstName || null,
+        lastName: lastName || null,
+        role: "user"
+      });
+
+      req.session.userId = user.id;
+      res.json({
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role
+      });
+    } catch (error) {
+      console.error("Register error:", error);
+      res.status(400).json({ message: "Invalid registration data" });
+    }
+  });
+
+  app.get('/api/auth/user', requireAuth, async (req, res) => {
+    res.json(req.user);
+  });
+
+  app.post('/api/auth/logout', (req, res) => {
+    req.session.userId = undefined;
+    res.json({ message: "Logged out successfully" });
+  });
+
   // Hotel routes
-  app.get('/api/hotels', isAuthenticated, async (req, res) => {
+  app.get('/api/hotels', requireAuth, async (req, res) => {
     try {
       const hotels = await storage.getHotels();
       res.json(hotels);
@@ -32,7 +95,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/hotels/scrape', isAuthenticated, async (req, res) => {
+  app.post('/api/hotels/scrape', requireAuth, async (req, res) => {
     try {
       const { url } = req.body;
       if (!url) {
@@ -48,7 +111,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Pricing calculation routes
-  app.get('/api/pricing-calculations', isAuthenticated, async (req: any, res) => {
+  app.get('/api/pricing-calculations', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const calculations = await storage.getPricingCalculations(userId);
@@ -59,7 +122,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/pricing-calculations', isAuthenticated, async (req: any, res) => {
+  app.post('/api/pricing-calculations', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const validatedData = insertPricingCalculationSchema.parse({
@@ -78,7 +141,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/pricing-calculations/:id', isAuthenticated, async (req: any, res) => {
+  app.put('/api/pricing-calculations/:id', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const calculationId = parseInt(req.params.id);
@@ -100,7 +163,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/pricing-calculations/:id', isAuthenticated, async (req: any, res) => {
+  app.delete('/api/pricing-calculations/:id', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const calculationId = parseInt(req.params.id);
@@ -118,7 +181,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Feedback routes
-  app.post('/api/feedback', isAuthenticated, async (req: any, res) => {
+  app.post('/api/feedback', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const validatedData = insertFeedbackSchema.parse({
@@ -138,7 +201,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Export routes
-  app.post('/api/export/pdf', isAuthenticated, async (req: any, res) => {
+  app.post('/api/export/pdf', requireAuth, async (req: any, res) => {
     try {
       const { calculationId } = req.body;
       const userId = req.user.claims.sub;
@@ -154,7 +217,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/export/excel', isAuthenticated, async (req: any, res) => {
+  app.post('/api/export/excel', requireAuth, async (req: any, res) => {
     try {
       const { calculationId } = req.body;
       const userId = req.user.claims.sub;
@@ -171,7 +234,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin routes
-  app.get('/api/admin/users', isAuthenticated, async (req: any, res) => {
+  app.get('/api/admin/users', requireAuth, async (req: any, res) => {
     try {
       const user = await storage.getUser(req.user.claims.sub);
       if (!user || user.role !== 'admin') {
@@ -186,7 +249,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/admin/users', isAuthenticated, async (req: any, res) => {
+  app.post('/api/admin/users', requireAuth, async (req: any, res) => {
     try {
       const user = await storage.getUser(req.user.claims.sub);
       if (!user || user.role !== 'admin') {
@@ -209,7 +272,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/admin/users/:id', isAuthenticated, async (req: any, res) => {
+  app.delete('/api/admin/users/:id', requireAuth, async (req: any, res) => {
     try {
       const user = await storage.getUser(req.user.claims.sub);
       if (!user || user.role !== 'admin') {
