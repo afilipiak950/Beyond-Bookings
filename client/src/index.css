@@ -117,7 +117,7 @@
 
 @keyframes cardHover {
   from { transform: translateY(0); }
-  to { transform: translateY(-4px); }
+  to { transform: translateY(-2px); }
 }
 
 @keyframes slideInRight {
@@ -222,8 +222,8 @@ button:not([data-variant]):not([data-variant="outline"]):not([data-variant="ghos
 button[data-variant="default"]:not([data-sidebar]):hover,
 button:not([data-variant]):not([data-variant="outline"]):not([data-variant="ghost"]):not([data-variant="link"]):not([data-variant="secondary"]):not([data-variant="destructive"]):not([data-sidebar]):hover {
   background: linear-gradient(135deg, var(--button-gradient-hover-from), var(--button-gradient-hover-to)) !important;
-  transform: translateY(-2px) !important;
-  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.3) !important;
 }
 
 .btn-primary:active,
@@ -277,11 +277,11 @@ button:not([data-variant]):not([data-variant="outline"]):not([data-variant="ghos
 }
 
 .neo-card:hover {
-  transform: translateY(-4px);
+  transform: translateY(-2px);
   box-shadow: 
-    0 20px 25px -5px rgba(0, 0, 0, 0.1),
-    0 10px 10px -5px rgba(0, 0, 0, 0.04),
-    0 0 20px rgba(59, 130, 246, 0.1);
+    0 12px 20px -5px rgba(0, 0, 0, 0.08),
+    0 6px 8px -5px rgba(0, 0, 0, 0.03),
+    0 0 15px rgba(59, 130, 246, 0.08);
 }
 
 .gradient-text {
@@ -336,8 +336,8 @@ button:not([data-variant]):not([data-variant="outline"]):not([data-variant="ghos
 }
 
 .interactive-hover:hover {
-  transform: translateY(-2px);
-  filter: brightness(1.1);
+  transform: translateY(-1px);
+  filter: brightness(1.05);
 }
 
 /* Secondary button styling */
