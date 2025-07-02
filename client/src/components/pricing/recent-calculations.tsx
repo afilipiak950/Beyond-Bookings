@@ -18,7 +18,7 @@ export default function RecentCalculations() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      await apiRequest("DELETE", `/api/pricing-calculations/${id}`);
+      await apiRequest(`/api/pricing-calculations/${id}`, "DELETE");
     },
     onSuccess: () => {
       toast({

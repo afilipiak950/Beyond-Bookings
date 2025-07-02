@@ -45,7 +45,7 @@ export default function PricingCalculator() {
 
   const scrapeHotelMutation = useMutation({
     mutationFn: async (url: string) => {
-      const response = await apiRequest("POST", "/api/hotels/scrape", { url });
+      const response = await apiRequest("/api/hotels/scrape", "POST", { url });
       return response.json();
     },
     onSuccess: (data) => {
@@ -71,7 +71,7 @@ export default function PricingCalculator() {
 
   const savePricingMutation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await apiRequest("POST", "/api/pricing-calculations", data);
+      const response = await apiRequest("/api/pricing-calculations", "POST", data);
       return response.json();
     },
     onSuccess: () => {

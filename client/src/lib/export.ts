@@ -11,7 +11,7 @@ export async function exportCalculation(options: ExportOptions): Promise<void> {
   
   try {
     const endpoint = format === 'pdf' ? '/api/export/pdf' : '/api/export/excel';
-    const response = await apiRequest('POST', endpoint, { calculationId });
+    const response = await apiRequest(endpoint, 'POST', { calculationId });
     
     // Get the blob from the response
     const blob = await response.blob();
