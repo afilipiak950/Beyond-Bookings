@@ -145,6 +145,12 @@ Changelog:
   - Developed responsive layout with edge-to-edge content display
   - Added AI-powered design elements and real-time status indicators
   - Refined Beyond Bookings branding with optimized sizing and clean aesthetics
+- January 1, 2025. Fixed Settings page functionality and added comprehensive GitHub README
+  - Resolved theme switching issues by using correct theme provider
+  - Added state management for all notification switches with toast feedback
+  - Made admin settings inputs and switches fully functional
+  - Extended session duration to 7 days to prevent development logouts
+  - Created detailed GitHub README with project overview, setup instructions, and documentation
 ```
 
 ## User Preferences
