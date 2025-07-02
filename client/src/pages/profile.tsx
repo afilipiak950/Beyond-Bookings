@@ -13,6 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { 
   User as UserIcon, 
   Mail, 
@@ -230,6 +231,71 @@ export default function Profile() {
 
   const handleLogout = () => {
     window.location.href = "/api/logout";
+  };
+
+  // Export account data mutation
+  const exportDataMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("/api/auth/export-data", "GET");
+      return response;
+    },
+    onSuccess: (data) => {
+      // Create and download the JSON file
+      const jsonData = JSON.stringify(data, null, 2);
+      const blob = new Blob([jsonData], { type: 'application/json' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `account-data-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Export Complete",
+        description: "Your account data has been downloaded successfully.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Export Failed",
+        description: error.message || "Failed to export account data.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete account mutation
+  const deleteAccountMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest("/api/auth/delete-account", "DELETE");
+    },
+    onSuccess: () => {
+      toast({
+        title: "Account Deleted",
+        description: "Your account has been permanently deleted.",
+      });
+      // Redirect to home page after deletion
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 2000);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Deletion Failed",
+        description: error.message || "Failed to delete account.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleExportData = () => {
+    exportDataMutation.mutate();
+  };
+
+  const handleDeleteAccount = () => {
+    deleteAccountMutation.mutate();
   };
 
   return (
@@ -600,14 +666,17 @@ export default function Profile() {
                         </div>
                         <Button 
                           variant="outline"
-                          onClick={() => {
-                            toast({
-                              title: "Export Initiated",
-                              description: "Your account data export has been started. You'll receive a download link shortly.",
-                            });
-                          }}
+                          onClick={handleExportData}
+                          disabled={exportDataMutation.isPending}
                         >
-                          Export Data
+                          {exportDataMutation.isPending ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              Exporting...
+                            </>
+                          ) : (
+                            "Export Data"
+                          )}
                         </Button>
                       </div>
 
@@ -621,18 +690,51 @@ export default function Profile() {
                             Permanently delete your account and all associated data
                           </p>
                         </div>
-                        <Button 
-                          variant="destructive"
-                          onClick={() => {
-                            toast({
-                              title: "Account Deletion",
-                              description: "Please contact support to delete your account.",
-                              variant: "destructive",
-                            });
-                          }}
-                        >
-                          Delete Account
-                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button 
+                              variant="destructive"
+                              disabled={deleteAccountMutation.isPending}
+                            >
+                              {deleteAccountMutation.isPending ? (
+                                <>
+                                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                  Deleting...
+                                </>
+                              ) : (
+                                "Delete Account"
+                              )}
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This action cannot be undone. This will permanently delete your
+                                account and remove all of your data from our servers, including:
+                                <br /><br />
+                                • All your pricing calculations and reports
+                                <br />
+                                • Hotel data and preferences
+                                <br />
+                                • Profile information and settings
+                                <br />
+                                • OCR analysis results and files
+                                <br /><br />
+                                Type "DELETE" in the confirmation box to proceed.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={handleDeleteAccount}
+                                className="bg-red-600 hover:bg-red-700"
+                              >
+                                Yes, Delete My Account
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </div>
                   </CardContent>

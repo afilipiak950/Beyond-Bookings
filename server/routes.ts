@@ -108,6 +108,114 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Export account data endpoint
+  app.get('/api/auth/export-data', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Gather all user data
+      const pricingCalculations = await storage.getPricingCalculations(userId.toString());
+      const ocrAnalyses = await storage.getOcrAnalyses(userId.toString());
+      
+      const exportData = {
+        profile: {
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role,
+          profileImageUrl: user.profileImageUrl,
+          createdAt: user.createdAt,
+          updatedAt: user.updatedAt
+        },
+        pricingCalculations: pricingCalculations.map(calc => ({
+          id: calc.id,
+          hotelName: calc.hotelName,
+          hotelStars: calc.hotelStars,
+          totalRooms: calc.totalRooms,
+          occupancyRate: calc.occupancyRate,
+          averagePrice: calc.averagePrice,
+          voucherPrice: calc.voucherPrice,
+          operationalCosts: calc.operationalCosts,
+          vatRate: calc.vatRate,
+          vatAmount: calc.vatAmount,
+          profitMargin: calc.profitMargin,
+          totalPrice: calc.totalPrice,
+          createdAt: calc.createdAt,
+          updatedAt: calc.updatedAt
+        })),
+        ocrAnalyses: ocrAnalyses.map(analysis => ({
+          id: analysis.id,
+          fileName: analysis.fileName,
+          fileSize: analysis.fileSize,
+          status: analysis.status,
+          extractedText: analysis.extractedText,
+          insights: analysis.insights,
+          processingTime: analysis.processingTime,
+          createdAt: analysis.createdAt,
+          updatedAt: analysis.updatedAt
+        })),
+        exportMetadata: {
+          exportedAt: new Date().toISOString(),
+          totalCalculations: pricingCalculations.length,
+          totalAnalyses: ocrAnalyses.length,
+          version: "1.0"
+        }
+      };
+
+      res.json(exportData);
+    } catch (error) {
+      console.error("Export data error:", error);
+      res.status(500).json({ message: "Failed to export account data" });
+    }
+  });
+
+  // Delete account endpoint
+  app.delete('/api/auth/delete-account', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      
+      // Delete all user data in the correct order to respect foreign key constraints
+      // First delete dependent records
+      const pricingCalculations = await storage.getPricingCalculations(userId.toString());
+      for (const calc of pricingCalculations) {
+        await storage.deletePricingCalculation(calc.id, userId.toString());
+      }
+      
+      const ocrAnalyses = await storage.getOcrAnalyses(userId.toString());
+      for (const analysis of ocrAnalyses) {
+        await storage.deleteOcrAnalysis(analysis.id, userId.toString());
+      }
+      
+      // Finally delete the user account
+      const deleted = await storage.deleteUser(userId);
+      
+      if (!deleted) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Destroy the session
+      req.session.destroy((err: any) => {
+        if (err) {
+          console.error("Session destruction error:", err);
+        }
+      });
+      
+      res.json({ 
+        message: "Account successfully deleted",
+        deletedAt: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error("Delete account error:", error);
+      res.status(500).json({ message: "Failed to delete account" });
+    }
+  });
+
   // Profile update endpoint
   app.put('/api/auth/profile', requireAuth, async (req: any, res) => {
     try {
