@@ -108,6 +108,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Logout endpoint for local authentication
+  app.get('/api/logout', (req: any, res) => {
+    req.session.destroy((err: any) => {
+      if (err) {
+        console.error('Session destruction error:', err);
+        return res.status(500).json({ message: "Failed to logout" });
+      }
+      res.redirect('/');
+    });
+  });
+
   // Export account data endpoint
   app.get('/api/auth/export-data', requireAuth, async (req: any, res) => {
     try {
