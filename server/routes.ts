@@ -78,8 +78,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/auth/user', requireAuth, async (req, res) => {
-    res.json(req.user);
+  app.get('/api/auth/user', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // Profile update endpoint
+  app.put('/api/auth/profile', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { firstName, lastName, profileImageUrl } = req.body;
+
+      const updatedUser = await storage.updateUser(userId, {
+        firstName: firstName || null,
+        lastName: lastName || null,
+        profileImageUrl: profileImageUrl || null
+      });
+
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Profile update error:", error);
+      res.status(500).json({ message: "Failed to update profile" });
+    }
+  });
+
+  // Password change endpoint
+  app.post('/api/auth/change-password', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { currentPassword, newPassword } = req.body;
+
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ message: "Current password and new password are required" });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const isCurrentPasswordValid = await comparePassword(currentPassword, user.password);
+      if (!isCurrentPasswordValid) {
+        return res.status(400).json({ message: "Current password is incorrect" });
+      }
+
+      const hashedNewPassword = await hashPassword(newPassword);
+      await storage.updateUser(userId, { password: hashedNewPassword });
+
+      res.json({ message: "Password changed successfully" });
+    } catch (error) {
+      console.error("Password change error:", error);
+      res.status(500).json({ message: "Failed to change password" });
+    }
   });
 
   app.post('/api/auth/logout', (req, res) => {
