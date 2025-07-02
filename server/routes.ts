@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { requireAuth, hashPassword, comparePassword } from "./localAuth";
@@ -669,6 +669,95 @@ ${analyses.filter(a => a?.insights).map(analysis =>
     } catch (error) {
       console.error("Error exporting report:", error);
       res.status(500).json({ message: "Failed to export report" });
+    }
+  });
+
+  // AI Assistant Chat endpoint
+  app.post("/api/ai/chat", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const { message } = req.body;
+      
+      if (!message || typeof message !== 'string') {
+        return res.status(400).json({ message: "Message is required" });
+      }
+
+      // AI Assistant responses based on message content
+      let response = "";
+      
+      if (message.toLowerCase().includes('pricing') || message.toLowerCase().includes('calculate')) {
+        response = `I can help you with pricing calculations! Here are some key features:
+
+• **VAT Calculations**: Automatic 7% and 19% VAT calculations
+• **Profit Margins**: Real-time margin calculations and optimization
+• **Market Analysis**: Compare your prices against market averages
+• **Export Options**: Generate PDF and Excel reports
+
+Would you like me to guide you through creating a new pricing calculation or explain any specific pricing feature?`;
+      } else if (message.toLowerCase().includes('hotel') || message.toLowerCase().includes('scrape')) {
+        response = `I can assist with hotel data management:
+
+• **URL Scraping**: Extract hotel information from booking sites
+• **Data Storage**: Manage hotel profiles with stars, rooms, and pricing
+• **Integration**: Connect with multiple hotel platforms
+• **Analysis**: Track performance metrics and trends
+
+Try entering a hotel URL in the Pricing Agent to see automatic data extraction in action!`;
+      } else if (message.toLowerCase().includes('export') || message.toLowerCase().includes('pdf') || message.toLowerCase().includes('excel')) {
+        response = `Export functionality includes:
+
+• **PDF Reports**: Professional pricing reports with charts
+• **Excel Spreadsheets**: Detailed calculations with formulas
+• **Data Export**: Account data and calculation history
+• **Custom Formats**: Tailored reports based on your needs
+
+You can export any calculation from the Calculations page or your account data from the Profile section.`;
+      } else if (message.toLowerCase().includes('ocr') || message.toLowerCase().includes('document') || message.toLowerCase().includes('analyze')) {
+        response = `The OCR Analyzer can help you:
+
+• **Document Processing**: Extract text from Excel files and documents
+• **Data Analysis**: Generate insights from uploaded files
+• **Trend Detection**: Identify patterns in your data
+• **Report Generation**: Create summaries and recommendations
+
+Upload any Excel file or document in the OCR Analyzer to get started with automated analysis!`;
+      } else if (message.toLowerCase().includes('help') || message.toLowerCase().includes('guide') || message.toLowerCase().includes('how')) {
+        response = `I'm here to help! Beyond Bookings offers these main features:
+
+🏨 **Pricing Agent**: Calculate hotel pricing with VAT and margins
+📊 **Dashboard**: View analytics and recent calculations  
+🏢 **Hotels**: Manage hotel data and scraping
+📋 **Calculations**: Review and export past calculations
+📄 **OCR Analyzer**: Analyze documents and extract insights
+👤 **Profile**: Manage account settings and preferences
+
+What specific area would you like to explore? I can provide detailed guidance for any feature.`;
+      } else if (message.toLowerCase().includes('account') || message.toLowerCase().includes('profile') || message.toLowerCase().includes('settings')) {
+        response = `Account management features:
+
+• **Profile Settings**: Update personal information and preferences
+• **Password Management**: Change passwords securely
+• **Data Export**: Download all your account data
+• **Theme Options**: Switch between light and dark modes
+• **Session Management**: Control login sessions
+
+Visit the Profile page to access all account management features.`;
+      } else {
+        response = `Thanks for your question! I'm your AI assistant for Beyond Bookings platform. I can help with:
+
+• Pricing calculations and VAT analysis
+• Hotel data management and scraping
+• Document analysis with OCR
+• Export functionality (PDF/Excel)
+• Platform navigation and features
+• Account management
+
+Feel free to ask me anything specific about these features or how to use the platform effectively!`;
+      }
+
+      res.json({ message: response });
+    } catch (error) {
+      console.error("AI Chat error:", error);
+      res.status(500).json({ message: "Failed to process AI request" });
     }
   });
 
