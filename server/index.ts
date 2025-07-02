@@ -1,5 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
+import connectPg from "connect-pg-simple";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
@@ -7,8 +8,17 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Session configuration for local authentication
+// Session configuration for local authentication with PostgreSQL store
+const pgStore = connectPg(session);
+const sessionTtl = 30 * 24 * 60 * 60 * 1000; // 30 days for development
+
 app.use(session({
+  store: new pgStore({
+    conString: process.env.DATABASE_URL,
+    createTableIfMissing: true,
+    ttl: sessionTtl,
+    tableName: "sessions",
+  }),
   secret: process.env.SESSION_SECRET || 'dev-secret-key-change-in-production',
   resave: false,
   saveUninitialized: false,
@@ -16,7 +26,7 @@ app.use(session({
   cookie: {
     secure: false, // Set to true in production with HTTPS
     httpOnly: true,
-    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days for development work
+    maxAge: sessionTtl // 30 days for development work
   }
 }));
 
