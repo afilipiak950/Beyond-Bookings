@@ -193,7 +193,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
                   <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-green-400 to-blue-500 rounded-full animate-pulse" />
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl h-[600px] flex flex-col glass-card border-blue-200/20">
+              <DialogContent className="max-w-2xl h-[600px] flex flex-col bg-white border border-blue-200/30 shadow-2xl">
                 <DialogHeader className="border-b border-blue-200/20 pb-4">
                   <DialogTitle className="flex items-center gap-2">
                     <Bot className="h-5 w-5 text-blue-500" />
@@ -231,12 +231,20 @@ export default function AppLayout({ children }: AppLayoutProps) {
                         <div className={`flex-1 max-w-[80%] ${
                           message.role === 'user' ? 'text-right' : 'text-left'
                         }`}>
-                          <div className={`inline-block px-4 py-2 rounded-lg ${
+                          <div className={`inline-block px-4 py-3 rounded-lg shadow-sm ${
                             message.role === 'user'
                               ? 'bg-blue-500 text-white rounded-br-none'
-                              : 'bg-slate-100 text-slate-900 rounded-bl-none border border-slate-200'
+                              : 'bg-gray-50 text-gray-900 rounded-bl-none border border-gray-200'
                           }`}>
-                            <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                            <div className="text-sm whitespace-pre-wrap prose prose-sm max-w-none"
+                                 dangerouslySetInnerHTML={{
+                                   __html: message.content
+                                     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                                     .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                                     .replace(/•/g, '&bull;')
+                                     .replace(/\n/g, '<br/>')
+                                 }}
+                            />
                           </div>
                           <p className="text-xs text-slate-500 mt-1">
                             {message.timestamp.toLocaleTimeString()}
@@ -262,8 +270,46 @@ export default function AppLayout({ children }: AppLayoutProps) {
                   </div>
                 </ScrollArea>
 
+                {/* Quick Action Buttons */}
+                <div className="border-t border-gray-200 pt-3 pb-2">
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentMessage("How do I calculate pricing with VAT?")}
+                      className="text-xs h-7 px-3 bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
+                    >
+                      💰 Pricing Help
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentMessage("Show me my dashboard analytics")}
+                      className="text-xs h-7 px-3 bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
+                    >
+                      📊 Analytics
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentMessage("How do I export my calculations?")}
+                      className="text-xs h-7 px-3 bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100"
+                    >
+                      📄 Export Guide
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentMessage("Help me upload documents for OCR analysis")}
+                      className="text-xs h-7 px-3 bg-orange-50 border-orange-200 text-orange-700 hover:bg-orange-100"
+                    >
+                      🔍 OCR Help
+                    </Button>
+                  </div>
+                </div>
+
                 {/* Message Input */}
-                <div className="border-t border-blue-200/20 pt-4">
+                <div className="border-t border-gray-200 pt-4">
                   <div className="flex gap-2">
                     <Input
                       placeholder="Ask me anything about your hotel pricing platform..."
@@ -271,12 +317,12 @@ export default function AppLayout({ children }: AppLayoutProps) {
                       onChange={(e) => setCurrentMessage(e.target.value)}
                       onKeyPress={handleKeyPress}
                       disabled={aiChatMutation.isPending}
-                      className="flex-1 glass-card border-blue-200/20"
+                      className="flex-1 bg-white border-gray-200 focus:border-blue-400 focus:ring-blue-400/20"
                     />
                     <Button
                       onClick={handleSendMessage}
                       disabled={!currentMessage.trim() || aiChatMutation.isPending}
-                      className="px-3"
+                      className="px-3 bg-blue-500 hover:bg-blue-600"
                     >
                       {aiChatMutation.isPending ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -285,7 +331,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
                       )}
                     </Button>
                   </div>
-                  <div className="flex items-center justify-between mt-2 text-xs text-slate-500">
+                  <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
                     <span>Press Enter to send, Shift+Enter for new line</span>
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />

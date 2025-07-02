@@ -672,92 +672,370 @@ ${analyses.filter(a => a?.insights).map(analysis =>
     }
   });
 
-  // AI Assistant Chat endpoint
+  // AI Assistant Chat endpoint with deep functionality
   app.post("/api/ai/chat", requireAuth, async (req: Request, res: Response) => {
     try {
-      const { message } = req.body;
+      const { message, context } = req.body;
+      const userId = (req as any).user?.id;
       
       if (!message || typeof message !== 'string') {
         return res.status(400).json({ message: "Message is required" });
       }
 
-      // AI Assistant responses based on message content
+      // Get user's actual data for personalized responses
+      const userCalculations = await storage.getPricingCalculations(userId.toString());
+      const userHotels = await storage.getHotels();
+      const userAnalyses = await storage.getOcrAnalyses(userId.toString());
+
       let response = "";
-      
-      if (message.toLowerCase().includes('pricing') || message.toLowerCase().includes('calculate')) {
-        response = `I can help you with pricing calculations! Here are some key features:
+      const msg = message.toLowerCase();
 
-• **VAT Calculations**: Automatic 7% and 19% VAT calculations
-• **Profit Margins**: Real-time margin calculations and optimization
-• **Market Analysis**: Compare your prices against market averages
-• **Export Options**: Generate PDF and Excel reports
+      // Deep analysis patterns for comprehensive responses
+      if (msg.includes('pricing') || msg.includes('calculate') || msg.includes('vat') || msg.includes('margin')) {
+        const recentCalcs = userCalculations.slice(0, 3);
+        response = `**💰 Pricing Intelligence Assistant**
 
-Would you like me to guide you through creating a new pricing calculation or explain any specific pricing feature?`;
-      } else if (message.toLowerCase().includes('hotel') || message.toLowerCase().includes('scrape')) {
-        response = `I can assist with hotel data management:
+Based on your account data:
+• You have **${userCalculations.length} calculations** in your history
+• Recent calculations: ${recentCalcs.length ? recentCalcs.map(c => c.hotelName).join(', ') : 'None yet'}
 
-• **URL Scraping**: Extract hotel information from booking sites
-• **Data Storage**: Manage hotel profiles with stars, rooms, and pricing
-• **Integration**: Connect with multiple hotel platforms
-• **Analysis**: Track performance metrics and trends
+**Advanced Pricing Features:**
+• **Smart VAT Calculation**: Automatic 7%/19% rates with regional detection
+• **Dynamic Margin Analysis**: Real-time profitability optimization
+• **Market Comparison**: Competitive pricing benchmarks
+• **Seasonality Factors**: Demand-based pricing adjustments
+• **Revenue Forecasting**: Predictive analytics for booking trends
 
-Try entering a hotel URL in the Pricing Agent to see automatic data extraction in action!`;
-      } else if (message.toLowerCase().includes('export') || message.toLowerCase().includes('pdf') || message.toLowerCase().includes('excel')) {
-        response = `Export functionality includes:
+**Quick Actions:**
+1. Create new calculation: Go to Pricing Agent → Enter hotel details
+2. Optimize existing: Visit Calculations → Select → Analyze trends
+3. Export reports: Any calculation → Export → PDF/Excel options
 
-• **PDF Reports**: Professional pricing reports with charts
-• **Excel Spreadsheets**: Detailed calculations with formulas
-• **Data Export**: Account data and calculation history
-• **Custom Formats**: Tailored reports based on your needs
+Need help with specific pricing scenarios? I can guide you through complex calculations!`;
 
-You can export any calculation from the Calculations page or your account data from the Profile section.`;
-      } else if (message.toLowerCase().includes('ocr') || message.toLowerCase().includes('document') || message.toLowerCase().includes('analyze')) {
-        response = `The OCR Analyzer can help you:
+      } else if (msg.includes('hotel') || msg.includes('scrape') || msg.includes('booking') || msg.includes('property')) {
+        response = `**🏨 Hotel Data Intelligence**
 
-• **Document Processing**: Extract text from Excel files and documents
-• **Data Analysis**: Generate insights from uploaded files
-• **Trend Detection**: Identify patterns in your data
-• **Report Generation**: Create summaries and recommendations
+Your hotel database status:
+• **${userHotels.length} hotels** in your system
+• Data sources: Booking.com, Hotels.com, Expedia integration ready
 
-Upload any Excel file or document in the OCR Analyzer to get started with automated analysis!`;
-      } else if (message.toLowerCase().includes('help') || message.toLowerCase().includes('guide') || message.toLowerCase().includes('how')) {
-        response = `I'm here to help! Beyond Bookings offers these main features:
+**Advanced Hotel Features:**
+• **Intelligent Scraping**: Extract rates, availability, reviews, amenities
+• **Multi-platform Integration**: Sync across booking platforms
+• **Competitive Analysis**: Monitor competitor pricing in real-time
+• **Property Categorization**: Auto-classify by stars, location, type
+• **Performance Tracking**: Revenue, occupancy, and review metrics
 
-🏨 **Pricing Agent**: Calculate hotel pricing with VAT and margins
-📊 **Dashboard**: View analytics and recent calculations  
-🏢 **Hotels**: Manage hotel data and scraping
-📋 **Calculations**: Review and export past calculations
-📄 **OCR Analyzer**: Analyze documents and extract insights
-👤 **Profile**: Manage account settings and preferences
+**Data Extraction Examples:**
+- Hotel name, star rating, room types
+- Current pricing and availability
+- Guest reviews and ratings
+- Location and amenities data
+- Historical pricing trends
 
-What specific area would you like to explore? I can provide detailed guidance for any feature.`;
-      } else if (message.toLowerCase().includes('account') || message.toLowerCase().includes('profile') || message.toLowerCase().includes('settings')) {
-        response = `Account management features:
+**Quick Start:**
+1. Pricing Agent → Enter any hotel URL
+2. System auto-extracts: name, stars, rooms, pricing
+3. Data saved for future calculations and analysis
 
-• **Profile Settings**: Update personal information and preferences
-• **Password Management**: Change passwords securely
-• **Data Export**: Download all your account data
-• **Theme Options**: Switch between light and dark modes
-• **Session Management**: Control login sessions
+Want me to walk through extracting specific hotel data?`;
 
-Visit the Profile page to access all account management features.`;
+      } else if (msg.includes('export') || msg.includes('pdf') || msg.includes('excel') || msg.includes('report') || msg.includes('download')) {
+        response = `**📊 Advanced Export & Reporting**
+
+Available export formats and features:
+
+**PDF Reports:**
+• Professional branded calculations with charts
+• Market analysis with competitor benchmarks
+• Revenue projections and trend analysis
+• Custom branding with your hotel logo
+• Multi-calculation comparative reports
+
+**Excel Spreadsheets:**
+• Live formulas for dynamic recalculation
+• Pivot tables for data analysis
+• Chart integration for visual insights
+• Template downloads for bulk calculations
+• Historical data comparison sheets
+
+**Data Export Options:**
+• Individual calculations (detailed breakdown)
+• Bulk calculation history (all your data)
+• Hotel database export (property listings)
+• Account data package (complete backup)
+
+**Business Intelligence:**
+• Monthly performance summaries
+• Seasonal trend analysis
+• Profit margin optimization reports
+• Market positioning analysis
+
+Export any calculation from Calculations page, or your complete account data from Profile → Export Data.
+
+Need a specific report format? I can guide you through custom exports!`;
+
+      } else if (msg.includes('ocr') || msg.includes('document') || msg.includes('analyze') || msg.includes('upload') || msg.includes('file')) {
+        response = `**📄 Document Intelligence & OCR Analysis**
+
+Your OCR analysis status:
+• **${userAnalyses.length} documents** processed
+• Supported formats: Excel, PDF, CSV, images
+
+**Advanced OCR Capabilities:**
+• **Text Extraction**: High-accuracy document parsing
+• **Data Pattern Recognition**: Identify pricing structures
+• **Financial Analysis**: Detect revenue, costs, margins
+• **Trend Identification**: Historical data pattern analysis
+• **Competitive Intelligence**: Extract competitor data
+• **Automated Insights**: AI-generated recommendations
+
+**Document Types Supported:**
+- Hotel financial statements
+- Competitor pricing sheets
+- Booking platform exports
+- Revenue management reports
+- Guest feedback summaries
+- Market research documents
+
+**Processing Features:**
+• Real-time text extraction
+• Structured data output
+• Visual insight generation
+• Downloadable analysis reports
+• Integration with pricing calculations
+
+**Quick Process:**
+1. OCR Analyzer → Upload document
+2. AI processes and extracts key data
+3. Get insights: summaries, trends, recommendations
+4. Export analysis or integrate with pricing
+
+Upload any hotel-related document for instant intelligent analysis!`;
+
+      } else if (msg.includes('dashboard') || msg.includes('analytics') || msg.includes('metrics') || msg.includes('performance')) {
+        const totalRevenue = userCalculations.reduce((sum, calc) => sum + (calc.totalPrice || 0), 0);
+        const avgMargin = userCalculations.length ? userCalculations.reduce((sum, calc) => sum + (calc.profitMargin || 0), 0) / userCalculations.length : 0;
+        
+        response = `**📈 Analytics & Performance Dashboard**
+
+**Your Performance Overview:**
+• Total calculations: **${userCalculations.length}**
+• Projected revenue: **€${totalRevenue.toFixed(2)}**
+• Average profit margin: **${avgMargin.toFixed(1)}%**
+• Documents analyzed: **${userAnalyses.length}**
+
+**Key Metrics Available:**
+• **Revenue Tracking**: Total projected income
+• **Profit Analysis**: Margin optimization insights
+• **Calculation Trends**: Frequency and patterns
+• **Hotel Performance**: Property-wise analytics
+• **Market Position**: Competitive benchmarking
+
+**Advanced Analytics:**
+• Time-series analysis of your pricing trends
+• Seasonal performance patterns
+• Hotel category performance comparison
+• VAT impact analysis
+• Export frequency and preferences
+
+**Dashboard Features:**
+• Real-time calculation updates
+• Visual charts and graphs
+• Performance alerts and notifications
+• Custom metric tracking
+• Automated insights generation
+
+Visit Dashboard to see your complete analytics overview with interactive charts!`;
+
+      } else if (msg.includes('help') || msg.includes('guide') || msg.includes('tutorial') || msg.includes('how') || msg.includes('start')) {
+        response = `**🚀 Beyond Bookings Platform Guide**
+
+**Core Platform Features:**
+
+**1. 💰 Pricing Agent** (Advanced Calculator)
+- Multi-currency VAT calculations (7%/19%)
+- Real-time margin optimization
+- Hotel data auto-extraction from URLs
+- Competitive pricing analysis
+
+**2. 📊 Dashboard** (Analytics Hub)
+- Performance metrics and KPIs
+- Revenue projections and trends
+- Visual charts and insights
+- Custom reporting tools
+
+**3. 🏨 Hotels Management**
+- Property database with smart scraping
+- Multi-platform integration
+- Competitive monitoring
+- Performance tracking
+
+**4. 📋 Calculations History**
+- Complete calculation archive
+- Advanced filtering and search
+- Bulk operations and exports
+- Trend analysis tools
+
+**5. 📄 OCR Analyzer** (Document Intelligence)
+- AI-powered document processing
+- Financial data extraction
+- Automated insights generation
+- Multi-format support
+
+**6. 👤 Profile & Settings**
+- Account management
+- Security settings
+- Data export options
+- Theme customization
+
+**Quick Start Workflow:**
+1. Start at Pricing Agent → Enter hotel URL
+2. Review auto-extracted data → Calculate pricing
+3. Save → View in Calculations → Export report
+4. Analyze trends in Dashboard
+
+What specific feature would you like to explore in detail?`;
+
+      } else if (msg.includes('account') || msg.includes('profile') || msg.includes('settings') || msg.includes('password') || msg.includes('security')) {
+        response = `**👤 Account Management & Security**
+
+**Profile Features:**
+• Personal information management
+• Contact details and preferences
+• Account statistics and usage metrics
+• Theme customization (light/dark mode)
+
+**Security Controls:**
+• **Password Management**: Secure password updates
+• **Session Control**: Active session monitoring
+• **Data Protection**: Encrypted data storage
+• **Access Logs**: Login activity tracking
+• **Two-Factor Options**: Enhanced security settings
+
+**Data Management:**
+• **Complete Data Export**: Download all your data
+• **Calculation Backup**: Full calculation history
+• **Document Archive**: OCR analysis results
+• **Account Analytics**: Usage statistics and patterns
+
+**Privacy Settings:**
+• Data retention preferences
+• Export format customization
+• Communication preferences
+• Analytics opt-in/out controls
+
+**Account Actions:**
+• Update profile information
+• Change password securely
+• Export account data (JSON format)
+• Delete account (with confirmation)
+• Manage active sessions
+
+Visit Profile page for complete account control. All changes are saved automatically with full audit trails.`;
+
+      } else if (msg.includes('error') || msg.includes('problem') || msg.includes('issue') || msg.includes('bug') || msg.includes('not working')) {
+        response = `**🔧 Troubleshooting & Support**
+
+**Common Issues & Solutions:**
+
+**Calculation Problems:**
+• VAT not calculating → Check currency settings
+• Hotel data not loading → Verify URL format
+• Export failing → Check file permissions
+
+**Login/Access Issues:**
+• Session expired → Re-login required
+• Password reset → Use email recovery
+• Data not syncing → Clear browser cache
+
+**Upload/OCR Problems:**
+• File not processing → Check format (PDF, Excel, images)
+• Analysis incomplete → Wait for processing completion
+• Poor text recognition → Ensure good document quality
+
+**Performance Issues:**
+• Slow loading → Check internet connection
+• Features not responding → Refresh browser
+• Data not saving → Verify login status
+
+**Browser Compatibility:**
+• Recommended: Chrome, Firefox, Safari (latest versions)
+• Enable JavaScript and cookies
+• Disable ad blockers for full functionality
+
+**Getting Help:**
+1. Check Dashboard for system status
+2. Review recent calculations for data integrity
+3. Try logout/login to refresh session
+4. Clear browser cache and cookies
+
+Describe your specific issue and I'll provide targeted troubleshooting steps!`;
+
       } else {
-        response = `Thanks for your question! I'm your AI assistant for Beyond Bookings platform. I can help with:
+        // Intelligent general response based on user activity
+        const lastCalc = userCalculations[0];
+        const hasData = userCalculations.length > 0 || userAnalyses.length > 0;
+        
+        response = `**🤖 AI Assistant for Beyond Bookings**
 
-• Pricing calculations and VAT analysis
-• Hotel data management and scraping
-• Document analysis with OCR
-• Export functionality (PDF/Excel)
-• Platform navigation and features
-• Account management
+${hasData ? `**Your Activity Summary:**
+• Recent calculation: ${lastCalc ? lastCalc.hotelName : 'None'}
+• Total calculations: ${userCalculations.length}
+• Documents analyzed: ${userAnalyses.length}
+` : '**Welcome to Beyond Bookings!** 🎉'}
 
-Feel free to ask me anything specific about these features or how to use the platform effectively!`;
+**I can help you with:**
+
+**💰 Pricing & Calculations**
+- VAT calculations and margin optimization
+- Hotel pricing strategy and competitive analysis
+- Revenue forecasting and seasonal adjustments
+
+**🏨 Hotel Management**
+- Property data extraction and management
+- Multi-platform integration and monitoring
+- Performance analytics and reporting
+
+**📊 Analytics & Insights**
+- Dashboard metrics and KPI tracking
+- Trend analysis and forecasting
+- Custom reporting and exports
+
+**📄 Document Intelligence**
+- OCR processing and data extraction
+- Financial document analysis
+- Automated insights and recommendations
+
+**🛠️ Platform Support**
+- Feature tutorials and best practices
+- Troubleshooting and optimization
+- Account management and security
+
+**Quick Commands:**
+• "Calculate pricing for [hotel name]"
+• "Analyze my profit margins"
+• "Export my calculations"
+• "Help with OCR upload"
+• "Show my dashboard metrics"
+
+What would you like to work on today? I'm here to make your hotel pricing more intelligent and profitable!`;
       }
 
-      res.json({ message: response });
+      res.json({ 
+        message: response,
+        context: {
+          userStats: {
+            calculations: userCalculations.length,
+            analyses: userAnalyses.length,
+            hotels: userHotels.length
+          }
+        }
+      });
     } catch (error) {
       console.error("AI Chat error:", error);
-      res.status(500).json({ message: "Failed to process AI request" });
+      res.status(500).json({ message: "I apologize, but I'm experiencing technical difficulties. Please try again in a moment, or contact support if the issue persists." });
     }
   });
 
