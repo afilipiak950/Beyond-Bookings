@@ -16,6 +16,7 @@ import CustomerManagement from "@/pages/customer-management";
 import Reports from "@/pages/reports";
 import Settings from "@/pages/settings";
 import Profile from "@/pages/profile";
+import Workflow from "@/pages/workflow";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -28,6 +29,7 @@ function Router() {
       ) : (
         <>
           <Route path="/" component={Dashboard} />
+          <Route path="/workflow" component={Workflow} />
           <Route path="/pricing-agent" component={PricingAgent} />
           <Route path="/calculations" component={Calculations} />
           <Route path="/ocr-analyzer" component={OCRAnalyzer} />

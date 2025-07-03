@@ -3,14 +3,18 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import AppLayout from "@/components/layout/app-layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
-import { Calculator, TrendingUp, Users, FileText, DollarSign, Building2 } from "lucide-react";
+import { Calculator, TrendingUp, Users, FileText, DollarSign, Building2, Sparkles, BarChart3, ArrowRight, Zap } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import { useLocation } from "wouter";
 
 export default function Dashboard() {
   const { toast } = useToast();
   const { isAuthenticated, isLoading } = useAuth();
+  const [, navigate] = useLocation();
 
   const { data: calculations, isLoading: calculationsLoading } = useQuery({
     queryKey: ["/api/pricing-calculations"],
@@ -63,13 +67,87 @@ export default function Dashboard() {
 
   return (
     <AppLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Dashboard</h1>
-          <p className="text-slate-600 dark:text-slate-400 mt-2">
-            Overview of your pricing intelligence platform
-          </p>
+      <div className="space-y-8">
+        {/* Three-Step Workflow Hero Section */}
+        <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-50 via-white to-green-50 rounded-3xl opacity-60"></div>
+          <div className="relative p-8 glass-card border-blue-200/30 rounded-3xl">
+            <div className="text-center mb-8">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-green-500 rounded-full mb-4">
+                <Sparkles className="h-8 w-8 text-white" />
+              </div>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent mb-3">
+                Hotel Pricing Workflow
+              </h1>
+              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                Complete hotel pricing analysis in three simple steps
+              </p>
+              <Badge className="mt-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0">
+                NEW FEATURE
+              </Badge>
+            </div>
+
+            {/* Three-Step Process */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div className="text-center group">
+                <div className="relative mb-4">
+                  <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full group-hover:bg-blue-200 transition-all duration-300">
+                    <Calculator className="h-8 w-8 text-blue-600" />
+                  </div>
+                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                    1
+                  </div>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Hotel Pricing Calculator</h3>
+                <p className="text-gray-600 text-sm">
+                  Enter hotel details and calculate pricing with VAT, margins, and optimal rates
+                </p>
+              </div>
+
+              <div className="text-center group">
+                <div className="relative mb-4">
+                  <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full group-hover:bg-green-200 transition-all duration-300">
+                    <BarChart3 className="h-8 w-8 text-green-600" />
+                  </div>
+                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                    2
+                  </div>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Price Comparison</h3>
+                <p className="text-gray-600 text-sm">
+                  Compare with local competitors and analyze market positioning
+                </p>
+              </div>
+
+              <div className="text-center group">
+                <div className="relative mb-4">
+                  <div className="inline-flex items-center justify-center w-16 h-16 bg-purple-100 rounded-full group-hover:bg-purple-200 transition-all duration-300">
+                    <FileText className="h-8 w-8 text-purple-600" />
+                  </div>
+                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                    3
+                  </div>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Generate PDF Report</h3>
+                <p className="text-gray-600 text-sm">
+                  Create professional pricing reports with insights and recommendations
+                </p>
+              </div>
+            </div>
+
+            {/* CTA Button */}
+            <div className="text-center">
+              <Button 
+                onClick={() => navigate('/workflow')}
+                size="lg"
+                className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white px-8 py-3 text-lg"
+              >
+                <Zap className="h-5 w-5 mr-2" />
+                Start Pricing Workflow
+                <ArrowRight className="h-5 w-5 ml-2" />
+              </Button>
+            </div>
+          </div>
         </div>
 
         {/* Stats Cards */}

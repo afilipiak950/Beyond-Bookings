@@ -37,6 +37,14 @@ const navigation = [
     gradient: "from-blue-500 to-cyan-500",
   },
   {
+    name: "Pricing Workflow",
+    href: "/workflow",
+    icon: Sparkles,
+    description: "3-step pricing process",
+    gradient: "from-green-500 to-blue-500",
+    badge: "NEW",
+  },
+  {
     name: "AI Pricing Agent",
     href: "/pricing-agent",
     icon: Brain,
@@ -166,12 +174,19 @@ export default function AppSidebar({ className }: SidebarProps) {
                 {/* Navigation Text */}
                 {!isCollapsed && (
                   <div className="flex flex-col items-start flex-1 min-w-0">
-                    <span className={cn(
-                      "font-semibold text-sm transition-all duration-300",
-                      isActive && "gradient-text"
-                    )}>
-                      {item.name}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className={cn(
+                        "font-semibold text-sm transition-all duration-300",
+                        isActive && "gradient-text"
+                      )}>
+                        {item.name}
+                      </span>
+                      {(item as any).badge && (
+                        <Badge className="text-xs bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0 px-1.5 py-0.5">
+                          {(item as any).badge}
+                        </Badge>
+                      )}
+                    </div>
                     <span className="text-xs text-muted-foreground truncate max-w-full">
                       {item.description}
                     </span>
