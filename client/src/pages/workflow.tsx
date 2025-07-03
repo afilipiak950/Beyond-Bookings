@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ChevronRight, Calculator, BarChart3, FileText, Check, ArrowLeft } from "lucide-react";
-import { useLocation } from "wouter";
+import { useLocation, useRoute } from "wouter";
 import AppLayout from "@/components/layout/app-layout";
 
 // Import step components - temporarily creating inline to fix imports
@@ -515,11 +515,23 @@ export default function Workflow() {
       <div className="space-y-6">
         {/* Workflow Header */}
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
-              AI Pricing Agent
-            </h1>
-            <p className="text-gray-600 mt-2">Complete hotel pricing analysis in three steps</p>
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/")}
+              className="flex items-center gap-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Dashboard
+            </Button>
+            <div className="h-6 w-px bg-gray-300" />
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
+                AI Pricing Agent
+              </h1>
+              <p className="text-gray-600 mt-2">Complete hotel pricing analysis in three steps</p>
+            </div>
           </div>
           <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
             Step {currentStep} of {steps.length}
