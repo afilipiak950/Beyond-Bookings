@@ -134,48 +134,301 @@ export default function Workflow() {
     switch (currentStep) {
       case 1:
         return (
-          <Card className="glass-card">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calculator className="h-5 w-5 text-blue-600" />
-                Hotel Pricing Calculator
-              </CardTitle>
-              <CardDescription>
-                Enter hotel details and calculate pricing
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium">Hotel Name</label>
-                  <input 
-                    type="text"
-                    placeholder="Enter hotel name"
-                    className="w-full p-2 border rounded-lg"
-                    value={workflowData.hotelName}
-                    onChange={(e) => updateWorkflowData({ hotelName: e.target.value })}
-                  />
+          <div className="grid grid-cols-2 gap-8">
+            {/* Left Side - Input Form */}
+            <Card className="glass-card">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Calculator className="h-5 w-5 text-blue-600" />
+                  Hotel Information & Pricing Inputs
+                </CardTitle>
+                <CardDescription>
+                  Enter all required details for pricing calculation
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* General Hotel Information */}
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-blue-900 border-b border-blue-200 pb-2">
+                    General Hotel Information
+                  </h3>
+                  <div className="grid grid-cols-1 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">Hotel Name *</label>
+                      <input 
+                        type="text"
+                        placeholder="e.g., Hampton by Hilton Potsdam"
+                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        value={workflowData.hotelName}
+                        onChange={(e) => updateWorkflowData({ hotelName: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">Hotel URL</label>
+                      <input 
+                        type="url"
+                        placeholder="https://example.com/hotel"
+                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        value={workflowData.hotelUrl}
+                        onChange={(e) => updateWorkflowData({ hotelUrl: e.target.value })}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">Category (Stars)</label>
+                        <select 
+                          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          value={workflowData.stars}
+                          onChange={(e) => updateWorkflowData({ stars: parseInt(e.target.value) })}
+                        >
+                          <option value={0}>Select Stars</option>
+                          <option value={1}>1 Star</option>
+                          <option value={2}>2 Stars</option>
+                          <option value={3}>3 Stars</option>
+                          <option value={4}>4 Stars</option>
+                          <option value={5}>5 Stars</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">Room Count</label>
+                        <input 
+                          type="number"
+                          placeholder="e.g., 180"
+                          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          value={workflowData.roomCount}
+                          onChange={(e) => updateWorkflowData({ roomCount: parseInt(e.target.value) || 0 })}
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <label className="text-sm font-medium">Voucher Price (€)</label>
-                  <input 
-                    type="number"
-                    placeholder="100.00"
-                    className="w-full p-2 border rounded-lg"
-                    value={workflowData.voucherPrice}
-                    onChange={(e) => updateWorkflowData({ voucherPrice: parseFloat(e.target.value) || 0 })}
-                  />
+
+                {/* Pricing Information */}
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-green-900 border-b border-green-200 pb-2">
+                    Pricing Information
+                  </h3>
+                  <div className="grid grid-cols-1 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">Average Market Price (€) *</label>
+                      <input 
+                        type="number"
+                        step="0.01"
+                        placeholder="e.g., 120.00"
+                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        value={workflowData.averagePrice}
+                        onChange={(e) => updateWorkflowData({ averagePrice: parseFloat(e.target.value) || 0 })}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">Voucher Price (€) *</label>
+                      <input 
+                        type="number"
+                        step="0.01"
+                        placeholder="e.g., 89.00"
+                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        value={workflowData.voucherPrice}
+                        onChange={(e) => updateWorkflowData({ voucherPrice: parseFloat(e.target.value) || 0 })}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">Operational Costs (€)</label>
+                      <input 
+                        type="number"
+                        step="0.01"
+                        placeholder="e.g., 15.00"
+                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        value={workflowData.operationalCosts}
+                        onChange={(e) => updateWorkflowData({ operationalCosts: parseFloat(e.target.value) || 0 })}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">VAT Rate (%)</label>
+                      <select 
+                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        value={workflowData.vatRate}
+                        onChange={(e) => updateWorkflowData({ vatRate: parseFloat(e.target.value) })}
+                      >
+                        <option value={0.07}>7% (Reduced Rate)</option>
+                        <option value={0.19}>19% (Standard Rate)</option>
+                      </select>
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <Button 
-                onClick={nextStep} 
-                disabled={!workflowData.hotelName || workflowData.voucherPrice <= 0}
-                className="w-full bg-blue-600 hover:bg-blue-700"
-              >
-                Continue to Price Comparison
-              </Button>
-            </CardContent>
-          </Card>
+
+                <Button 
+                  onClick={() => {
+                    // Calculate results before moving to next step
+                    const netPrice = workflowData.voucherPrice - workflowData.operationalCosts;
+                    const vatAmount = netPrice * workflowData.vatRate;
+                    const totalPrice = netPrice + vatAmount;
+                    const profitMargin = netPrice - workflowData.operationalCosts;
+                    const discountVsMarket = workflowData.averagePrice - workflowData.voucherPrice;
+                    const marginPercentage = (profitMargin / workflowData.voucherPrice) * 100;
+                    const discountPercentage = (discountVsMarket / workflowData.averagePrice) * 100;
+
+                    updateWorkflowData({
+                      calculationResult: {
+                        vatAmount,
+                        profitMargin,
+                        totalPrice,
+                        discountVsMarket,
+                        marginPercentage,
+                        discountPercentage
+                      }
+                    });
+                    nextStep();
+                  }}
+                  disabled={!workflowData.hotelName || workflowData.voucherPrice <= 0 || workflowData.averagePrice <= 0}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3"
+                >
+                  Calculate & Continue to Price Comparison
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Right Side - Live Calculation Output */}
+            <Card className="glass-card">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5 text-green-600" />
+                  Live Calculation Results
+                </CardTitle>
+                <CardDescription>
+                  Real-time pricing calculations and analysis
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Offer-relevant Information */}
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-blue-900 border-b border-blue-200 pb-2">
+                    Offer-relevant Information
+                  </h3>
+                  <div className="bg-blue-50 p-4 rounded-lg space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium">Effective Hotel Price</span>
+                      <span className="text-lg font-bold text-blue-800">
+                        €{workflowData.voucherPrice ? workflowData.voucherPrice.toFixed(2) : '0.00'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span>65% of average market price</span>
+                      <span className="text-green-600 font-semibold">
+                        {workflowData.averagePrice > 0 ? 
+                          `${((workflowData.voucherPrice / workflowData.averagePrice) * 100).toFixed(0)}%` : 
+                          '0%'
+                        }
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Discount Information */}
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-red-900 border-b border-red-200 pb-2">
+                    Discount Information
+                  </h3>
+                  <div className="bg-red-50 p-4 rounded-lg space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium">Discount vs Market</span>
+                      <span className="text-lg font-bold text-red-800">
+                        -€{workflowData.averagePrice > 0 ? 
+                          (workflowData.averagePrice - workflowData.voucherPrice).toFixed(2) : 
+                          '0.00'
+                        }
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span>Discount Percentage</span>
+                      <span className="text-red-600 font-semibold">
+                        {workflowData.averagePrice > 0 ? 
+                          `${(((workflowData.averagePrice - workflowData.voucherPrice) / workflowData.averagePrice) * 100).toFixed(1)}%` : 
+                          '0%'
+                        }
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* VAT Calculation */}
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-green-900 border-b border-green-200 pb-2">
+                    VAT Calculation
+                  </h3>
+                  <div className="bg-green-50 p-4 rounded-lg space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium">Net Price</span>
+                      <span className="text-lg font-bold text-green-800">
+                        €{workflowData.voucherPrice ? 
+                          (workflowData.voucherPrice - workflowData.operationalCosts).toFixed(2) : 
+                          '0.00'
+                        }
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span>VAT ({(workflowData.vatRate * 100).toFixed(0)}%)</span>
+                      <span className="text-green-600 font-semibold">
+                        €{workflowData.voucherPrice ? 
+                          ((workflowData.voucherPrice - workflowData.operationalCosts) * workflowData.vatRate).toFixed(2) : 
+                          '0.00'
+                        }
+                      </span>
+                    </div>
+                    <div className="border-t pt-2 flex justify-between items-center font-bold">
+                      <span>Total incl. VAT</span>
+                      <span className="text-lg text-green-800">
+                        €{workflowData.voucherPrice ? 
+                          ((workflowData.voucherPrice - workflowData.operationalCosts) * (1 + workflowData.vatRate)).toFixed(2) : 
+                          '0.00'
+                        }
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Profit Analysis */}
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-purple-900 border-b border-purple-200 pb-2">
+                    Profit Analysis
+                  </h3>
+                  <div className="bg-purple-50 p-4 rounded-lg space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium">Net Profit</span>
+                      <span className="text-lg font-bold text-purple-800">
+                        €{workflowData.voucherPrice ? 
+                          (workflowData.voucherPrice - workflowData.operationalCosts).toFixed(2) : 
+                          '0.00'
+                        }
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span>Profit Margin</span>
+                      <span className="text-purple-600 font-semibold">
+                        {workflowData.voucherPrice > 0 ? 
+                          `${(((workflowData.voucherPrice - workflowData.operationalCosts) / workflowData.voucherPrice) * 100).toFixed(1)}%` : 
+                          '0%'
+                        }
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Recommendation */}
+                <div className="bg-gradient-to-r from-blue-50 to-green-50 p-4 rounded-lg border border-blue-200">
+                  <h4 className="font-semibold text-gray-800 mb-2">💡 Recommendation</h4>
+                  <p className="text-sm text-gray-600">
+                    {workflowData.voucherPrice > 0 && workflowData.averagePrice > 0 ? 
+                      (workflowData.voucherPrice < workflowData.averagePrice * 0.8 ? 
+                        "Excellent discount offering significant savings to customers. Consider highlighting this competitive advantage." :
+                        "Moderate discount. Consider adjusting pricing strategy for better market positioning."
+                      ) : 
+                      "Enter pricing data to receive personalized recommendations."
+                    }
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         );
       case 2:
         return (
