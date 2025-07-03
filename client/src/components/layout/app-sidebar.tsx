@@ -37,7 +37,7 @@ const navigation = [
     gradient: "from-blue-500 to-cyan-500",
   },
   {
-    name: "Pricing Workflow",
+    name: "Pricing Agent",
     href: "/workflow",
     icon: Sparkles,
     description: "3-step pricing process",

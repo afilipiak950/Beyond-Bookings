@@ -517,7 +517,7 @@ export default function Workflow() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
-              Hotel Pricing Workflow
+              AI Pricing Agent
             </h1>
             <p className="text-gray-600 mt-2">Complete hotel pricing analysis in three steps</p>
           </div>
