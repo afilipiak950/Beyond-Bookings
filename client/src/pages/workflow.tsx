@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ChevronRight, Calculator, BarChart3, FileText, Check, ArrowLeft } from "lucide-react";
 import { useLocation } from "wouter";
+import AppLayout from "@/components/layout/app-layout";
 
 // Import step components - temporarily creating inline to fix imports
 // import PricingCalculatorStep from "@/components/workflow/pricing-calculator-step";
@@ -257,88 +258,85 @@ export default function Workflow() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
-      {/* Header */}
-      <div className="bg-white/80 backdrop-blur-sm border-b border-blue-200/30 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate("/")}
-                className="flex items-center gap-2 text-gray-600 hover:text-blue-600"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Back to Dashboard
-              </Button>
-              <div className="h-6 w-px bg-gray-300" />
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
-                Hotel Pricing Workflow
-              </h1>
-            </div>
-            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-              Step {currentStep} of {steps.length}
-            </Badge>
+    <AppLayout>
+      <div className="space-y-6">
+        {/* Workflow Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
+              Hotel Pricing Workflow
+            </h1>
+            <p className="text-gray-600 mt-2">Complete hotel pricing analysis in three steps</p>
           </div>
+          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+            Step {currentStep} of {steps.length}
+          </Badge>
         </div>
-      </div>
 
-      {/* Progress Steps */}
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
+        {/* Progress Steps */}
+        <div className="space-y-6">
+          {/* Step Progress Indicator */}
+          <div className="flex items-center justify-between">
             {steps.map((step, index) => (
-              <div key={step.id} className="flex items-center">
+              <div key={step.id} className="flex items-center flex-1">
                 {/* Step Circle */}
-                <div
-                  className={`relative flex items-center justify-center w-12 h-12 rounded-full border-2 transition-all duration-300 cursor-pointer ${
-                    currentStep === step.id
-                      ? `bg-${step.color}-500 border-${step.color}-500 text-white shadow-lg`
-                      : currentStep > step.id
-                      ? `bg-green-500 border-green-500 text-white`
-                      : canProceedToStep(step.id)
-                      ? `border-${step.color}-300 text-${step.color}-600 hover:border-${step.color}-400`
-                      : 'border-gray-300 text-gray-400'
-                  }`}
-                  onClick={() => canProceedToStep(step.id) && goToStep(step.id)}
-                >
-                  {currentStep > step.id ? (
-                    <Check className="h-6 w-6" />
-                  ) : (
-                    <step.icon className="h-6 w-6" />
-                  )}
-                  
-                  {/* Step glow effect */}
-                  {currentStep === step.id && (
-                    <div className={`absolute inset-0 rounded-full bg-${step.color}-500 opacity-20 animate-ping`} />
-                  )}
+                <div className="flex flex-col items-center">
+                  <div
+                    className={`relative flex items-center justify-center w-12 h-12 rounded-full border-2 transition-all duration-300 cursor-pointer ${
+                      currentStep === step.id
+                        ? 'bg-blue-500 border-blue-500 text-white shadow-lg'
+                        : currentStep > step.id
+                        ? 'bg-green-500 border-green-500 text-white'
+                        : canProceedToStep(step.id)
+                        ? 'border-blue-300 text-blue-600 hover:border-blue-400'
+                        : 'border-gray-300 text-gray-400'
+                    }`}
+                    onClick={() => canProceedToStep(step.id) && goToStep(step.id)}
+                  >
+                    {currentStep > step.id ? (
+                      <Check className="h-6 w-6" />
+                    ) : (
+                      <step.icon className="h-6 w-6" />
+                    )}
+                    
+                    {/* Step glow effect */}
+                    {currentStep === step.id && (
+                      <div className="absolute inset-0 rounded-full bg-blue-500 opacity-20 animate-ping" />
+                    )}
+                  </div>
+
+                  {/* Step Label */}
+                  <div className="mt-2 text-center">
+                    <h3 className={`text-sm font-semibold ${
+                      currentStep >= step.id ? 'text-gray-900' : 'text-gray-500'
+                    }`}>
+                      {step.title}
+                    </h3>
+                    <p className={`text-xs ${
+                      currentStep >= step.id ? 'text-gray-600' : 'text-gray-400'
+                    }`}>
+                      {step.description}
+                    </p>
+                  </div>
                 </div>
 
-                {/* Step Label */}
-                <div className="ml-4 min-w-0 flex-1">
-                  <h3 className={`text-sm font-semibold ${
-                    currentStep >= step.id ? 'text-gray-900' : 'text-gray-500'
-                  }`}>
-                    {step.title}
-                  </h3>
-                  <p className={`text-xs ${
-                    currentStep >= step.id ? 'text-gray-600' : 'text-gray-400'
-                  }`}>
-                    {step.description}
-                  </p>
-                </div>
-
-                {/* Arrow */}
+                {/* Connection Line */}
                 {index < steps.length - 1 && (
-                  <ChevronRight className="h-5 w-5 text-gray-400 mx-4" />
+                  <div className="flex-1 h-0.5 bg-gray-200 mx-4 relative">
+                    <div 
+                      className="h-full bg-gradient-to-r from-blue-500 to-green-500 transition-all duration-500"
+                      style={{ 
+                        width: currentStep > step.id ? '100%' : currentStep === step.id ? '50%' : '0%' 
+                      }}
+                    />
+                  </div>
                 )}
               </div>
             ))}
           </div>
 
           {/* Progress Bar */}
-          <div className="w-full bg-gray-200 rounded-full h-2 mb-6">
+          <div className="w-full bg-gray-200 rounded-full h-2">
             <div
               className="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full transition-all duration-500 ease-out"
               style={{ width: `${progress}%` }}
@@ -351,6 +349,6 @@ export default function Workflow() {
           {renderStepContent()}
         </div>
       </div>
-    </div>
+    </AppLayout>
   );
 }
