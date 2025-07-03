@@ -518,12 +518,12 @@ export default function Workflow() {
           {/* Back Button - Positioned Absolutely */}
           <Button
             variant="ghost"
-            size="sm"
+            size="xs"
             onClick={() => navigate("/")}
-            className="absolute left-0 top-0 flex items-center gap-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50"
+            className="absolute right-0 top-0 flex items-center gap-1 text-gray-500 hover:text-blue-600 hover:bg-blue-50 text-xs px-2 py-1"
           >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Dashboard
+            <ArrowLeft className="h-3 w-3" />
+            Back
           </Button>
           
           {/* Centered Title and Badge */}
