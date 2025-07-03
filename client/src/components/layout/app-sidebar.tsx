@@ -44,13 +44,7 @@ const navigation = [
     gradient: "from-green-500 to-blue-500",
     badge: "NEW",
   },
-  {
-    name: "AI Pricing Agent",
-    href: "/pricing-agent",
-    icon: Brain,
-    description: "Intelligent pricing calculator",
-    gradient: "from-purple-500 to-pink-500",
-  },
+
   {
     name: "Calculations",
     href: "/calculations",

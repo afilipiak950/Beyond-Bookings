@@ -9,7 +9,7 @@ import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
 import Login from "@/pages/login";
 import Dashboard from "@/pages/dashboard";
-import PricingAgent from "@/pages/pricing-agent";
+
 import Calculations from "@/pages/calculations";
 import OCRAnalyzer from "@/pages/ocr-analyzer";
 import CustomerManagement from "@/pages/customer-management";
@@ -30,7 +30,6 @@ function Router() {
         <>
           <Route path="/" component={Dashboard} />
           <Route path="/workflow" component={Workflow} />
-          <Route path="/pricing-agent" component={PricingAgent} />
           <Route path="/calculations" component={Calculations} />
           <Route path="/ocr-analyzer" component={OCRAnalyzer} />
           <Route path="/customer-management" component={CustomerManagement} />
