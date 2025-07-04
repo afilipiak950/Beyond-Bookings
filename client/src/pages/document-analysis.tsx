@@ -12,6 +12,7 @@ import {
   TrendingUp, 
   DollarSign, 
   FileSpreadsheet,
+  Folder,
   Zap,
   Brain,
   Download,
@@ -374,7 +375,7 @@ export default function DocumentAnalysis() {
                               </Badge>
                               {upload.extractedFiles && (
                                 <Badge variant="outline">
-                                  {upload.extractedFiles.length} Dateien extrahiert
+                                  {Array.isArray(upload.extractedFiles) ? upload.extractedFiles.length : 0} Dateien extrahiert
                                 </Badge>
                               )}
                             </div>
@@ -391,6 +392,48 @@ export default function DocumentAnalysis() {
                           </Button>
                         </div>
                       </div>
+
+                      {/* Detailed File Structure Display */}
+                      {upload.extractedFiles && Array.isArray(upload.extractedFiles) && upload.extractedFiles.length > 0 && (
+                        <div className="mt-6 border-t border-gray-200/50 pt-4">
+                          <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                            <Folder className="h-4 w-4 text-blue-600" />
+                            Extrahierte Ordnerstruktur
+                          </h4>
+                          <div className="space-y-3">
+                            {upload.extractedFiles.map((fileInfo: any, index: number) => (
+                              <div key={index} className="bg-gray-50/50 rounded-lg p-4 border border-gray-200/30">
+                                <div className="flex items-center gap-3 mb-2">
+                                  <FileSpreadsheet className="h-5 w-5 text-green-600 flex-shrink-0" />
+                                  <div className="flex-1">
+                                    <h5 className="font-medium text-gray-900">{fileInfo.fileName}</h5>
+                                    <p className="text-sm text-gray-600">
+                                      {fileInfo.fileType || 'Excel'} • {fileInfo.folderPath || 'Root'}
+                                    </p>
+                                  </div>
+                                </div>
+                                
+                                {fileInfo.worksheets && Array.isArray(fileInfo.worksheets) && fileInfo.worksheets.length > 0 && (
+                                  <div className="ml-8 space-y-1">
+                                    <p className="text-xs font-medium text-gray-700 mb-2">Arbeitsblätter:</p>
+                                    {fileInfo.worksheets.map((worksheet: any, wsIndex: number) => (
+                                      <div key={wsIndex} className="flex items-center gap-2 text-sm text-gray-600">
+                                        <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                                        <span>{typeof worksheet === 'string' ? worksheet : worksheet.name}</span>
+                                        {typeof worksheet === 'object' && worksheet.rowCount && (
+                                          <Badge variant="secondary" className="text-xs">
+                                            {worksheet.rowCount} Zeilen
+                                          </Badge>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 ))}
