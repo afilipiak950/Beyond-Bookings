@@ -546,7 +546,7 @@ export default function Workflow() {
                     {/* 65% Calculation - Floating Card */}
                     <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-white/50 to-gray-50/30 backdrop-blur-xl border border-white/30 shadow-lg transition-all duration-300">
                       <div className="absolute inset-0 bg-gradient-to-r from-gray-400/5 via-transparent to-gray-500/5 animate-gradient-x"></div>
-                      <div className="absolute top-1 right-1 w-1 h-1 bg-gray-400 rounded-full animate-ping opacity-40"></div>
+                      <div className="absolute top-1 right-1 w-2 h-2 bg-gray-400 rounded-full animate-ping opacity-40"></div>
                       <div className="relative p-3 flex justify-between items-center">
                         <div className="flex items-center space-x-2">
                           <div className="w-2 h-2 rounded-full bg-gradient-to-r from-gray-400 to-gray-500 animate-pulse shadow-md shadow-gray-400/30"></div>
@@ -564,7 +564,7 @@ export default function Workflow() {
                     <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-red-50/40 to-rose-100/30 backdrop-blur-xl border border-red-200/40 shadow-lg transition-all duration-300">
                       <div className="absolute inset-0 bg-gradient-to-r from-red-400/10 via-transparent to-rose-500/10 animate-gradient-x"></div>
                       <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-red-500 to-rose-500 animate-pulse"></div>
-                      <div className="absolute top-1 right-1 w-1 h-1 bg-red-400 rounded-full animate-ping opacity-60"></div>
+                      <div className="absolute top-1 right-1 w-2 h-2 bg-red-400 rounded-full animate-ping opacity-60"></div>
                       <div className="relative p-3">
                         <div className="flex justify-between items-center">
                           <div className="flex items-center space-x-2">
@@ -741,16 +741,16 @@ export default function Workflow() {
                     <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/10 to-transparent group-hover:via-white/20 transition-all duration-500"></div>
                     
                     {/* Enhanced floating particles */}
-                    <div className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping opacity-60"></div>
-                    <div className="absolute bottom-2 left-2 w-1 h-1 rounded-full bg-red-400 animate-bounce opacity-50"></div>
-                    <div className="absolute top-1/2 left-1/3 w-1 h-1 rounded-full bg-rose-300 animate-ping animation-delay-1000 opacity-40"></div>
+                    <div className="absolute top-1 right-1 w-2 h-2 rounded-full bg-rose-500 animate-ping opacity-60"></div>
+                    <div className="absolute bottom-2 left-2 w-2 h-2 rounded-full bg-red-400 animate-bounce opacity-50"></div>
+                    <div className="absolute top-1/2 left-1/3 w-2 h-2 rounded-full bg-rose-300 animate-ping animation-delay-1000 opacity-40"></div>
                     
                     <div className="relative">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
                           <div className="relative">
-                            <div className="w-3 h-3 rounded-full bg-gradient-to-r from-rose-500 to-red-600 animate-pulse shadow-xl shadow-rose-500/60"></div>
-                            <div className="absolute inset-0 w-3 h-3 rounded-full bg-rose-400 animate-ping opacity-30"></div>
+                            <div className="w-2 h-2 rounded-full bg-gradient-to-r from-rose-500 to-red-600 animate-pulse shadow-xl shadow-rose-500/60"></div>
+                            <div className="absolute inset-0 w-2 h-2 rounded-full bg-rose-400 animate-ping opacity-30"></div>
                           </div>
                           <span className="text-sm font-black bg-gradient-to-r from-rose-800 to-red-700 bg-clip-text text-transparent">
                             Finanzierung: Projektkosten brutto
@@ -782,9 +782,9 @@ export default function Workflow() {
                   <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/10 to-transparent group-hover:via-white/15 transition-all duration-500"></div>
                   
                   {/* Floating Elements */}
-                  <div className="absolute top-2 right-2 w-1 h-1 bg-blue-400 rounded-full animate-ping opacity-50"></div>
-                  <div className="absolute bottom-2 left-2 w-1 h-1 bg-green-400 rounded-full animate-bounce opacity-60"></div>
-                  <div className="absolute top-1/3 right-1/3 w-0.5 h-0.5 bg-purple-400 rounded-full animate-pulse opacity-40"></div>
+                  <div className="absolute top-2 right-2 w-2 h-2 bg-blue-400 rounded-full animate-ping opacity-50"></div>
+                  <div className="absolute bottom-2 left-2 w-2 h-2 bg-green-400 rounded-full animate-bounce opacity-60"></div>
+                  <div className="absolute top-1/3 right-1/3 w-2 h-2 bg-purple-400 rounded-full animate-pulse opacity-40"></div>
                   
                   <div className="relative">
                     <div className="flex items-center space-x-3 mb-3">
