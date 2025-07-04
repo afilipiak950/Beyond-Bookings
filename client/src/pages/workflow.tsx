@@ -258,84 +258,67 @@ export default function Workflow() {
                   Echtzeitberechnungen und Analyse
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Hotel Information */}
-                <div className="space-y-4">
-                  <h3 className="font-semibold text-blue-900 border-b border-blue-200 pb-2">
-                    Hotel-Informationen
-                  </h3>
-                  <div className="bg-blue-50 p-4 rounded-lg space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium">Hotel</span>
-                      <span className="text-lg font-bold text-blue-800">
-                        {workflowData.hotelName || 'Nicht angegeben'}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center text-sm">
-                      <span>Kategorie</span>
-                      <span className="text-blue-600 font-semibold">
-                        {workflowData.stars > 0 ? `${workflowData.stars} Sterne` : 'Nicht ausgewählt'}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center text-sm">
-                      <span>Zimmeranzahl</span>
-                      <span className="text-blue-600 font-semibold">
-                        {workflowData.roomCount || 0}
-                      </span>
-                    </div>
+              <CardContent className="space-y-4">
+                {/* Calculation Results Table */}
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center py-2 border-b border-gray-200">
+                    <span className="text-sm font-medium">Realistischer Hotelverkaufspreis</span>
+                    <span className="text-lg font-bold text-black">
+                      {workflowData.averagePrice ? `${workflowData.averagePrice.toFixed(2)} €` : '0.00 €'}
+                    </span>
                   </div>
-                </div>
-
-                {/* Occupancy Analysis */}
-                <div className="space-y-4">
-                  <h3 className="font-semibold text-green-900 border-b border-green-200 pb-2">
-                    Auslastungsanalyse
-                  </h3>
-                  <div className="bg-green-50 p-4 rounded-lg space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium">Auslastung</span>
-                      <span className="text-lg font-bold text-green-800">
-                        {workflowData.occupancyRate ? `${workflowData.occupancyRate}%` : '0%'}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center text-sm">
-                      <span>Verfügbare Roomnights</span>
-                      <span className="text-green-600 font-semibold">
-                        {Math.floor(workflowData.roomCount * 365 * (1 - workflowData.occupancyRate / 100)).toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center text-sm">
-                      <span>Adressierbare Roomnights</span>
-                      <span className="text-green-600 font-semibold">
-                        {Math.min(Math.floor((workflowData.roomCount * 365) * 0.15), 1000).toLocaleString()}
-                      </span>
-                    </div>
+                  
+                  <div className="flex justify-between items-center py-2 border-b border-gray-200">
+                    <span className="text-sm font-medium">65% des durchschnittlichen Zimmerpreises</span>
+                    <span className="text-lg font-bold text-black">
+                      {workflowData.averagePrice ? (workflowData.averagePrice * 0.65).toFixed(0) : '0'}
+                    </span>
                   </div>
-                </div>
-
-                {/* Pricing Analysis */}
-                <div className="space-y-4">
-                  <h3 className="font-semibold text-purple-900 border-b border-purple-200 pb-2">
-                    Preisanalyse
-                  </h3>
-                  <div className="bg-purple-50 p-4 rounded-lg space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium">Durchschnittspreis</span>
-                      <span className="text-lg font-bold text-purple-800">
-                        €{workflowData.averagePrice ? workflowData.averagePrice.toFixed(2) : '0.00'}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center text-sm">
-                      <span>Status</span>
-                      <span className="text-purple-600 font-semibold">
-                        {workflowData.averagePrice > 0 ? 'Bereit für Analyse' : 'Preis eingeben'}
-                      </span>
-                    </div>
+                  
+                  <div className="flex justify-between items-center py-2 border-b border-gray-200">
+                    <span className="text-sm font-medium">Gutscheinwert für Hotel</span>
+                    <span className="text-lg font-bold text-red-600">
+                      {workflowData.averagePrice ? (workflowData.averagePrice * 0.65).toFixed(2) : '0.00'}
+                    </span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center py-2 border-b border-gray-200">
+                    <span className="text-sm font-medium">Marge nach Steuern</span>
+                    <span className="text-lg font-bold text-green-600">
+                      {workflowData.averagePrice ? `${((workflowData.averagePrice - (workflowData.averagePrice * 0.65)) / workflowData.averagePrice * 100).toFixed(0)}%` : '0%'}
+                    </span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center py-2 border-b border-gray-200">
+                    <span className="text-sm font-medium">Zahlung von Tripz Estimate</span>
+                    <span className="text-lg font-bold text-black">
+                      {workflowData.averagePrice ? (workflowData.averagePrice * 0.75).toFixed(2) + ' €' : '0.00 €'}
+                    </span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center py-2 border-b border-gray-200">
+                    <span className="text-sm font-medium">Vertragsvolumen Estimate</span>
+                    <span className="text-lg font-bold text-blue-600">
+                      {workflowData.roomCount && workflowData.averagePrice ? 
+                        (Math.min(Math.floor((workflowData.roomCount * 365) * 0.15), 1000) * workflowData.averagePrice * 0.75).toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €' : 
+                        '0.00 €'
+                      }
+                    </span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center py-2 bg-red-50 px-3 rounded">
+                    <span className="text-sm font-medium text-red-800">Finanzierung: Projektkosten brutto</span>
+                    <span className="text-lg font-bold text-red-600">
+                      {workflowData.roomCount && workflowData.averagePrice ? 
+                        (Math.min(Math.floor((workflowData.roomCount * 365) * 0.15), 1000) * workflowData.averagePrice * 0.65).toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €' : 
+                        '0.00 €'
+                      }
+                    </span>
                   </div>
                 </div>
 
                 {/* Summary */}
-                <div className="bg-gradient-to-r from-blue-50 to-green-50 p-4 rounded-lg border border-blue-200">
+                <div className="bg-gradient-to-r from-blue-50 to-green-50 p-4 rounded-lg border border-blue-200 mt-6">
                   <h4 className="font-semibold text-gray-800 mb-2">📊 Zusammenfassung</h4>
                   <p className="text-sm text-gray-600">
                     {workflowData.hotelName && workflowData.averagePrice > 0 ? 
