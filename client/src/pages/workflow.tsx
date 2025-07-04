@@ -83,7 +83,7 @@ export default function Workflow() {
     hotelName: "",
     stars: 0,
     roomCount: 0,
-    occupancyRate: 0,
+    occupancyRate: 70,
     averagePrice: 0
   });
 
