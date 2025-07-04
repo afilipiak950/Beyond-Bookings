@@ -14,6 +14,7 @@ import AppLayout from "@/components/layout/app-layout";
 
 export interface WorkflowData {
   // Step 1: Hotel Pricing Calculator
+  date?: string;
   hotelName: string;
   hotelUrl: string;
   stars: number;
@@ -82,6 +83,7 @@ export default function Workflow() {
   const [, navigate] = useLocation();
   const [currentStep, setCurrentStep] = useState(1);
   const [workflowData, setWorkflowData] = useState<WorkflowData>({
+    date: new Date().toISOString().split('T')[0], // Default to today's date
     hotelName: "",
     hotelUrl: "",
     stars: 0,
@@ -90,7 +92,7 @@ export default function Workflow() {
     averagePrice: 0,
     voucherPrice: 0,
     operationalCosts: 0,
-    vatRate: 19
+    vatRate: 0.07
   });
 
   const progress = ((currentStep - 1) / (steps.length - 1)) * 100;
@@ -154,6 +156,15 @@ export default function Workflow() {
                   </h3>
                   <div className="grid grid-cols-1 gap-4">
                     <div>
+                      <label className="text-sm font-medium text-gray-700">Date *</label>
+                      <input 
+                        type="date"
+                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        value={workflowData.date || ''}
+                        onChange={(e) => updateWorkflowData({ date: e.target.value })}
+                      />
+                    </div>
+                    <div>
                       <label className="text-sm font-medium text-gray-700">Hotel Name *</label>
                       <input 
                         type="text"
@@ -200,6 +211,39 @@ export default function Workflow() {
                         />
                       </div>
                     </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">Occupancy Rate (%)</label>
+                      <input 
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        max="100"
+                        placeholder="e.g., 75.5"
+                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        value={workflowData.occupancyRate}
+                        onChange={(e) => updateWorkflowData({ occupancyRate: parseFloat(e.target.value) || 0 })}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">Available Room Nights</label>
+                      <input 
+                        type="number"
+                        placeholder="Calculated: Room Count × 365"
+                        className="w-full p-3 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        value={workflowData.roomCount * 365}
+                        readOnly
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">Addressable Room Nights (15%, max. 1,000)</label>
+                      <input 
+                        type="number"
+                        placeholder="Calculated automatically"
+                        className="w-full p-3 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        value={Math.min(Math.floor((workflowData.roomCount * 365) * 0.15), 1000)}
+                        readOnly
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -210,7 +254,7 @@ export default function Workflow() {
                   </h3>
                   <div className="grid grid-cols-1 gap-4">
                     <div>
-                      <label className="text-sm font-medium text-gray-700">Average Market Price (€) *</label>
+                      <label className="text-sm font-medium text-gray-700">Average Room Price (Google Research) (€) *</label>
                       <input 
                         type="number"
                         step="0.01"
@@ -518,7 +562,7 @@ export default function Workflow() {
           {/* Back Button - Positioned Absolutely */}
           <Button
             variant="ghost"
-            size="xs"
+            size="sm"
             onClick={() => navigate("/")}
             className="absolute right-0 top-0 flex items-center gap-1 text-gray-500 hover:text-blue-600 hover:bg-blue-50 text-xs px-2 py-1"
           >
