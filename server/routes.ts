@@ -1150,7 +1150,7 @@ What would you like to work on today? I'm here to make your hotel pricing more i
           // Create cross-document insights
           await storage.createDocumentInsight({
             userId,
-            uploadId: upload.id,
+            analysisIds: [],
             insightType: 'cross_document',
             title: 'Multi-Document Pricing Analysis',
             description: 'Comprehensive analysis across all uploaded documents revealing pricing trends and optimization opportunities.',

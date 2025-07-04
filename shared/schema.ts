@@ -272,7 +272,7 @@ export const documentAnalyses = pgTable("document_analyses", {
 export const documentInsights = pgTable("document_insights", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id").notNull(),
-  analysisIds: jsonb("analysis_ids").notNull(), // Array of analysis IDs used for this insight
+  analysisIds: jsonb("analysis_ids"), // Array of analysis IDs used for this insight (nullable)
   insightType: varchar("insight_type").notNull(), // 'price_average', 'trend_analysis', 'comparison'
   title: varchar("title").notNull(),
   description: text("description"),
