@@ -174,6 +174,14 @@ Changelog:
   - Redesigned dashboard to prominently feature workflow as main entry point
   - Implemented step-by-step progress tracking with visual indicators and state management
   - Created responsive workflow interface consistent with Beyond Bookings branding
+- January 4, 2025. Complete rebuild as AI-powered document analysis SaaS platform
+  - Pivoted from hotel pricing calculator to comprehensive document analysis system
+  - Implemented ZIP file upload functionality with drag-and-drop interface using react-dropzone
+  - Added Mistral API integration for OCR and AI-powered document processing
+  - Created document analysis page with ultra-modern glassmorphism design and tabbed interface
+  - Built comprehensive backend processing system for ZIP extraction and Excel analysis
+  - Fixed critical file upload issues with proper FormData handling in apiRequest function
+  - Established complete document workflow: Upload → Analysis → AI Insights
 ```
 
 ## User Preferences
