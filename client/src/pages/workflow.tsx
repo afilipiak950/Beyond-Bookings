@@ -845,7 +845,7 @@ export default function Workflow() {
 
               <CardContent className="relative space-y-6">
                 {/* Calculation Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
                   
                   {/* Realistic Hotel Selling Price */}
                   <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-blue-50/80 to-indigo-50/60 backdrop-blur-sm border border-blue-200/50 p-4 shadow-md">
