@@ -25,6 +25,7 @@ export interface WorkflowData {
   occupancyRate: number;
   averagePrice: number;
   projectCosts: number;
+  hotelVoucherValue: number;
   calculationResult?: {
     vatAmount: number;
     profitMargin: number;
@@ -90,7 +91,8 @@ export default function Workflow() {
     roomCount: 0,
     occupancyRate: 70,
     averagePrice: 0,
-    projectCosts: 0
+    projectCosts: 0,
+    hotelVoucherValue: 0
   });
 
   // AI Price Intelligence State
@@ -723,8 +725,8 @@ export default function Workflow() {
                           </span>
                         </div>
                         <span className="text-xl font-black bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">
-                          {workflowData.roomCount && workflowData.averagePrice ? 
-                            (Math.min(Math.floor((workflowData.roomCount * 365) * 0.15), 1000) * workflowData.averagePrice * 0.75).toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €' : 
+                          {workflowData.projectCosts && workflowData.hotelVoucherValue ? 
+                            (workflowData.projectCosts * workflowData.hotelVoucherValue * 1.1).toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €' : 
                             '0.00 €'
                           }
                         </span>
@@ -764,6 +766,42 @@ export default function Workflow() {
                           className="bg-white/60 backdrop-blur-sm border-rose-300/50 focus:border-rose-500 focus:ring-rose-500/20 text-right font-bold"
                         />
                         <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-rose-600 font-bold">€</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Hotel Voucher Value - Manual Input Section */}
+                  <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-50/50 to-green-100/40 backdrop-blur-xl border border-emerald-300/50 p-4 shadow-lg transition-all duration-300">
+                    {/* Multiple animated layers */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/15 via-green-500/10 to-emerald-400/15 animate-gradient-x"></div>
+                    <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/10 to-transparent group-hover:via-white/20 transition-all duration-500"></div>
+                    
+                    {/* Enhanced floating particles */}
+                    <div className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping opacity-60"></div>
+                    <div className="absolute bottom-2 left-2 w-1 h-1 rounded-full bg-green-400 animate-bounce opacity-50"></div>
+                    <div className="absolute top-1/2 left-1/3 w-1 h-1 rounded-full bg-emerald-300 animate-ping animation-delay-1000 opacity-40"></div>
+                    
+                    <div className="relative space-y-3">
+                      <div className="flex items-center space-x-3">
+                        <div className="relative">
+                          <div className="w-3 h-3 rounded-full bg-gradient-to-r from-emerald-500 to-green-600 animate-pulse shadow-xl shadow-emerald-500/60"></div>
+                          <div className="absolute inset-0 w-3 h-3 rounded-full bg-emerald-400 animate-ping opacity-30"></div>
+                        </div>
+                        <span className="font-black text-sm bg-gradient-to-r from-emerald-800 to-green-700 bg-clip-text text-transparent">
+                          Gutscheinwert für Hotel
+                        </span>
+                      </div>
+                      <div className="relative">
+                        <Input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          placeholder="Gutscheinwert eingeben..."
+                          value={workflowData.hotelVoucherValue || ''}
+                          onChange={(e) => setWorkflowData({...workflowData, hotelVoucherValue: parseFloat(e.target.value) || 0})}
+                          className="bg-white/60 backdrop-blur-sm border-emerald-300/50 focus:border-emerald-500 focus:ring-emerald-500/20 text-right font-bold"
+                        />
+                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-emerald-600 font-bold">€</div>
                       </div>
                     </div>
                   </div>
