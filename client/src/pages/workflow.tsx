@@ -820,7 +820,7 @@ export default function Workflow() {
             </Card>
 
             {/* Output Calculation Section - Standalone Card */}
-            <Card className="relative overflow-hidden bg-gradient-to-br from-emerald-50/60 to-teal-50/40 backdrop-blur-2xl border border-emerald-300/40 shadow-2xl mt-6 mr-[-1.5rem]">
+            <Card className="relative overflow-hidden bg-gradient-to-br from-emerald-50/60 to-teal-50/40 backdrop-blur-2xl border border-emerald-300/40 shadow-2xl mt-6 -mr-16 pr-16 w-[calc(100%+4rem)]">
               {/* Floating Background Elements */}
               <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 <div className="absolute top-8 left-8 w-24 h-24 bg-emerald-500/10 rounded-full blur-xl animate-float"></div>
