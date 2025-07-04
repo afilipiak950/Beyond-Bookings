@@ -261,13 +261,14 @@ export default function Workflow() {
     switch (currentStep) {
       case 1:
         return (
-          <div className="grid grid-cols-2 gap-8">
-            {/* Left Side - Input Form */}
-            <Card className="glass-card">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Calculator className="h-5 w-5 text-blue-600" />
-                  Hotel-Preiskalkulator
+          <>
+            <div className="grid grid-cols-2 gap-8">
+              {/* Left Side - Input Form */}
+              <Card className="glass-card">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Calculator className="h-5 w-5 text-blue-600" />
+                    Hotel-Preiskalkulator
                 </CardTitle>
                 <CardDescription>
                   Geben Sie alle erforderlichen Details für die Preisberechnung ein
@@ -818,9 +819,10 @@ export default function Workflow() {
                 </div>
               </CardContent>
             </Card>
+            </div>
 
-            {/* Output Calculation Section - Standalone Card */}
-            <Card className="relative overflow-hidden bg-gradient-to-br from-emerald-50/60 to-teal-50/40 backdrop-blur-2xl border border-emerald-300/40 shadow-2xl mt-6 -mr-16 pr-16 w-[calc(100%+4rem)]">
+            {/* Output Calculation Section - Full Viewport Width */}
+            <Card className="relative overflow-hidden bg-gradient-to-br from-emerald-50/60 to-teal-50/40 backdrop-blur-2xl border border-emerald-300/40 shadow-2xl mt-6 -mx-[50vw] left-1/2 translate-x-[-50%] w-screen">
               {/* Floating Background Elements */}
               <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 <div className="absolute top-8 left-8 w-24 h-24 bg-emerald-500/10 rounded-full blur-xl animate-float"></div>
@@ -965,7 +967,7 @@ export default function Workflow() {
                 </div>
               </CardContent>
             </Card>
-          </div>
+          </>
         );
 
       case 2:
