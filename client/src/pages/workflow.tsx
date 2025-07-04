@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ChevronRight, Calculator, BarChart3, FileText, Check, ArrowLeft, Edit3, Brain } from "lucide-react";
+import { ChevronRight, Calculator, BarChart3, FileText, Check, ArrowLeft, Edit3, Brain, Gift } from "lucide-react";
 import { useLocation, useRoute } from "wouter";
 import AppLayout from "@/components/layout/app-layout";
 
@@ -99,6 +99,13 @@ export default function Workflow() {
   const [editFeedback, setEditFeedback] = useState("");
   const [tempPrice, setTempPrice] = useState("");
 
+  // Hotel Voucher Value State
+  const [hotelVoucherValue, setHotelVoucherValue] = useState(0);
+  const [isVoucherManualEdit, setIsVoucherManualEdit] = useState(false);
+  const [voucherEditOpen, setVoucherEditOpen] = useState(false);
+  const [tempVoucherValue, setTempVoucherValue] = useState("");
+  const [voucherEditFeedback, setVoucherEditFeedback] = useState("");
+
   // Calculate AI suggested price (55% of average price, rounded up)
   useEffect(() => {
     if (workflowData.averagePrice > 0) {
@@ -109,6 +116,39 @@ export default function Workflow() {
       }
     }
   }, [workflowData.averagePrice, isManualEdit]);
+
+  // Calculate hotel voucher value based on star rating
+  useEffect(() => {
+    if (workflowData.averagePrice > 0 && workflowData.stars > 0) {
+      let voucherValue = 0;
+      
+      // Calculate based on star rating according to the assumptions table
+      switch (workflowData.stars) {
+        case 1:
+          voucherValue = 15.00;
+          break;
+        case 2:
+          voucherValue = 20.00;
+          break;
+        case 3:
+          voucherValue = 30.00;
+          break;
+        case 4:
+          voucherValue = 35.00;
+          break;
+        case 5:
+          voucherValue = 45.00;
+          break;
+        default:
+          // For 0 stars or unknown, use 65% of average price as fallback
+          voucherValue = workflowData.averagePrice * 0.65;
+      }
+      
+      if (!isVoucherManualEdit) {
+        setHotelVoucherValue(voucherValue);
+      }
+    }
+  }, [workflowData.averagePrice, workflowData.stars, isVoucherManualEdit]);
 
   // Handle manual price edit
   const handleManualEdit = () => {
@@ -140,6 +180,39 @@ export default function Workflow() {
       aiSuggested: aiSuggestedPrice,
       userPrice: newPrice,
       feedback: editFeedback
+    });
+  };
+
+  // Handle voucher manual edit
+  const handleVoucherManualEdit = () => {
+    setTempVoucherValue(hotelVoucherValue.toString());
+    setVoucherEditFeedback("");
+    setVoucherEditOpen(true);
+  };
+
+  // Save voucher manual edit with feedback
+  const saveVoucherManualEdit = async () => {
+    const newVoucherValue = parseFloat(tempVoucherValue);
+    if (isNaN(newVoucherValue) || newVoucherValue <= 0) {
+      alert("Bitte geben Sie einen gültigen Gutscheinwert ein.");
+      return;
+    }
+    
+    if (!voucherEditFeedback.trim()) {
+      alert("Bitte geben Sie eine Begründung für die Änderung ein. Dies hilft bei der Verbesserung der Berechnungen.");
+      return;
+    }
+
+    setHotelVoucherValue(newVoucherValue);
+    setIsVoucherManualEdit(true);
+    setVoucherEditOpen(false);
+
+    console.log("Voucher manual edit recorded:", {
+      hotel: workflowData.hotelName,
+      stars: workflowData.stars,
+      originalValue: hotelVoucherValue,
+      newValue: newVoucherValue,
+      feedback: voucherEditFeedback
     });
   };
 
@@ -483,21 +556,116 @@ export default function Workflow() {
                       </div>
                     </div>
                     
-                    {/* Hotel Voucher - Red Pulsing Card */}
+                    {/* Hotel Voucher - Dynamic Star-Based Card with Manual Edit */}
                     <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-red-50/40 to-rose-100/30 backdrop-blur-xl border border-red-200/40 shadow-lg transition-all duration-300">
                       <div className="absolute inset-0 bg-gradient-to-r from-red-400/10 via-transparent to-rose-500/10 animate-gradient-x"></div>
                       <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-red-500 to-rose-500 animate-pulse"></div>
                       <div className="absolute top-1 right-1 w-1 h-1 bg-red-400 rounded-full animate-ping opacity-60"></div>
-                      <div className="relative p-3 flex justify-between items-center">
-                        <div className="flex items-center space-x-2">
-                          <div className="w-2 h-2 rounded-full bg-gradient-to-r from-red-500 to-rose-500 animate-pulse shadow-lg shadow-red-500/40"></div>
-                          <span className="text-xs font-bold bg-gradient-to-r from-red-700 to-red-600 bg-clip-text text-transparent">
-                            Gutscheinwert für Hotel
-                          </span>
+                      <div className="relative p-3">
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center space-x-2">
+                            <div className="w-2 h-2 rounded-full bg-gradient-to-r from-red-500 to-rose-500 animate-pulse shadow-lg shadow-red-500/40"></div>
+                            <span className="text-xs font-bold bg-gradient-to-r from-red-700 to-red-600 bg-clip-text text-transparent">
+                              Gutscheinwert für Hotel
+                            </span>
+                            {isVoucherManualEdit && (
+                              <span className="text-xs bg-gradient-to-r from-orange-100 to-orange-50 text-orange-600 px-2 py-1 rounded-full font-semibold border border-orange-200/30">
+                                Manuell
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <span className="text-lg font-black bg-gradient-to-r from-red-600 to-rose-600 bg-clip-text text-transparent">
+                              {hotelVoucherValue ? hotelVoucherValue.toFixed(2) : '0.00'} €
+                            </span>
+                            <Dialog open={voucherEditOpen} onOpenChange={setVoucherEditOpen}>
+                              <DialogTrigger asChild>
+                                <button 
+                                  onClick={handleVoucherManualEdit}
+                                  className="group relative overflow-hidden p-1 bg-red-500/10 backdrop-blur-sm border border-red-300/30 rounded-full text-xs text-red-700 hover:text-white transition-all duration-300 hover:scale-105"
+                                >
+                                  <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-rose-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                  <Edit3 className="h-3 w-3 relative" />
+                                </button>
+                              </DialogTrigger>
+                              <DialogContent className="sm:max-w-[425px]">
+                                <DialogHeader>
+                                  <DialogTitle className="flex items-center space-x-2">
+                                    <Gift className="h-5 w-5 text-red-600" />
+                                    <span>Gutscheinwert anpassen</span>
+                                  </DialogTitle>
+                                </DialogHeader>
+                                <div className="space-y-4 pt-4">
+                                  <div className="bg-red-50 p-3 rounded border-l-4 border-red-400">
+                                    <p className="text-sm text-red-800">
+                                      <strong>Standard für {workflowData.stars}-Sterne Hotels:</strong> {
+                                        workflowData.stars === 1 ? '15,00 €' :
+                                        workflowData.stars === 2 ? '20,00 €' :
+                                        workflowData.stars === 3 ? '30,00 €' :
+                                        workflowData.stars === 4 ? '35,00 €' :
+                                        workflowData.stars === 5 ? '45,00 €' :
+                                        'Individuell'
+                                      }
+                                    </p>
+                                    <p className="text-xs text-red-600 mt-1">
+                                      Anpassungen helfen bei der Verbesserung der Berechnungen.
+                                    </p>
+                                  </div>
+                                  
+                                  <div>
+                                    <Label htmlFor="voucher-value">Angepasster Gutscheinwert</Label>
+                                    <Input
+                                      id="voucher-value"
+                                      type="number"
+                                      step="0.01"
+                                      value={tempVoucherValue}
+                                      onChange={(e) => setTempVoucherValue(e.target.value)}
+                                      placeholder="Gutscheinwert in Euro"
+                                      className="mt-1"
+                                    />
+                                  </div>
+                                  
+                                  <div>
+                                    <Label htmlFor="voucher-feedback">Begründung für die Anpassung *</Label>
+                                    <Textarea
+                                      id="voucher-feedback"
+                                      value={voucherEditFeedback}
+                                      onChange={(e) => setVoucherEditFeedback(e.target.value)}
+                                      placeholder="Warum ändern Sie den Gutscheinwert? Z.B. 'Hotel ist sehr luxuriös', 'Konkurrenzsituation', 'Besondere Ausstattung'..."
+                                      className="mt-1"
+                                      rows={3}
+                                    />
+                                    <p className="text-xs text-gray-500 mt-1">
+                                      * Erforderlich für bessere Berechnungen
+                                    </p>
+                                  </div>
+                                  
+                                  <div className="flex justify-end space-x-2 pt-4">
+                                    <Button 
+                                      variant="outline" 
+                                      onClick={() => setVoucherEditOpen(false)}
+                                    >
+                                      Abbrechen
+                                    </Button>
+                                    <Button onClick={saveVoucherManualEdit} className="bg-red-600 hover:bg-red-700">
+                                      Speichern
+                                    </Button>
+                                  </div>
+                                </div>
+                              </DialogContent>
+                            </Dialog>
+                          </div>
                         </div>
-                        <span className="text-lg font-black bg-gradient-to-r from-red-600 to-rose-600 bg-clip-text text-transparent">
-                          {workflowData.averagePrice ? (workflowData.averagePrice * 0.65).toFixed(2) : '0.00'} €
-                        </span>
+                        
+                        {workflowData.stars > 0 && (
+                          <div className="mt-2 text-xs text-red-600">
+                            {isVoucherManualEdit ? (
+                              `Manuell angepasst für ${workflowData.stars}-Sterne Hotel`
+                            ) : (
+                              `Basierend auf ${workflowData.stars}-Sterne Hotel Annahmen`
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
                     
