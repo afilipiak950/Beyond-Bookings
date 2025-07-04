@@ -847,7 +847,7 @@ export default function Workflow() {
 
               <CardContent className="relative space-y-6">
                 {/* Calculation Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 px-4 sm:px-0">
                   
                   {/* Realistic Hotel Selling Price */}
                   <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-blue-50/80 to-indigo-50/60 backdrop-blur-sm border border-blue-200/50 p-4 shadow-md">
@@ -855,8 +855,8 @@ export default function Workflow() {
                     <div className="absolute top-2 right-2 w-2 h-2 bg-blue-400 rounded-full animate-ping opacity-50"></div>
                     <div className="flex flex-col space-y-2">
                       <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
-                        <span className="text-sm font-bold text-blue-800">Realistischer Hotelverkaufspreis</span>
+                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce flex-shrink-0"></div>
+                        <span className="text-sm font-bold text-blue-800 break-words">Realistischer Hotelverkaufspreis</span>
                       </div>
                       <div className="text-2xl font-black text-blue-900">
                         {workflowData.averagePrice ? `${workflowData.averagePrice.toFixed(2)} €` : '0.00 €'}
@@ -870,8 +870,8 @@ export default function Workflow() {
                     <div className="absolute top-2 right-2 w-2 h-2 bg-purple-400 rounded-full animate-ping opacity-50"></div>
                     <div className="flex flex-col space-y-2">
                       <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"></div>
-                        <span className="text-sm font-bold text-purple-800">Zahlung von Tripz (75%)</span>
+                        <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce flex-shrink-0"></div>
+                        <span className="text-sm font-bold text-purple-800 break-words">Zahlung von Tripz (75%)</span>
                       </div>
                       <div className="text-2xl font-black text-purple-900">
                         {workflowData.averagePrice ? `${(workflowData.averagePrice * 0.75).toFixed(2)} €` : '0.00 €'}
@@ -885,8 +885,8 @@ export default function Workflow() {
                     <div className="absolute top-2 right-2 w-2 h-2 bg-orange-400 rounded-full animate-ping opacity-50"></div>
                     <div className="flex flex-col space-y-2">
                       <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-orange-500 rounded-full animate-bounce"></div>
-                        <span className="text-sm font-bold text-orange-800">Gutscheinwert für Hotel</span>
+                        <div className="w-2 h-2 bg-orange-500 rounded-full animate-bounce flex-shrink-0"></div>
+                        <span className="text-sm font-bold text-orange-800 break-words">Gutscheinwert für Hotel</span>
                       </div>
                       <div className="text-2xl font-black text-orange-900">
                         {workflowData.hotelVoucherValue ? `${workflowData.hotelVoucherValue.toFixed(2)} €` : '0.00 €'}
@@ -900,8 +900,8 @@ export default function Workflow() {
                     <div className="absolute top-2 right-2 w-2 h-2 bg-rose-400 rounded-full animate-ping opacity-50"></div>
                     <div className="flex flex-col space-y-2">
                       <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-rose-500 rounded-full animate-bounce"></div>
-                        <span className="text-sm font-bold text-rose-800">Projektkosten Brutto</span>
+                        <div className="w-2 h-2 bg-rose-500 rounded-full animate-bounce flex-shrink-0"></div>
+                        <span className="text-sm font-bold text-rose-800 break-words">Projektkosten Brutto</span>
                       </div>
                       <div className="text-2xl font-black text-rose-900">
                         {workflowData.projectCosts ? `${workflowData.projectCosts.toFixed(2)} €` : '0.00 €'}
@@ -915,8 +915,8 @@ export default function Workflow() {
                     <div className="absolute top-2 right-2 w-2 h-2 bg-cyan-400 rounded-full animate-ping opacity-50"></div>
                     <div className="flex flex-col space-y-2">
                       <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-cyan-500 rounded-full animate-bounce"></div>
-                        <span className="text-sm font-bold text-cyan-800">Finanzierungsbasierung</span>
+                        <div className="w-2 h-2 bg-cyan-500 rounded-full animate-bounce flex-shrink-0"></div>
+                        <span className="text-sm font-bold text-cyan-800 break-words">Finanzierungsbasierung</span>
                       </div>
                       <div className="text-2xl font-black text-cyan-900">
                         {workflowData.projectCosts && workflowData.hotelVoucherValue && workflowData.hotelVoucherValue > 0 ? 
@@ -931,8 +931,8 @@ export default function Workflow() {
                     <div className="absolute top-2 right-2 w-2 h-2 bg-green-400 rounded-full animate-ping opacity-50"></div>
                     <div className="flex flex-col space-y-2">
                       <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce"></div>
-                        <span className="text-sm font-bold text-green-800">Finanzierungsbetrag (×1.1)</span>
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce flex-shrink-0"></div>
+                        <span className="text-sm font-bold text-green-800 break-words">Finanzierungsbetrag (×1.1)</span>
                       </div>
                       <div className="text-2xl font-black text-green-900">
                         {workflowData.projectCosts && workflowData.hotelVoucherValue && workflowData.averagePrice && workflowData.hotelVoucherValue > 0 ? 
@@ -949,8 +949,8 @@ export default function Workflow() {
                   <div className="absolute top-2 right-2 w-2 h-2 bg-slate-400 rounded-full animate-ping opacity-50"></div>
                   <div className="flex flex-col space-y-3">
                     <div className="flex items-center space-x-2">
-                      <div className="w-2 h-2 bg-slate-500 rounded-full animate-bounce"></div>
-                      <span className="text-sm font-bold text-slate-800">Berechnungsformel</span>
+                      <div className="w-2 h-2 bg-slate-500 rounded-full animate-bounce flex-shrink-0"></div>
+                      <span className="text-sm font-bold text-slate-800 break-words">Berechnungsformel</span>
                     </div>
                     <div className="text-sm text-slate-700 font-mono bg-slate-100/50 p-3 rounded-lg">
                       <div className="font-bold text-slate-900 mb-2">Finanzierungsbetrag =</div>
