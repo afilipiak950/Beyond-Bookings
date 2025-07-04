@@ -818,6 +818,153 @@ export default function Workflow() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Output Calculation Section - Standalone Card */}
+            <Card className="relative overflow-hidden bg-gradient-to-br from-emerald-50/60 to-teal-50/40 backdrop-blur-2xl border border-emerald-300/40 shadow-2xl mt-6">
+              {/* Floating Background Elements */}
+              <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-8 left-8 w-24 h-24 bg-emerald-500/10 rounded-full blur-xl animate-float"></div>
+                <div className="absolute bottom-12 right-12 w-20 h-20 bg-teal-500/10 rounded-full blur-lg animate-float-delayed"></div>
+                <div className="absolute top-1/2 left-1/4 w-16 h-16 bg-green-500/10 rounded-full blur-md animate-pulse"></div>
+              </div>
+
+              <CardHeader className="relative">
+                <CardTitle className="flex items-center gap-3">
+                  <div className="relative">
+                    <div className="w-2 h-2 rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/40 animate-pulse"></div>
+                    <div className="absolute inset-0 w-2 h-2 rounded-full bg-emerald-400 animate-ping opacity-25"></div>
+                  </div>
+                  <span className="bg-gradient-to-r from-emerald-800 via-teal-700 to-green-800 bg-clip-text text-transparent font-black text-xl">
+                    Output Calculations
+                  </span>
+                </CardTitle>
+                <CardDescription className="text-gray-600 font-medium">
+                  Comprehensive financial calculations and analysis results
+                </CardDescription>
+              </CardHeader>
+
+              <CardContent className="relative space-y-6">
+                {/* Calculation Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  
+                  {/* Realistic Hotel Selling Price */}
+                  <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-blue-50/80 to-indigo-50/60 backdrop-blur-sm border border-blue-200/50 p-4 shadow-md">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-indigo-400 animate-pulse"></div>
+                    <div className="absolute top-2 right-2 w-2 h-2 bg-blue-400 rounded-full animate-ping opacity-50"></div>
+                    <div className="flex flex-col space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
+                        <span className="text-sm font-bold text-blue-800">Realistischer Hotelverkaufspreis</span>
+                      </div>
+                      <div className="text-2xl font-black text-blue-900">
+                        {workflowData.averagePrice ? `${workflowData.averagePrice.toFixed(2)} €` : '0.00 €'}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Tripz Payment (75% of realistic price) */}
+                  <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-purple-50/80 to-violet-50/60 backdrop-blur-sm border border-purple-200/50 p-4 shadow-md">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-400 to-violet-400 animate-pulse"></div>
+                    <div className="absolute top-2 right-2 w-2 h-2 bg-purple-400 rounded-full animate-ping opacity-50"></div>
+                    <div className="flex flex-col space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"></div>
+                        <span className="text-sm font-bold text-purple-800">Zahlung von Tripz (75%)</span>
+                      </div>
+                      <div className="text-2xl font-black text-purple-900">
+                        {workflowData.averagePrice ? `${(workflowData.averagePrice * 0.75).toFixed(2)} €` : '0.00 €'}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Hotel Voucher Value */}
+                  <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-orange-50/80 to-amber-50/60 backdrop-blur-sm border border-orange-200/50 p-4 shadow-md">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-400 to-amber-400 animate-pulse"></div>
+                    <div className="absolute top-2 right-2 w-2 h-2 bg-orange-400 rounded-full animate-ping opacity-50"></div>
+                    <div className="flex flex-col space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-orange-500 rounded-full animate-bounce"></div>
+                        <span className="text-sm font-bold text-orange-800">Gutscheinwert für Hotel</span>
+                      </div>
+                      <div className="text-2xl font-black text-orange-900">
+                        {workflowData.hotelVoucherValue ? `${workflowData.hotelVoucherValue.toFixed(2)} €` : '0.00 €'}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Project Costs */}
+                  <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-rose-50/80 to-pink-50/60 backdrop-blur-sm border border-rose-200/50 p-4 shadow-md">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-rose-400 to-pink-400 animate-pulse"></div>
+                    <div className="absolute top-2 right-2 w-2 h-2 bg-rose-400 rounded-full animate-ping opacity-50"></div>
+                    <div className="flex flex-col space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-rose-500 rounded-full animate-bounce"></div>
+                        <span className="text-sm font-bold text-rose-800">Projektkosten Brutto</span>
+                      </div>
+                      <div className="text-2xl font-black text-rose-900">
+                        {workflowData.projectCosts ? `${workflowData.projectCosts.toFixed(2)} €` : '0.00 €'}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Financing Base Calculation */}
+                  <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-cyan-50/80 to-sky-50/60 backdrop-blur-sm border border-cyan-200/50 p-4 shadow-md">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-400 to-sky-400 animate-pulse"></div>
+                    <div className="absolute top-2 right-2 w-2 h-2 bg-cyan-400 rounded-full animate-ping opacity-50"></div>
+                    <div className="flex flex-col space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-cyan-500 rounded-full animate-bounce"></div>
+                        <span className="text-sm font-bold text-cyan-800">Finanzierungsbasierung</span>
+                      </div>
+                      <div className="text-2xl font-black text-cyan-900">
+                        {workflowData.projectCosts && workflowData.hotelVoucherValue && workflowData.hotelVoucherValue > 0 ? 
+                          `${(workflowData.projectCosts / workflowData.hotelVoucherValue).toFixed(2)}` : '0.00'}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Final Financing Amount */}
+                  <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-green-50/80 to-emerald-50/60 backdrop-blur-sm border border-green-200/50 p-4 shadow-md">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-400 to-emerald-400 animate-pulse"></div>
+                    <div className="absolute top-2 right-2 w-2 h-2 bg-green-400 rounded-full animate-ping opacity-50"></div>
+                    <div className="flex flex-col space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce"></div>
+                        <span className="text-sm font-bold text-green-800">Finanzierungsbetrag (×1.1)</span>
+                      </div>
+                      <div className="text-2xl font-black text-green-900">
+                        {workflowData.projectCosts && workflowData.hotelVoucherValue && workflowData.averagePrice && workflowData.hotelVoucherValue > 0 ? 
+                          `${((workflowData.projectCosts / workflowData.hotelVoucherValue) * (workflowData.averagePrice * 0.75) * 1.1).toFixed(2)} €` : '0.00 €'}
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+
+                {/* Formula Explanation */}
+                <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-slate-50/80 to-gray-50/60 backdrop-blur-sm border border-slate-200/50 p-4 shadow-md">
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-slate-400 to-gray-400 animate-pulse"></div>
+                  <div className="absolute top-2 right-2 w-2 h-2 bg-slate-400 rounded-full animate-ping opacity-50"></div>
+                  <div className="flex flex-col space-y-3">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 bg-slate-500 rounded-full animate-bounce"></div>
+                      <span className="text-sm font-bold text-slate-800">Berechnungsformel</span>
+                    </div>
+                    <div className="text-sm text-slate-700 font-mono bg-slate-100/50 p-3 rounded-lg">
+                      <div className="font-bold text-slate-900 mb-2">Finanzierungsbetrag =</div>
+                      <div className="pl-4 space-y-1">
+                        <div>(Projektkosten Brutto ÷ Gutscheinwert für Hotel)</div>
+                        <div>× Zahlung von Tripz Estimate</div>
+                        <div>× 1.1</div>
+                      </div>
+                      <div className="mt-2 text-xs text-slate-600">
+                        <div>Zahlung von Tripz = Realistischer Hotelverkaufspreis × 0.75</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         );
       case 2:
