@@ -325,7 +325,7 @@ export default function Workflow() {
                 {/* Calculation Results - Ultra Modern Glassmorphism */}
                 <div className="relative space-y-3">
                   {/* AI-Powered Realistic Price - Hero Section with Advanced Effects */}
-                  <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/40 to-blue-50/30 backdrop-blur-xl border border-white/20 shadow-xl hover:shadow-blue-500/20 transition-all duration-500 hover:scale-[1.01] hover:rotate-1">
+                  <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/40 to-blue-50/30 backdrop-blur-xl border border-white/20 shadow-xl transition-all duration-500">
                     {/* Animated Background Layers */}
                     <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-transparent to-green-500/10 animate-gradient-x"></div>
                     <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/5 to-transparent group-hover:via-white/10 transition-all duration-500"></div>
@@ -467,7 +467,7 @@ export default function Workflow() {
                   {/* Secondary Calculations - Floating Cards Grid */}
                   <div className="grid gap-3 mt-4">
                     {/* 65% Calculation - Floating Card */}
-                    <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-white/50 to-gray-50/30 backdrop-blur-xl border border-white/30 shadow-lg hover:shadow-xl hover:shadow-gray-500/10 transition-all duration-300 hover:scale-[1.01] hover:-rotate-1">
+                    <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-white/50 to-gray-50/30 backdrop-blur-xl border border-white/30 shadow-lg transition-all duration-300">
                       <div className="absolute inset-0 bg-gradient-to-r from-gray-400/5 via-transparent to-gray-500/5 animate-gradient-x"></div>
                       <div className="absolute top-1 right-1 w-1 h-1 bg-gray-400 rounded-full animate-ping opacity-40"></div>
                       <div className="relative p-3 flex justify-between items-center">
@@ -484,7 +484,7 @@ export default function Workflow() {
                     </div>
                     
                     {/* Hotel Voucher - Red Pulsing Card */}
-                    <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-red-50/40 to-rose-100/30 backdrop-blur-xl border border-red-200/40 shadow-lg hover:shadow-xl hover:shadow-red-500/15 transition-all duration-300 hover:scale-[1.01] hover:rotate-1">
+                    <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-red-50/40 to-rose-100/30 backdrop-blur-xl border border-red-200/40 shadow-lg transition-all duration-300">
                       <div className="absolute inset-0 bg-gradient-to-r from-red-400/10 via-transparent to-rose-500/10 animate-gradient-x"></div>
                       <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-red-500 to-rose-500 animate-pulse"></div>
                       <div className="absolute top-1 right-1 w-1 h-1 bg-red-400 rounded-full animate-ping opacity-60"></div>
@@ -502,7 +502,7 @@ export default function Workflow() {
                     </div>
                     
                     {/* Profit Margin - Animated Success Card */}
-                    <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-50/40 to-green-100/30 backdrop-blur-xl border border-green-200/40 shadow-lg hover:shadow-xl hover:shadow-green-500/15 transition-all duration-300 hover:scale-[1.01] hover:-rotate-1">
+                    <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-50/40 to-green-100/30 backdrop-blur-xl border border-green-200/40 shadow-lg transition-all duration-300">
                       <div className="absolute inset-0 bg-gradient-to-r from-green-400/10 via-transparent to-emerald-500/10 animate-gradient-x"></div>
                       <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-green-500 to-emerald-500 animate-pulse"></div>
                       <div className="absolute top-1 right-1 w-1 h-1 bg-green-400 rounded-full animate-ping opacity-60"></div>
@@ -523,7 +523,7 @@ export default function Workflow() {
                     </div>
                     
                     {/* Tripz Payment - Ultra Modern Card */}
-                    <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-50/40 to-purple-100/30 backdrop-blur-xl border border-indigo-200/40 shadow-xl hover:shadow-2xl hover:shadow-indigo-500/15 transition-all duration-500 hover:scale-[1.03] hover:rotate-1">
+                    <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-50/40 to-purple-100/30 backdrop-blur-xl border border-indigo-200/40 shadow-xl transition-all duration-500">
                       <div className="absolute inset-0 bg-gradient-to-r from-indigo-400/10 via-transparent to-purple-500/10 animate-gradient-x"></div>
                       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-purple-500 animate-pulse"></div>
                       <div className="absolute top-2 right-2 w-2 h-2 bg-indigo-400 rounded-full animate-ping opacity-60"></div>
@@ -541,7 +541,7 @@ export default function Workflow() {
                     </div>
                     
                     {/* Contract Volume - Ultra Modern Blue Card */}
-                    <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-cyan-50/40 to-blue-100/30 backdrop-blur-xl border border-cyan-200/40 shadow-xl hover:shadow-2xl hover:shadow-cyan-500/15 transition-all duration-500 hover:scale-[1.03] hover:-rotate-1">
+                    <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-cyan-50/40 to-blue-100/30 backdrop-blur-xl border border-cyan-200/40 shadow-xl transition-all duration-500">
                       <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/10 via-transparent to-blue-500/10 animate-gradient-x"></div>
                       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 to-blue-500 animate-pulse"></div>
                       <div className="absolute top-2 right-2 w-2 h-2 bg-cyan-400 rounded-full animate-ping opacity-60"></div>
@@ -563,7 +563,7 @@ export default function Workflow() {
                   </div>
                   
                   {/* Project Costs - Ultra-Modern Special Section */}
-                  <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-rose-50/50 to-red-100/40 backdrop-blur-xl border border-rose-300/50 p-4 shadow-lg hover:shadow-rose-500/25 transition-all duration-300 hover:scale-[1.01] hover:-rotate-1">
+                  <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-rose-50/50 to-red-100/40 backdrop-blur-xl border border-rose-300/50 p-4 shadow-lg transition-all duration-300">
                     {/* Multiple animated layers */}
                     <div className="absolute inset-0 bg-gradient-to-r from-rose-400/15 via-red-500/10 to-rose-400/15 animate-gradient-x"></div>
                     <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/10 to-transparent group-hover:via-white/20 transition-all duration-500"></div>
@@ -594,7 +594,7 @@ export default function Workflow() {
                 </div>
 
                 {/* Summary - Ultra-Modern Glass Card with Advanced Effects */}
-                <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-50/40 to-blue-50/30 backdrop-blur-xl border border-slate-300/30 p-4 shadow-lg hover:shadow-blue-500/20 transition-all duration-300 hover:scale-[1.01] mt-4">
+                <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-50/40 to-blue-50/30 backdrop-blur-xl border border-slate-300/30 p-4 shadow-lg transition-all duration-300 mt-4">
                   {/* Animated Background Layers */}
                   <div className="absolute inset-0 bg-gradient-to-r from-blue-500/8 via-green-500/8 to-purple-500/8 animate-gradient-x"></div>
                   <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/10 to-transparent group-hover:via-white/15 transition-all duration-500"></div>
