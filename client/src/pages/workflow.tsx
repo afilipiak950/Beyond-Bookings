@@ -545,42 +545,42 @@ export default function Workflow() {
                   {/* Secondary Calculations - Floating Cards Grid */}
                   <div className="grid gap-3 mt-4">
                     {/* 65% Calculation - Floating Card */}
-                    <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-white/50 to-gray-50/30 backdrop-blur-xl border border-white/30 shadow-lg transition-all duration-300">
+                    <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-white/50 to-gray-50/30 backdrop-blur-xl border border-white/30 shadow-lg transition-all duration-300 h-16">
                       <div className="absolute inset-0 bg-gradient-to-r from-gray-400/5 via-transparent to-gray-500/5 animate-gradient-x"></div>
-                      <div className="absolute top-1 right-1 w-2 h-2 bg-gray-400 rounded-full animate-ping opacity-40"></div>
-                      <div className="relative p-3 flex justify-between items-center">
+                      <div className="absolute top-2 right-2 w-2 h-2 bg-gray-400 rounded-full animate-ping opacity-40"></div>
+                      <div className="relative p-4 flex justify-between items-center h-full">
                         <div className="flex items-center space-x-2">
-                          <div className="w-2 h-2 rounded-full bg-gradient-to-r from-gray-400 to-gray-500 animate-pulse shadow-md shadow-gray-400/30"></div>
-                          <span className="text-sm font-semibold bg-gradient-to-r from-gray-700 to-gray-600 bg-clip-text text-transparent group-hover:from-gray-800 group-hover:to-gray-700 transition-all duration-300">
+                          <div className="w-2 h-2 rounded-full bg-gradient-to-r from-gray-400 to-gray-500 animate-pulse shadow-md shadow-gray-400/30 flex-shrink-0"></div>
+                          <span className="text-sm font-bold bg-gradient-to-r from-gray-700 to-gray-600 bg-clip-text text-transparent break-words">
                             65% des durchschnittlichen Zimmerpreises
                           </span>
                         </div>
-                        <span className="text-lg font-black bg-gradient-to-r from-gray-700 to-gray-800 bg-clip-text text-transparent">
-                          {workflowData.averagePrice ? (workflowData.averagePrice * 0.65).toFixed(0) : '0'}
+                        <span className="text-xl font-black bg-gradient-to-r from-gray-700 to-gray-800 bg-clip-text text-transparent">
+                          {workflowData.averagePrice ? (workflowData.averagePrice * 0.65).toFixed(2) : '0.00'} €
                         </span>
                       </div>
                     </div>
                     
                     {/* Hotel Voucher - Dynamic Star-Based Card with Manual Edit */}
-                    <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-red-50/40 to-rose-100/30 backdrop-blur-xl border border-red-200/40 shadow-lg transition-all duration-300">
+                    <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-red-50/40 to-rose-100/30 backdrop-blur-xl border border-red-200/40 shadow-lg transition-all duration-300 h-16">
                       <div className="absolute inset-0 bg-gradient-to-r from-red-400/10 via-transparent to-rose-500/10 animate-gradient-x"></div>
                       <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-red-500 to-rose-500 animate-pulse"></div>
-                      <div className="absolute top-1 right-1 w-2 h-2 bg-red-400 rounded-full animate-ping opacity-60"></div>
-                      <div className="relative p-3">
-                        <div className="flex justify-between items-center">
+                      <div className="absolute top-2 right-2 w-2 h-2 bg-red-400 rounded-full animate-ping opacity-60"></div>
+                      <div className="relative p-4 h-full">
+                        <div className="flex justify-between items-center h-full">
                           <div className="flex items-center space-x-2">
-                            <div className="w-2 h-2 rounded-full bg-gradient-to-r from-red-500 to-rose-500 animate-pulse shadow-lg shadow-red-500/40"></div>
-                            <span className="text-sm font-bold bg-gradient-to-r from-red-700 to-red-600 bg-clip-text text-transparent">
+                            <div className="w-2 h-2 rounded-full bg-gradient-to-r from-red-500 to-rose-500 animate-pulse shadow-lg shadow-red-500/40 flex-shrink-0"></div>
+                            <span className="text-sm font-bold bg-gradient-to-r from-red-700 to-red-600 bg-clip-text text-transparent break-words">
                               Gutscheinwert für Hotel
                             </span>
                             {isVoucherManualEdit && (
-                              <span className="text-xs bg-gradient-to-r from-orange-100 to-orange-50 text-orange-600 px-2 py-1 rounded-full font-semibold border border-orange-200/30">
+                              <span className="text-xs bg-gradient-to-r from-orange-100 to-orange-50 text-orange-600 px-2 py-1 rounded-full font-semibold border border-orange-200/30 flex-shrink-0">
                                 Manuell
                               </span>
                             )}
                           </div>
                           <div className="flex items-center space-x-2">
-                            <span className="text-lg font-black bg-gradient-to-r from-red-600 to-rose-600 bg-clip-text text-transparent">
+                            <span className="text-xl font-black bg-gradient-to-r from-red-600 to-rose-600 bg-clip-text text-transparent">
                               {hotelVoucherValue ? hotelVoucherValue.toFixed(2) : '0.00'} €
                             </span>
                             <Dialog open={voucherEditOpen} onOpenChange={setVoucherEditOpen}>
@@ -675,53 +675,50 @@ export default function Workflow() {
                     </div>
                     
                     {/* Profit Margin - Animated Success Card */}
-                    <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-50/40 to-green-100/30 backdrop-blur-xl border border-green-200/40 shadow-lg transition-all duration-300">
+                    <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-50/40 to-green-100/30 backdrop-blur-xl border border-green-200/40 shadow-lg transition-all duration-300 h-16">
                       <div className="absolute inset-0 bg-gradient-to-r from-green-400/10 via-transparent to-emerald-500/10 animate-gradient-x"></div>
                       <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-green-500 to-emerald-500 animate-pulse"></div>
-                      <div className="absolute top-1 right-1 w-2 h-2 bg-green-400 rounded-full animate-ping opacity-60"></div>
-                      <div className="relative p-3 flex justify-between items-center">
+                      <div className="absolute top-2 right-2 w-2 h-2 bg-green-400 rounded-full animate-ping opacity-60"></div>
+                      <div className="relative p-4 flex justify-between items-center h-full">
                         <div className="flex items-center space-x-2">
-                          <div className="w-2 h-2 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 animate-pulse shadow-lg shadow-green-500/40"></div>
-                          <span className="text-sm font-bold bg-gradient-to-r from-green-700 to-green-600 bg-clip-text text-transparent">
+                          <div className="w-2 h-2 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 animate-pulse shadow-lg shadow-green-500/40 flex-shrink-0"></div>
+                          <span className="text-sm font-bold bg-gradient-to-r from-green-700 to-green-600 bg-clip-text text-transparent break-words">
                             Marge nach Steuern
                           </span>
                         </div>
-                        <div className="flex items-center space-x-2">
-                          <div className="w-2 h-2 rounded-full bg-green-500 animate-bounce shadow-sm shadow-green-500/50"></div>
-                          <span className="text-lg font-black bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
-                            {workflowData.averagePrice ? `${((workflowData.averagePrice - (workflowData.averagePrice * 0.65)) / workflowData.averagePrice * 100).toFixed(0)}%` : '0%'}
-                          </span>
-                        </div>
+                        <span className="text-xl font-black bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                          {workflowData.averagePrice ? `${((workflowData.averagePrice - (workflowData.averagePrice * 0.65)) / workflowData.averagePrice * 100).toFixed(0)}%` : '0%'}
+                        </span>
                       </div>
                     </div>
                     
                     {/* Tripz Payment - Ultra Modern Card */}
-                    <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-50/40 to-purple-100/30 backdrop-blur-xl border border-indigo-200/40 shadow-xl transition-all duration-500">
+                    <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-indigo-50/40 to-purple-100/30 backdrop-blur-xl border border-indigo-200/40 shadow-lg transition-all duration-300 h-16">
                       <div className="absolute inset-0 bg-gradient-to-r from-indigo-400/10 via-transparent to-purple-500/10 animate-gradient-x"></div>
-                      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-purple-500 animate-pulse"></div>
+                      <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-indigo-500 to-purple-500 animate-pulse"></div>
                       <div className="absolute top-2 right-2 w-2 h-2 bg-indigo-400 rounded-full animate-ping opacity-60"></div>
-                      <div className="relative p-4 flex justify-between items-center">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-2 h-2 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 animate-pulse shadow-lg shadow-indigo-500/40"></div>
-                          <span className="text-sm font-bold bg-gradient-to-r from-indigo-700 to-indigo-600 bg-clip-text text-transparent">
+                      <div className="relative p-4 flex justify-between items-center h-full">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-2 h-2 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 animate-pulse shadow-lg shadow-indigo-500/40 flex-shrink-0"></div>
+                          <span className="text-sm font-bold bg-gradient-to-r from-indigo-700 to-indigo-600 bg-clip-text text-transparent break-words">
                             Zahlung von Tripz Estimate
                           </span>
                         </div>
-                        <span className="text-lg font-black bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                        <span className="text-xl font-black bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
                           {actualPrice ? (actualPrice * 0.75).toFixed(2) + ' €' : '0.00 €'}
                         </span>
                       </div>
                     </div>
                     
                     {/* Contract Volume - Ultra Modern Blue Card */}
-                    <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-cyan-50/40 to-blue-100/30 backdrop-blur-xl border border-cyan-200/40 shadow-xl transition-all duration-500">
+                    <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-cyan-50/40 to-blue-100/30 backdrop-blur-xl border border-cyan-200/40 shadow-lg transition-all duration-300 h-16">
                       <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/10 via-transparent to-blue-500/10 animate-gradient-x"></div>
-                      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 to-blue-500 animate-pulse"></div>
+                      <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-cyan-500 to-blue-500 animate-pulse"></div>
                       <div className="absolute top-2 right-2 w-2 h-2 bg-cyan-400 rounded-full animate-ping opacity-60"></div>
-                      <div className="relative p-4 flex justify-between items-center">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-2 h-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 animate-pulse shadow-lg shadow-cyan-500/40"></div>
-                          <span className="text-sm font-bold bg-gradient-to-r from-cyan-700 to-cyan-600 bg-clip-text text-transparent">
+                      <div className="relative p-4 flex justify-between items-center h-full">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-2 h-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 animate-pulse shadow-lg shadow-cyan-500/40 flex-shrink-0"></div>
+                          <span className="text-sm font-bold bg-gradient-to-r from-cyan-700 to-cyan-600 bg-clip-text text-transparent break-words">
                             Vertragsvolumen Estimate
                           </span>
                         </div>
@@ -850,10 +847,10 @@ export default function Workflow() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 px-4 sm:px-0">
                   
                   {/* Realistic Hotel Selling Price */}
-                  <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-blue-50/80 to-indigo-50/60 backdrop-blur-sm border border-blue-200/50 p-4 shadow-md">
+                  <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-blue-50/80 to-indigo-50/60 backdrop-blur-sm border border-blue-200/50 p-4 shadow-md h-24">
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-indigo-400 animate-pulse"></div>
                     <div className="absolute top-2 right-2 w-2 h-2 bg-blue-400 rounded-full animate-ping opacity-50"></div>
-                    <div className="flex flex-col space-y-2">
+                    <div className="flex flex-col space-y-2 h-full justify-between">
                       <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce flex-shrink-0"></div>
                         <span className="text-sm font-bold text-blue-800 break-words">Realistischer Hotelverkaufspreis</span>
@@ -865,10 +862,10 @@ export default function Workflow() {
                   </div>
 
                   {/* Tripz Payment (75% of realistic price) */}
-                  <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-purple-50/80 to-violet-50/60 backdrop-blur-sm border border-purple-200/50 p-4 shadow-md">
+                  <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-purple-50/80 to-violet-50/60 backdrop-blur-sm border border-purple-200/50 p-4 shadow-md h-24">
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-400 to-violet-400 animate-pulse"></div>
                     <div className="absolute top-2 right-2 w-2 h-2 bg-purple-400 rounded-full animate-ping opacity-50"></div>
-                    <div className="flex flex-col space-y-2">
+                    <div className="flex flex-col space-y-2 h-full justify-between">
                       <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce flex-shrink-0"></div>
                         <span className="text-sm font-bold text-purple-800 break-words">Zahlung von Tripz (75%)</span>
@@ -880,10 +877,10 @@ export default function Workflow() {
                   </div>
 
                   {/* Hotel Voucher Value */}
-                  <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-orange-50/80 to-amber-50/60 backdrop-blur-sm border border-orange-200/50 p-4 shadow-md">
+                  <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-orange-50/80 to-amber-50/60 backdrop-blur-sm border border-orange-200/50 p-4 shadow-md h-24">
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-400 to-amber-400 animate-pulse"></div>
                     <div className="absolute top-2 right-2 w-2 h-2 bg-orange-400 rounded-full animate-ping opacity-50"></div>
-                    <div className="flex flex-col space-y-2">
+                    <div className="flex flex-col space-y-2 h-full justify-between">
                       <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 bg-orange-500 rounded-full animate-bounce flex-shrink-0"></div>
                         <span className="text-sm font-bold text-orange-800 break-words">Gutscheinwert für Hotel</span>
@@ -895,10 +892,10 @@ export default function Workflow() {
                   </div>
 
                   {/* Project Costs */}
-                  <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-rose-50/80 to-pink-50/60 backdrop-blur-sm border border-rose-200/50 p-4 shadow-md">
+                  <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-rose-50/80 to-pink-50/60 backdrop-blur-sm border border-rose-200/50 p-4 shadow-md h-24">
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-rose-400 to-pink-400 animate-pulse"></div>
                     <div className="absolute top-2 right-2 w-2 h-2 bg-rose-400 rounded-full animate-ping opacity-50"></div>
-                    <div className="flex flex-col space-y-2">
+                    <div className="flex flex-col space-y-2 h-full justify-between">
                       <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 bg-rose-500 rounded-full animate-bounce flex-shrink-0"></div>
                         <span className="text-sm font-bold text-rose-800 break-words">Projektkosten Brutto</span>
@@ -910,10 +907,10 @@ export default function Workflow() {
                   </div>
 
                   {/* Financing Base Calculation */}
-                  <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-cyan-50/80 to-sky-50/60 backdrop-blur-sm border border-cyan-200/50 p-4 shadow-md">
+                  <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-cyan-50/80 to-sky-50/60 backdrop-blur-sm border border-cyan-200/50 p-4 shadow-md h-24">
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-400 to-sky-400 animate-pulse"></div>
                     <div className="absolute top-2 right-2 w-2 h-2 bg-cyan-400 rounded-full animate-ping opacity-50"></div>
-                    <div className="flex flex-col space-y-2">
+                    <div className="flex flex-col space-y-2 h-full justify-between">
                       <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 bg-cyan-500 rounded-full animate-bounce flex-shrink-0"></div>
                         <span className="text-sm font-bold text-cyan-800 break-words">Finanzierungsbasierung</span>
@@ -926,10 +923,10 @@ export default function Workflow() {
                   </div>
 
                   {/* Final Financing Amount */}
-                  <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-green-50/80 to-emerald-50/60 backdrop-blur-sm border border-green-200/50 p-4 shadow-md">
+                  <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-green-50/80 to-emerald-50/60 backdrop-blur-sm border border-green-200/50 p-4 shadow-md h-24">
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-400 to-emerald-400 animate-pulse"></div>
                     <div className="absolute top-2 right-2 w-2 h-2 bg-green-400 rounded-full animate-ping opacity-50"></div>
-                    <div className="flex flex-col space-y-2">
+                    <div className="flex flex-col space-y-2 h-full justify-between">
                       <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce flex-shrink-0"></div>
                         <span className="text-sm font-bold text-green-800 break-words">Finanzierungsbetrag (×1.1)</span>
