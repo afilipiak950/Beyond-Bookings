@@ -821,8 +821,8 @@ export default function Workflow() {
             </Card>
             </div>
 
-            {/* Output Calculation Section - Full Viewport Width */}
-            <Card className="relative overflow-hidden bg-gradient-to-br from-emerald-50/60 to-teal-50/40 backdrop-blur-2xl border border-emerald-300/40 shadow-2xl mt-6 -mx-[50vw] left-1/2 translate-x-[-50%] w-screen">
+            {/* Output Calculation Section - Complete Platform Width */}
+            <Card className="relative overflow-hidden bg-gradient-to-br from-emerald-50/60 to-teal-50/40 backdrop-blur-2xl border border-emerald-300/40 shadow-2xl mt-6 full-platform-width">
               {/* Floating Background Elements */}
               <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 <div className="absolute top-8 left-8 w-24 h-24 bg-emerald-500/10 rounded-full blur-xl animate-float"></div>
