@@ -314,7 +314,7 @@ export default function Workflow() {
                   Echtzeitberechnungen und Analyse
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-8 p-8">
+              <CardContent className="space-y-4 p-4">
                 {/* Floating Background Elements */}
                 <div className="absolute inset-0 overflow-hidden pointer-events-none">
                   <div className="absolute top-10 left-10 w-32 h-32 bg-blue-500/10 rounded-full blur-xl animate-float"></div>
@@ -323,26 +323,26 @@ export default function Workflow() {
                 </div>
 
                 {/* Calculation Results - Ultra Modern Glassmorphism */}
-                <div className="relative space-y-6">
+                <div className="relative space-y-3">
                   {/* AI-Powered Realistic Price - Hero Section with Advanced Effects */}
-                  <div className="group relative overflow-hidden rounded-3xl bg-gradient-to-br from-white/40 to-blue-50/30 backdrop-blur-xl border border-white/20 shadow-2xl hover:shadow-blue-500/20 transition-all duration-700 hover:scale-[1.02] hover:rotate-1">
+                  <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/40 to-blue-50/30 backdrop-blur-xl border border-white/20 shadow-xl hover:shadow-blue-500/20 transition-all duration-500 hover:scale-[1.01] hover:rotate-1">
                     {/* Animated Background Layers */}
                     <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-transparent to-green-500/10 animate-gradient-x"></div>
                     <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/5 to-transparent group-hover:via-white/10 transition-all duration-500"></div>
                     
                     {/* Floating Particles */}
-                    <div className="absolute top-4 right-4 w-2 h-2 bg-blue-400 rounded-full animate-ping opacity-60"></div>
-                    <div className="absolute bottom-6 left-6 w-1 h-1 bg-green-400 rounded-full animate-ping animation-delay-1000 opacity-80"></div>
-                    <div className="absolute top-1/2 right-1/4 w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce animation-delay-500 opacity-70"></div>
+                    <div className="absolute top-2 right-2 w-1.5 h-1.5 bg-blue-400 rounded-full animate-ping opacity-60"></div>
+                    <div className="absolute bottom-3 left-3 w-1 h-1 bg-green-400 rounded-full animate-ping animation-delay-1000 opacity-80"></div>
+                    <div className="absolute top-1/2 right-1/4 w-1 h-1 bg-purple-400 rounded-full animate-bounce animation-delay-500 opacity-70"></div>
                     
-                    <div className="relative p-6 space-y-4">
+                    <div className="relative p-4 space-y-3">
                       <div className="flex justify-between items-center">
-                        <div className="flex items-center space-x-4">
+                        <div className="flex items-center space-x-3">
                           <div className="relative">
-                            <div className="w-4 h-4 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 animate-pulse shadow-lg shadow-blue-500/50"></div>
-                            <div className="absolute inset-0 w-4 h-4 rounded-full bg-blue-400 animate-ping opacity-40"></div>
+                            <div className="w-3 h-3 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 animate-pulse shadow-lg shadow-blue-500/50"></div>
+                            <div className="absolute inset-0 w-3 h-3 rounded-full bg-blue-400 animate-ping opacity-40"></div>
                           </div>
-                          <span className="font-bold text-lg bg-gradient-to-r from-blue-800 to-blue-600 bg-clip-text text-transparent">
+                          <span className="font-bold text-base bg-gradient-to-r from-blue-800 to-blue-600 bg-clip-text text-transparent">
                             Realistischer Hotelverkaufspreis (KI)
                           </span>
                         </div>
@@ -360,9 +360,9 @@ export default function Workflow() {
                         </div>
                       </div>
                       
-                      <div className="flex justify-between items-center mt-6">
+                      <div className="flex justify-between items-center mt-4">
                         <div className="relative">
-                          <span className="text-4xl font-black bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 bg-clip-text text-transparent tracking-tight animate-text-shimmer bg-300% bg-size-200">
+                          <span className="text-2xl font-black bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 bg-clip-text text-transparent tracking-tight animate-text-shimmer bg-300% bg-size-200">
                             {actualPrice ? `${actualPrice.toFixed(2)} €` : '0.00 €'}
                           </span>
                           <div className="absolute -inset-1 bg-gradient-to-r from-blue-500/20 to-purple-500/20 blur-sm -z-10 animate-pulse"></div>
@@ -465,57 +465,57 @@ export default function Workflow() {
                   </div>
                   
                   {/* Secondary Calculations - Floating Cards Grid */}
-                  <div className="grid gap-4 mt-8">
+                  <div className="grid gap-3 mt-4">
                     {/* 65% Calculation - Floating Card */}
-                    <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/50 to-gray-50/30 backdrop-blur-xl border border-white/30 shadow-xl hover:shadow-2xl hover:shadow-gray-500/10 transition-all duration-500 hover:scale-[1.03] hover:-rotate-1">
+                    <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-white/50 to-gray-50/30 backdrop-blur-xl border border-white/30 shadow-lg hover:shadow-xl hover:shadow-gray-500/10 transition-all duration-300 hover:scale-[1.01] hover:-rotate-1">
                       <div className="absolute inset-0 bg-gradient-to-r from-gray-400/5 via-transparent to-gray-500/5 animate-gradient-x"></div>
-                      <div className="absolute top-2 right-2 w-1.5 h-1.5 bg-gray-400 rounded-full animate-ping opacity-40"></div>
-                      <div className="relative p-4 flex justify-between items-center">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-3 h-3 rounded-full bg-gradient-to-r from-gray-400 to-gray-500 animate-pulse shadow-md shadow-gray-400/30"></div>
-                          <span className="text-sm font-semibold bg-gradient-to-r from-gray-700 to-gray-600 bg-clip-text text-transparent group-hover:from-gray-800 group-hover:to-gray-700 transition-all duration-300">
+                      <div className="absolute top-1 right-1 w-1 h-1 bg-gray-400 rounded-full animate-ping opacity-40"></div>
+                      <div className="relative p-3 flex justify-between items-center">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-2 h-2 rounded-full bg-gradient-to-r from-gray-400 to-gray-500 animate-pulse shadow-md shadow-gray-400/30"></div>
+                          <span className="text-xs font-semibold bg-gradient-to-r from-gray-700 to-gray-600 bg-clip-text text-transparent group-hover:from-gray-800 group-hover:to-gray-700 transition-all duration-300">
                             65% des durchschnittlichen Zimmerpreises
                           </span>
                         </div>
-                        <span className="text-xl font-black bg-gradient-to-r from-gray-700 to-gray-800 bg-clip-text text-transparent">
+                        <span className="text-lg font-black bg-gradient-to-r from-gray-700 to-gray-800 bg-clip-text text-transparent">
                           {workflowData.averagePrice ? (workflowData.averagePrice * 0.65).toFixed(0) : '0'}
                         </span>
                       </div>
                     </div>
                     
                     {/* Hotel Voucher - Red Pulsing Card */}
-                    <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-red-50/40 to-rose-100/30 backdrop-blur-xl border border-red-200/40 shadow-xl hover:shadow-2xl hover:shadow-red-500/15 transition-all duration-500 hover:scale-[1.03] hover:rotate-1">
+                    <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-red-50/40 to-rose-100/30 backdrop-blur-xl border border-red-200/40 shadow-lg hover:shadow-xl hover:shadow-red-500/15 transition-all duration-300 hover:scale-[1.01] hover:rotate-1">
                       <div className="absolute inset-0 bg-gradient-to-r from-red-400/10 via-transparent to-rose-500/10 animate-gradient-x"></div>
-                      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 to-rose-500 animate-pulse"></div>
-                      <div className="absolute top-2 right-2 w-2 h-2 bg-red-400 rounded-full animate-ping opacity-60"></div>
-                      <div className="relative p-4 flex justify-between items-center">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-3 h-3 rounded-full bg-gradient-to-r from-red-500 to-rose-500 animate-pulse shadow-lg shadow-red-500/40"></div>
-                          <span className="font-bold bg-gradient-to-r from-red-700 to-red-600 bg-clip-text text-transparent">
+                      <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-red-500 to-rose-500 animate-pulse"></div>
+                      <div className="absolute top-1 right-1 w-1 h-1 bg-red-400 rounded-full animate-ping opacity-60"></div>
+                      <div className="relative p-3 flex justify-between items-center">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-2 h-2 rounded-full bg-gradient-to-r from-red-500 to-rose-500 animate-pulse shadow-lg shadow-red-500/40"></div>
+                          <span className="text-xs font-bold bg-gradient-to-r from-red-700 to-red-600 bg-clip-text text-transparent">
                             Gutscheinwert für Hotel
                           </span>
                         </div>
-                        <span className="text-xl font-black bg-gradient-to-r from-red-600 to-rose-600 bg-clip-text text-transparent">
+                        <span className="text-lg font-black bg-gradient-to-r from-red-600 to-rose-600 bg-clip-text text-transparent">
                           {workflowData.averagePrice ? (workflowData.averagePrice * 0.65).toFixed(2) : '0.00'} €
                         </span>
                       </div>
                     </div>
                     
                     {/* Profit Margin - Animated Success Card */}
-                    <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-50/40 to-green-100/30 backdrop-blur-xl border border-green-200/40 shadow-xl hover:shadow-2xl hover:shadow-green-500/15 transition-all duration-500 hover:scale-[1.03] hover:-rotate-1">
+                    <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-50/40 to-green-100/30 backdrop-blur-xl border border-green-200/40 shadow-lg hover:shadow-xl hover:shadow-green-500/15 transition-all duration-300 hover:scale-[1.01] hover:-rotate-1">
                       <div className="absolute inset-0 bg-gradient-to-r from-green-400/10 via-transparent to-emerald-500/10 animate-gradient-x"></div>
-                      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-500 to-emerald-500 animate-pulse"></div>
-                      <div className="absolute top-2 right-2 w-2 h-2 bg-green-400 rounded-full animate-ping opacity-60"></div>
-                      <div className="relative p-4 flex justify-between items-center">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-3 h-3 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 animate-pulse shadow-lg shadow-green-500/40"></div>
-                          <span className="font-bold bg-gradient-to-r from-green-700 to-green-600 bg-clip-text text-transparent">
+                      <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-green-500 to-emerald-500 animate-pulse"></div>
+                      <div className="absolute top-1 right-1 w-1 h-1 bg-green-400 rounded-full animate-ping opacity-60"></div>
+                      <div className="relative p-3 flex justify-between items-center">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-2 h-2 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 animate-pulse shadow-lg shadow-green-500/40"></div>
+                          <span className="text-xs font-bold bg-gradient-to-r from-green-700 to-green-600 bg-clip-text text-transparent">
                             Marge nach Steuern
                           </span>
                         </div>
-                        <div className="flex items-center space-x-3">
-                          <div className="w-2 h-2 rounded-full bg-green-500 animate-bounce shadow-sm shadow-green-500/50"></div>
-                          <span className="text-xl font-black bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-1 h-1 rounded-full bg-green-500 animate-bounce shadow-sm shadow-green-500/50"></div>
+                          <span className="text-lg font-black bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
                             {workflowData.averagePrice ? `${((workflowData.averagePrice - (workflowData.averagePrice * 0.65)) / workflowData.averagePrice * 100).toFixed(0)}%` : '0%'}
                           </span>
                         </div>
@@ -563,27 +563,27 @@ export default function Workflow() {
                   </div>
                   
                   {/* Project Costs - Ultra-Modern Special Section */}
-                  <div className="group relative overflow-hidden rounded-3xl bg-gradient-to-br from-rose-50/50 to-red-100/40 backdrop-blur-2xl border-2 border-rose-300/50 p-6 shadow-2xl hover:shadow-rose-500/25 transition-all duration-700 hover:scale-[1.02] hover:-rotate-1">
+                  <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-rose-50/50 to-red-100/40 backdrop-blur-xl border border-rose-300/50 p-4 shadow-lg hover:shadow-rose-500/25 transition-all duration-300 hover:scale-[1.01] hover:-rotate-1">
                     {/* Multiple animated layers */}
                     <div className="absolute inset-0 bg-gradient-to-r from-rose-400/15 via-red-500/10 to-rose-400/15 animate-gradient-x"></div>
                     <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/10 to-transparent group-hover:via-white/20 transition-all duration-500"></div>
                     
                     {/* Enhanced floating particles */}
-                    <div className="absolute top-3 right-3 w-3 h-3 rounded-full bg-rose-500 animate-ping opacity-60"></div>
-                    <div className="absolute bottom-4 left-4 w-2 h-2 rounded-full bg-red-400 animate-bounce opacity-50"></div>
-                    <div className="absolute top-1/2 left-1/3 w-1.5 h-1.5 rounded-full bg-rose-300 animate-ping animation-delay-1000 opacity-40"></div>
+                    <div className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping opacity-60"></div>
+                    <div className="absolute bottom-2 left-2 w-1 h-1 rounded-full bg-red-400 animate-bounce opacity-50"></div>
+                    <div className="absolute top-1/2 left-1/3 w-1 h-1 rounded-full bg-rose-300 animate-ping animation-delay-1000 opacity-40"></div>
                     
                     <div className="relative flex justify-between items-center">
-                      <div className="flex items-center space-x-4">
+                      <div className="flex items-center space-x-3">
                         <div className="relative">
-                          <div className="w-4 h-4 rounded-full bg-gradient-to-r from-rose-500 to-red-600 animate-pulse shadow-xl shadow-rose-500/60"></div>
-                          <div className="absolute inset-0 w-4 h-4 rounded-full bg-rose-400 animate-ping opacity-30"></div>
+                          <div className="w-3 h-3 rounded-full bg-gradient-to-r from-rose-500 to-red-600 animate-pulse shadow-xl shadow-rose-500/60"></div>
+                          <div className="absolute inset-0 w-3 h-3 rounded-full bg-rose-400 animate-ping opacity-30"></div>
                         </div>
-                        <span className="font-black text-lg bg-gradient-to-r from-rose-800 to-red-700 bg-clip-text text-transparent">
+                        <span className="font-black text-sm bg-gradient-to-r from-rose-800 to-red-700 bg-clip-text text-transparent">
                           Finanzierung: Projektkosten brutto
                         </span>
                       </div>
-                      <span className="text-2xl font-black bg-gradient-to-r from-rose-600 via-red-600 to-rose-700 bg-clip-text text-transparent tracking-tight animate-text-shimmer bg-size-200">
+                      <span className="text-lg font-black bg-gradient-to-r from-rose-600 via-red-600 to-rose-700 bg-clip-text text-transparent tracking-tight animate-text-shimmer bg-size-200">
                         {workflowData.roomCount && workflowData.averagePrice ? 
                           (Math.min(Math.floor((workflowData.roomCount * 365) * 0.15), 1000) * workflowData.averagePrice * 0.65).toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €' : 
                           '0.00 €'
@@ -594,41 +594,41 @@ export default function Workflow() {
                 </div>
 
                 {/* Summary - Ultra-Modern Glass Card with Advanced Effects */}
-                <div className="group relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-50/40 to-blue-50/30 backdrop-blur-2xl border border-slate-300/30 p-6 shadow-2xl hover:shadow-blue-500/20 transition-all duration-700 hover:scale-[1.01] mt-8">
+                <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-50/40 to-blue-50/30 backdrop-blur-xl border border-slate-300/30 p-4 shadow-lg hover:shadow-blue-500/20 transition-all duration-300 hover:scale-[1.01] mt-4">
                   {/* Animated Background Layers */}
                   <div className="absolute inset-0 bg-gradient-to-r from-blue-500/8 via-green-500/8 to-purple-500/8 animate-gradient-x"></div>
                   <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/10 to-transparent group-hover:via-white/15 transition-all duration-500"></div>
                   
                   {/* Floating Elements */}
-                  <div className="absolute top-4 right-4 w-2 h-2 bg-blue-400 rounded-full animate-ping opacity-50"></div>
-                  <div className="absolute bottom-4 left-4 w-1.5 h-1.5 bg-green-400 rounded-full animate-bounce opacity-60"></div>
-                  <div className="absolute top-1/3 right-1/3 w-1 h-1 bg-purple-400 rounded-full animate-pulse opacity-40"></div>
+                  <div className="absolute top-2 right-2 w-1 h-1 bg-blue-400 rounded-full animate-ping opacity-50"></div>
+                  <div className="absolute bottom-2 left-2 w-1 h-1 bg-green-400 rounded-full animate-bounce opacity-60"></div>
+                  <div className="absolute top-1/3 right-1/3 w-0.5 h-0.5 bg-purple-400 rounded-full animate-pulse opacity-40"></div>
                   
                   <div className="relative">
-                    <div className="flex items-center space-x-4 mb-4">
+                    <div className="flex items-center space-x-3 mb-3">
                       <div className="relative">
-                        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-500 via-green-500 to-purple-500 flex items-center justify-center shadow-xl shadow-blue-500/30 group-hover:shadow-blue-500/50 transition-all duration-500">
-                          <span className="text-white text-lg font-bold animate-bounce-gentle">📊</span>
+                        <div className="w-6 h-6 rounded-xl bg-gradient-to-br from-blue-500 via-green-500 to-purple-500 flex items-center justify-center shadow-lg shadow-blue-500/30 group-hover:shadow-blue-500/50 transition-all duration-500">
+                          <span className="text-white text-sm font-bold animate-bounce-gentle">📊</span>
                         </div>
-                        <div className="absolute inset-0 w-10 h-10 rounded-2xl bg-blue-400 animate-ping opacity-20"></div>
+                        <div className="absolute inset-0 w-6 h-6 rounded-xl bg-blue-400 animate-ping opacity-20"></div>
                       </div>
-                      <h4 className="font-black text-xl bg-gradient-to-r from-slate-800 via-blue-700 to-slate-800 bg-clip-text text-transparent animate-text-shimmer bg-size-200">
+                      <h4 className="font-black text-lg bg-gradient-to-r from-slate-800 via-blue-700 to-slate-800 bg-clip-text text-transparent animate-text-shimmer bg-size-200">
                         Live-Zusammenfassung
                       </h4>
                     </div>
-                    <p className="text-slate-600 leading-relaxed text-lg font-medium">
+                    <p className="text-slate-600 leading-relaxed text-base font-medium">
                       {workflowData.hotelName && workflowData.averagePrice > 0 ? 
                         `${workflowData.hotelName} mit ${workflowData.roomCount} Zimmern bereit für detaillierte Preisvergleichsanalyse.` :
                         "Geben Sie Hoteldaten ein, um die Live-Berechnung zu starten."
                       }
                     </p>
                     {workflowData.hotelName && workflowData.averagePrice > 0 && (
-                      <div className="mt-4 flex items-center space-x-3">
+                      <div className="mt-3 flex items-center space-x-2">
                         <div className="relative">
-                          <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse shadow-lg shadow-green-500/50"></div>
-                          <div className="absolute inset-0 w-3 h-3 rounded-full bg-green-400 animate-ping opacity-40"></div>
+                          <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-lg shadow-green-500/50"></div>
+                          <div className="absolute inset-0 w-2 h-2 rounded-full bg-green-400 animate-ping opacity-40"></div>
                         </div>
-                        <span className="text-sm bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent font-bold">
+                        <span className="text-xs bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent font-bold">
                           Bereit für Analyse
                         </span>
                       </div>
