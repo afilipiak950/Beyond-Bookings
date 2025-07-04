@@ -106,10 +106,10 @@ export default function Workflow() {
   const [tempVoucherValue, setTempVoucherValue] = useState("");
   const [voucherEditFeedback, setVoucherEditFeedback] = useState("");
 
-  // Calculate AI suggested price (55% of average price, rounded up)
+  // Calculate AI suggested price (56% of average price, rounded up)
   useEffect(() => {
     if (workflowData.averagePrice > 0) {
-      const suggested = Math.ceil(workflowData.averagePrice * 0.55);
+      const suggested = Math.ceil(workflowData.averagePrice * 0.56);
       setAiSuggestedPrice(suggested);
       if (!isManualEdit) {
         setActualPrice(suggested);
@@ -427,7 +427,7 @@ export default function Workflow() {
                             </span>
                           ) : (
                             <span className="text-sm bg-gradient-to-r from-green-100 to-emerald-50 text-green-700 px-4 py-2 rounded-full font-semibold shadow-lg shadow-green-200/50 border border-green-200/30 backdrop-blur-sm animate-pulse">
-                              KI: 55%
+                              KI: 56%
                             </span>
                           )}
                         </div>
@@ -463,7 +463,7 @@ export default function Workflow() {
                             <div className="space-y-4 pt-4">
                               <div className="bg-blue-50 p-3 rounded border-l-4 border-blue-400">
                                 <p className="text-sm text-blue-800">
-                                  <strong>KI-Vorschlag:</strong> {aiSuggestedPrice.toFixed(2)} € (55% von {workflowData.averagePrice.toFixed(2)} €)
+                                  <strong>KI-Vorschlag:</strong> {aiSuggestedPrice.toFixed(2)} € (56% von {workflowData.averagePrice.toFixed(2)} €)
                                 </p>
                                 <p className="text-xs text-blue-600 mt-1">
                                   Ihre Anpassung hilft der KI beim Lernen und verbessert zukünftige Vorschläge.
@@ -527,7 +527,7 @@ export default function Workflow() {
                                 {isManualEdit ? (
                                   <>Manuell angepasst von <span className="font-bold text-blue-800">{aiSuggestedPrice.toFixed(2)} €</span> auf <span className="font-bold text-green-600">{actualPrice.toFixed(2)} €</span>. Die KI lernt aus Ihrer Korrektur für ähnliche {workflowData.stars}-Sterne Hotels.</>
                                 ) : (
-                                  <>Basierend auf <span className="font-bold text-blue-800">55%</span> des Durchschnittspreises für <span className="font-semibold">{workflowData.stars}-Sterne Hotels</span> mit <span className="font-semibold">{workflowData.roomCount} Zimmern</span> und <span className="font-semibold">{workflowData.occupancyRate}% Auslastung</span>. Selbstlernende KI passt sich an Ihre Korrekturen an.</>
+                                  <>Basierend auf <span className="font-bold text-blue-800">56%</span> des Durchschnittspreises für <span className="font-semibold">{workflowData.stars}-Sterne Hotels</span> mit <span className="font-semibold">{workflowData.roomCount} Zimmern</span> und <span className="font-semibold">{workflowData.occupancyRate}% Auslastung</span>. Selbstlernende KI passt sich an Ihre Korrekturen an.</>
                                 )}
                               </p>
                             </div>
