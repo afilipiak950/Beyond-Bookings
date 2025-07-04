@@ -208,7 +208,7 @@ export default function Workflow() {
                   <input 
                     type="number"
                     className="w-full p-3 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    value={workflowData.roomCount * 365}
+                    value={Math.floor(workflowData.roomCount * 365 * (1 - workflowData.occupancyRate / 100))}
                     readOnly
                   />
                 </div>
@@ -301,7 +301,7 @@ export default function Workflow() {
                     <div className="flex justify-between items-center text-sm">
                       <span>Verfügbare Roomnights</span>
                       <span className="text-green-600 font-semibold">
-                        {(workflowData.roomCount * 365).toLocaleString()}
+                        {Math.floor(workflowData.roomCount * 365 * (1 - workflowData.occupancyRate / 100)).toLocaleString()}
                       </span>
                     </div>
                     <div className="flex justify-between items-center text-sm">
