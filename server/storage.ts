@@ -6,6 +6,9 @@ import {
   ocrAnalyses,
   priceIntelligence,
   aiLearningSessions,
+  documentUploads,
+  documentAnalyses,
+  documentInsights,
   type User,
   type UpsertUser,
   type Hotel,
@@ -19,6 +22,12 @@ import {
   type InsertPriceIntelligence,
   type PriceIntelligence,
   type AiLearningSession,
+  type DocumentUpload,
+  type InsertDocumentUpload,
+  type DocumentAnalysis,
+  type InsertDocumentAnalysis,
+  type DocumentInsight,
+  type InsertDocumentInsight,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and } from "drizzle-orm";
@@ -68,6 +77,25 @@ export interface IStorage {
   getPriceIntelligence(userId: string): Promise<PriceIntelligence[]>;
   createPriceIntelligence(data: InsertPriceIntelligence): Promise<PriceIntelligence>;
   getAiLearningSessions(limit?: number): Promise<AiLearningSession[]>;
+
+  // Document Analysis operations
+  getDocumentUploads(userId: string): Promise<DocumentUpload[]>;
+  getDocumentUpload(id: number, userId: string): Promise<DocumentUpload | undefined>;
+  createDocumentUpload(upload: InsertDocumentUpload): Promise<DocumentUpload>;
+  updateDocumentUpload(id: number, upload: Partial<InsertDocumentUpload>): Promise<DocumentUpload | undefined>;
+  deleteDocumentUpload(id: number, userId: string): Promise<boolean>;
+
+  getDocumentAnalyses(userId: string): Promise<DocumentAnalysis[]>;
+  getDocumentAnalysis(id: number, userId: string): Promise<DocumentAnalysis | undefined>;
+  createDocumentAnalysis(analysis: InsertDocumentAnalysis): Promise<DocumentAnalysis>;
+  updateDocumentAnalysis(id: number, userId: string, analysis: Partial<InsertDocumentAnalysis>): Promise<DocumentAnalysis | undefined>;
+  deleteDocumentAnalysis(id: number, userId: string): Promise<boolean>;
+
+  getDocumentInsights(userId: string): Promise<DocumentInsight[]>;
+  getDocumentInsight(id: number, userId: string): Promise<DocumentInsight | undefined>;
+  createDocumentInsight(insight: InsertDocumentInsight): Promise<DocumentInsight>;
+  updateDocumentInsight(id: number, userId: string, insight: Partial<InsertDocumentInsight>): Promise<DocumentInsight | undefined>;
+  deleteDocumentInsight(id: number, userId: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -365,6 +393,96 @@ ${calculation.hotelName},${calculation.hotelUrl || ''},${calculation.stars || ''
   async deleteOcrAnalysis(id: number, userId: string): Promise<boolean> {
     const result = await db.delete(ocrAnalyses)
       .where(and(eq(ocrAnalyses.id, id), eq(ocrAnalyses.userId, userId)));
+    return result.rowCount > 0;
+  }
+
+  // Document Upload operations
+  async getDocumentUploads(userId: string): Promise<DocumentUpload[]> {
+    return await db.select().from(documentUploads).where(eq(documentUploads.userId, userId));
+  }
+
+  async getDocumentUpload(id: number, userId: string): Promise<DocumentUpload | undefined> {
+    const [upload] = await db.select().from(documentUploads)
+      .where(and(eq(documentUploads.id, id), eq(documentUploads.userId, userId)));
+    return upload;
+  }
+
+  async createDocumentUpload(uploadData: InsertDocumentUpload): Promise<DocumentUpload> {
+    const [upload] = await db.insert(documentUploads).values(uploadData).returning();
+    return upload;
+  }
+
+  async updateDocumentUpload(id: number, uploadData: Partial<InsertDocumentUpload>): Promise<DocumentUpload | undefined> {
+    const [upload] = await db.update(documentUploads)
+      .set({ ...uploadData, processedAt: new Date() })
+      .where(eq(documentUploads.id, id))
+      .returning();
+    return upload;
+  }
+
+  async deleteDocumentUpload(id: number, userId: string): Promise<boolean> {
+    const result = await db.delete(documentUploads)
+      .where(and(eq(documentUploads.id, id), eq(documentUploads.userId, userId)));
+    return result.rowCount > 0;
+  }
+
+  // Document Analysis operations
+  async getDocumentAnalyses(userId: string): Promise<DocumentAnalysis[]> {
+    return await db.select().from(documentAnalyses).where(eq(documentAnalyses.userId, userId));
+  }
+
+  async getDocumentAnalysis(id: number, userId: string): Promise<DocumentAnalysis | undefined> {
+    const [analysis] = await db.select().from(documentAnalyses)
+      .where(and(eq(documentAnalyses.id, id), eq(documentAnalyses.userId, userId)));
+    return analysis;
+  }
+
+  async createDocumentAnalysis(analysisData: InsertDocumentAnalysis): Promise<DocumentAnalysis> {
+    const [analysis] = await db.insert(documentAnalyses).values(analysisData).returning();
+    return analysis;
+  }
+
+  async updateDocumentAnalysis(id: number, userId: string, analysisData: Partial<InsertDocumentAnalysis>): Promise<DocumentAnalysis | undefined> {
+    const [analysis] = await db.update(documentAnalyses)
+      .set({ ...analysisData, completedAt: new Date() })
+      .where(and(eq(documentAnalyses.id, id), eq(documentAnalyses.userId, userId)))
+      .returning();
+    return analysis;
+  }
+
+  async deleteDocumentAnalysis(id: number, userId: string): Promise<boolean> {
+    const result = await db.delete(documentAnalyses)
+      .where(and(eq(documentAnalyses.id, id), eq(documentAnalyses.userId, userId)));
+    return result.rowCount > 0;
+  }
+
+  // Document Insights operations
+  async getDocumentInsights(userId: string): Promise<DocumentInsight[]> {
+    return await db.select().from(documentInsights).where(eq(documentInsights.userId, userId));
+  }
+
+  async getDocumentInsight(id: number, userId: string): Promise<DocumentInsight | undefined> {
+    const [insight] = await db.select().from(documentInsights)
+      .where(and(eq(documentInsights.id, id), eq(documentInsights.userId, userId)));
+    return insight;
+  }
+
+  async createDocumentInsight(insightData: InsertDocumentInsight): Promise<DocumentInsight> {
+    const [insight] = await db.insert(documentInsights).values(insightData).returning();
+    return insight;
+  }
+
+  async updateDocumentInsight(id: number, userId: string, insightData: Partial<InsertDocumentInsight>): Promise<DocumentInsight | undefined> {
+    const [insight] = await db.update(documentInsights)
+      .set({ ...insightData, updatedAt: new Date() })
+      .where(and(eq(documentInsights.id, id), eq(documentInsights.userId, userId)))
+      .returning();
+    return insight;
+  }
+
+  async deleteDocumentInsight(id: number, userId: string): Promise<boolean> {
+    const result = await db.delete(documentInsights)
+      .where(and(eq(documentInsights.id, id), eq(documentInsights.userId, userId)));
     return result.rowCount > 0;
   }
 }

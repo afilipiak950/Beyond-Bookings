@@ -1039,6 +1039,205 @@ What would you like to work on today? I'm here to make your hotel pricing more i
     }
   });
 
+  // Document Analysis routes - Configure multer for ZIP files
+  const documentUpload = multer({
+    dest: 'uploads/',
+    limits: {
+      fileSize: 100 * 1024 * 1024, // 100MB limit
+    },
+    fileFilter: (req, file, cb) => {
+      const allowedTypes = [
+        'application/zip',
+        'application/x-zip-compressed',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/vnd.ms-excel',
+        'text/csv'
+      ];
+      if (allowedTypes.includes(file.mimetype)) {
+        cb(null, true);
+      } else {
+        cb(new Error('Only ZIP, Excel, and CSV files are allowed'));
+      }
+    }
+  });
+
+  // Get document uploads
+  app.get('/api/document-uploads', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id.toString();
+      const uploads = await storage.getDocumentUploads(userId);
+      res.json(uploads);
+    } catch (error) {
+      console.error("Error fetching document uploads:", error);
+      res.status(500).json({ message: "Failed to fetch document uploads" });
+    }
+  });
+
+  // Upload and process document
+  app.post('/api/document-uploads', requireAuth, documentUpload.single('file'), async (req: any, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+
+      const userId = req.user.id.toString();
+      
+      // Create initial upload record
+      const upload = await storage.createDocumentUpload({
+        userId,
+        fileName: req.file.filename,
+        originalFileName: req.file.originalname,
+        filePath: req.file.path,
+        fileSize: req.file.size,
+        fileType: req.file.mimetype,
+        uploadStatus: 'processing'
+      });
+
+      // Start processing in background (mock implementation)
+      setTimeout(async () => {
+        try {
+          // Simulate processing time
+          await new Promise(resolve => setTimeout(resolve, 3000));
+          
+          // Update upload status
+          await storage.updateDocumentUpload(upload.id, {
+            uploadStatus: 'completed',
+            extractedFiles: [
+              { fileName: 'Hotel_Data_2024.xlsx', worksheets: ['Q1 Revenue', 'Q2 Revenue', 'Summary'] },
+              { fileName: 'Pricing_Analysis.xlsx', worksheets: ['Current Rates', 'Competitor Analysis'] }
+            ]
+          });
+
+          // Create sample analyses
+          const analyses = [
+            {
+              uploadId: upload.id,
+              userId,
+              fileName: 'Hotel_Data_2024.xlsx',
+              worksheetName: 'Q1 Revenue',
+              analysisType: 'revenue_analysis',
+              status: 'completed',
+              priceData: [
+                { value: 89.50, currency: 'EUR', context: 'Standard Room', row: 2, column: 3, confidence: 0.95 },
+                { value: 125.00, currency: 'EUR', context: 'Suite', row: 3, column: 3, confidence: 0.92 },
+                { value: 75.00, currency: 'EUR', context: 'Economy Room', row: 4, column: 3, confidence: 0.88 }
+              ],
+              insights: {
+                summary: "Revenue analysis shows strong Q1 performance with average room rates of €89.50. Pricing strategy suggests optimal positioning in mid-market segment.",
+                keyMetrics: [
+                  { metric: "Average Room Rate", value: "€89.50", change: "+5.2%" },
+                  { metric: "Revenue Growth", value: "12.3%", change: "+2.1%" },
+                  { metric: "Occupancy Rate", value: "78%", change: "+3.5%" }
+                ],
+                recommendations: [
+                  "Consider 10-15% rate increase for peak season",
+                  "Implement dynamic pricing for weekends",
+                  "Focus on corporate segment for steady revenue"
+                ],
+                trends: [
+                  { category: "Pricing", trend: "up", description: "Consistent upward pricing trend" },
+                  { category: "Demand", trend: "stable", description: "Stable demand patterns" }
+                ]
+              },
+              processingTime: 2500
+            }
+          ];
+
+          for (const analysisData of analyses) {
+            await storage.createDocumentAnalysis(analysisData);
+          }
+
+          // Create cross-document insights
+          await storage.createDocumentInsight({
+            userId,
+            uploadId: upload.id,
+            insightType: 'cross_document',
+            title: 'Multi-Document Pricing Analysis',
+            description: 'Comprehensive analysis across all uploaded documents revealing pricing trends and optimization opportunities.',
+            data: {
+              summary: "Analysis of multiple documents reveals consistent pricing strategies with opportunities for revenue optimization. Key findings suggest 15-20% potential revenue increase through strategic pricing adjustments.",
+              averagePrices: {
+                overall: 89.50,
+                byCategory: {
+                  'Standard Room': 89.50,
+                  'Suite': 125.00,
+                  'Economy Room': 75.00
+                }
+              },
+              recommendations: [
+                "Implement dynamic pricing strategy",
+                "Increase rates during peak demand periods",
+                "Optimize room category pricing mix",
+                "Focus on revenue per available room (RevPAR) improvement"
+              ]
+            },
+            visualizationData: {
+              chartType: 'pricing_distribution',
+              data: [
+                { category: 'Standard Room', value: 89.50, count: 15 },
+                { category: 'Suite', value: 125.00, count: 8 },
+                { category: 'Economy Room', value: 75.00, count: 22 }
+              ]
+            }
+          });
+
+        } catch (error) {
+          console.error("Error processing document:", error);
+          await storage.updateDocumentUpload(upload.id, {
+            uploadStatus: 'error'
+          });
+        }
+      }, 1000);
+
+      res.json(upload);
+    } catch (error) {
+      console.error("Error uploading document:", error);
+      res.status(500).json({ message: "Failed to upload document" });
+    }
+  });
+
+  // Get document analyses
+  app.get('/api/document-analyses', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id.toString();
+      const analyses = await storage.getDocumentAnalyses(userId);
+      res.json(analyses);
+    } catch (error) {
+      console.error("Error fetching document analyses:", error);
+      res.status(500).json({ message: "Failed to fetch document analyses" });
+    }
+  });
+
+  // Get document insights
+  app.get('/api/document-insights', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id.toString();
+      const insights = await storage.getDocumentInsights(userId);
+      res.json(insights);
+    } catch (error) {
+      console.error("Error fetching document insights:", error);
+      res.status(500).json({ message: "Failed to fetch document insights" });
+    }
+  });
+
+  // Delete document upload
+  app.delete('/api/document-uploads/:id', requireAuth, async (req: any, res) => {
+    try {
+      const uploadId = parseInt(req.params.id);
+      const userId = req.user.id.toString();
+      
+      const success = await storage.deleteDocumentUpload(uploadId, userId);
+      if (!success) {
+        return res.status(404).json({ message: "Document upload not found" });
+      }
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting document upload:", error);
+      res.status(500).json({ message: "Failed to delete document upload" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

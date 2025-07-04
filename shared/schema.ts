@@ -235,3 +235,92 @@ export const aiLearningSessions = pgTable("ai_learning_sessions", {
 
 export type InsertAiLearningSession = typeof aiLearningSessions.$inferInsert;
 export type AiLearningSession = typeof aiLearningSessions.$inferSelect;
+
+// Document Upload and Analysis System
+export const documentUploads = pgTable("document_uploads", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull(),
+  fileName: varchar("file_name").notNull(),
+  originalFileName: varchar("original_file_name").notNull(),
+  filePath: varchar("file_path").notNull(),
+  fileSize: integer("file_size").notNull(),
+  fileType: varchar("file_type").notNull(), // 'zip', 'excel', 'pdf'
+  uploadStatus: varchar("upload_status").default("uploaded"), // 'uploaded', 'processing', 'completed', 'error'
+  extractedFiles: jsonb("extracted_files"), // Array of extracted file paths for ZIP files
+  createdAt: timestamp("created_at").defaultNow(),
+  processedAt: timestamp("processed_at"),
+});
+
+export const documentAnalyses = pgTable("document_analyses", {
+  id: serial("id").primaryKey(),
+  uploadId: integer("upload_id").references(() => documentUploads.id),
+  userId: varchar("user_id").notNull(),
+  fileName: varchar("file_name").notNull(),
+  worksheetName: varchar("worksheet_name"), // For Excel files with multiple sheets
+  analysisType: varchar("analysis_type").notNull(), // 'ocr', 'excel_parse', 'structured_data'
+  extractedData: jsonb("extracted_data"), // Raw extracted data
+  processedData: jsonb("processed_data"), // Structured/normalized data
+  insights: jsonb("insights"), // AI-generated insights
+  priceData: jsonb("price_data"), // Extracted pricing information
+  status: varchar("status").default("pending"), // 'pending', 'processing', 'completed', 'error'
+  errorMessage: text("error_message"),
+  processingTime: integer("processing_time"), // in milliseconds
+  createdAt: timestamp("created_at").defaultNow(),
+  completedAt: timestamp("completed_at"),
+});
+
+export const documentInsights = pgTable("document_insights", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull(),
+  analysisIds: jsonb("analysis_ids").notNull(), // Array of analysis IDs used for this insight
+  insightType: varchar("insight_type").notNull(), // 'price_average', 'trend_analysis', 'comparison'
+  title: varchar("title").notNull(),
+  description: text("description"),
+  data: jsonb("data").notNull(), // Calculated insights data
+  visualizationData: jsonb("visualization_data"), // Chart/graph data
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Relations
+export const documentUploadsRelations = relations(documentUploads, ({ many, one }) => ({
+  analyses: many(documentAnalyses),
+  user: one(users, { fields: [documentUploads.userId], references: [users.id] }),
+}));
+
+export const documentAnalysesRelations = relations(documentAnalyses, ({ one }) => ({
+  upload: one(documentUploads, { fields: [documentAnalyses.uploadId], references: [documentUploads.id] }),
+  user: one(users, { fields: [documentAnalyses.userId], references: [users.id] }),
+}));
+
+export const documentInsightsRelations = relations(documentInsights, ({ one }) => ({
+  user: one(users, { fields: [documentInsights.userId], references: [users.id] }),
+}));
+
+// Types with Zod schemas
+export const insertDocumentUploadSchema = createInsertSchema(documentUploads).omit({
+  id: true,
+  createdAt: true,
+  processedAt: true,
+});
+
+export const insertDocumentAnalysisSchema = createInsertSchema(documentAnalyses).omit({
+  id: true,
+  createdAt: true,
+  completedAt: true,
+});
+
+export const insertDocumentInsightSchema = createInsertSchema(documentInsights).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertDocumentUpload = z.infer<typeof insertDocumentUploadSchema>;
+export type DocumentUpload = typeof documentUploads.$inferSelect;
+
+export type InsertDocumentAnalysis = z.infer<typeof insertDocumentAnalysisSchema>;
+export type DocumentAnalysis = typeof documentAnalyses.$inferSelect;
+
+export type InsertDocumentInsight = z.infer<typeof insertDocumentInsightSchema>;
+export type DocumentInsight = typeof documentInsights.$inferSelect;

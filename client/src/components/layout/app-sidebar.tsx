@@ -13,6 +13,7 @@ import {
   FileText,
   Settings,
   User,
+  Brain,
   LogOut,
   Menu,
   Home,
@@ -20,8 +21,7 @@ import {
   Sparkles,
   TrendingUp,
   Database,
-  Zap,
-  Brain
+  Zap
 } from "lucide-react";
 
 interface SidebarProps {
@@ -58,6 +58,14 @@ const navigation = [
     icon: FileText,
     description: "AI-powered Excel file analysis",
     gradient: "from-emerald-500 to-teal-500",
+  },
+  {
+    name: "Document Analysis",
+    href: "/document-analysis",
+    icon: Brain,
+    description: "Advanced ZIP & Excel processing",
+    gradient: "from-purple-500 to-indigo-500",
+    badge: "AI",
   },
   {
     name: "Hotel Database",
