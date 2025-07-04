@@ -249,6 +249,23 @@
 }
 
 .animate-float-delayed {
+  animation: float-delayed 3s ease-in-out infinite;
+  animation-delay: 1s;
+}
+
+.animate-bounce-gentle {
+  animation: bounce-gentle 2s ease-in-out infinite;
+}
+
+.animate-text-shimmer {
+  animation: text-shimmer 2s ease-in-out infinite;
+}
+
+.bg-size-200 {
+  background-size: 200% 200%;
+}
+
+.animate-float-delayed {
   animation: float-delayed 4s ease-in-out infinite;
 }
 
