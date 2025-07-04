@@ -185,3 +185,53 @@ export const insertOcrAnalysisSchema = createInsertSchema(ocrAnalyses).omit({
 
 export type InsertOcrAnalysis = z.infer<typeof insertOcrAnalysisSchema>;
 export type OcrAnalysis = typeof ocrAnalyses.$inferSelect;
+
+// AI Vector Database for Self-Learning Price Intelligence
+export const priceIntelligence = pgTable("price_intelligence", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull(),
+  hotelName: varchar("hotel_name").notNull(),
+  stars: integer("stars").notNull(),
+  roomCount: integer("room_count").notNull(),
+  averagePrice: decimal("average_price", { precision: 10, scale: 2 }).notNull(),
+  aiSuggestedPrice: decimal("ai_suggested_price", { precision: 10, scale: 2 }).notNull(),
+  actualPrice: decimal("actual_price", { precision: 10, scale: 2 }).notNull(),
+  aiPercentage: decimal("ai_percentage", { precision: 5, scale: 2 }).notNull(), // AI suggested percentage
+  actualPercentage: decimal("actual_percentage", { precision: 5, scale: 2 }).notNull(), // User chosen percentage
+  userFeedback: text("user_feedback"), // Required comment when manually edited
+  wasManuallyEdited: boolean("was_manually_edited").default(false),
+  vectorEmbedding: jsonb("vector_embedding"), // For AI similarity search
+  learningMetrics: jsonb("learning_metrics"), // Performance tracking
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const priceIntelligenceRelations = relations(priceIntelligence, ({ one }) => ({
+  user: one(users, {
+    fields: [priceIntelligence.userId],
+    references: [users.id],
+  }),
+}));
+
+export const insertPriceIntelligenceSchema = createInsertSchema(priceIntelligence).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertPriceIntelligence = z.infer<typeof insertPriceIntelligenceSchema>;
+export type PriceIntelligence = typeof priceIntelligence.$inferSelect;
+
+// AI Learning Sessions - Track improvements over time
+export const aiLearningSessions = pgTable("ai_learning_sessions", {
+  id: serial("id").primaryKey(),
+  sessionType: varchar("session_type").notNull(), // 'manual_correction', 'batch_learning', 'ocr_analysis'
+  dataPoints: integer("data_points").notNull(), // Number of calculations processed
+  accuracyBefore: decimal("accuracy_before", { precision: 5, scale: 2 }),
+  accuracyAfter: decimal("accuracy_after", { precision: 5, scale: 2 }),
+  adjustments: jsonb("adjustments"), // What the AI learned
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type InsertAiLearningSession = typeof aiLearningSessions.$inferInsert;
+export type AiLearningSession = typeof aiLearningSessions.$inferSelect;

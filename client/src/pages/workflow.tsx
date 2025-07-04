@@ -3,7 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { ChevronRight, Calculator, BarChart3, FileText, Check, ArrowLeft } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { ChevronRight, Calculator, BarChart3, FileText, Check, ArrowLeft, Edit3, Brain } from "lucide-react";
 import { useLocation, useRoute } from "wouter";
 import AppLayout from "@/components/layout/app-layout";
 
@@ -86,6 +90,58 @@ export default function Workflow() {
     occupancyRate: 70,
     averagePrice: 0
   });
+
+  // AI Price Intelligence State
+  const [aiSuggestedPrice, setAiSuggestedPrice] = useState(0);
+  const [actualPrice, setActualPrice] = useState(0);
+  const [isManualEdit, setIsManualEdit] = useState(false);
+  const [manualEditOpen, setManualEditOpen] = useState(false);
+  const [editFeedback, setEditFeedback] = useState("");
+  const [tempPrice, setTempPrice] = useState("");
+
+  // Calculate AI suggested price (45% of average price, rounded up)
+  useEffect(() => {
+    if (workflowData.averagePrice > 0) {
+      const suggested = Math.ceil(workflowData.averagePrice * 0.45);
+      setAiSuggestedPrice(suggested);
+      if (!isManualEdit) {
+        setActualPrice(suggested);
+      }
+    }
+  }, [workflowData.averagePrice, isManualEdit]);
+
+  // Handle manual price edit
+  const handleManualEdit = () => {
+    setTempPrice(actualPrice.toString());
+    setEditFeedback("");
+    setManualEditOpen(true);
+  };
+
+  // Save manual edit with feedback
+  const saveManualEdit = async () => {
+    const newPrice = parseFloat(tempPrice);
+    if (isNaN(newPrice) || newPrice <= 0) {
+      alert("Bitte geben Sie einen gültigen Preis ein.");
+      return;
+    }
+    
+    if (!editFeedback.trim()) {
+      alert("Bitte geben Sie eine Begründung für die Änderung ein. Dies hilft der KI beim Lernen.");
+      return;
+    }
+
+    setActualPrice(newPrice);
+    setIsManualEdit(true);
+    setManualEditOpen(false);
+
+    // TODO: Send to AI learning API
+    console.log("Manual edit recorded:", {
+      hotel: workflowData.hotelName,
+      aiSuggested: aiSuggestedPrice,
+      userPrice: newPrice,
+      feedback: editFeedback
+    });
+  };
 
   const progress = ((currentStep - 1) / (steps.length - 1)) * 100;
 
@@ -261,17 +317,114 @@ export default function Workflow() {
               <CardContent className="space-y-5">
                 {/* Calculation Results - Modern Glass Design */}
                 <div className="space-y-3">
-                  {/* Primary Price - Hero Section */}
+                  {/* AI-Powered Realistic Price - Hero Section */}
                   <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-50/80 to-blue-100/80 backdrop-blur-sm border border-blue-200/50 p-4 shadow-sm hover:shadow-md transition-all duration-300">
                     <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-transparent"></div>
-                    <div className="relative flex justify-between items-center">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-3 h-3 rounded-full bg-blue-500 animate-pulse"></div>
-                        <span className="font-semibold text-blue-900">Realistischer Hotelverkaufspreis</span>
+                    <div className="relative space-y-3">
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-3 h-3 rounded-full bg-blue-500 animate-pulse"></div>
+                          <span className="font-semibold text-blue-900">Realistischer Hotelverkaufspreis (KI)</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          {isManualEdit ? (
+                            <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full font-medium flex items-center space-x-1">
+                              <Edit3 className="h-3 w-3" />
+                              <span>Manuell</span>
+                            </span>
+                          ) : (
+                            <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">
+                              KI: 45%
+                            </span>
+                          )}
+                        </div>
                       </div>
-                      <span className="text-2xl font-bold text-blue-800 tracking-tight">
-                        {workflowData.averagePrice ? `${workflowData.averagePrice.toFixed(2)} €` : '0.00 €'}
-                      </span>
+                      
+                      <div className="flex justify-between items-center">
+                        <span className="text-2xl font-bold text-blue-800 tracking-tight">
+                          {actualPrice ? `${actualPrice.toFixed(2)} €` : '0.00 €'}
+                        </span>
+                        <Dialog open={manualEditOpen} onOpenChange={setManualEditOpen}>
+                          <DialogTrigger asChild>
+                            <button 
+                              onClick={handleManualEdit}
+                              className="flex items-center space-x-1 text-xs text-blue-600 hover:text-blue-800 underline"
+                            >
+                              <Edit3 className="h-3 w-3" />
+                              <span>Manuell bearbeiten</span>
+                            </button>
+                          </DialogTrigger>
+                          <DialogContent className="sm:max-w-[425px]">
+                            <DialogHeader>
+                              <DialogTitle className="flex items-center space-x-2">
+                                <Brain className="h-5 w-5 text-blue-600" />
+                                <span>KI-Preis manuell anpassen</span>
+                              </DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-4 pt-4">
+                              <div className="bg-blue-50 p-3 rounded border-l-4 border-blue-400">
+                                <p className="text-sm text-blue-800">
+                                  <strong>KI-Vorschlag:</strong> {aiSuggestedPrice.toFixed(2)} € (45% von {workflowData.averagePrice.toFixed(2)} €)
+                                </p>
+                                <p className="text-xs text-blue-600 mt-1">
+                                  Ihre Anpassung hilft der KI beim Lernen und verbessert zukünftige Vorschläge.
+                                </p>
+                              </div>
+                              
+                              <div>
+                                <Label htmlFor="manual-price">Ihr realistischer Verkaufspreis</Label>
+                                <Input
+                                  id="manual-price"
+                                  type="number"
+                                  step="0.01"
+                                  value={tempPrice}
+                                  onChange={(e) => setTempPrice(e.target.value)}
+                                  placeholder="Preis in Euro"
+                                  className="mt-1"
+                                />
+                              </div>
+                              
+                              <div>
+                                <Label htmlFor="edit-feedback">Begründung für die Änderung *</Label>
+                                <Textarea
+                                  id="edit-feedback"
+                                  value={editFeedback}
+                                  onChange={(e) => setEditFeedback(e.target.value)}
+                                  placeholder="Warum ändern Sie den Preis? Z.B. 'Lage ist besonders attraktiv', 'Hotel hat Premium-Ausstattung', 'Markt ist sehr umkämpft'..."
+                                  className="mt-1"
+                                  rows={3}
+                                />
+                                <p className="text-xs text-gray-500 mt-1">
+                                  * Erforderlich für das KI-Lernsystem
+                                </p>
+                              </div>
+                              
+                              <div className="flex justify-end space-x-2 pt-4">
+                                <Button 
+                                  variant="outline" 
+                                  onClick={() => setManualEditOpen(false)}
+                                >
+                                  Abbrechen
+                                </Button>
+                                <Button onClick={saveManualEdit} className="bg-blue-600 hover:bg-blue-700">
+                                  Speichern & KI trainieren
+                                </Button>
+                              </div>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+                      </div>
+
+                      {workflowData.averagePrice && (
+                        <div className="text-xs text-blue-600 bg-blue-50 p-2 rounded border-l-2 border-blue-300">
+                          <strong>KI-Begründung:</strong> 
+                          {isManualEdit ? (
+                            <>Manuell angepasst von {aiSuggestedPrice.toFixed(2)} € auf {actualPrice.toFixed(2)} €. Die KI lernt aus Ihrer Korrektur für ähnliche {workflowData.stars}-Sterne Hotels.</>
+                          ) : (
+                            <>Basierend auf 45% des Durchschnittspreises für {workflowData.stars}-Sterne Hotels mit {workflowData.roomCount} Zimmern und {workflowData.occupancyRate}% Auslastung. Selbstlernende KI passt sich an Ihre Korrekturen an.</>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                   

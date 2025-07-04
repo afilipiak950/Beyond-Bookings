@@ -4,6 +4,8 @@ import {
   pricingCalculations,
   feedback,
   ocrAnalyses,
+  priceIntelligence,
+  aiLearningSessions,
   type User,
   type UpsertUser,
   type Hotel,
@@ -14,6 +16,9 @@ import {
   type InsertFeedback,
   type OcrAnalysis,
   type InsertOcrAnalysis,
+  type InsertPriceIntelligence,
+  type PriceIntelligence,
+  type AiLearningSession,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and } from "drizzle-orm";
@@ -58,6 +63,11 @@ export interface IStorage {
   createOcrAnalysis(analysis: InsertOcrAnalysis): Promise<OcrAnalysis>;
   updateOcrAnalysis(id: number, userId: string, analysis: Partial<InsertOcrAnalysis>): Promise<OcrAnalysis | undefined>;
   deleteOcrAnalysis(id: number, userId: string): Promise<boolean>;
+
+  // AI Price Intelligence operations
+  getPriceIntelligence(userId: string): Promise<PriceIntelligence[]>;
+  createPriceIntelligence(data: InsertPriceIntelligence): Promise<PriceIntelligence>;
+  getAiLearningSessions(limit?: number): Promise<AiLearningSession[]>;
 }
 
 export class DatabaseStorage implements IStorage {
