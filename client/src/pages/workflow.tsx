@@ -24,6 +24,7 @@ export interface WorkflowData {
   roomCount: number;
   occupancyRate: number;
   averagePrice: number;
+  projectCosts: number;
   calculationResult?: {
     vatAmount: number;
     profitMargin: number;
@@ -88,7 +89,8 @@ export default function Workflow() {
     stars: 0,
     roomCount: 0,
     occupancyRate: 70,
-    averagePrice: 0
+    averagePrice: 0,
+    projectCosts: 0
   });
 
   // AI Price Intelligence State
@@ -730,7 +732,7 @@ export default function Workflow() {
                     </div>
                   </div>
                   
-                  {/* Project Costs - Ultra-Modern Special Section */}
+                  {/* Project Costs - Manual Input Section */}
                   <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-rose-50/50 to-red-100/40 backdrop-blur-xl border border-rose-300/50 p-4 shadow-lg transition-all duration-300">
                     {/* Multiple animated layers */}
                     <div className="absolute inset-0 bg-gradient-to-r from-rose-400/15 via-red-500/10 to-rose-400/15 animate-gradient-x"></div>
@@ -741,7 +743,7 @@ export default function Workflow() {
                     <div className="absolute bottom-2 left-2 w-1 h-1 rounded-full bg-red-400 animate-bounce opacity-50"></div>
                     <div className="absolute top-1/2 left-1/3 w-1 h-1 rounded-full bg-rose-300 animate-ping animation-delay-1000 opacity-40"></div>
                     
-                    <div className="relative flex justify-between items-center">
+                    <div className="relative space-y-3">
                       <div className="flex items-center space-x-3">
                         <div className="relative">
                           <div className="w-3 h-3 rounded-full bg-gradient-to-r from-rose-500 to-red-600 animate-pulse shadow-xl shadow-rose-500/60"></div>
@@ -751,12 +753,18 @@ export default function Workflow() {
                           Finanzierung: Projektkosten brutto
                         </span>
                       </div>
-                      <span className="text-lg font-black bg-gradient-to-r from-rose-600 via-red-600 to-rose-700 bg-clip-text text-transparent tracking-tight animate-text-shimmer bg-size-200">
-                        {workflowData.roomCount && workflowData.averagePrice ? 
-                          (Math.min(Math.floor((workflowData.roomCount * 365) * 0.15), 1000) * workflowData.averagePrice * 0.65).toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €' : 
-                          '0.00 €'
-                        }
-                      </span>
+                      <div className="relative">
+                        <Input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          placeholder="Projektkosten eingeben..."
+                          value={workflowData.projectCosts || ''}
+                          onChange={(e) => setWorkflowData({...workflowData, projectCosts: parseFloat(e.target.value) || 0})}
+                          className="bg-white/60 backdrop-blur-sm border-rose-300/50 focus:border-rose-500 focus:ring-rose-500/20 text-right font-bold"
+                        />
+                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-rose-600 font-bold">€</div>
+                      </div>
                     </div>
                   </div>
                 </div>

@@ -421,9 +421,20 @@ ${calculation.hotelName},${calculation.hotelUrl || ''},${calculation.stars || ''
   }
 
   async deleteDocumentUpload(id: number, userId: string): Promise<boolean> {
-    const result = await db.delete(documentUploads)
-      .where(and(eq(documentUploads.id, id), eq(documentUploads.userId, userId)));
-    return result.rowCount > 0;
+    try {
+      // First delete related document analyses to avoid foreign key constraint violation
+      await db
+        .delete(documentAnalyses)
+        .where(eq(documentAnalyses.uploadId, id));
+      
+      // Then delete the document upload
+      const result = await db.delete(documentUploads)
+        .where(and(eq(documentUploads.id, id), eq(documentUploads.userId, userId)));
+      return result.rowCount! > 0;
+    } catch (error) {
+      console.error("Error deleting document upload:", error);
+      return false;
+    }
   }
 
   // Document Analysis operations
