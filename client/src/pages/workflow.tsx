@@ -725,8 +725,8 @@ export default function Workflow() {
                           </span>
                         </div>
                         <span className="text-xl font-black bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">
-                          {workflowData.projectCosts && hotelVoucherValue ? 
-                            (workflowData.projectCosts * hotelVoucherValue * 1.1).toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €' : 
+                          {workflowData.projectCosts && hotelVoucherValue && workflowData.averagePrice ? 
+                            ((workflowData.projectCosts / hotelVoucherValue) * (workflowData.averagePrice * 0.75) * 1.1).toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €' : 
                             '0.00 €'
                           }
                         </span>
