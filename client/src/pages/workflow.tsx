@@ -419,7 +419,7 @@ export default function Workflow() {
                             <div className="w-3 h-3 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 animate-pulse shadow-lg shadow-blue-500/50"></div>
                             <div className="absolute inset-0 w-3 h-3 rounded-full bg-blue-400 animate-ping opacity-40"></div>
                           </div>
-                          <span className="font-bold text-base bg-gradient-to-r from-blue-800 to-blue-600 bg-clip-text text-transparent">
+                          <span className="font-bold text-sm bg-gradient-to-r from-blue-800 to-blue-600 bg-clip-text text-transparent">
                             Realistischer Hotelverkaufspreis (KI)
                           </span>
                         </div>
@@ -439,7 +439,7 @@ export default function Workflow() {
                       
                       <div className="flex justify-between items-center mt-4">
                         <div className="relative">
-                          <span className="text-2xl font-black bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 bg-clip-text text-transparent tracking-tight animate-text-shimmer bg-300% bg-size-200">
+                          <span className="text-lg font-black bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 bg-clip-text text-transparent tracking-tight animate-text-shimmer bg-300% bg-size-200">
                             {actualPrice ? `${actualPrice.toFixed(2)} €` : '0.00 €'}
                           </span>
                           <div className="absolute -inset-1 bg-gradient-to-r from-blue-500/20 to-purple-500/20 blur-sm -z-10 animate-pulse"></div>
@@ -550,7 +550,7 @@ export default function Workflow() {
                       <div className="relative p-3 flex justify-between items-center">
                         <div className="flex items-center space-x-2">
                           <div className="w-2 h-2 rounded-full bg-gradient-to-r from-gray-400 to-gray-500 animate-pulse shadow-md shadow-gray-400/30"></div>
-                          <span className="text-xs font-semibold bg-gradient-to-r from-gray-700 to-gray-600 bg-clip-text text-transparent group-hover:from-gray-800 group-hover:to-gray-700 transition-all duration-300">
+                          <span className="text-sm font-semibold bg-gradient-to-r from-gray-700 to-gray-600 bg-clip-text text-transparent group-hover:from-gray-800 group-hover:to-gray-700 transition-all duration-300">
                             65% des durchschnittlichen Zimmerpreises
                           </span>
                         </div>
@@ -569,7 +569,7 @@ export default function Workflow() {
                         <div className="flex justify-between items-center">
                           <div className="flex items-center space-x-2">
                             <div className="w-2 h-2 rounded-full bg-gradient-to-r from-red-500 to-rose-500 animate-pulse shadow-lg shadow-red-500/40"></div>
-                            <span className="text-xs font-bold bg-gradient-to-r from-red-700 to-red-600 bg-clip-text text-transparent">
+                            <span className="text-sm font-bold bg-gradient-to-r from-red-700 to-red-600 bg-clip-text text-transparent">
                               Gutscheinwert für Hotel
                             </span>
                             {isVoucherManualEdit && (
@@ -681,7 +681,7 @@ export default function Workflow() {
                       <div className="relative p-3 flex justify-between items-center">
                         <div className="flex items-center space-x-2">
                           <div className="w-2 h-2 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 animate-pulse shadow-lg shadow-green-500/40"></div>
-                          <span className="text-xs font-bold bg-gradient-to-r from-green-700 to-green-600 bg-clip-text text-transparent">
+                          <span className="text-sm font-bold bg-gradient-to-r from-green-700 to-green-600 bg-clip-text text-transparent">
                             Marge nach Steuern
                           </span>
                         </div>
@@ -702,11 +702,11 @@ export default function Workflow() {
                       <div className="relative p-4 flex justify-between items-center">
                         <div className="flex items-center space-x-3">
                           <div className="w-3 h-3 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 animate-pulse shadow-lg shadow-indigo-500/40"></div>
-                          <span className="font-bold bg-gradient-to-r from-indigo-700 to-indigo-600 bg-clip-text text-transparent">
+                          <span className="text-sm font-bold bg-gradient-to-r from-indigo-700 to-indigo-600 bg-clip-text text-transparent">
                             Zahlung von Tripz Estimate
                           </span>
                         </div>
-                        <span className="text-xl font-black bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                        <span className="text-lg font-black bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
                           {actualPrice ? (actualPrice * 0.75).toFixed(2) + ' €' : '0.00 €'}
                         </span>
                       </div>
@@ -720,7 +720,7 @@ export default function Workflow() {
                       <div className="relative p-4 flex justify-between items-center">
                         <div className="flex items-center space-x-3">
                           <div className="w-3 h-3 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 animate-pulse shadow-lg shadow-cyan-500/40"></div>
-                          <span className="font-bold bg-gradient-to-r from-cyan-700 to-cyan-600 bg-clip-text text-transparent">
+                          <span className="text-sm font-bold bg-gradient-to-r from-cyan-700 to-cyan-600 bg-clip-text text-transparent">
                             Vertragsvolumen Estimate
                           </span>
                         </div>
@@ -745,27 +745,29 @@ export default function Workflow() {
                     <div className="absolute bottom-2 left-2 w-1 h-1 rounded-full bg-red-400 animate-bounce opacity-50"></div>
                     <div className="absolute top-1/2 left-1/3 w-1 h-1 rounded-full bg-rose-300 animate-ping animation-delay-1000 opacity-40"></div>
                     
-                    <div className="relative space-y-3">
-                      <div className="flex items-center space-x-3">
-                        <div className="relative">
-                          <div className="w-3 h-3 rounded-full bg-gradient-to-r from-rose-500 to-red-600 animate-pulse shadow-xl shadow-rose-500/60"></div>
-                          <div className="absolute inset-0 w-3 h-3 rounded-full bg-rose-400 animate-ping opacity-30"></div>
+                    <div className="relative">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="relative">
+                            <div className="w-3 h-3 rounded-full bg-gradient-to-r from-rose-500 to-red-600 animate-pulse shadow-xl shadow-rose-500/60"></div>
+                            <div className="absolute inset-0 w-3 h-3 rounded-full bg-rose-400 animate-ping opacity-30"></div>
+                          </div>
+                          <span className="text-sm font-black bg-gradient-to-r from-rose-800 to-red-700 bg-clip-text text-transparent">
+                            Finanzierung: Projektkosten brutto
+                          </span>
                         </div>
-                        <span className="font-black text-sm bg-gradient-to-r from-rose-800 to-red-700 bg-clip-text text-transparent">
-                          Finanzierung: Projektkosten brutto
-                        </span>
-                      </div>
-                      <div className="relative">
-                        <Input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          placeholder="Projektkosten eingeben..."
-                          value={workflowData.projectCosts || ''}
-                          onChange={(e) => setWorkflowData({...workflowData, projectCosts: parseFloat(e.target.value) || 0})}
-                          className="bg-white/60 backdrop-blur-sm border-rose-300/50 focus:border-rose-500 focus:ring-rose-500/20 text-right font-bold"
-                        />
-                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-rose-600 font-bold">€</div>
+                        <div className="relative w-48">
+                          <Input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            placeholder="Projektkosten eingeben..."
+                            value={workflowData.projectCosts || ''}
+                            onChange={(e) => setWorkflowData({...workflowData, projectCosts: parseFloat(e.target.value) || 0})}
+                            className="bg-white/60 backdrop-blur-sm border-rose-300/50 focus:border-rose-500 focus:ring-rose-500/20 text-right font-bold"
+                          />
+                          <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-rose-600 font-bold">€</div>
+                        </div>
                       </div>
                     </div>
                   </div>
