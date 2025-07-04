@@ -16,14 +16,10 @@ export interface WorkflowData {
   // Step 1: Hotel Pricing Calculator
   date?: string;
   hotelName: string;
-  hotelUrl: string;
   stars: number;
   roomCount: number;
   occupancyRate: number;
   averagePrice: number;
-  voucherPrice: number;
-  operationalCosts: number;
-  vatRate: number;
   calculationResult?: {
     vatAmount: number;
     profitMargin: number;
@@ -85,14 +81,10 @@ export default function Workflow() {
   const [workflowData, setWorkflowData] = useState<WorkflowData>({
     date: new Date().toISOString().split('T')[0], // Default to today's date
     hotelName: "",
-    hotelUrl: "",
     stars: 0,
     roomCount: 0,
     occupancyRate: 0,
-    averagePrice: 0,
-    voucherPrice: 0,
-    operationalCosts: 0,
-    vatRate: 0.07
+    averagePrice: 0
   });
 
   const progress = ((currentStep - 1) / (steps.length - 1)) * 100;
@@ -124,7 +116,7 @@ export default function Workflow() {
       case 1:
         return true;
       case 2:
-        return Boolean(workflowData.hotelName && workflowData.voucherPrice > 0);
+        return Boolean(workflowData.hotelName && workflowData.averagePrice > 0);
       case 3:
         return Boolean(workflowData.calculationResult && workflowData.marketAnalysis);
       default:
@@ -142,331 +134,213 @@ export default function Workflow() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Calculator className="h-5 w-5 text-blue-600" />
-                  Hotel Information & Pricing Inputs
+                  Hotel-Preiskalkulator
                 </CardTitle>
                 <CardDescription>
-                  Enter all required details for pricing calculation
+                  Geben Sie alle erforderlichen Details für die Preisberechnung ein
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
-                {/* General Hotel Information */}
-                <div className="space-y-4">
-                  <h3 className="font-semibold text-blue-900 border-b border-blue-200 pb-2">
-                    General Hotel Information
-                  </h3>
-                  <div className="grid grid-cols-1 gap-4">
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">Date *</label>
-                      <input 
-                        type="date"
-                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        value={workflowData.date || ''}
-                        onChange={(e) => updateWorkflowData({ date: e.target.value })}
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">Hotel Name *</label>
-                      <input 
-                        type="text"
-                        placeholder="e.g., Hampton by Hilton Potsdam"
-                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        value={workflowData.hotelName}
-                        onChange={(e) => updateWorkflowData({ hotelName: e.target.value })}
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">Hotel URL</label>
-                      <input 
-                        type="url"
-                        placeholder="https://example.com/hotel"
-                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        value={workflowData.hotelUrl}
-                        onChange={(e) => updateWorkflowData({ hotelUrl: e.target.value })}
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-sm font-medium text-gray-700">Category (Stars)</label>
-                        <select 
-                          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          value={workflowData.stars}
-                          onChange={(e) => updateWorkflowData({ stars: parseInt(e.target.value) })}
-                        >
-                          <option value={0}>Select Stars</option>
-                          <option value={1}>1 Star</option>
-                          <option value={2}>2 Stars</option>
-                          <option value={3}>3 Stars</option>
-                          <option value={4}>4 Stars</option>
-                          <option value={5}>5 Stars</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-700">Room Count</label>
-                        <input 
-                          type="number"
-                          placeholder="e.g., 180"
-                          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          value={workflowData.roomCount}
-                          onChange={(e) => updateWorkflowData({ roomCount: parseInt(e.target.value) || 0 })}
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">Occupancy Rate (%)</label>
-                      <input 
-                        type="number"
-                        step="0.1"
-                        min="0"
-                        max="100"
-                        placeholder="e.g., 75.5"
-                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        value={workflowData.occupancyRate}
-                        onChange={(e) => updateWorkflowData({ occupancyRate: parseFloat(e.target.value) || 0 })}
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">Available Room Nights</label>
-                      <input 
-                        type="number"
-                        placeholder="Calculated: Room Count × 365"
-                        className="w-full p-3 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        value={workflowData.roomCount * 365}
-                        readOnly
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">Addressable Room Nights (15%, max. 1,000)</label>
-                      <input 
-                        type="number"
-                        placeholder="Calculated automatically"
-                        className="w-full p-3 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        value={Math.min(Math.floor((workflowData.roomCount * 365) * 0.15), 1000)}
-                        readOnly
-                      />
-                    </div>
-                  </div>
+              <CardContent className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Datum</label>
+                  <input 
+                    type="date"
+                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    value={workflowData.date || ''}
+                    onChange={(e) => updateWorkflowData({ date: e.target.value })}
+                  />
                 </div>
-
-                {/* Pricing Information */}
-                <div className="space-y-4">
-                  <h3 className="font-semibold text-green-900 border-b border-green-200 pb-2">
-                    Pricing Information
-                  </h3>
-                  <div className="grid grid-cols-1 gap-4">
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">Average Room Price (Google Research) (€) *</label>
-                      <input 
-                        type="number"
-                        step="0.01"
-                        placeholder="e.g., 120.00"
-                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                        value={workflowData.averagePrice}
-                        onChange={(e) => updateWorkflowData({ averagePrice: parseFloat(e.target.value) || 0 })}
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">Voucher Price (€) *</label>
-                      <input 
-                        type="number"
-                        step="0.01"
-                        placeholder="e.g., 89.00"
-                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                        value={workflowData.voucherPrice}
-                        onChange={(e) => updateWorkflowData({ voucherPrice: parseFloat(e.target.value) || 0 })}
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">Operational Costs (€)</label>
-                      <input 
-                        type="number"
-                        step="0.01"
-                        placeholder="e.g., 15.00"
-                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                        value={workflowData.operationalCosts}
-                        onChange={(e) => updateWorkflowData({ operationalCosts: parseFloat(e.target.value) || 0 })}
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">VAT Rate (%)</label>
-                      <select 
-                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                        value={workflowData.vatRate}
-                        onChange={(e) => updateWorkflowData({ vatRate: parseFloat(e.target.value) })}
-                      >
-                        <option value={0.07}>7% (Reduced Rate)</option>
-                        <option value={0.19}>19% (Standard Rate)</option>
-                      </select>
-                    </div>
-                  </div>
+                
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Hotelname</label>
+                  <input 
+                    type="text"
+                    placeholder="z.B. Hampton by Hilton Potsdam"
+                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    value={workflowData.hotelName}
+                    onChange={(e) => updateWorkflowData({ hotelName: e.target.value })}
+                  />
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Kategorie</label>
+                  <select 
+                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    value={workflowData.stars}
+                    onChange={(e) => updateWorkflowData({ stars: parseInt(e.target.value) })}
+                  >
+                    <option value={0}>Kategorie wählen</option>
+                    <option value={1}>1 Stern</option>
+                    <option value={2}>2 Sterne</option>
+                    <option value={3}>3 Sterne</option>
+                    <option value={4}>4 Sterne</option>
+                    <option value={5}>5 Sterne</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Zimmeranzahl</label>
+                  <input 
+                    type="number"
+                    placeholder="z.B. 180"
+                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    value={workflowData.roomCount}
+                    onChange={(e) => updateWorkflowData({ roomCount: parseInt(e.target.value) || 0 })}
+                  />
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Auslastung in %</label>
+                  <input 
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    max="100"
+                    placeholder="z.B. 75,5"
+                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    value={workflowData.occupancyRate}
+                    onChange={(e) => updateWorkflowData({ occupancyRate: parseFloat(e.target.value) || 0 })}
+                  />
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Verfügbare Roomnights</label>
+                  <input 
+                    type="number"
+                    className="w-full p-3 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    value={workflowData.roomCount * 365}
+                    readOnly
+                  />
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Adressierbare Roomnights (15%, max. 1.000)</label>
+                  <input 
+                    type="number"
+                    className="w-full p-3 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    value={Math.min(Math.floor((workflowData.roomCount * 365) * 0.15), 1000)}
+                    readOnly
+                  />
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Durchschnittlicher Zimmerpreis (Google-Recherche)</label>
+                  <input 
+                    type="number"
+                    step="0.01"
+                    placeholder="z.B. 120,00"
+                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    value={workflowData.averagePrice}
+                    onChange={(e) => updateWorkflowData({ averagePrice: parseFloat(e.target.value) || 0 })}
+                  />
                 </div>
 
                 <Button 
                   onClick={() => {
-                    // Calculate results before moving to next step
-                    const netPrice = workflowData.voucherPrice - workflowData.operationalCosts;
-                    const vatAmount = netPrice * workflowData.vatRate;
-                    const totalPrice = netPrice + vatAmount;
-                    const profitMargin = netPrice - workflowData.operationalCosts;
-                    const discountVsMarket = workflowData.averagePrice - workflowData.voucherPrice;
-                    const marginPercentage = (profitMargin / workflowData.voucherPrice) * 100;
-                    const discountPercentage = (discountVsMarket / workflowData.averagePrice) * 100;
-
-                    updateWorkflowData({
-                      calculationResult: {
-                        vatAmount,
-                        profitMargin,
-                        totalPrice,
-                        discountVsMarket,
-                        marginPercentage,
-                        discountPercentage
-                      }
-                    });
                     nextStep();
                   }}
-                  disabled={!workflowData.hotelName || workflowData.voucherPrice <= 0 || workflowData.averagePrice <= 0}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3"
+                  disabled={!workflowData.hotelName || workflowData.averagePrice <= 0}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 mt-6"
                 >
-                  Calculate & Continue to Price Comparison
+                  Weiter zur Preisvergleichsanalyse
                 </Button>
               </CardContent>
             </Card>
 
-            {/* Right Side - Live Calculation Output */}
+            {/* Right Side - Live Calculation Results */}
             <Card className="glass-card">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <BarChart3 className="h-5 w-5 text-green-600" />
-                  Live Calculation Results
+                  Live-Berechnungsergebnisse
                 </CardTitle>
                 <CardDescription>
-                  Real-time pricing calculations and analysis
+                  Echtzeitberechnungen und Analyse
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Offer-relevant Information */}
+                {/* Hotel Information */}
                 <div className="space-y-4">
                   <h3 className="font-semibold text-blue-900 border-b border-blue-200 pb-2">
-                    Offer-relevant Information
+                    Hotel-Informationen
                   </h3>
                   <div className="bg-blue-50 p-4 rounded-lg space-y-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium">Effective Hotel Price</span>
+                      <span className="text-sm font-medium">Hotel</span>
                       <span className="text-lg font-bold text-blue-800">
-                        €{workflowData.voucherPrice ? workflowData.voucherPrice.toFixed(2) : '0.00'}
+                        {workflowData.hotelName || 'Nicht angegeben'}
                       </span>
                     </div>
                     <div className="flex justify-between items-center text-sm">
-                      <span>65% of average market price</span>
-                      <span className="text-green-600 font-semibold">
-                        {workflowData.averagePrice > 0 ? 
-                          `${((workflowData.voucherPrice / workflowData.averagePrice) * 100).toFixed(0)}%` : 
-                          '0%'
-                        }
+                      <span>Kategorie</span>
+                      <span className="text-blue-600 font-semibold">
+                        {workflowData.stars > 0 ? `${workflowData.stars} Sterne` : 'Nicht ausgewählt'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span>Zimmeranzahl</span>
+                      <span className="text-blue-600 font-semibold">
+                        {workflowData.roomCount || 0}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                {/* Discount Information */}
-                <div className="space-y-4">
-                  <h3 className="font-semibold text-red-900 border-b border-red-200 pb-2">
-                    Discount Information
-                  </h3>
-                  <div className="bg-red-50 p-4 rounded-lg space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium">Discount vs Market</span>
-                      <span className="text-lg font-bold text-red-800">
-                        -€{workflowData.averagePrice > 0 ? 
-                          (workflowData.averagePrice - workflowData.voucherPrice).toFixed(2) : 
-                          '0.00'
-                        }
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center text-sm">
-                      <span>Discount Percentage</span>
-                      <span className="text-red-600 font-semibold">
-                        {workflowData.averagePrice > 0 ? 
-                          `${(((workflowData.averagePrice - workflowData.voucherPrice) / workflowData.averagePrice) * 100).toFixed(1)}%` : 
-                          '0%'
-                        }
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* VAT Calculation */}
+                {/* Occupancy Analysis */}
                 <div className="space-y-4">
                   <h3 className="font-semibold text-green-900 border-b border-green-200 pb-2">
-                    VAT Calculation
+                    Auslastungsanalyse
                   </h3>
                   <div className="bg-green-50 p-4 rounded-lg space-y-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium">Net Price</span>
+                      <span className="text-sm font-medium">Auslastung</span>
                       <span className="text-lg font-bold text-green-800">
-                        €{workflowData.voucherPrice ? 
-                          (workflowData.voucherPrice - workflowData.operationalCosts).toFixed(2) : 
-                          '0.00'
-                        }
+                        {workflowData.occupancyRate ? `${workflowData.occupancyRate}%` : '0%'}
                       </span>
                     </div>
                     <div className="flex justify-between items-center text-sm">
-                      <span>VAT ({(workflowData.vatRate * 100).toFixed(0)}%)</span>
+                      <span>Verfügbare Roomnights</span>
                       <span className="text-green-600 font-semibold">
-                        €{workflowData.voucherPrice ? 
-                          ((workflowData.voucherPrice - workflowData.operationalCosts) * workflowData.vatRate).toFixed(2) : 
-                          '0.00'
-                        }
+                        {(workflowData.roomCount * 365).toLocaleString()}
                       </span>
                     </div>
-                    <div className="border-t pt-2 flex justify-between items-center font-bold">
-                      <span>Total incl. VAT</span>
-                      <span className="text-lg text-green-800">
-                        €{workflowData.voucherPrice ? 
-                          ((workflowData.voucherPrice - workflowData.operationalCosts) * (1 + workflowData.vatRate)).toFixed(2) : 
-                          '0.00'
-                        }
+                    <div className="flex justify-between items-center text-sm">
+                      <span>Adressierbare Roomnights</span>
+                      <span className="text-green-600 font-semibold">
+                        {Math.min(Math.floor((workflowData.roomCount * 365) * 0.15), 1000).toLocaleString()}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                {/* Profit Analysis */}
+                {/* Pricing Analysis */}
                 <div className="space-y-4">
                   <h3 className="font-semibold text-purple-900 border-b border-purple-200 pb-2">
-                    Profit Analysis
+                    Preisanalyse
                   </h3>
                   <div className="bg-purple-50 p-4 rounded-lg space-y-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium">Net Profit</span>
+                      <span className="text-sm font-medium">Durchschnittspreis</span>
                       <span className="text-lg font-bold text-purple-800">
-                        €{workflowData.voucherPrice ? 
-                          (workflowData.voucherPrice - workflowData.operationalCosts).toFixed(2) : 
-                          '0.00'
-                        }
+                        €{workflowData.averagePrice ? workflowData.averagePrice.toFixed(2) : '0.00'}
                       </span>
                     </div>
                     <div className="flex justify-between items-center text-sm">
-                      <span>Profit Margin</span>
+                      <span>Status</span>
                       <span className="text-purple-600 font-semibold">
-                        {workflowData.voucherPrice > 0 ? 
-                          `${(((workflowData.voucherPrice - workflowData.operationalCosts) / workflowData.voucherPrice) * 100).toFixed(1)}%` : 
-                          '0%'
-                        }
+                        {workflowData.averagePrice > 0 ? 'Bereit für Analyse' : 'Preis eingeben'}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                {/* Recommendation */}
+                {/* Summary */}
                 <div className="bg-gradient-to-r from-blue-50 to-green-50 p-4 rounded-lg border border-blue-200">
-                  <h4 className="font-semibold text-gray-800 mb-2">💡 Recommendation</h4>
+                  <h4 className="font-semibold text-gray-800 mb-2">📊 Zusammenfassung</h4>
                   <p className="text-sm text-gray-600">
-                    {workflowData.voucherPrice > 0 && workflowData.averagePrice > 0 ? 
-                      (workflowData.voucherPrice < workflowData.averagePrice * 0.8 ? 
-                        "Excellent discount offering significant savings to customers. Consider highlighting this competitive advantage." :
-                        "Moderate discount. Consider adjusting pricing strategy for better market positioning."
-                      ) : 
-                      "Enter pricing data to receive personalized recommendations."
+                    {workflowData.hotelName && workflowData.averagePrice > 0 ? 
+                      `${workflowData.hotelName} mit ${workflowData.roomCount} Zimmern bereit für Preisvergleichsanalyse.` :
+                      "Geben Sie Hoteldaten ein, um die Live-Berechnung zu starten."
                     }
                   </p>
                 </div>
@@ -480,36 +354,29 @@ export default function Workflow() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <BarChart3 className="h-5 w-5 text-green-600" />
-                Price Comparison Analysis
+                Preisvergleichsanalyse
               </CardTitle>
               <CardDescription>
-                Compare with market rates and competitors
+                Vergleichen Sie mit Marktpreisen und Wettbewerbern
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="bg-blue-50 p-4 rounded-lg">
-                <h4 className="font-semibold text-blue-900">Your Hotel: {workflowData.hotelName}</h4>
-                <p className="text-blue-700">Price: €{workflowData.voucherPrice}</p>
-                <p className="text-sm text-blue-600">Analyzing market position...</p>
+                <h4 className="font-semibold text-blue-900">Ihr Hotel: {workflowData.hotelName}</h4>
+                <p className="text-blue-700">Durchschnittspreis: €{workflowData.averagePrice}</p>
+                <p className="text-sm text-blue-600">Marktposition wird analysiert...</p>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <Button variant="outline" onClick={prevStep}>
-                  Back to Calculator
+                  Zurück zum Kalkulator
                 </Button>
                 <Button 
                   onClick={() => {
-                    updateWorkflowData({
-                      marketAnalysis: {
-                        averageMarketPrice: 120,
-                        positionRanking: 2,
-                        recommendedPrice: 115
-                      }
-                    });
                     nextStep();
                   }}
                   className="bg-green-600 hover:bg-green-700"
                 >
-                  Generate PDF Report
+                  PDF-Bericht erstellen
                 </Button>
               </div>
             </CardContent>
@@ -521,29 +388,29 @@ export default function Workflow() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <FileText className="h-5 w-5 text-purple-600" />
-                Generate PDF Report
+                PDF-Bericht erstellen
               </CardTitle>
               <CardDescription>
-                Create professional pricing report
+                Professionellen Preisbericht erstellen
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="bg-green-50 p-4 rounded-lg">
-                <h4 className="font-semibold text-green-900">Report Ready for: {workflowData.hotelName}</h4>
-                <p className="text-green-700">Price: €{workflowData.voucherPrice}</p>
-                <p className="text-green-700">Market Position: #{workflowData.marketAnalysis?.positionRanking}</p>
+                <h4 className="font-semibold text-green-900">Bericht bereit für: {workflowData.hotelName}</h4>
+                <p className="text-green-700">Durchschnittspreis: €{workflowData.averagePrice}</p>
+                <p className="text-green-700">Zimmeranzahl: {workflowData.roomCount}</p>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <Button variant="outline" onClick={prevStep}>
-                  Back to Comparison
+                  Zurück zum Vergleich
                 </Button>
                 <Button className="bg-purple-600 hover:bg-purple-700">
-                  Download PDF Report
+                  PDF-Bericht herunterladen
                 </Button>
               </div>
               <div className="text-center pt-4">
                 <Badge className="bg-green-100 text-green-800">
-                  Workflow Complete
+                  Workflow abgeschlossen
                 </Badge>
               </div>
             </CardContent>
