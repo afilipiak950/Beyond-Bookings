@@ -314,44 +314,70 @@ export default function Workflow() {
                   Echtzeitberechnungen und Analyse
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-5">
-                {/* Calculation Results - Modern Glass Design */}
-                <div className="space-y-3">
-                  {/* AI-Powered Realistic Price - Hero Section */}
-                  <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-50/80 to-blue-100/80 backdrop-blur-sm border border-blue-200/50 p-4 shadow-sm hover:shadow-md transition-all duration-300">
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-transparent"></div>
-                    <div className="relative space-y-3">
+              <CardContent className="space-y-8 p-8">
+                {/* Floating Background Elements */}
+                <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                  <div className="absolute top-10 left-10 w-32 h-32 bg-blue-500/10 rounded-full blur-xl animate-float"></div>
+                  <div className="absolute bottom-20 right-20 w-24 h-24 bg-green-500/10 rounded-full blur-lg animate-float-delayed"></div>
+                  <div className="absolute top-1/2 left-1/3 w-16 h-16 bg-purple-500/10 rounded-full blur-md animate-pulse"></div>
+                </div>
+
+                {/* Calculation Results - Ultra Modern Glassmorphism */}
+                <div className="relative space-y-6">
+                  {/* AI-Powered Realistic Price - Hero Section with Advanced Effects */}
+                  <div className="group relative overflow-hidden rounded-3xl bg-gradient-to-br from-white/40 to-blue-50/30 backdrop-blur-xl border border-white/20 shadow-2xl hover:shadow-blue-500/20 transition-all duration-700 hover:scale-[1.02] hover:rotate-1">
+                    {/* Animated Background Layers */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-transparent to-green-500/10 animate-gradient-x"></div>
+                    <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/5 to-transparent group-hover:via-white/10 transition-all duration-500"></div>
+                    
+                    {/* Floating Particles */}
+                    <div className="absolute top-4 right-4 w-2 h-2 bg-blue-400 rounded-full animate-ping opacity-60"></div>
+                    <div className="absolute bottom-6 left-6 w-1 h-1 bg-green-400 rounded-full animate-ping animation-delay-1000 opacity-80"></div>
+                    <div className="absolute top-1/2 right-1/4 w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce animation-delay-500 opacity-70"></div>
+                    
+                    <div className="relative p-6 space-y-4">
                       <div className="flex justify-between items-center">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-3 h-3 rounded-full bg-blue-500 animate-pulse"></div>
-                          <span className="font-semibold text-blue-900">Realistischer Hotelverkaufspreis (KI)</span>
+                        <div className="flex items-center space-x-4">
+                          <div className="relative">
+                            <div className="w-4 h-4 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 animate-pulse shadow-lg shadow-blue-500/50"></div>
+                            <div className="absolute inset-0 w-4 h-4 rounded-full bg-blue-400 animate-ping opacity-40"></div>
+                          </div>
+                          <span className="font-bold text-lg bg-gradient-to-r from-blue-800 to-blue-600 bg-clip-text text-transparent">
+                            Realistischer Hotelverkaufspreis (KI)
+                          </span>
                         </div>
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center space-x-3">
                           {isManualEdit ? (
-                            <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full font-medium flex items-center space-x-1">
-                              <Edit3 className="h-3 w-3" />
+                            <span className="text-sm bg-gradient-to-r from-orange-100 to-orange-50 text-orange-700 px-4 py-2 rounded-full font-semibold flex items-center space-x-2 shadow-lg shadow-orange-200/50 border border-orange-200/30 backdrop-blur-sm animate-bounce-gentle">
+                              <Edit3 className="h-4 w-4 animate-pulse" />
                               <span>Manuell</span>
                             </span>
                           ) : (
-                            <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">
+                            <span className="text-sm bg-gradient-to-r from-green-100 to-emerald-50 text-green-700 px-4 py-2 rounded-full font-semibold shadow-lg shadow-green-200/50 border border-green-200/30 backdrop-blur-sm animate-pulse">
                               KI: 45%
                             </span>
                           )}
                         </div>
                       </div>
                       
-                      <div className="flex justify-between items-center">
-                        <span className="text-2xl font-bold text-blue-800 tracking-tight">
-                          {actualPrice ? `${actualPrice.toFixed(2)} €` : '0.00 €'}
-                        </span>
+                      <div className="flex justify-between items-center mt-6">
+                        <div className="relative">
+                          <span className="text-4xl font-black bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 bg-clip-text text-transparent tracking-tight animate-text-shimmer bg-300% bg-size-200">
+                            {actualPrice ? `${actualPrice.toFixed(2)} €` : '0.00 €'}
+                          </span>
+                          <div className="absolute -inset-1 bg-gradient-to-r from-blue-500/20 to-purple-500/20 blur-sm -z-10 animate-pulse"></div>
+                        </div>
                         <Dialog open={manualEditOpen} onOpenChange={setManualEditOpen}>
                           <DialogTrigger asChild>
                             <button 
                               onClick={handleManualEdit}
-                              className="flex items-center space-x-1 text-xs text-blue-600 hover:text-blue-800 underline"
+                              className="group relative overflow-hidden px-4 py-2 bg-gradient-to-r from-blue-500/10 to-purple-500/10 backdrop-blur-sm border border-blue-300/30 rounded-full text-sm font-medium text-blue-700 hover:text-white transition-all duration-500 hover:scale-105 hover:shadow-lg hover:shadow-blue-500/25"
                             >
-                              <Edit3 className="h-3 w-3" />
-                              <span>Manuell bearbeiten</span>
+                              <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                              <div className="relative flex items-center space-x-2">
+                                <Edit3 className="h-4 w-4 group-hover:animate-spin transition-transform duration-300" />
+                                <span>Manuell bearbeiten</span>
+                              </div>
                             </button>
                           </DialogTrigger>
                           <DialogContent className="sm:max-w-[425px]">
@@ -416,51 +442,80 @@ export default function Workflow() {
                       </div>
 
                       {workflowData.averagePrice && (
-                        <div className="text-xs text-blue-600 bg-blue-50 p-2 rounded border-l-2 border-blue-300">
-                          <strong>KI-Begründung:</strong> 
-                          {isManualEdit ? (
-                            <>Manuell angepasst von {aiSuggestedPrice.toFixed(2)} € auf {actualPrice.toFixed(2)} €. Die KI lernt aus Ihrer Korrektur für ähnliche {workflowData.stars}-Sterne Hotels.</>
-                          ) : (
-                            <>Basierend auf 45% des Durchschnittspreises für {workflowData.stars}-Sterne Hotels mit {workflowData.roomCount} Zimmern und {workflowData.occupancyRate}% Auslastung. Selbstlernende KI passt sich an Ihre Korrekturen an.</>
-                          )}
+                        <div className="relative overflow-hidden bg-gradient-to-r from-blue-50/60 via-indigo-50/40 to-purple-50/60 backdrop-blur-md border border-blue-200/40 rounded-2xl p-4 mt-4 shadow-inner animate-fade-in">
+                          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 animate-gradient-x"></div>
+                          <div className="flex items-start space-x-3">
+                            <div className="mt-1">
+                              <Brain className="h-5 w-5 text-blue-600 animate-pulse" />
+                            </div>
+                            <div className="flex-1">
+                              <span className="font-semibold text-blue-800 text-sm">KI-Begründung:</span>
+                              <p className="text-sm text-blue-700 mt-1 leading-relaxed">
+                                {isManualEdit ? (
+                                  <>Manuell angepasst von <span className="font-bold text-blue-800">{aiSuggestedPrice.toFixed(2)} €</span> auf <span className="font-bold text-green-600">{actualPrice.toFixed(2)} €</span>. Die KI lernt aus Ihrer Korrektur für ähnliche {workflowData.stars}-Sterne Hotels.</>
+                                ) : (
+                                  <>Basierend auf <span className="font-bold text-blue-800">45%</span> des Durchschnittspreises für <span className="font-semibold">{workflowData.stars}-Sterne Hotels</span> mit <span className="font-semibold">{workflowData.roomCount} Zimmern</span> und <span className="font-semibold">{workflowData.occupancyRate}% Auslastung</span>. Selbstlernende KI passt sich an Ihre Korrekturen an.</>
+                                )}
+                              </p>
+                            </div>
+                          </div>
                         </div>
                       )}
                     </div>
                   </div>
                   
-                  {/* Secondary Calculations */}
-                  <div className="grid gap-3">
-                    {/* 65% Calculation */}
-                    <div className="relative rounded-lg bg-white/60 backdrop-blur-sm border border-gray-200/70 p-3 hover:bg-white/80 transition-all duration-200 group">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900 transition-colors">
-                          65% des durchschnittlichen Zimmerpreises
-                        </span>
-                        <span className="text-lg font-bold text-gray-800">
+                  {/* Secondary Calculations - Floating Cards Grid */}
+                  <div className="grid gap-4 mt-8">
+                    {/* 65% Calculation - Floating Card */}
+                    <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/50 to-gray-50/30 backdrop-blur-xl border border-white/30 shadow-xl hover:shadow-2xl hover:shadow-gray-500/10 transition-all duration-500 hover:scale-[1.03] hover:-rotate-1">
+                      <div className="absolute inset-0 bg-gradient-to-r from-gray-400/5 via-transparent to-gray-500/5 animate-gradient-x"></div>
+                      <div className="absolute top-2 right-2 w-1.5 h-1.5 bg-gray-400 rounded-full animate-ping opacity-40"></div>
+                      <div className="relative p-4 flex justify-between items-center">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-3 h-3 rounded-full bg-gradient-to-r from-gray-400 to-gray-500 animate-pulse shadow-md shadow-gray-400/30"></div>
+                          <span className="text-sm font-semibold bg-gradient-to-r from-gray-700 to-gray-600 bg-clip-text text-transparent group-hover:from-gray-800 group-hover:to-gray-700 transition-all duration-300">
+                            65% des durchschnittlichen Zimmerpreises
+                          </span>
+                        </div>
+                        <span className="text-xl font-black bg-gradient-to-r from-gray-700 to-gray-800 bg-clip-text text-transparent">
                           {workflowData.averagePrice ? (workflowData.averagePrice * 0.65).toFixed(0) : '0'}
                         </span>
                       </div>
                     </div>
                     
-                    {/* Hotel Voucher - Highlighted */}
-                    <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-red-50/80 to-red-100/80 backdrop-blur-sm border border-red-200/50 p-3 shadow-sm">
-                      <div className="absolute top-0 left-0 w-1 h-full bg-red-500"></div>
-                      <div className="flex justify-between items-center ml-3">
-                        <span className="font-medium text-red-800">Gutscheinwert für Hotel</span>
-                        <span className="text-lg font-bold text-red-600">
+                    {/* Hotel Voucher - Red Pulsing Card */}
+                    <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-red-50/40 to-rose-100/30 backdrop-blur-xl border border-red-200/40 shadow-xl hover:shadow-2xl hover:shadow-red-500/15 transition-all duration-500 hover:scale-[1.03] hover:rotate-1">
+                      <div className="absolute inset-0 bg-gradient-to-r from-red-400/10 via-transparent to-rose-500/10 animate-gradient-x"></div>
+                      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 to-rose-500 animate-pulse"></div>
+                      <div className="absolute top-2 right-2 w-2 h-2 bg-red-400 rounded-full animate-ping opacity-60"></div>
+                      <div className="relative p-4 flex justify-between items-center">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-3 h-3 rounded-full bg-gradient-to-r from-red-500 to-rose-500 animate-pulse shadow-lg shadow-red-500/40"></div>
+                          <span className="font-bold bg-gradient-to-r from-red-700 to-red-600 bg-clip-text text-transparent">
+                            Gutscheinwert für Hotel
+                          </span>
+                        </div>
+                        <span className="text-xl font-black bg-gradient-to-r from-red-600 to-rose-600 bg-clip-text text-transparent">
                           {workflowData.averagePrice ? (workflowData.averagePrice * 0.65).toFixed(2) : '0.00'} €
                         </span>
                       </div>
                     </div>
                     
-                    {/* Profit Margin - Success */}
-                    <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-green-50/80 to-green-100/80 backdrop-blur-sm border border-green-200/50 p-3 shadow-sm">
-                      <div className="absolute top-0 left-0 w-1 h-full bg-green-500"></div>
-                      <div className="flex justify-between items-center ml-3">
-                        <span className="font-medium text-green-800">Marge nach Steuern</span>
-                        <div className="flex items-center space-x-2">
-                          <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                          <span className="text-lg font-bold text-green-600">
+                    {/* Profit Margin - Animated Success Card */}
+                    <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-50/40 to-green-100/30 backdrop-blur-xl border border-green-200/40 shadow-xl hover:shadow-2xl hover:shadow-green-500/15 transition-all duration-500 hover:scale-[1.03] hover:-rotate-1">
+                      <div className="absolute inset-0 bg-gradient-to-r from-green-400/10 via-transparent to-emerald-500/10 animate-gradient-x"></div>
+                      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-500 to-emerald-500 animate-pulse"></div>
+                      <div className="absolute top-2 right-2 w-2 h-2 bg-green-400 rounded-full animate-ping opacity-60"></div>
+                      <div className="relative p-4 flex justify-between items-center">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-3 h-3 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 animate-pulse shadow-lg shadow-green-500/40"></div>
+                          <span className="font-bold bg-gradient-to-r from-green-700 to-green-600 bg-clip-text text-transparent">
+                            Marge nach Steuern
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                          <div className="w-2 h-2 rounded-full bg-green-500 animate-bounce shadow-sm shadow-green-500/50"></div>
+                          <span className="text-xl font-black bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
                             {workflowData.averagePrice ? `${((workflowData.averagePrice - (workflowData.averagePrice * 0.65)) / workflowData.averagePrice * 100).toFixed(0)}%` : '0%'}
                           </span>
                         </div>
