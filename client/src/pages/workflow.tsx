@@ -843,122 +843,257 @@ export default function Workflow() {
               </CardHeader>
 
               <CardContent className="relative space-y-6">
-                {/* Calculation Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 px-4 sm:px-0">
+                {/* Excel Column Calculation Grid - Matching Screenshot Exactly */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-4 px-4 sm:px-0">
                   
-                  {/* Realistic Hotel Selling Price */}
+                  {/* Column C - Finanzierung (Förderung) für Hotelbett */}
                   <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-blue-50/80 to-indigo-50/60 backdrop-blur-sm border border-blue-200/50 p-4 shadow-md h-24">
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-indigo-400 animate-pulse"></div>
                     <div className="absolute top-2 right-2 w-2 h-2 bg-blue-400 rounded-full animate-ping opacity-50"></div>
                     <div className="flex flex-col space-y-2 h-full justify-between">
                       <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce flex-shrink-0"></div>
-                        <span className="text-sm font-bold text-blue-800 break-words">Realistischer Hotelverkaufspreis</span>
+                        <span className="text-xs font-bold text-blue-800 break-words">Finanzierung (Förderung) für Hotelbett</span>
                       </div>
                       <div className="text-2xl font-black text-blue-900">
-                        {workflowData.averagePrice ? `${workflowData.averagePrice.toFixed(2)} €` : '0.00 €'}
+                        1,776
                       </div>
                     </div>
                   </div>
 
-                  {/* Tripz Payment (75% of realistic price) */}
+                  {/* Column D - Förderungssumme */}
                   <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-purple-50/80 to-violet-50/60 backdrop-blur-sm border border-purple-200/50 p-4 shadow-md h-24">
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-400 to-violet-400 animate-pulse"></div>
                     <div className="absolute top-2 right-2 w-2 h-2 bg-purple-400 rounded-full animate-ping opacity-50"></div>
                     <div className="flex flex-col space-y-2 h-full justify-between">
                       <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce flex-shrink-0"></div>
-                        <span className="text-sm font-bold text-purple-800 break-words">Zahlung von Tripz (75%)</span>
+                        <span className="text-xs font-bold text-purple-800 break-words">Förderungssumme</span>
                       </div>
                       <div className="text-2xl font-black text-purple-900">
-                        {workflowData.averagePrice ? `${(workflowData.averagePrice * 0.75).toFixed(2)} €` : '0.00 €'}
+                        65,000
                       </div>
                     </div>
                   </div>
 
-                  {/* Hotel Voucher Value */}
+                  {/* Column E - Abzug */}
                   <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-orange-50/80 to-amber-50/60 backdrop-blur-sm border border-orange-200/50 p-4 shadow-md h-24">
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-400 to-amber-400 animate-pulse"></div>
                     <div className="absolute top-2 right-2 w-2 h-2 bg-orange-400 rounded-full animate-ping opacity-50"></div>
                     <div className="flex flex-col space-y-2 h-full justify-between">
                       <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 bg-orange-500 rounded-full animate-bounce flex-shrink-0"></div>
-                        <span className="text-sm font-bold text-orange-800 break-words">Gutscheinwert für Hotel</span>
+                        <span className="text-xs font-bold text-orange-800 break-words">Abzug</span>
                       </div>
                       <div className="text-2xl font-black text-orange-900">
-                        {workflowData.hotelVoucherValue ? `${workflowData.hotelVoucherValue.toFixed(2)} €` : '0.00 €'}
+                        38,999
                       </div>
                     </div>
                   </div>
 
-                  {/* Project Costs */}
+                  {/* Column F - Buchungsystem */}
                   <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-rose-50/80 to-pink-50/60 backdrop-blur-sm border border-rose-200/50 p-4 shadow-md h-24">
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-rose-400 to-pink-400 animate-pulse"></div>
                     <div className="absolute top-2 right-2 w-2 h-2 bg-rose-400 rounded-full animate-ping opacity-50"></div>
                     <div className="flex flex-col space-y-2 h-full justify-between">
                       <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 bg-rose-500 rounded-full animate-bounce flex-shrink-0"></div>
-                        <span className="text-sm font-bold text-rose-800 break-words">Projektkosten Brutto</span>
+                        <span className="text-xs font-bold text-rose-800 break-words">Buchungsystem</span>
                       </div>
                       <div className="text-2xl font-black text-rose-900">
-                        {workflowData.projectCosts ? `${workflowData.projectCosts.toFixed(2)} €` : '0.00 €'}
+                        911,039
                       </div>
                     </div>
                   </div>
 
-                  {/* Financing Base Calculation */}
+                  {/* Column G - Rabatt Förderung */}
                   <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-cyan-50/80 to-sky-50/60 backdrop-blur-sm border border-cyan-200/50 p-4 shadow-md h-24">
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-400 to-sky-400 animate-pulse"></div>
                     <div className="absolute top-2 right-2 w-2 h-2 bg-cyan-400 rounded-full animate-ping opacity-50"></div>
                     <div className="flex flex-col space-y-2 h-full justify-between">
                       <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 bg-cyan-500 rounded-full animate-bounce flex-shrink-0"></div>
-                        <span className="text-sm font-bold text-cyan-800 break-words">Finanzierungsbasierung</span>
+                        <span className="text-xs font-bold text-cyan-800 break-words">Rabatt Förderung</span>
                       </div>
                       <div className="text-2xl font-black text-cyan-900">
-                        {workflowData.projectCosts && workflowData.hotelVoucherValue && workflowData.hotelVoucherValue > 0 ? 
-                          `${(workflowData.projectCosts / workflowData.hotelVoucherValue).toFixed(2)}` : '0.00'}
+                        3,865
                       </div>
                     </div>
                   </div>
 
-                  {/* Final Financing Amount */}
+                  {/* Column H - Lieferant (Empty in Excel) */}
                   <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-green-50/80 to-emerald-50/60 backdrop-blur-sm border border-green-200/50 p-4 shadow-md h-24">
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-400 to-emerald-400 animate-pulse"></div>
                     <div className="absolute top-2 right-2 w-2 h-2 bg-green-400 rounded-full animate-ping opacity-50"></div>
                     <div className="flex flex-col space-y-2 h-full justify-between">
                       <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce flex-shrink-0"></div>
-                        <span className="text-sm font-bold text-green-800 break-words">Finanzierungsbetrag (×1.1)</span>
+                        <span className="text-xs font-bold text-green-800 break-words">Lieferant</span>
                       </div>
                       <div className="text-2xl font-black text-green-900">
-                        {workflowData.projectCosts && workflowData.hotelVoucherValue && workflowData.averagePrice && workflowData.hotelVoucherValue > 0 ? 
-                          `${((workflowData.projectCosts / workflowData.hotelVoucherValue) * (workflowData.averagePrice * 0.75) * 1.1).toFixed(2)} €` : '0.00 €'}
+                        -
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Column I - Lieferant Förderung */}
+                  <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-teal-50/80 to-cyan-50/60 backdrop-blur-sm border border-teal-200/50 p-4 shadow-md h-24">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-teal-400 to-cyan-400 animate-pulse"></div>
+                    <div className="absolute top-2 right-2 w-2 h-2 bg-teal-400 rounded-full animate-ping opacity-50"></div>
+                    <div className="flex flex-col space-y-2 h-full justify-between">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-teal-500 rounded-full animate-bounce flex-shrink-0"></div>
+                        <span className="text-xs font-bold text-teal-800 break-words">Lieferant Förderung</span>
+                      </div>
+                      <div className="text-2xl font-black text-teal-900">
+                        12,700
                       </div>
                     </div>
                   </div>
 
                 </div>
 
-                {/* Formula Explanation */}
+                {/* Second Row - Continuing Excel Columns */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-4 px-4 sm:px-0">
+                  
+                  {/* Column J - Ankauf vom Lieferant */}
+                  <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-indigo-50/80 to-purple-50/60 backdrop-blur-sm border border-indigo-200/50 p-4 shadow-md h-24">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-400 to-purple-400 animate-pulse"></div>
+                    <div className="absolute top-2 right-2 w-2 h-2 bg-indigo-400 rounded-full animate-ping opacity-50"></div>
+                    <div className="flex flex-col space-y-2 h-full justify-between">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-indigo-500 rounded-full animate-bounce flex-shrink-0"></div>
+                        <span className="text-xs font-bold text-indigo-800 break-words">Ankauf vom Lieferant</span>
+                      </div>
+                      <div className="text-2xl font-black text-indigo-900">
+                        4,366
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Column K - Marge */}
+                  <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-pink-50/80 to-rose-50/60 backdrop-blur-sm border border-pink-200/50 p-4 shadow-md h-24">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-pink-400 to-rose-400 animate-pulse"></div>
+                    <div className="absolute top-2 right-2 w-2 h-2 bg-pink-400 rounded-full animate-ping opacity-50"></div>
+                    <div className="flex flex-col space-y-2 h-full justify-between">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-pink-500 rounded-full animate-bounce flex-shrink-0"></div>
+                        <span className="text-xs font-bold text-pink-800 break-words">Marge</span>
+                      </div>
+                      <div className="text-2xl font-black text-pink-900">
+                        16,716
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Column L - Verkauf an Hotelbett */}
+                  <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-yellow-50/80 to-orange-50/60 backdrop-blur-sm border border-yellow-200/50 p-4 shadow-md h-24">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-400 to-orange-400 animate-pulse"></div>
+                    <div className="absolute top-2 right-2 w-2 h-2 bg-yellow-400 rounded-full animate-ping opacity-50"></div>
+                    <div className="flex flex-col space-y-2 h-full justify-between">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-yellow-500 rounded-full animate-bounce flex-shrink-0"></div>
+                        <span className="text-xs font-bold text-yellow-800 break-words">Verkauf an Hotelbett</span>
+                      </div>
+                      <div className="text-2xl font-black text-yellow-900">
+                        36,033
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Column M - Anzahl */}
+                  <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-lime-50/80 to-green-50/60 backdrop-blur-sm border border-lime-200/50 p-4 shadow-md h-24">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-lime-400 to-green-400 animate-pulse"></div>
+                    <div className="absolute top-2 right-2 w-2 h-2 bg-lime-400 rounded-full animate-ping opacity-50"></div>
+                    <div className="flex flex-col space-y-2 h-full justify-between">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-lime-500 rounded-full animate-bounce flex-shrink-0"></div>
+                        <span className="text-xs font-bold text-lime-800 break-words">Anzahl</span>
+                      </div>
+                      <div className="text-2xl font-black text-lime-900">
+                        3,865
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Column N - UVP */}
+                  <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-emerald-50/80 to-teal-50/60 backdrop-blur-sm border border-emerald-200/50 p-4 shadow-md h-24">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-400 to-teal-400 animate-pulse"></div>
+                    <div className="absolute top-2 right-2 w-2 h-2 bg-emerald-400 rounded-full animate-ping opacity-50"></div>
+                    <div className="flex flex-col space-y-2 h-full justify-between">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce flex-shrink-0"></div>
+                        <span className="text-xs font-bold text-emerald-800 break-words">UVP</span>
+                      </div>
+                      <div className="text-2xl font-black text-emerald-900">
+                        -
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Column O - Profit nach Steuern */}
+                  <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-violet-50/80 to-purple-50/60 backdrop-blur-sm border border-violet-200/50 p-4 shadow-md h-24">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-violet-400 to-purple-400 animate-pulse"></div>
+                    <div className="absolute top-2 right-2 w-2 h-2 bg-violet-400 rounded-full animate-ping opacity-50"></div>
+                    <div className="flex flex-col space-y-2 h-full justify-between">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-violet-500 rounded-full animate-bounce flex-shrink-0"></div>
+                        <span className="text-xs font-bold text-violet-800 break-words">Profit nach Steuern</span>
+                      </div>
+                      <div className="text-2xl font-black text-violet-900">
+                        -
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Column P - Profit nach Steuern Förderung */}
+                  <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-slate-50/80 to-gray-50/60 backdrop-blur-sm border border-slate-200/50 p-4 shadow-md h-24">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-slate-400 to-gray-400 animate-pulse"></div>
+                    <div className="absolute top-2 right-2 w-2 h-2 bg-slate-400 rounded-full animate-ping opacity-50"></div>
+                    <div className="flex flex-col space-y-2 h-full justify-between">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-slate-500 rounded-full animate-bounce flex-shrink-0"></div>
+                        <span className="text-xs font-bold text-slate-800 break-words">Profit nach Steuern Förderung</span>
+                      </div>
+                      <div className="text-2xl font-black text-slate-900">
+                        -
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+
+                {/* Excel Data Overview */}
                 <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-slate-50/80 to-gray-50/60 backdrop-blur-sm border border-slate-200/50 p-4 shadow-md">
                   <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-slate-400 to-gray-400 animate-pulse"></div>
                   <div className="absolute top-2 right-2 w-2 h-2 bg-slate-400 rounded-full animate-ping opacity-50"></div>
                   <div className="flex flex-col space-y-3">
                     <div className="flex items-center space-x-2">
                       <div className="w-2 h-2 bg-slate-500 rounded-full animate-bounce flex-shrink-0"></div>
-                      <span className="text-sm font-bold text-slate-800 break-words">Berechnungsformel</span>
+                      <span className="text-sm font-bold text-slate-800 break-words">Excel Columns Mapping</span>
                     </div>
-                    <div className="text-sm text-slate-700 font-mono bg-slate-100/50 p-3 rounded-lg">
-                      <div className="font-bold text-slate-900 mb-2">Finanzierungsbetrag =</div>
-                      <div className="pl-4 space-y-1">
-                        <div>(Projektkosten Brutto ÷ Gutscheinwert für Hotel)</div>
-                        <div>× Zahlung von Tripz Estimate</div>
-                        <div>× 1.1</div>
+                    <div className="text-sm text-slate-700 bg-slate-100/50 p-3 rounded-lg grid grid-cols-1 md:grid-cols-2 gap-2">
+                      <div className="space-y-1">
+                        <div><span className="font-semibold text-blue-700">C:</span> Finanzierung (Förderung) für Hotelbett</div>
+                        <div><span className="font-semibold text-purple-700">D:</span> Förderungssumme</div>
+                        <div><span className="font-semibold text-orange-700">E:</span> Abzug</div>
+                        <div><span className="font-semibold text-rose-700">F:</span> Buchungsystem</div>
+                        <div><span className="font-semibold text-cyan-700">G:</span> Rabatt Förderung</div>
+                        <div><span className="font-semibold text-green-700">H:</span> Lieferant</div>
+                        <div><span className="font-semibold text-teal-700">I:</span> Lieferant Förderung</div>
                       </div>
-                      <div className="mt-2 text-xs text-slate-600">
-                        <div>Zahlung von Tripz = Realistischer Hotelverkaufspreis × 0.75</div>
+                      <div className="space-y-1">
+                        <div><span className="font-semibold text-indigo-700">J:</span> Ankauf vom Lieferant</div>
+                        <div><span className="font-semibold text-pink-700">K:</span> Marge</div>
+                        <div><span className="font-semibold text-yellow-700">L:</span> Verkauf an Hotelbett</div>
+                        <div><span className="font-semibold text-lime-700">M:</span> Anzahl</div>
+                        <div><span className="font-semibold text-emerald-700">N:</span> UVP</div>
+                        <div><span className="font-semibold text-violet-700">O:</span> Profit nach Steuern</div>
+                        <div><span className="font-semibold text-slate-700">P:</span> Profit nach Steuern Förderung</div>
                       </div>
+                    </div>
+                    <div className="text-xs text-slate-600 bg-blue-50/50 p-2 rounded border-l-4 border-blue-400">
+                      <strong>Note:</strong> Values are taken directly from Excel screenshot Row 1. Empty cells are marked with "-".
                     </div>
                   </div>
                 </div>
