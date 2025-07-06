@@ -188,6 +188,13 @@ Changelog:
   - Added comprehensive formula explanation with business logic breakdown
   - Standardized all circular elements to w-2 h-2 sizing for visual consistency
   - Integrated automatic calculations for financing formula: (Project Costs / Voucher) × Tripz Payment × 1.1
+- January 6, 2025. Complete restructure to match Excel screenshot with 14 columns
+  - Replaced all calculation cards with exact Excel column structure (C-P)
+  - Implemented 14 German business terminology columns with actual Excel values
+  - Added two-row layout with 7 columns each for optimal visual organization
+  - Applied unique color schemes for each Excel column with consistent h-24 heights
+  - Replaced formula explanation with Excel columns mapping documentation
+  - Updated README.md with comprehensive project documentation including Excel business logic
 ```
 
 ## User Preferences
