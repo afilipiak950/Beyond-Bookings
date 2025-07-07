@@ -352,7 +352,7 @@ export default function Workflow() {
                   <input 
                     type="number"
                     className="w-full p-3 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    value={Math.min(Math.floor((workflowData.roomCount * 365) * 0.15), 1000)}
+                    value={Math.min(Math.floor((workflowData.roomCount * 365 * (workflowData.occupancyRate / 100)) * 0.15), 1000)}
                     readOnly
                   />
                 </div>
