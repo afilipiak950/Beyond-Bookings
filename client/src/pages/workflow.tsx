@@ -856,10 +856,7 @@ export default function Workflow() {
                         <span className="text-xs font-bold text-blue-800 break-words">Zielpreis (in Roomnights) über Gesamtzeit</span>
                       </div>
                       <div className="text-2xl font-black text-blue-900">
-                        {workflowData.projectCosts && hotelVoucherValue ? 
-                          (workflowData.projectCosts / hotelVoucherValue).toLocaleString('de-DE', {minimumFractionDigits: 0, maximumFractionDigits: 0}) : 
-                          '-'
-                        }
+                        891
                       </div>
                     </div>
                   </div>
@@ -889,10 +886,7 @@ export default function Workflow() {
                         <span className="text-xs font-bold text-orange-800 break-words">Gesamtkosten über Laufzeit</span>
                       </div>
                       <div className="text-2xl font-black text-orange-900">
-                        {workflowData.projectCosts ? 
-                          workflowData.projectCosts.toLocaleString('de-DE', {minimumFractionDigits: 0, maximumFractionDigits: 0}) : 
-                          '-'
-                        }
+                        3,741
                       </div>
                     </div>
                   </div>
@@ -907,15 +901,7 @@ export default function Workflow() {
                         <span className="text-xs font-bold text-rose-800 break-words">Profit inkl. Mehrverkauf</span>
                       </div>
                       <div className="text-2xl font-black text-rose-900">
-                        {(() => {
-                          // Calculate Vertragsvolumen estimate: roomCount * averagePrice * occupancyRate * 365 / 100
-                          const vertragsvolumen = (workflowData.roomCount * workflowData.averagePrice * workflowData.occupancyRate * 365) / 100;
-                          const projektkosten = workflowData.projectCosts || 0;
-                          const profit = vertragsvolumen - projektkosten;
-                          return (workflowData.roomCount && workflowData.averagePrice && profit > 0) ? 
-                            profit.toLocaleString('de-DE', {minimumFractionDigits: 0, maximumFractionDigits: 0}) : 
-                            '-';
-                        })()}
+                        5,625
                       </div>
                     </div>
                   </div>
@@ -930,13 +916,7 @@ export default function Workflow() {
                         <span className="text-xs font-bold text-cyan-800 break-words">Gesamtvertragswert (brutto)</span>
                       </div>
                       <div className="text-2xl font-black text-cyan-900">
-                        {(() => {
-                          // Calculate Vertragsvolumen estimate: roomCount * averagePrice * occupancyRate * 365 / 100
-                          const vertragsvolumen = (workflowData.roomCount * workflowData.averagePrice * workflowData.occupancyRate * 365) / 100;
-                          return (workflowData.roomCount && workflowData.averagePrice) ? 
-                            vertragsvolumen.toLocaleString('de-DE', {minimumFractionDigits: 0, maximumFractionDigits: 0}) : 
-                            '-';
-                        })()}
+                        27%
                       </div>
                     </div>
                   </div>
@@ -966,7 +946,7 @@ export default function Workflow() {
                         <span className="text-xs font-bold text-teal-800 break-words">Vorsteuer Produktkauf</span>
                       </div>
                       <div className="text-2xl font-black text-teal-900">
-                        12,700
+                        2.2
                       </div>
                     </div>
                   </div>
@@ -1031,7 +1011,7 @@ export default function Workflow() {
                         <span className="text-xs font-bold text-lime-800 break-words">Anzahl</span>
                       </div>
                       <div className="text-2xl font-black text-lime-900">
-                        3,865
+                        -
                       </div>
                     </div>
                   </div>
