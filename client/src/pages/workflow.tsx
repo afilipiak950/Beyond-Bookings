@@ -948,10 +948,10 @@ export default function Workflow() {
                     <div className="flex flex-col space-y-2 h-full justify-between">
                       <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce flex-shrink-0"></div>
-                        <span className="text-xs font-bold text-green-800 break-words">Lieferant</span>
+                        <span className="text-xs font-bold text-green-800 break-words">Marge</span>
                       </div>
                       <div className="text-2xl font-black text-green-900">
-                        -
+                        16,716
                       </div>
                     </div>
                   </div>
@@ -1099,7 +1099,7 @@ export default function Workflow() {
                         <div><span className="font-semibold text-orange-700">E:</span> Gesamtkosten über Laufzeit</div>
                         <div><span className="font-semibold text-rose-700">F:</span> Profit inkl. Mehrverkauf</div>
                         <div><span className="font-semibold text-cyan-700">G:</span> Gesamtvertragswert (brutto)</div>
-                        <div><span className="font-semibold text-green-700">H:</span> Lieferant</div>
+                        <div><span className="font-semibold text-green-700">H:</span> Marge</div>
                         <div><span className="font-semibold text-teal-700">I:</span> Lieferant Förderung</div>
                       </div>
                       <div className="space-y-1">
