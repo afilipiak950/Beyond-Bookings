@@ -951,7 +951,7 @@ export default function Workflow() {
                         <span className="text-xs font-bold text-green-800 break-words">Marge</span>
                       </div>
                       <div className="text-2xl font-black text-green-900">
-                        16,716
+                        -
                       </div>
                     </div>
                   </div>
