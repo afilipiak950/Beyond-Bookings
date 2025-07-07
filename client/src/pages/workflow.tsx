@@ -927,10 +927,16 @@ export default function Workflow() {
                     <div className="flex flex-col space-y-2 h-full justify-between">
                       <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 bg-cyan-500 rounded-full animate-bounce flex-shrink-0"></div>
-                        <span className="text-xs font-bold text-cyan-800 break-words">Rabatt Förderung</span>
+                        <span className="text-xs font-bold text-cyan-800 break-words">Gesamtvertragswert (brutto)</span>
                       </div>
                       <div className="text-2xl font-black text-cyan-900">
-                        3,865
+                        {(() => {
+                          // Calculate Vertragsvolumen estimate: roomCount * averagePrice * occupancyRate * 365 / 100
+                          const vertragsvolumen = (workflowData.roomCount * workflowData.averagePrice * workflowData.occupancyRate * 365) / 100;
+                          return (workflowData.roomCount && workflowData.averagePrice) ? 
+                            vertragsvolumen.toLocaleString('de-DE', {minimumFractionDigits: 0, maximumFractionDigits: 0}) : 
+                            '-';
+                        })()}
                       </div>
                     </div>
                   </div>
@@ -1092,7 +1098,7 @@ export default function Workflow() {
                         <div><span className="font-semibold text-purple-700">D:</span> Laufzeit</div>
                         <div><span className="font-semibold text-orange-700">E:</span> Gesamtkosten über Laufzeit</div>
                         <div><span className="font-semibold text-rose-700">F:</span> Profit inkl. Mehrverkauf</div>
-                        <div><span className="font-semibold text-cyan-700">G:</span> Rabatt Förderung</div>
+                        <div><span className="font-semibold text-cyan-700">G:</span> Gesamtvertragswert (brutto)</div>
                         <div><span className="font-semibold text-green-700">H:</span> Lieferant</div>
                         <div><span className="font-semibold text-teal-700">I:</span> Lieferant Förderung</div>
                       </div>
