@@ -1094,121 +1094,115 @@ What would you like to work on today? I'm here to make your hotel pricing more i
         uploadStatus: 'processing'
       });
 
-      // Start processing in background with actual ZIP extraction
+      // Start processing in background with real file processing
       setTimeout(async () => {
         try {
-          // For now, create structured mock data that matches expected format
-          const mockExtractedFiles = [
-            {
-              fileName: 'Quartals_Berichte_2024.xlsx',
-              fileType: 'Excel',
-              folderPath: 'Berichte/Q1-Q4',
-              worksheets: [
-                { name: 'Q1 Umsatz', rowCount: 145 },
-                { name: 'Q2 Umsatz', rowCount: 167 },
-                { name: 'Q3 Umsatz', rowCount: 134 },
-                { name: 'Q4 Umsatz', rowCount: 189 }
-              ]
-            },
-            {
-              fileName: 'Preisanalyse_Hotels.xlsx', 
-              fileType: 'Excel',
-              folderPath: 'Analysen/Preise',
-              worksheets: [
-                { name: 'Aktuelle Preise', rowCount: 89 },
-                { name: 'Konkurrenzanalyse', rowCount: 67 },
-                { name: 'Preistrends', rowCount: 156 }
-              ]
-            },
-            {
-              fileName: 'Kundendaten_Export.xlsx',
-              fileType: 'Excel', 
-              folderPath: 'Daten/Kunden',
-              worksheets: [
-                { name: 'Kundenliste', rowCount: 2340 },
-                { name: 'Segmentierung', rowCount: 145 }
-              ]
-            }
-          ];
+          console.log(`Starting real document processing for file: ${req.file.originalname}`);
           
-          // Update upload status with structured extracted files
-          await storage.updateDocumentUpload(upload.id, {
-            uploadStatus: 'completed',
-            extractedFiles: mockExtractedFiles
-          });
-
-          // Create sample analyses
-          const analyses = [
-            {
-              uploadId: upload.id,
+          // Check if the uploaded file is a ZIP file or Excel file
+          if (req.file.mimetype === 'application/zip' || req.file.mimetype === 'application/x-zip-compressed') {
+            // Process ZIP file with DocumentProcessor
+            const result = await documentProcessor.processZipFile(req.file.path, {
               userId,
-              fileName: 'Hotel_Data_2024.xlsx',
-              worksheetName: 'Q1 Revenue',
-              analysisType: 'revenue_analysis',
-              status: 'completed',
-              priceData: [
-                { value: 89.50, currency: 'EUR', context: 'Standard Room', row: 2, column: 3, confidence: 0.95 },
-                { value: 125.00, currency: 'EUR', context: 'Suite', row: 3, column: 3, confidence: 0.92 },
-                { value: 75.00, currency: 'EUR', context: 'Economy Room', row: 4, column: 3, confidence: 0.88 }
-              ],
-              insights: {
-                summary: "Revenue analysis shows strong Q1 performance with average room rates of €89.50. Pricing strategy suggests optimal positioning in mid-market segment.",
-                keyMetrics: [
-                  { metric: "Average Room Rate", value: "€89.50", change: "+5.2%" },
-                  { metric: "Revenue Growth", value: "12.3%", change: "+2.1%" },
-                  { metric: "Occupancy Rate", value: "78%", change: "+3.5%" }
-                ],
-                recommendations: [
-                  "Consider 10-15% rate increase for peak season",
-                  "Implement dynamic pricing for weekends",
-                  "Focus on corporate segment for steady revenue"
-                ],
-                trends: [
-                  { category: "Pricing", trend: "up", description: "Consistent upward pricing trend" },
-                  { category: "Demand", trend: "stable", description: "Stable demand patterns" }
-                ]
-              },
-              processingTime: 2500
+              fileName: req.file.filename,
+              originalFileName: req.file.originalname,
+              filePath: req.file.path,
+              fileSize: req.file.size,
+              fileType: req.file.mimetype,
+              uploadStatus: 'processing'
+            }, storage);
+
+            if (result.success) {
+              console.log(`Successfully processed ${result.processedFiles} files from ${result.totalFiles} total files`);
+              
+              // Delete the upload we created earlier since DocumentProcessor creates its own
+              await storage.deleteDocumentUpload(upload.id, userId);
+            } else {
+              console.error(`Failed to process upload ${upload.id}: ${result.message}`);
+              await storage.updateDocumentUpload(upload.id, {
+                uploadStatus: 'error'
+              });
             }
-          ];
-
-          for (const analysisData of analyses) {
-            await storage.createDocumentAnalysis(analysisData);
-          }
-
-          // Create cross-document insights
-          await storage.createDocumentInsight({
-            userId,
-            analysisIds: [],
-            insightType: 'cross_document',
-            title: 'Multi-Document Pricing Analysis',
-            description: 'Comprehensive analysis across all uploaded documents revealing pricing trends and optimization opportunities.',
-            data: {
-              summary: "Analysis of multiple documents reveals consistent pricing strategies with opportunities for revenue optimization. Key findings suggest 15-20% potential revenue increase through strategic pricing adjustments.",
-              averagePrices: {
-                overall: 89.50,
-                byCategory: {
-                  'Standard Room': 89.50,
-                  'Suite': 125.00,
-                  'Economy Room': 75.00
+          } else {
+            // Handle single Excel/CSV files directly
+            console.log(`Processing single Excel/CSV file: ${req.file.originalname}`);
+            
+            // Import and use XLSX library directly for single files
+            const XLSX = await import('xlsx');
+            const workbook = XLSX.readFile(req.file.path);
+            const sheetNames = workbook.SheetNames;
+            
+            const extractedFiles = [];
+            const analysisData = [];
+            
+            for (const sheetName of sheetNames) {
+              const worksheet = workbook.Sheets[sheetName];
+              const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+              
+              if (jsonData.length > 0) {
+                extractedFiles.push({
+                  fileName: req.file.originalname,
+                  fileType: 'Excel',
+                  worksheetName: sheetName,
+                  rowCount: jsonData.length,
+                  columnCount: jsonData[0]?.length || 0
+                });
+                
+                // Extract price-related data from worksheet
+                const priceData = [];
+                for (let rowIndex = 0; rowIndex < jsonData.length; rowIndex++) {
+                  const row = jsonData[rowIndex];
+                  for (let colIndex = 0; colIndex < row.length; colIndex++) {
+                    const cellValue = row[colIndex];
+                    if (typeof cellValue === 'number' && cellValue > 0 && cellValue < 10000) {
+                      // Likely a price value
+                      priceData.push({
+                        value: cellValue,
+                        currency: 'EUR',
+                        context: `Row ${rowIndex + 1}, Column ${colIndex + 1}`,
+                        row: rowIndex,
+                        column: colIndex,
+                        confidence: 0.8
+                      });
+                    }
+                  }
                 }
-              },
-              recommendations: [
-                "Implement dynamic pricing strategy",
-                "Increase rates during peak demand periods",
-                "Optimize room category pricing mix",
-                "Focus on revenue per available room (RevPAR) improvement"
-              ]
-            },
-            visualizationData: {
-              chartType: 'pricing_distribution',
-              data: [
-                { category: 'Standard Room', value: 89.50, count: 15 },
-                { category: 'Suite', value: 125.00, count: 8 },
-                { category: 'Economy Room', value: 75.00, count: 22 }
-              ]
+                
+                // Create analysis record
+                analysisData.push({
+                  uploadId: upload.id,
+                  userId,
+                  fileName: req.file.originalname,
+                  worksheetName: sheetName,
+                  analysisType: 'excel_analysis',
+                  status: 'completed',
+                  priceData,
+                  insights: {
+                    summary: `Analysis of ${sheetName} worksheet with ${jsonData.length} rows and ${priceData.length} price points identified.`,
+                    keyMetrics: [
+                      { metric: "Total Rows", value: jsonData.length.toString() },
+                      { metric: "Price Points Found", value: priceData.length.toString() },
+                      { metric: "Average Value", value: priceData.length > 0 ? (priceData.reduce((sum, p) => sum + p.value, 0) / priceData.length).toFixed(2) : "0" }
+                    ]
+                  },
+                  processingTime: 1000
+                });
+              }
             }
-          });
+            
+            // Update upload with extracted file info
+            await storage.updateDocumentUpload(upload.id, {
+              extractedFiles,
+              uploadStatus: 'completed'
+            });
+            
+            // Create analysis records
+            for (const analysis of analysisData) {
+              await storage.createDocumentAnalysis(analysis);
+            }
+            
+            console.log(`Successfully processed single Excel file with ${analysisData.length} worksheets`);
+          }
 
         } catch (error) {
           console.error("Error processing document:", error);
