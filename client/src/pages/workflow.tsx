@@ -856,7 +856,10 @@ export default function Workflow() {
                         <span className="text-xs font-bold text-blue-800 break-words">Finanzierung (Förderung) für Hotelbett</span>
                       </div>
                       <div className="text-2xl font-black text-blue-900">
-                        1,776
+                        {workflowData.projectCosts && hotelVoucherValue ? 
+                          (workflowData.projectCosts / hotelVoucherValue).toLocaleString('de-DE', {minimumFractionDigits: 0, maximumFractionDigits: 0}) : 
+                          '-'
+                        }
                       </div>
                     </div>
                   </div>
