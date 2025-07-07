@@ -853,7 +853,7 @@ export default function Workflow() {
                     <div className="flex flex-col space-y-2 h-full justify-between">
                       <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce flex-shrink-0"></div>
-                        <span className="text-xs font-bold text-blue-800 break-words">Finanzierung (Förderung) für Hotelbett</span>
+                        <span className="text-xs font-bold text-blue-800 break-words">Zielpreis (in Roomnights) über Gesamtzeit</span>
                       </div>
                       <div className="text-2xl font-black text-blue-900">
                         {workflowData.projectCosts && hotelVoucherValue ? 
@@ -1077,7 +1077,7 @@ export default function Workflow() {
                     </div>
                     <div className="text-sm text-slate-700 bg-slate-100/50 p-3 rounded-lg grid grid-cols-1 md:grid-cols-2 gap-2">
                       <div className="space-y-1">
-                        <div><span className="font-semibold text-blue-700">C:</span> Finanzierung (Förderung) für Hotelbett</div>
+                        <div><span className="font-semibold text-blue-700">C:</span> Zielpreis (in Roomnights) über Gesamtzeit</div>
                         <div><span className="font-semibold text-purple-700">D:</span> Förderungssumme</div>
                         <div><span className="font-semibold text-orange-700">E:</span> Abzug</div>
                         <div><span className="font-semibold text-rose-700">F:</span> Buchungsystem</div>
