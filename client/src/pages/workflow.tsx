@@ -904,10 +904,18 @@ export default function Workflow() {
                     <div className="flex flex-col space-y-2 h-full justify-between">
                       <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 bg-rose-500 rounded-full animate-bounce flex-shrink-0"></div>
-                        <span className="text-xs font-bold text-rose-800 break-words">Buchungsystem</span>
+                        <span className="text-xs font-bold text-rose-800 break-words">Profit inkl. Mehrverkauf</span>
                       </div>
                       <div className="text-2xl font-black text-rose-900">
-                        911,039
+                        {(() => {
+                          // Calculate Vertragsvolumen estimate: roomCount * averagePrice * occupancyRate * 365 / 100
+                          const vertragsvolumen = (workflowData.roomCount * workflowData.averagePrice * workflowData.occupancyRate * 365) / 100;
+                          const projektkosten = workflowData.projectCosts || 0;
+                          const profit = vertragsvolumen - projektkosten;
+                          return (workflowData.roomCount && workflowData.averagePrice && profit > 0) ? 
+                            profit.toLocaleString('de-DE', {minimumFractionDigits: 0, maximumFractionDigits: 0}) : 
+                            '-';
+                        })()}
                       </div>
                     </div>
                   </div>
@@ -1083,7 +1091,7 @@ export default function Workflow() {
                         <div><span className="font-semibold text-blue-700">C:</span> Zielpreis (in Roomnights) über Gesamtzeit</div>
                         <div><span className="font-semibold text-purple-700">D:</span> Laufzeit</div>
                         <div><span className="font-semibold text-orange-700">E:</span> Gesamtkosten über Laufzeit</div>
-                        <div><span className="font-semibold text-rose-700">F:</span> Buchungsystem</div>
+                        <div><span className="font-semibold text-rose-700">F:</span> Profit inkl. Mehrverkauf</div>
                         <div><span className="font-semibold text-cyan-700">G:</span> Rabatt Förderung</div>
                         <div><span className="font-semibold text-green-700">H:</span> Lieferant</div>
                         <div><span className="font-semibold text-teal-700">I:</span> Lieferant Förderung</div>
