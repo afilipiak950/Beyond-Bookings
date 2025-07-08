@@ -318,7 +318,12 @@ export default function Workflow() {
                     type="number"
                     placeholder="z.B. 180"
                     className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    value={workflowData.roomCount}
+                    value={workflowData.roomCount === 0 ? '' : workflowData.roomCount}
+                    onFocus={(e) => {
+                      if (workflowData.roomCount === 0) {
+                        e.target.value = '';
+                      }
+                    }}
                     onChange={(e) => updateWorkflowData({ roomCount: parseInt(e.target.value) || 0 })}
                   />
                 </div>
@@ -332,7 +337,12 @@ export default function Workflow() {
                     max="100"
                     placeholder="z.B. 75,5"
                     className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    value={workflowData.occupancyRate}
+                    value={workflowData.occupancyRate === 0 ? '' : workflowData.occupancyRate}
+                    onFocus={(e) => {
+                      if (workflowData.occupancyRate === 0) {
+                        e.target.value = '';
+                      }
+                    }}
                     onChange={(e) => updateWorkflowData({ occupancyRate: parseFloat(e.target.value) || 0 })}
                   />
                 </div>
@@ -364,7 +374,12 @@ export default function Workflow() {
                     step="0.01"
                     placeholder="z.B. 120,00"
                     className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    value={workflowData.averagePrice}
+                    value={workflowData.averagePrice === 0 ? '' : workflowData.averagePrice}
+                    onFocus={(e) => {
+                      if (workflowData.averagePrice === 0) {
+                        e.target.value = '';
+                      }
+                    }}
                     onChange={(e) => updateWorkflowData({ averagePrice: parseFloat(e.target.value) || 0 })}
                   />
                 </div>
@@ -481,7 +496,12 @@ export default function Workflow() {
                                   id="manual-price"
                                   type="number"
                                   step="0.01"
-                                  value={tempPrice}
+                                  value={tempPrice === '0' ? '' : tempPrice}
+                                  onFocus={(e) => {
+                                    if (tempPrice === '0') {
+                                      e.target.value = '';
+                                    }
+                                  }}
                                   onChange={(e) => setTempPrice(e.target.value)}
                                   placeholder="Preis in Euro"
                                   className="mt-1"
@@ -623,7 +643,12 @@ export default function Workflow() {
                                       id="voucher-value"
                                       type="number"
                                       step="0.01"
-                                      value={tempVoucherValue}
+                                      value={tempVoucherValue === '0' ? '' : tempVoucherValue}
+                                      onFocus={(e) => {
+                                        if (tempVoucherValue === '0') {
+                                          e.target.value = '';
+                                        }
+                                      }}
                                       onChange={(e) => setTempVoucherValue(e.target.value)}
                                       placeholder="Gutscheinwert in Euro"
                                       className="mt-1"
@@ -760,7 +785,12 @@ export default function Workflow() {
                             step="0.01"
                             min="0"
                             placeholder="Projektkosten eingeben..."
-                            value={workflowData.projectCosts || ''}
+                            value={workflowData.projectCosts === 0 ? '' : workflowData.projectCosts}
+                            onFocus={(e) => {
+                              if (workflowData.projectCosts === 0) {
+                                e.target.value = '';
+                              }
+                            }}
                             onChange={(e) => {
                               const value = e.target.value;
                               const numValue = value === '' ? 0 : parseFloat(value) || 0;
