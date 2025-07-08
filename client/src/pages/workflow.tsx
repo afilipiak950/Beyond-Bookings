@@ -898,7 +898,7 @@ export default function Workflow() {
                     </div>
                   </div>
 
-                  {/* Column F - Vertagsvolumen Estimate - Finanzierung: Projektkosten brutto */}
+                  {/* Column F - Profit inkl. Mehrverkauf (Vertragsvolumen Estimate - Finanzierung: Projektkosten brutto) */}
                   <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-rose-50/80 to-pink-50/60 backdrop-blur-sm border border-rose-200/50 p-4 shadow-md h-24">
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-rose-400 to-pink-400 animate-pulse"></div>
                     <div className="absolute top-2 right-2 w-2 h-2 bg-rose-400 rounded-full animate-ping opacity-50"></div>
