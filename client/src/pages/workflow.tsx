@@ -1043,7 +1043,21 @@ export default function Workflow() {
                         <span className="text-xs font-bold text-teal-800 break-words">Vorsteuer Produktkauf</span>
                       </div>
                       <div className="text-2xl font-black text-teal-900">
-                        2.2
+                        {(() => {
+                          // Get actual input values from form
+                          const projectCosts = workflowData.projectCosts || 0;
+                          
+                          // Vorsteuer Produktkauf = (Projektkosten × 1.19) - Projektkosten
+                          // This calculates the 19% VAT amount
+                          const vorsteuerProdukt = (projectCosts * 1.19) - projectCosts;
+                          
+                          // Show 0 when no meaningful input data
+                          if (projectCosts === 0) {
+                            return '-';
+                          }
+                          
+                          return Math.round(vorsteuerProdukt).toLocaleString('de-DE');
+                        })()}
                       </div>
                     </div>
                   </div>
