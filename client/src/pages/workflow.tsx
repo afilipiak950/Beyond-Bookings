@@ -877,8 +877,8 @@ export default function Workflow() {
               </CardHeader>
 
               <CardContent className="relative space-y-6">
-                {/* Excel Column Calculation Grid - Matching Screenshot Exactly */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-4 px-4 sm:px-0">
+                {/* Excel Column Calculation Grid - 5 Columns in First Row */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 px-4 sm:px-0">
                   
                   {/* Column C - Finanzierung (Förderung) für Hotelbett */}
                   <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-blue-50/80 to-indigo-50/60 backdrop-blur-sm border border-blue-200/50 p-4 shadow-md h-24">
@@ -964,7 +964,7 @@ export default function Workflow() {
                     </div>
                   </div>
 
-                  {/* Column G - Rabatt Förderung */}
+                  {/* Column G - Gesamtvertragswert (brutto) */}
                   <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-cyan-50/80 to-sky-50/60 backdrop-blur-sm border border-cyan-200/50 p-4 shadow-md h-24">
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-400 to-sky-400 animate-pulse"></div>
                     <div className="absolute top-2 right-2 w-2 h-2 bg-cyan-400 rounded-full animate-ping opacity-50"></div>
@@ -997,7 +997,51 @@ export default function Workflow() {
                     </div>
                   </div>
 
-                  {/* Column H - Lieferant (Empty in Excel) */}
+                  {/* Creative ROI Calculation - Return on Investment */}
+                  <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-emerald-50/80 to-green-50/60 backdrop-blur-sm border border-emerald-200/50 p-4 shadow-md h-24">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-400 to-green-400 animate-pulse"></div>
+                    <div className="absolute top-2 right-2 w-2 h-2 bg-emerald-400 rounded-full animate-ping opacity-50"></div>
+                    <div className="flex flex-col space-y-2 h-full justify-between">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce flex-shrink-0"></div>
+                        <span className="text-xs font-bold text-emerald-800 break-words">ROI (Return on Investment)</span>
+                      </div>
+                      <div className="text-2xl font-black text-emerald-900">
+                        {(() => {
+                          // Get actual input values from form
+                          const projectCosts = workflowData.projectCosts || 0;
+                          const stars = workflowData.stars || 0;
+                          const actualPrice = workflowData.averagePrice || 0;
+                          
+                          // Calculate hotel voucher value based on stars
+                          const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30;
+                          
+                          // Formula: Vertragsvolumen Estimate = (Project Costs / Hotel Voucher Value) × (Actual Price × 0.75) × 1.1
+                          const vertragsvolumenEstimate = (projectCosts / voucherValue) * (actualPrice * 0.75) * 1.1;
+                          
+                          // ROI = ((Revenue - Investment) / Investment) × 100
+                          const profit = vertragsvolumenEstimate - projectCosts;
+                          const roi = projectCosts > 0 ? (profit / projectCosts) * 100 : 0;
+                          
+                          // Show 0 when no meaningful input data
+                          if (projectCosts === 0 && actualPrice === 0) {
+                            return '-';
+                          }
+                          
+                          return Math.round(roi).toLocaleString('de-DE') + '%';
+                        })()}
+                      </div>
+                    </div>
+                  </div>
+
+
+
+                </div>
+
+                {/* Second Row - Continuing Excel Columns */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 px-4 sm:px-0">
+                  
+                  {/* Column H - Marge */}
                   <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-green-50/80 to-emerald-50/60 backdrop-blur-sm border border-green-200/50 p-4 shadow-md h-24">
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-400 to-emerald-400 animate-pulse"></div>
                     <div className="absolute top-2 right-2 w-2 h-2 bg-green-400 rounded-full animate-ping opacity-50"></div>
@@ -1033,7 +1077,7 @@ export default function Workflow() {
                     </div>
                   </div>
 
-                  {/* Column I - Lieferant Förderung */}
+                  {/* Column I - Vorsteuer Produktkauf */}
                   <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-teal-50/80 to-cyan-50/60 backdrop-blur-sm border border-teal-200/50 p-4 shadow-md h-24">
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-teal-400 to-cyan-400 animate-pulse"></div>
                     <div className="absolute top-2 right-2 w-2 h-2 bg-teal-400 rounded-full animate-ping opacity-50"></div>
@@ -1062,11 +1106,6 @@ export default function Workflow() {
                     </div>
                   </div>
 
-                </div>
-
-                {/* Second Row - Continuing Excel Columns */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-4 px-4 sm:px-0">
-                  
                   {/* Column J - Vorsteuer Tripz Provision */}
                   <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-indigo-50/80 to-purple-50/60 backdrop-blur-sm border border-indigo-200/50 p-4 shadow-md h-24">
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-400 to-purple-400 animate-pulse"></div>
@@ -1145,80 +1184,44 @@ export default function Workflow() {
                     </div>
                   </div>
 
-                  {/* Column L - Profit nach Steuern */}
+                  {/* Creative Profit Margin Percentage */}
                   <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-yellow-50/80 to-orange-50/60 backdrop-blur-sm border border-yellow-200/50 p-4 shadow-md h-24">
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-400 to-orange-400 animate-pulse"></div>
                     <div className="absolute top-2 right-2 w-2 h-2 bg-yellow-400 rounded-full animate-ping opacity-50"></div>
                     <div className="flex flex-col space-y-2 h-full justify-between">
                       <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 bg-yellow-500 rounded-full animate-bounce flex-shrink-0"></div>
-                        <span className="text-xs font-bold text-yellow-800 break-words">Profit nach Steuern</span>
+                        <span className="text-xs font-bold text-yellow-800 break-words">Profit Margin %</span>
                       </div>
                       <div className="text-2xl font-black text-yellow-900">
-                        36,033
+                        {(() => {
+                          // Get actual input values from form
+                          const projectCosts = workflowData.projectCosts || 0;
+                          const stars = workflowData.stars || 0;
+                          const actualPrice = workflowData.averagePrice || 0;
+                          
+                          // Calculate hotel voucher value based on stars
+                          const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30;
+                          
+                          // Formula: Vertragsvolumen Estimate = (Project Costs / Hotel Voucher Value) × (Actual Price × 0.75) × 1.1
+                          const vertragsvolumenEstimate = (projectCosts / voucherValue) * (actualPrice * 0.75) * 1.1;
+                          
+                          // Profit Margin = (Profit / Revenue) × 100
+                          const profit = vertragsvolumenEstimate - projectCosts;
+                          const profitMargin = vertragsvolumenEstimate > 0 ? (profit / vertragsvolumenEstimate) * 100 : 0;
+                          
+                          // Show 0 when no meaningful input data
+                          if (projectCosts === 0 && actualPrice === 0) {
+                            return '-';
+                          }
+                          
+                          return Math.round(profitMargin).toLocaleString('de-DE') + '%';
+                        })()}
                       </div>
                     </div>
                   </div>
 
-                  {/* Column M - Marge nach Steuern bei Vermietpreis */}
-                  <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-lime-50/80 to-green-50/60 backdrop-blur-sm border border-lime-200/50 p-4 shadow-md h-24">
-                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-lime-400 to-green-400 animate-pulse"></div>
-                    <div className="absolute top-2 right-2 w-2 h-2 bg-lime-400 rounded-full animate-ping opacity-50"></div>
-                    <div className="flex flex-col space-y-2 h-full justify-between">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-lime-500 rounded-full animate-bounce flex-shrink-0"></div>
-                        <span className="text-xs font-bold text-lime-800 break-words">Marge nach Steuern bei Vermietpreis</span>
-                      </div>
-                      <div className="text-2xl font-black text-lime-900">
-                        -
-                      </div>
-                    </div>
-                  </div>
 
-                  {/* Column N - Breakeven in Jahren */}
-                  <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-emerald-50/80 to-teal-50/60 backdrop-blur-sm border border-emerald-200/50 p-4 shadow-md h-24">
-                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-400 to-teal-400 animate-pulse"></div>
-                    <div className="absolute top-2 right-2 w-2 h-2 bg-emerald-400 rounded-full animate-ping opacity-50"></div>
-                    <div className="flex flex-col space-y-2 h-full justify-between">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce flex-shrink-0"></div>
-                        <span className="text-xs font-bold text-emerald-800 break-words">Breakeven in Jahren</span>
-                      </div>
-                      <div className="text-2xl font-black text-emerald-900">
-                        -
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Column O - Profit nach Steuern */}
-                  <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-violet-50/80 to-purple-50/60 backdrop-blur-sm border border-violet-200/50 p-4 shadow-md h-24">
-                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-violet-400 to-purple-400 animate-pulse"></div>
-                    <div className="absolute top-2 right-2 w-2 h-2 bg-violet-400 rounded-full animate-ping opacity-50"></div>
-                    <div className="flex flex-col space-y-2 h-full justify-between">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-violet-500 rounded-full animate-bounce flex-shrink-0"></div>
-                        <span className="text-xs font-bold text-violet-800 break-words">Profit nach Steuern</span>
-                      </div>
-                      <div className="text-2xl font-black text-violet-900">
-                        -
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Column P - Profit nach Steuern Förderung */}
-                  <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-slate-50/80 to-gray-50/60 backdrop-blur-sm border border-slate-200/50 p-4 shadow-md h-24">
-                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-slate-400 to-gray-400 animate-pulse"></div>
-                    <div className="absolute top-2 right-2 w-2 h-2 bg-slate-400 rounded-full animate-ping opacity-50"></div>
-                    <div className="flex flex-col space-y-2 h-full justify-between">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-slate-500 rounded-full animate-bounce flex-shrink-0"></div>
-                        <span className="text-xs font-bold text-slate-800 break-words">Profit nach Steuern Förderung</span>
-                      </div>
-                      <div className="text-2xl font-black text-slate-900">
-                        -
-                      </div>
-                    </div>
-                  </div>
 
                 </div>
 
@@ -1233,22 +1236,15 @@ export default function Workflow() {
                     </div>
                     <div className="text-sm text-slate-700 bg-slate-100/50 p-3 rounded-lg grid grid-cols-1 md:grid-cols-2 gap-2">
                       <div className="space-y-1">
-                        <div><span className="font-semibold text-blue-700">C:</span> Zielpreis (in Roomnights) über Gesamtzeit</div>
-                        <div><span className="font-semibold text-purple-700">D:</span> Laufzeit</div>
-                        <div><span className="font-semibold text-orange-700">E:</span> Gesamtkosten über Laufzeit</div>
-                        <div><span className="font-semibold text-rose-700">F:</span> Profit inkl. Mehrverkauf</div>
-                        <div><span className="font-semibold text-cyan-700">G:</span> Gesamtvertragswert (brutto)</div>
+                        <div><span className="font-semibold text-blue-700">Row 1:</span> Zielpreis, Laufzeit, Gesamtkosten, Profit, Gesamtvertragswert</div>
+                        <div><span className="font-semibold text-emerald-700">ROI:</span> Return on Investment (Creative calculation)</div>
                         <div><span className="font-semibold text-green-700">H:</span> Marge</div>
                         <div><span className="font-semibold text-teal-700">I:</span> Vorsteuer Produktkauf</div>
+                        <div><span className="font-semibold text-indigo-700">J:</span> Vorsteuer Tripz Provision</div>
                       </div>
                       <div className="space-y-1">
-                        <div><span className="font-semibold text-indigo-700">J:</span> Vorsteuer Tripz Provision</div>
                         <div><span className="font-semibold text-pink-700">K:</span> Netto Steuerzahlung bei Vermietpreis</div>
-                        <div><span className="font-semibold text-yellow-700">L:</span> Profit nach Steuern</div>
-                        <div><span className="font-semibold text-lime-700">M:</span> Marge nach Steuern bei Vermietpreis</div>
-                        <div><span className="font-semibold text-emerald-700">N:</span> Breakeven in Jahren</div>
-                        <div><span className="font-semibold text-violet-700">O:</span> Profit nach Steuern</div>
-                        <div><span className="font-semibold text-slate-700">P:</span> Profit nach Steuern Förderung</div>
+                        <div><span className="font-semibold text-yellow-700">Profit Margin:</span> Profit Margin % (Creative calculation)</div>
                       </div>
                     </div>
                     <div className="text-xs text-slate-600 bg-blue-50/50 p-2 rounded border-l-4 border-blue-400">
