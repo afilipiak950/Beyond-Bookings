@@ -183,20 +183,30 @@ export default function DocumentAnalysis() {
       (analysis: any) => analysis.fileName === fileInfo.fileName && analysis.analysisType === 'mistral_ocr'
     );
     
-    if (ocrAnalysis) {
+    // Also check for regular analyses with extracted text
+    const regularAnalysis = analysesArray.find(
+      (analysis: any) => analysis.fileName === fileInfo.fileName && analysis.extractedData?.text
+    );
+    
+    const analysis = ocrAnalysis || regularAnalysis;
+    
+    if (analysis) {
       setSelectedDocument({
         ...fileInfo,
-        ocrContent: ocrAnalysis.extractedData?.text || 'Kein OCR-Inhalt verfügbar',
-        insights: ocrAnalysis.insights,
-        priceData: ocrAnalysis.priceData
+        ocrContent: analysis.extractedData?.text || 'Kein OCR-Inhalt verfügbar',
+        insights: analysis.insights,
+        priceData: analysis.priceData
       });
       setDocumentDialogOpen(true);
     } else {
-      toast({
-        title: "Kein OCR-Inhalt gefunden",
-        description: "Für dieses Dokument ist noch kein OCR-Inhalt verfügbar.",
-        variant: "destructive"
+      // Show available content even without OCR
+      setSelectedDocument({
+        ...fileInfo,
+        ocrContent: `Dateiname: ${fileInfo.fileName}\nDateityp: ${fileInfo.fileType?.toUpperCase() || 'UNBEKANNT'}\nPfad: ${fileInfo.originalPath || fileInfo.fileName}\n\nDiese Datei wurde noch nicht durch OCR verarbeitet oder enthält keinen extrahierten Text.`,
+        insights: null,
+        priceData: []
       });
+      setDocumentDialogOpen(true);
     }
   };
 
@@ -481,9 +491,20 @@ export default function DocumentAnalysis() {
                                           </p>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                          <Badge variant="secondary" className="text-xs">
-                                            OCR verfügbar
-                                          </Badge>
+                                          {(() => {
+                                            const hasOcrAnalysis = analysesArray.some((analysis: any) => 
+                                              analysis.fileName === fileInfo.fileName && analysis.analysisType === 'mistral_ocr'
+                                            );
+                                            const hasRegularAnalysis = analysesArray.some((analysis: any) => 
+                                              analysis.fileName === fileInfo.fileName && analysis.extractedData?.text
+                                            );
+                                            
+                                            return (
+                                              <Badge variant="secondary" className="text-xs">
+                                                {hasOcrAnalysis ? 'OCR verfügbar' : hasRegularAnalysis ? 'Daten verfügbar' : 'Datei anzeigen'}
+                                              </Badge>
+                                            );
+                                          })()}
                                           <Eye className="h-4 w-4 text-blue-600" />
                                         </div>
                                       </div>
@@ -930,9 +951,17 @@ export default function DocumentAnalysis() {
               
               <ScrollArea className="h-60 w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
                 <div className="p-4">
-                  <pre className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap font-mono leading-relaxed">
-                    {selectedDocument?.ocrContent || 'Kein OCR-Inhalt verfügbar'}
-                  </pre>
+                  {selectedDocument?.ocrContent ? (
+                    <pre className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap font-mono leading-relaxed">
+                      {selectedDocument.ocrContent}
+                    </pre>
+                  ) : (
+                    <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                      <FileText className="h-12 w-12 mx-auto mb-3 text-gray-400" />
+                      <p className="text-sm">Kein OCR-Inhalt verfügbar</p>
+                      <p className="text-xs mt-1">Diese Datei wurde noch nicht durch OCR verarbeitet</p>
+                    </div>
+                  )}
                 </div>
               </ScrollArea>
             </div>
