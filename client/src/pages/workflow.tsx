@@ -888,7 +888,7 @@ export default function Workflow() {
                       <div className="text-2xl font-black text-orange-900">
                         {workflowData.projectCosts > 0 ? 
                           Number(workflowData.projectCosts).toLocaleString('de-DE', {minimumFractionDigits: 0, maximumFractionDigits: 0}) :
-                          '3,741'
+                          (workflowData.projectCosts === 0 ? '0' : '3,741')
                         }
                       </div>
                     </div>
