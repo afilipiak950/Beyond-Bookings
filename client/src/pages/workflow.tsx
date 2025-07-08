@@ -520,10 +520,10 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
             </div>
           </div>
 
-          <div className="flex-1 bg-gray-100 p-2 overflow-auto animate-slideInFromBottom">
-            <div className="max-w-4xl mx-auto">
+          <div className="flex-1 bg-gray-100 p-1 overflow-auto animate-slideInFromBottom">
+            <div className="max-w-2xl mx-auto">
               <div
-                className={`aspect-[16/9] bg-gradient-to-r ${slides[currentSlide]?.backgroundGradient} rounded-xl shadow-xl p-8 text-white relative overflow-hidden cursor-text animate-slideReveal animate-morphGradient transition-all duration-500`}
+                className={`aspect-[4/3] bg-gradient-to-r ${slides[currentSlide]?.backgroundGradient} rounded-lg shadow-lg p-4 text-white relative overflow-hidden cursor-text animate-slideReveal animate-morphGradient transition-all duration-500`}
                 onClick={() => setIsEditing(!isEditing)}
                 onDrop={(e) => {
                   e.preventDefault();
@@ -533,8 +533,8 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
                 onDragOver={(e) => e.preventDefault()}
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent"></div>
-                <div className="absolute top-4 right-4 w-24 h-24 bg-white/10 rounded-full blur-xl animate-pulse"></div>
-                <div className="absolute bottom-8 left-8 w-16 h-16 bg-white/5 rounded-full blur-lg animate-pulse"></div>
+                <div className="absolute top-2 right-2 w-8 h-8 bg-white/10 rounded-full blur-lg animate-pulse"></div>
+                <div className="absolute bottom-2 left-2 w-6 h-6 bg-white/5 rounded-full blur-md animate-pulse"></div>
                 
                 <div className="relative z-10 h-full flex flex-col justify-center">
                   {isEditing ? (
@@ -552,46 +552,47 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
                             setIsEditing(false);
                           }
                         }}
-                        className="bg-white/20 text-white placeholder-white/60 border-white/30 text-2xl font-bold text-center backdrop-blur-sm"
+                        className="bg-white/20 text-white placeholder-white/60 border-white/30 text-lg font-bold text-center backdrop-blur-sm"
                         placeholder="Slide Title"
                       />
                       <Textarea
                         value={slides[currentSlide]?.content}
                         onChange={(e) => updateSlide(currentSlide, { content: e.target.value })}
-                        className="bg-white/20 text-white placeholder-white/60 border-white/30 text-lg text-center min-h-24 backdrop-blur-sm"
+                        className="bg-white/20 text-white placeholder-white/60 border-white/30 text-sm text-center min-h-16 backdrop-blur-sm"
                         placeholder="Slide Content"
                       />
                     </div>
                   ) : (
-                    <div className="text-center space-y-4 animate-slideTrail">
-                      <h1 className="text-2xl font-bold mb-3 drop-shadow-lg">{slides[currentSlide]?.title}</h1>
-                      <p className="text-lg opacity-90 drop-shadow-md">{slides[currentSlide]?.content}</p>
+                    <div className="text-center space-y-2 animate-slideTrail">
+                      <h1 className="text-lg font-bold mb-2 drop-shadow-lg">{slides[currentSlide]?.title}</h1>
+                      <p className="text-sm opacity-90 drop-shadow-md">{slides[currentSlide]?.content}</p>
                     </div>
                   )}
                 </div>
                 
                 {!isEditing && (
-                  <div className="absolute top-4 left-4 bg-white/20 rounded-full px-3 py-1 text-sm font-medium backdrop-blur-sm animate-pulse">
+                  <div className="absolute top-2 left-2 bg-white/20 rounded-full px-2 py-1 text-xs font-medium backdrop-blur-sm animate-pulse">
                     Click to edit
                   </div>
                 )}
               </div>
 
-              <div className="flex justify-center items-center space-x-4 mt-4">
+              <div className="flex justify-center items-center space-x-2 mt-2">
                 <Button
                   variant="outline"
+                  size="sm"
                   onClick={() => setCurrentSlide(Math.max(0, currentSlide - 1))}
                   disabled={currentSlide === 0}
-                  className="bg-white/80 backdrop-blur-sm"
+                  className="bg-white/80 backdrop-blur-sm text-xs"
                 >
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Previous
+                  <ArrowLeft className="h-3 w-3 mr-1" />
+                  Prev
                 </Button>
-                <div className="flex space-x-2">
+                <div className="flex space-x-1">
                   {slides.map((_, index) => (
                     <div
                       key={index}
-                      className={`w-3 h-3 rounded-full cursor-pointer transition-colors ${
+                      className={`w-2 h-2 rounded-full cursor-pointer transition-colors ${
                         currentSlide === index ? 'bg-blue-600' : 'bg-gray-300'
                       }`}
                       onClick={() => setCurrentSlide(index)}
@@ -600,12 +601,13 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
                 </div>
                 <Button
                   variant="outline"
+                  size="sm"
                   onClick={() => setCurrentSlide(Math.min(slides.length - 1, currentSlide + 1))}
                   disabled={currentSlide === slides.length - 1}
-                  className="bg-white/80 backdrop-blur-sm"
+                  className="bg-white/80 backdrop-blur-sm text-xs"
                 >
                   Next
-                  <ArrowRight className="h-4 w-4 ml-2" />
+                  <ArrowRight className="h-3 w-3 ml-1" />
                 </Button>
               </div>
             </div>
