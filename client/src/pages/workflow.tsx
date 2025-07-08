@@ -894,14 +894,14 @@ export default function Workflow() {
                     </div>
                   </div>
 
-                  {/* Column F - Buchungsystem */}
+                  {/* Column F - Vertragsvolumen Estimate - Projektkosten */}
                   <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-rose-50/80 to-pink-50/60 backdrop-blur-sm border border-rose-200/50 p-4 shadow-md h-24">
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-rose-400 to-pink-400 animate-pulse"></div>
                     <div className="absolute top-2 right-2 w-2 h-2 bg-rose-400 rounded-full animate-ping opacity-50"></div>
                     <div className="flex flex-col space-y-2 h-full justify-between">
                       <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 bg-rose-500 rounded-full animate-bounce flex-shrink-0"></div>
-                        <span className="text-xs font-bold text-rose-800 break-words">Profit inkl. Mehrverkauf</span>
+                        <span className="text-xs font-bold text-rose-800 break-words">Vertragsvolumen Estimate - Projektkosten</span>
                       </div>
                       <div className="text-2xl font-black text-rose-900">
                         {workflowData.projectCosts > 0 ? 
@@ -911,8 +911,8 @@ export default function Workflow() {
                             const defaultActualPrice = actualPrice > 0 ? actualPrice : 120; // Default price
                             
                             const vertragsvolumen = (workflowData.projectCosts / defaultVoucherValue) * (defaultActualPrice * 0.75) * 1.1;
-                            const profit = vertragsvolumen - workflowData.projectCosts;
-                            return profit.toLocaleString('de-DE', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+                            const result = vertragsvolumen - workflowData.projectCosts;
+                            return result.toLocaleString('de-DE', {minimumFractionDigits: 0, maximumFractionDigits: 0});
                           })() :
                           '5,625'
                         }
