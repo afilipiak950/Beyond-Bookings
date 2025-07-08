@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ChevronRight, Calculator, BarChart3, FileText, Check, ArrowLeft, ArrowRight, Edit3, Brain, Gift, TrendingDown, Star, Download, Plus, Eye, Trash2, Copy, Move, Image, Type, BarChart, PieChart, Presentation, Loader2 } from "lucide-react";
+import { ChevronRight, Calculator, BarChart3, FileText, Check, ArrowLeft, ArrowRight, Edit3, Brain, Gift, TrendingDown, Star, Download, Plus, Eye, Trash2, Copy, Move, Image, Type, BarChart, PieChart, Presentation, Loader2, Save } from "lucide-react";
 import { useLocation, useRoute } from "wouter";
 import AppLayout from "@/components/layout/app-layout";
 
@@ -488,6 +488,9 @@ export default function Workflow() {
   // PowerPoint export state
   const [isExporting, setIsExporting] = useState(false);
 
+  // Save calculation state
+  const [isSaving, setIsSaving] = useState(false);
+
   // Calculate AI suggested price (56% of average price, rounded up)
   useEffect(() => {
     if (workflowData.averagePrice > 0) {
@@ -632,6 +635,59 @@ export default function Workflow() {
         return Boolean(workflowData.hotelName && workflowData.projectCosts > 0); // Same requirement as step 2
       default:
         return false;
+    }
+  };
+
+  // Save calculation function
+  const saveCalculation = async () => {
+    setIsSaving(true);
+    try {
+      const calculationData = {
+        hotelName: workflowData.hotelName || 'Unnamed Hotel',
+        hotelUrl: workflowData.hotelUrl || '',
+        stars: workflowData.stars || 0,
+        roomCount: workflowData.roomCount || 0,
+        occupancyRate: workflowData.occupancyRate || 70,
+        averagePrice: workflowData.averagePrice || 0,
+        projectCosts: workflowData.projectCosts || 0,
+        hotelVoucherValue: workflowData.hotelVoucherValue || 0,
+        actualPrice: actualPrice || 0,
+        aiSuggestedPrice: aiSuggestedPrice || 0,
+        calculations: {
+          mwst19: ((workflowData.projectCosts || 0) * 0.19),
+          kostenNetto: ((workflowData.projectCosts || 0) * 1.19),
+          gesamtkosten: ((workflowData.roomCount || 0) * 17.83),
+          kostenvorteil: ((workflowData.projectCosts || 0) * 1.19 - (workflowData.roomCount || 0) * 17.83),
+          gutscheinKosten: ((workflowData.roomCount || 0) * 20),
+          steuerbelastung: ((workflowData.roomCount || 0) * 2.61),
+          umsatzsteuer: ((workflowData.roomCount || 0) * 4.78)
+        },
+        status: 'saved',
+        notes: `Saved from Step ${currentStep} - ${new Date().toLocaleString('de-DE')}`
+      };
+
+      const response = await fetch('/api/pricing-calculations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(calculationData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save calculation');
+      }
+
+      const savedCalculation = await response.json();
+      
+      // Show success message
+      alert(`Calculation saved successfully! ID: ${savedCalculation.id}`);
+      
+    } catch (error) {
+      console.error('Save calculation error:', error);
+      alert('Failed to save calculation. Please try again.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -816,15 +872,35 @@ export default function Workflow() {
                   />
                 </div>
 
-                <Button 
-                  onClick={() => {
-                    nextStep();
-                  }}
-                  disabled={!workflowData.hotelName || workflowData.averagePrice <= 0}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 mt-6"
-                >
-                  Weiter zur Preisvergleichsanalyse
-                </Button>
+                <div className="flex justify-between mt-6">
+                  <Button
+                    onClick={saveCalculation}
+                    disabled={isSaving || !workflowData.hotelName}
+                    variant="outline"
+                    className="group relative overflow-hidden px-6 py-3 backdrop-blur-sm border-blue-300/50 hover:border-blue-400/60 transition-all duration-500 rounded-2xl"
+                  >
+                    {isSaving ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="mr-2 h-4 w-4" />
+                        Save Progress
+                      </>
+                    )}
+                  </Button>
+                  <Button 
+                    onClick={() => {
+                      nextStep();
+                    }}
+                    disabled={!workflowData.hotelName || workflowData.averagePrice <= 0}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-2xl"
+                  >
+                    Weiter zur Preisvergleichsanalyse
+                  </Button>
+                </div>
               </CardContent>
             </Card>
 
@@ -1999,6 +2075,24 @@ export default function Workflow() {
                   <ArrowLeft className="h-5 w-5 mr-2" />
                   <span className="relative z-10 font-semibold">Zurück zum Kalkulator</span>
                 </Button>
+                <Button
+                  onClick={saveCalculation}
+                  disabled={isSaving || !workflowData.hotelName}
+                  variant="outline"
+                  className="group relative overflow-hidden px-8 py-4 backdrop-blur-sm border-blue-300/50 hover:border-blue-400/60 transition-all duration-500 rounded-2xl"
+                >
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="mr-2 h-5 w-5" />
+                      Save Progress
+                    </>
+                  )}
+                </Button>
                 <Button 
                   onClick={nextStep}
                   className="group relative overflow-hidden px-8 py-4 bg-gradient-to-r from-emerald-600 via-cyan-600 to-blue-600 hover:from-emerald-700 hover:via-cyan-700 hover:to-blue-700 shadow-xl shadow-emerald-500/25 transition-all duration-500 rounded-2xl"
@@ -2216,6 +2310,24 @@ export default function Workflow() {
                     <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 to-indigo-500/0 group-hover:from-blue-500/10 group-hover:to-indigo-500/10 transition-all duration-500"></div>
                     <ArrowLeft className="h-5 w-5 mr-2" />
                     <span className="relative z-10 font-semibold">Zurück zur Analyse</span>
+                  </Button>
+                  <Button
+                    onClick={saveCalculation}
+                    disabled={isSaving || !workflowData.hotelName}
+                    variant="outline"
+                    className="group relative overflow-hidden px-8 py-4 backdrop-blur-sm border-blue-300/50 hover:border-blue-400/60 transition-all duration-500 rounded-2xl"
+                  >
+                    {isSaving ? (
+                      <>
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="mr-2 h-5 w-5" />
+                        Save Progress
+                      </>
+                    )}
                   </Button>
                   <Button
                     onClick={exportToPowerPoint}
