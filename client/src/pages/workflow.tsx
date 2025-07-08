@@ -905,7 +905,7 @@ export default function Workflow() {
                     <div className="flex flex-col space-y-2 h-full justify-between">
                       <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 bg-rose-500 rounded-full animate-bounce flex-shrink-0"></div>
-                        <span className="text-xs font-bold text-rose-800 break-words">Vertagsvolumen Estimate - Finanzierung: Projektkosten brutto</span>
+                        <span className="text-xs font-bold text-rose-800 break-words">Profit inkl. Mehrverkauf</span>
                       </div>
                       <div className="text-2xl font-black text-rose-900">
                         {(() => {
@@ -1105,7 +1105,7 @@ export default function Workflow() {
                         <div><span className="font-semibold text-blue-700">C:</span> Zielpreis (in Roomnights) über Gesamtzeit</div>
                         <div><span className="font-semibold text-purple-700">D:</span> Laufzeit</div>
                         <div><span className="font-semibold text-orange-700">E:</span> Gesamtkosten über Laufzeit</div>
-                        <div><span className="font-semibold text-rose-700">F:</span> Vertagsvolumen Estimate - Finanzierung: Projektkosten brutto</div>
+                        <div><span className="font-semibold text-rose-700">F:</span> Profit inkl. Mehrverkauf</div>
                         <div><span className="font-semibold text-cyan-700">G:</span> Gesamtvertragswert (brutto)</div>
                         <div><span className="font-semibold text-green-700">H:</span> Marge</div>
                         <div><span className="font-semibold text-teal-700">I:</span> Vorsteuer Produktkauf</div>
