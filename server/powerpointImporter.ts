@@ -187,9 +187,11 @@ export class PowerPointImporter {
       
       // Extract text content from slide
       const textContent = this.extractTextFromSlide(parsed);
+      console.log(`Slide ${slideNumber} extracted text:`, textContent);
       
       // Determine slide type and extract title/content
       const { title, content, type } = this.categorizeSlideContent(textContent, slideNumber);
+      console.log(`Slide ${slideNumber} processed:`, { title, content: content.substring(0, 100) + '...' });
       
       // Generate appropriate background gradient based on content
       const backgroundGradient = this.generateBackgroundGradient(type, slideNumber);
@@ -221,15 +223,39 @@ export class PowerPointImporter {
     // Recursive function to extract text from nested XML structure
     const extractText = (obj: any, path: string = '') => {
       if (typeof obj === 'string' && obj.trim()) {
-        textElements.push(obj.trim());
+        // Only add strings that look like actual text content, not XML tags or metadata
+        const text = obj.trim();
+        if (text.length > 1 && 
+            !text.match(/^[0-9A-F-]{8,}$/) && // Skip GUIDs
+            !text.match(/^[0-9]+$/) && // Skip pure numbers
+            !text.match(/^[a-zA-Z]$/) && // Skip single letters
+            !text.match(/^[0-9]{6}$/) && // Skip color codes
+            !text.match(/^(rect|horz|ctr|auto|yes|no|tx1|UTF-8)$/) && // Skip XML values
+            !text.match(/^\+mn-/) && // Skip font references
+            !text.match(/^[0-9]{12}$/) && // Skip large numbers
+            !text.match(/^rId[0-9]+$/) && // Skip reference IDs
+            !text.match(/^[A-Z]{6}$/) && // Skip hex codes
+            !text.match(/^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$/) && // Skip UUIDs
+            !text.includes('xmlns') &&
+            !text.includes('<?xml') &&
+            text.length < 200 // Skip very long strings that are likely XML
+        ) {
+          textElements.push(text);
+        }
       } else if (Array.isArray(obj)) {
         obj.forEach((item, index) => extractText(item, `${path}[${index}]`));
       } else if (obj && typeof obj === 'object') {
         // Look for text nodes in PowerPoint XML structure
         if (obj.t && typeof obj.t === 'string' && obj.t.trim()) {
-          textElements.push(obj.t.trim());
+          const text = obj.t.trim();
+          if (this.isValidText(text)) {
+            textElements.push(text);
+          }
         } else if (obj['#text'] && typeof obj['#text'] === 'string' && obj['#text'].trim()) {
-          textElements.push(obj['#text'].trim());
+          const text = obj['#text'].trim();
+          if (this.isValidText(text)) {
+            textElements.push(text);
+          }
         }
         
         // Continue recursively through all properties
@@ -243,14 +269,35 @@ export class PowerPointImporter {
     
     extractText(parsed);
     
-    // Filter out empty strings, duplicates, and common PowerPoint metadata
-    return textElements.filter((text, index, arr) => 
-      text.length > 0 && 
-      arr.indexOf(text) === index &&
-      !text.match(/^[0-9]+$/) && // Remove pure numbers
-      !text.match(/^[a-zA-Z]$/) && // Remove single letters
-      text.length > 2 // Remove very short strings
-    );
+    // Filter out duplicates and sort by length (longer text first)
+    const uniqueTexts = [...new Set(textElements)];
+    return uniqueTexts.filter(text => this.isValidText(text)).sort((a, b) => b.length - a.length);
+  }
+
+  private isValidText(text: string): boolean {
+    if (!text || text.length < 2) return false;
+    
+    // Skip common PowerPoint metadata and XML artifacts
+    const skipPatterns = [
+      /^[0-9A-F-]{8,}$/, // GUIDs
+      /^[0-9]+$/, // Pure numbers
+      /^[a-zA-Z]$/, // Single letters
+      /^[0-9]{6}$/, // Color codes
+      /^(rect|horz|ctr|auto|yes|no|tx1|UTF-8|black|white|Arial|Gadugi|Avenir)$/, // XML values
+      /^\+mn-/, // Font references
+      /^[0-9]{12}$/, // Large numbers
+      /^rId[0-9]+$/, // Reference IDs
+      /^[A-Z]{6}$/, // Hex codes
+      /^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$/, // UUIDs
+      /^[0-9]{13}$/, // Timestamps
+      /^Picture [0-9]+$/, // Picture references
+      /^Grafik [0-9]+$/, // German picture references
+      /^Textplatzhalter [0-9]+$/, // German text placeholders
+      /Automatisch generierte Beschreibung/, // German auto-generated descriptions
+      /^[0-9]{20}$/ // Very long numbers
+    ];
+    
+    return !skipPatterns.some(pattern => pattern.test(text)) && text.length < 200;
   }
 
   private categorizeSlideContent(textContent: string[], slideNumber: number): {
