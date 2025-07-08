@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { requireAuth, hashPassword, comparePassword } from "./localAuth";
 import { insertPricingCalculationSchema, insertFeedbackSchema, insertOcrAnalysisSchema } from "@shared/schema";
 import { documentProcessor } from "./documentProcessor";
+import { powerpointImporter } from "./powerpointImporter";
 import { z } from "zod";
 import multer from "multer";
 import path from "path";
@@ -675,6 +676,25 @@ ${analyses.filter(a => a?.insights).map(analysis =>
 
   // AI Assistant Chat endpoint with deep functionality
   // PowerPoint export endpoint
+  // PowerPoint import route
+  app.post("/api/import/powerpoint", requireAuth, upload.single('pptx'), async (req: Request, res: Response) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No PowerPoint file uploaded" });
+      }
+
+      const importedPresentation = await powerpointImporter.importPresentation(req.file.path);
+      
+      // Clean up uploaded file
+      await fs.unlink(req.file.path);
+      
+      res.json(importedPresentation);
+    } catch (error) {
+      console.error("PowerPoint import error:", error);
+      res.status(500).json({ error: "Failed to import PowerPoint presentation" });
+    }
+  });
+
   app.post("/api/export/powerpoint", requireAuth, async (req: Request, res: Response) => {
     try {
       const { slides, workflowData } = req.body;

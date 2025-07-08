@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ChevronRight, Calculator, BarChart3, FileText, Check, ArrowLeft, ArrowRight, Edit3, Brain, Gift, TrendingDown, Star, Download, Plus, Eye, Trash2, Copy, Move, Image, Type, BarChart, PieChart, Presentation } from "lucide-react";
+import { ChevronRight, Calculator, BarChart3, FileText, Check, ArrowLeft, ArrowRight, Edit3, Brain, Gift, TrendingDown, Star, Download, Plus, Eye, Trash2, Copy, Move, Image, Type, BarChart, PieChart, Presentation, Upload } from "lucide-react";
 import { useLocation, useRoute } from "wouter";
 import AppLayout from "@/components/layout/app-layout";
 
@@ -110,6 +110,10 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isEditing, setIsEditing] = useState(false);
   const [editingText, setEditingText] = useState("");
+  
+  // PowerPoint import functionality
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isImporting, setIsImporting] = useState(false);
 
   const addSlide = () => {
     const newSlide = {
@@ -135,6 +139,55 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
       setSlides(newSlides);
       if (currentSlide >= newSlides.length) {
         setCurrentSlide(newSlides.length - 1);
+      }
+    }
+  };
+
+  const importFromPowerPoint = async (file: File) => {
+    setIsImporting(true);
+    try {
+      const formData = new FormData();
+      formData.append('pptx', file);
+      
+      const response = await fetch('/api/import/powerpoint', {
+        method: 'POST',
+        body: formData
+      });
+      
+      if (!response.ok) {
+        throw new Error('Import failed');
+      }
+      
+      const importedPresentation = await response.json();
+      
+      // Replace current slides with imported ones
+      const importedSlides = importedPresentation.slides.map((slide: any, index: number) => ({
+        id: index + 1,
+        title: slide.title,
+        content: slide.content,
+        type: slide.type,
+        backgroundGradient: slide.backgroundGradient
+      }));
+      
+      setSlides(importedSlides);
+      setCurrentSlide(0);
+      
+      alert(`Successfully imported ${importedSlides.length} slides from PowerPoint presentation!`);
+    } catch (error) {
+      console.error('PowerPoint import error:', error);
+      alert('Failed to import PowerPoint presentation. Please try again.');
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
+  const handleFileImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (file.type === 'application/vnd.openxmlformats-officedocument.presentationml.presentation') {
+        importFromPowerPoint(file);
+      } else {
+        alert('Please select a PowerPoint file (.pptx)');
       }
     }
   };
@@ -195,6 +248,21 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
             </div>
           </div>
           <div className="flex items-center space-x-3 animate-slideInFromRight">
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileImport}
+              accept=".pptx"
+              className="hidden"
+            />
+            <Button 
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isImporting}
+              className="bg-purple-600 hover:bg-purple-700 text-white transform hover:scale-105 transition-all duration-300"
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              {isImporting ? 'Importing...' : 'Import PPTX'}
+            </Button>
             <Button onClick={addSlide} className="bg-emerald-600 hover:bg-emerald-700 text-white transform hover:scale-105 transition-all duration-300">
               <Plus className="h-4 w-4 mr-2" />
               New Slide
