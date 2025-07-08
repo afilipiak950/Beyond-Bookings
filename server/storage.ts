@@ -52,11 +52,11 @@ export interface IStorage {
   scrapeHotelData(url: string): Promise<any>;
 
   // Pricing calculation operations
-  getPricingCalculations(userId: string): Promise<PricingCalculation[]>;
-  getPricingCalculation(id: number, userId: string): Promise<PricingCalculation | undefined>;
+  getPricingCalculations(userId: number): Promise<PricingCalculation[]>;
+  getPricingCalculation(id: number, userId: number): Promise<PricingCalculation | undefined>;
   createPricingCalculation(calculation: InsertPricingCalculation): Promise<PricingCalculation>;
-  updatePricingCalculation(id: number, userId: string, calculation: Partial<InsertPricingCalculation>): Promise<PricingCalculation | undefined>;
-  deletePricingCalculation(id: number, userId: string): Promise<boolean>;
+  updatePricingCalculation(id: number, userId: number, calculation: Partial<InsertPricingCalculation>): Promise<PricingCalculation | undefined>;
+  deletePricingCalculation(id: number, userId: number): Promise<boolean>;
 
   // Feedback operations
   createFeedback(feedback: InsertFeedback): Promise<Feedback>;
@@ -228,7 +228,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Pricing calculation operations
-  async getPricingCalculations(userId: string): Promise<PricingCalculation[]> {
+  async getPricingCalculations(userId: number): Promise<PricingCalculation[]> {
     return await db
       .select()
       .from(pricingCalculations)
@@ -236,7 +236,7 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(pricingCalculations.createdAt));
   }
 
-  async getPricingCalculation(id: number, userId: string): Promise<PricingCalculation | undefined> {
+  async getPricingCalculation(id: number, userId: number): Promise<PricingCalculation | undefined> {
     const [calculation] = await db
       .select()
       .from(pricingCalculations)
@@ -261,7 +261,7 @@ export class DatabaseStorage implements IStorage {
 
   async updatePricingCalculation(
     id: number, 
-    userId: string, 
+    userId: number, 
     calculationData: Partial<InsertPricingCalculation>
   ): Promise<PricingCalculation | undefined> {
     const [calculation] = await db
@@ -278,7 +278,7 @@ export class DatabaseStorage implements IStorage {
     return calculation;
   }
 
-  async deletePricingCalculation(id: number, userId: string): Promise<boolean> {
+  async deletePricingCalculation(id: number, userId: number): Promise<boolean> {
     const result = await db
       .delete(pricingCalculations)
       .where(and(
