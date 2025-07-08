@@ -920,15 +920,6 @@ export default function Workflow() {
                           // Formula: Vertragsvolumen Estimate = (Project Costs / Hotel Voucher Value) × (Actual Price × 0.75) × 1.1
                           const vertragsvolumenEstimate = (projectCosts / voucherValue) * (actualPrice * 0.75) * 1.1;
                           
-                          // Debug logging
-                          console.log('Debug Column F:', {
-                            projectCosts,
-                            voucherValue,
-                            actualPrice,
-                            vertragsvolumenEstimate,
-                            subtraction: vertragsvolumenEstimate - projectCosts
-                          });
-                          
                           // Result = Vertragsvolumen Estimate - Finanzierung: Projektkosten brutto
                           const result = vertragsvolumenEstimate - projectCosts;
                           
@@ -953,7 +944,25 @@ export default function Workflow() {
                         <span className="text-xs font-bold text-cyan-800 break-words">Gesamtvertragswert (brutto)</span>
                       </div>
                       <div className="text-2xl font-black text-cyan-900">
-                        27%
+                        {(() => {
+                          // Get actual input values from form
+                          const projectCosts = workflowData.projectCosts || 0;
+                          const stars = workflowData.stars || 0;
+                          const actualPrice = workflowData.averagePrice || 0;
+                          
+                          // Calculate hotel voucher value based on stars
+                          const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30;
+                          
+                          // Formula: Vertragsvolumen Estimate = (Project Costs / Hotel Voucher Value) × (Actual Price × 0.75) × 1.1
+                          const vertragsvolumenEstimate = (projectCosts / voucherValue) * (actualPrice * 0.75) * 1.1;
+                          
+                          // Show 0 when no meaningful input data
+                          if (projectCosts === 0 && actualPrice === 0) {
+                            return '0';
+                          }
+                          
+                          return Math.round(vertragsvolumenEstimate).toLocaleString('de-DE');
+                        })()}
                       </div>
                     </div>
                   </div>
