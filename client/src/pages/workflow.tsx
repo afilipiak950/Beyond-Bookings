@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ChevronRight, Calculator, BarChart3, FileText, Check, ArrowLeft, ArrowRight, Edit3, Brain, Gift, TrendingDown, Star, Download, Plus, Eye, Trash2, Copy, Move, Image, Type, BarChart, PieChart, Presentation } from "lucide-react";
+import { ChevronRight, Calculator, BarChart3, FileText, Check, ArrowLeft, ArrowRight, Edit3, Brain, Gift, TrendingDown, Star, Download, Plus, Eye, Trash2, Copy, Move, Image, Type, BarChart, PieChart, Presentation, Loader2 } from "lucide-react";
 import { useLocation, useRoute } from "wouter";
 import AppLayout from "@/components/layout/app-layout";
 
@@ -485,6 +485,9 @@ export default function Workflow() {
   const [tempVoucherValue, setTempVoucherValue] = useState("");
   const [voucherEditFeedback, setVoucherEditFeedback] = useState("");
 
+  // PowerPoint export state
+  const [isExporting, setIsExporting] = useState(false);
+
   // Calculate AI suggested price (56% of average price, rounded up)
   useEffect(() => {
     if (workflowData.averagePrice > 0) {
@@ -629,6 +632,51 @@ export default function Workflow() {
         return Boolean(workflowData.hotelName && workflowData.projectCosts > 0); // Same requirement as step 2
       default:
         return false;
+    }
+  };
+
+  // PowerPoint export function
+  const exportToPowerPoint = async () => {
+    setIsExporting(true);
+    try {
+      const response = await fetch('/api/export/powerpoint', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          workflowData,
+          actualPrice,
+          aiSuggestedPrice,
+          hotelVoucherValue: workflowData.hotelVoucherValue || 30,
+          roomCount: workflowData.roomCount || 857,
+          calculations: {
+            projectCosts: workflowData.projectCosts || 30000,
+            mwst19: ((workflowData.projectCosts || 30000) * 0.19),
+            kostenNetto: ((workflowData.projectCosts || 30000) * 1.19),
+            gesamtkosten: ((workflowData.roomCount || 857) * 17.83),
+            kostenvorteil: ((workflowData.projectCosts || 30000) * 1.19 - (workflowData.roomCount || 857) * 17.83)
+          }
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to export PowerPoint');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `bebo-convert-${workflowData.hotelName || 'hotel'}-${new Date().toISOString().split('T')[0]}.pptx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('PowerPoint export error:', error);
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -1964,7 +2012,233 @@ export default function Workflow() {
           </div>
         );
       case 3:
-        return <PowerPointEditor workflowData={workflowData} onBack={prevStep} />;
+        return (
+          <div className="space-y-6">
+            {/* Modern bebo convert Layout - Matching Screenshot */}
+            <div className="bg-gradient-to-br from-slate-50 via-white to-slate-50 backdrop-blur-md border border-slate-200/40 rounded-3xl p-8 shadow-2xl">
+              {/* Header Section */}
+              <div className="mb-8 relative">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-teal-500 to-green-500 rounded-full animate-gradient-x"></div>
+                <div className="pt-6">
+                  <h1 className="text-4xl font-bold text-blue-600 mb-2 animate-fade-in">
+                    bebo convert - Währungsrechner
+                  </h1>
+                  <p className="text-slate-600 text-lg animate-fade-in animation-delay-300">
+                    Gutscheine werden als Übernachtung (DZ inkl. Frühstück) genutzt
+                  </p>
+                </div>
+              </div>
+
+              {/* Main Content Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Left Column - Selbstfinanziert */}
+                <div className="space-y-6">
+                  <div className="bg-gradient-to-br from-slate-100 to-slate-200 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-slate-300/20 transform hover:scale-105 transition-all duration-300">
+                    <div className="text-center mb-6">
+                      <h2 className="text-xl font-bold text-slate-700 mb-2">Selbstfinanziert:</h2>
+                      <div className="w-full h-0.5 bg-gradient-to-r from-slate-300 to-slate-400 rounded-full mb-4"></div>
+                      <h3 className="text-lg font-semibold text-slate-600 mb-4">Lieferantenrechnung</h3>
+                      <div className="text-3xl font-bold text-slate-800 bg-white/70 rounded-xl p-4 shadow-inner">
+                        {workflowData.projectCosts?.toLocaleString('de-DE') || '30.000,00'} €
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Ihre Kosten Section */}
+                  <div className="bg-gradient-to-br from-white to-slate-50 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-slate-200/40 transform hover:scale-105 transition-all duration-300">
+                    <h3 className="text-xl font-bold text-slate-700 mb-4">Ihre Kosten:</h3>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center p-3 bg-slate-50/70 rounded-xl">
+                        <span className="text-slate-600">Lieferanten Rechnung Brutto</span>
+                        <span className="font-bold text-slate-800">{workflowData.projectCosts?.toLocaleString('de-DE') || '30.000,00'} €</span>
+                      </div>
+                      <div className="flex justify-between items-center p-3 bg-slate-50/70 rounded-xl">
+                        <span className="text-slate-600">MwSt. 19%</span>
+                        <span className="font-bold text-slate-800">{((workflowData.projectCosts || 30000) * 0.19).toLocaleString('de-DE')} €</span>
+                      </div>
+                      <div className="w-full h-0.5 bg-gradient-to-r from-slate-300 to-slate-400 rounded-full"></div>
+                      <div className="flex justify-between items-center p-3 bg-gradient-to-r from-blue-50 to-teal-50 rounded-xl border border-blue-200/40">
+                        <span className="font-bold text-slate-700">Kosten netto</span>
+                        <span className="font-bold text-blue-600 text-xl">{((workflowData.projectCosts || 30000) * 1.19).toLocaleString('de-DE')} €</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Middle Column - Bezahlt mit bebo convert */}
+                <div className="space-y-6">
+                  <div className="bg-gradient-to-br from-white to-blue-50 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-blue-200/40 transform hover:scale-105 transition-all duration-300">
+                    <div className="flex items-center mb-4">
+                      <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center mr-3">
+                        <span className="text-white font-bold">B</span>
+                      </div>
+                      <h2 className="text-xl font-bold text-blue-700">Bezahlt mit bebo convert:</h2>
+                    </div>
+
+                    <div className="space-y-4">
+                      {/* Schritt 1 */}
+                      <div className="bg-white/70 rounded-xl p-4 shadow-inner">
+                        <div className="flex items-center mb-2">
+                          <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center mr-2">
+                            <span className="text-white text-sm font-bold">1</span>
+                          </div>
+                          <span className="font-semibold text-blue-700">Du erhältst Deine Lieferantenrechnung in Höhe von</span>
+                          <span className="font-bold text-blue-800 ml-2">{workflowData.projectCosts?.toLocaleString('de-DE') || '30.000,00'} €</span>
+                        </div>
+                        <ul className="text-sm text-slate-600 ml-8 space-y-1">
+                          <li>• Du bist weiterhin vertragsberechtigt 19%</li>
+                          <li className="text-blue-600 font-semibold">{((workflowData.projectCosts || 30000) * 0.19).toLocaleString('de-DE')} € (R)</li>
+                        </ul>
+                      </div>
+
+                      {/* Schritt 2 */}
+                      <div className="bg-white/70 rounded-xl p-4 shadow-inner">
+                        <div className="flex items-center mb-2">
+                          <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center mr-2">
+                            <span className="text-white text-sm font-bold">2</span>
+                          </div>
+                          <span className="font-semibold text-blue-700">Wir kaufen Dir einen Teil Deiner</span>
+                          <span className="font-bold text-blue-800 ml-2">unverkauften</span>
+                          <span className="font-semibold text-blue-700 ml-1">Zimmer ab</span>
+                        </div>
+                        <ul className="text-sm text-slate-600 ml-8 space-y-1">
+                          <li>• <span className="font-semibold">{workflowData.roomCount || 857}</span> Gutscheine (ca. 5% Deiner jährlichen Leistung)</li>
+                          <li className="text-green-600 font-semibold">{workflowData.hotelVoucherValue || 35} €</li>
+                          <li>• davon MwSt. 7% bei Erteilung vor Ort</li>
+                          <li className="text-blue-600 font-semibold">{((workflowData.hotelVoucherValue || 35) * 0.07).toFixed(2)} € (R)</li>
+                          <li>• Erm. 19% für Frühstück (ca nach Setting /or 3€)</li>
+                          <li className="text-red-600 font-semibold">{((workflowData.hotelVoucherValue || 35) * 0.19).toFixed(2)} € (R)</li>
+                        </ul>
+                      </div>
+
+                      {/* Schritt 3 */}
+                      <div className="bg-white/70 rounded-xl p-4 shadow-inner">
+                        <div className="flex items-center mb-2">
+                          <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center mr-2">
+                            <span className="text-white text-sm font-bold">3</span>
+                          </div>
+                          <span className="font-semibold text-blue-700">Wir bezahlen Deine Brutto-Rechnung schuldzinsfrei für Dich beim Lieferanten</span>
+                        </div>
+                      </div>
+
+                      {/* Deine Kosten */}
+                      <div className="bg-gradient-to-r from-blue-50 to-teal-50 rounded-xl p-4 border border-blue-200/40">
+                        <h3 className="text-lg font-bold text-blue-700 mb-3">Deine Kosten:</h3>
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-slate-600">20,00 € (s) Gutschein² × {workflowData.roomCount || 857} RoomNights</span>
+                            <span className="font-bold text-slate-800">{((workflowData.roomCount || 857) * 20).toLocaleString('de-DE')} €</span>
+                          </div>
+                          <div className="flex justify-between items-center text-red-600">
+                            <span>(e) Steuerbelastung bei Gutscheineinlösung</span>
+                            <span className="font-bold">{((workflowData.roomCount || 857) * 2.61).toLocaleString('de-DE')} €</span>
+                          </div>
+                          <div className="flex justify-between items-center text-green-600">
+                            <span>(e) Umsatzsteuerklärung 19%</span>
+                            <span className="font-bold">- {((workflowData.roomCount || 857) * 4.78).toLocaleString('de-DE')} €</span>
+                          </div>
+                          <div className="w-full h-0.5 bg-gradient-to-r from-blue-300 to-teal-300 rounded-full"></div>
+                          <div className="flex justify-between items-center p-3 bg-gradient-to-r from-blue-100 to-teal-100 rounded-xl">
+                            <span className="font-bold text-blue-700 text-lg">Gesamtkosten</span>
+                            <span className="font-bold text-blue-800 text-xl">{((workflowData.roomCount || 857) * (20 + 2.61 - 4.78)).toLocaleString('de-DE')} €</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Column - Kostenvorteil */}
+                <div className="space-y-6">
+                  <div className="bg-gradient-to-br from-teal-50 to-green-100 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-teal-200/40 transform hover:scale-105 transition-all duration-300">
+                    <h2 className="text-xl font-bold text-teal-700 mb-4">Ihr Kostenvorteil:</h2>
+                    <div className="text-center mb-6">
+                      <div className="text-4xl font-bold text-teal-600 bg-white/70 rounded-xl p-4 shadow-inner">
+                        {((workflowData.projectCosts || 30000) * 1.19 - (workflowData.roomCount || 857) * 17.83).toLocaleString('de-DE')} € 
+                        <span className="text-lg text-teal-500 ml-2">= -XX%</span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-bold text-teal-700">Weitere Vorteile:</h3>
+                      
+                      <div className="space-y-3">
+                        <div className="flex items-start space-x-2 p-3 bg-white/70 rounded-xl">
+                          <div className="w-2 h-2 bg-teal-500 rounded-full mt-2 flex-shrink-0"></div>
+                          <div>
+                            <span className="font-semibold text-teal-700">Deine Rechnung wird sofort beglichen.</span>
+                            <p className="text-sm text-slate-600">Deine Kosten dagegen verteilen sich über gesamte Vertragslaufzeit.</p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-start space-x-2 p-3 bg-white/70 rounded-xl">
+                          <div className="w-2 h-2 bg-teal-500 rounded-full mt-2 flex-shrink-0"></div>
+                          <div>
+                            <span className="font-semibold text-teal-700">Gesteigerte Auslastung durch neue Gäste und kostenlose Marketing!</span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-start space-x-2 p-3 bg-white/70 rounded-xl">
+                          <div className="w-2 h-2 bg-teal-500 rounded-full mt-2 flex-shrink-0"></div>
+                          <div>
+                            <span className="font-semibold text-teal-700">Mehr Umsatz</span>
+                            <span className="text-slate-600 ml-2">von ca. {((workflowData.roomCount || 857) * 20).toLocaleString('de-DE')} € durch Zusatzeinnahmen in Euren Outlets und durch Upselling.</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Bottom Info Section */}
+                  <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-slate-200/40">
+                    <div className="text-sm text-slate-600 space-y-2">
+                      <p>¹) Erfahrung: Kosten je Gutschein:</p>
+                      <div className="ml-4 space-y-1">
+                        <p>© Kosten für ein leeres Zimmer: ≈ 25,00 €</p>
+                        <p>© Kosten für ein belegtes Zimmer: ≈ 45,00 €</p>
+                      </div>
+                      <div className="bg-slate-100 rounded-lg p-3 mt-4">
+                        <p className="font-semibold text-slate-700">Ihre Kosten Gutschein: {workflowData.hotelVoucherValue || 30} €</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom Action Section */}
+              <div className="mt-8 text-center">
+                <div className="flex justify-center space-x-6">
+                  <Button 
+                    variant="outline" 
+                    onClick={prevStep}
+                    className="group relative overflow-hidden px-8 py-4 backdrop-blur-sm border-gray-300/50 hover:border-blue-400/60 transition-all duration-500 rounded-2xl"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 to-indigo-500/0 group-hover:from-blue-500/10 group-hover:to-indigo-500/10 transition-all duration-500"></div>
+                    <ArrowLeft className="h-5 w-5 mr-2" />
+                    <span className="relative z-10 font-semibold">Zurück zur Analyse</span>
+                  </Button>
+                  <Button
+                    onClick={exportToPowerPoint}
+                    disabled={isExporting}
+                    className="bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700 text-white px-8 py-4 rounded-2xl font-semibold shadow-2xl transition-all duration-300 transform hover:scale-105"
+                  >
+                    {isExporting ? (
+                      <>
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        Wird exportiert...
+                      </>
+                    ) : (
+                      <>
+                        <Download className="mr-2 h-5 w-5" />
+                        PowerPoint exportieren
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
       default:
         return null;
     }
