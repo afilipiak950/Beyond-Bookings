@@ -886,7 +886,7 @@ export default function Workflow() {
                         <span className="text-xs font-bold text-orange-800 break-words">Gesamtkosten über Laufzeit</span>
                       </div>
                       <div className="text-2xl font-black text-orange-900">
-                        {workflowData.projectCosts ? 
+                        {workflowData.projectCosts > 0 ? 
                           Number(workflowData.projectCosts).toLocaleString('de-DE', {minimumFractionDigits: 0, maximumFractionDigits: 0}) :
                           '3,741'
                         }
@@ -904,9 +904,13 @@ export default function Workflow() {
                         <span className="text-xs font-bold text-rose-800 break-words">Profit inkl. Mehrverkauf</span>
                       </div>
                       <div className="text-2xl font-black text-rose-900">
-                        {workflowData.projectCosts && hotelVoucherValue && actualPrice ? 
+                        {workflowData.projectCosts > 0 ? 
                           (() => {
-                            const vertragsvolumen = (workflowData.projectCosts / hotelVoucherValue) * (actualPrice * 0.75) * 1.1;
+                            // Use default values if hotel data not yet entered
+                            const defaultVoucherValue = hotelVoucherValue > 0 ? hotelVoucherValue : 30; // Default 3-star value
+                            const defaultActualPrice = actualPrice > 0 ? actualPrice : 120; // Default price
+                            
+                            const vertragsvolumen = (workflowData.projectCosts / defaultVoucherValue) * (defaultActualPrice * 0.75) * 1.1;
                             const profit = vertragsvolumen - workflowData.projectCosts;
                             return profit.toLocaleString('de-DE', {minimumFractionDigits: 0, maximumFractionDigits: 0});
                           })() :
