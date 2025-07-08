@@ -920,6 +920,15 @@ export default function Workflow() {
                           // Formula: Vertragsvolumen Estimate = (Project Costs / Hotel Voucher Value) × (Actual Price × 0.75) × 1.1
                           const vertragsvolumenEstimate = (projectCosts / voucherValue) * (actualPrice * 0.75) * 1.1;
                           
+                          // Debug logging
+                          console.log('Debug Column F:', {
+                            projectCosts,
+                            voucherValue,
+                            actualPrice,
+                            vertragsvolumenEstimate,
+                            subtraction: vertragsvolumenEstimate - projectCosts
+                          });
+                          
                           // Result = Vertragsvolumen Estimate - Finanzierung: Projektkosten brutto
                           const result = vertragsvolumenEstimate - projectCosts;
                           
