@@ -346,22 +346,93 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
         {/* Ultra-Modern Main Content Area */}
         <main className="flex-1 overflow-auto relative">
-          <div className="w-full h-full animate-fadeInUp">
-            <div className="w-full h-full neo-card rounded-none relative overflow-hidden animate-scaleIn">
-              {/* Content Glow Effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-transparent to-green-500/5 pointer-events-none" />
+          {/* Animated Background Layers */}
+          <div className="absolute inset-0">
+            {/* Primary animated background */}
+            <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/20 dark:from-slate-900 dark:via-blue-900/10 dark:to-purple-900/5" />
+            
+            {/* Floating geometric shapes */}
+            <div className="absolute top-10 left-10 w-32 h-32 bg-gradient-to-br from-blue-400/10 to-purple-400/10 rounded-full blur-xl animate-float" />
+            <div className="absolute top-32 right-20 w-24 h-24 bg-gradient-to-br from-green-400/10 to-teal-400/10 rounded-full blur-xl animate-float-delayed" />
+            <div className="absolute bottom-20 left-1/4 w-40 h-40 bg-gradient-to-br from-purple-400/10 to-pink-400/10 rounded-full blur-xl animate-float-slow" />
+            <div className="absolute bottom-32 right-1/3 w-28 h-28 bg-gradient-to-br from-orange-400/10 to-red-400/10 rounded-full blur-xl animate-float-reverse" />
+            
+            {/* Animated grid pattern */}
+            <div className="absolute inset-0 opacity-[0.02] dark:opacity-[0.05]">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,_rgb(0,0,0)_1px,_transparent_0)] [background-size:20px_20px] animate-grid-flow" />
+            </div>
+            
+            {/* Morphing gradient orbs */}
+            <div className="absolute top-1/4 left-1/5 w-64 h-64 bg-gradient-to-r from-blue-600/5 via-purple-600/5 to-pink-600/5 rounded-full blur-3xl animate-morph" />
+            <div className="absolute bottom-1/4 right-1/5 w-72 h-72 bg-gradient-to-r from-green-600/5 via-teal-600/5 to-blue-600/5 rounded-full blur-3xl animate-morph-reverse" />
+          </div>
+
+          {/* Main content container with advanced glassmorphism */}
+          <div className="relative z-10 w-full h-full animate-slideInUp">
+            <div className="w-full h-full relative overflow-hidden">
+              {/* Multi-layered glassmorphism effect */}
+              <div className="absolute inset-0 bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border border-white/20 dark:border-slate-700/20" />
+              <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-blue-500/5 dark:from-slate-800/10 dark:to-blue-500/5" />
               
-              <div className="p-6 w-full h-full bg-white">
-                {children}
+              {/* Dynamic light rays */}
+              <div className="absolute top-0 left-1/4 w-px h-full bg-gradient-to-b from-transparent via-blue-400/20 to-transparent animate-ray-1" />
+              <div className="absolute top-0 right-1/3 w-px h-full bg-gradient-to-b from-transparent via-purple-400/20 to-transparent animate-ray-2" />
+              <div className="absolute top-0 left-2/3 w-px h-full bg-gradient-to-b from-transparent via-green-400/20 to-transparent animate-ray-3" />
+              
+              {/* Animated border glow */}
+              <div className="absolute inset-0 border border-transparent bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-green-500/20 bg-clip-border animate-border-glow" />
+              
+              {/* Content area with enhanced effects */}
+              <div className="relative p-6 w-full h-full">
+                {/* Content shimmer overlay */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 animate-shimmer" />
+                
+                {/* Main content */}
+                <div className="relative z-10 w-full h-full">
+                  {children}
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Floating Status Indicators */}
-          <div className="fixed bottom-6 right-6 flex flex-col space-y-3 animate-slideInRight">
-            <div className="w-3 h-3 bg-green-400 rounded-full animate-glowPulse shadow-lg" />
-            <div className="w-2 h-2 bg-blue-400 rounded-full animate-twinkle animation-delay-1000" />
-            <div className="w-2 h-2 bg-green-300 rounded-full animate-twinkle animation-delay-2000" />
+          {/* Enhanced floating elements */}
+          <div className="fixed bottom-6 right-6 flex flex-col space-y-4 animate-slideInRight">
+            {/* AI Status Indicator */}
+            <div className="relative group">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl shadow-xl shadow-blue-500/25 animate-pulse-glow cursor-pointer transition-all duration-300 group-hover:scale-110 group-hover:shadow-2xl group-hover:shadow-blue-500/40">
+                <div className="w-full h-full flex items-center justify-center">
+                  <div className="w-6 h-6 bg-white/90 rounded-full animate-spin-slow" />
+                </div>
+              </div>
+              <div className="absolute -top-2 -right-2 w-4 h-4 bg-green-400 rounded-full animate-ping" />
+            </div>
+            
+            {/* Floating action buttons */}
+            <div className="flex flex-col space-y-2">
+              <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-teal-500 rounded-xl shadow-lg shadow-green-400/25 animate-bounce-subtle" />
+              <div className="w-6 h-6 bg-gradient-to-br from-purple-400 to-pink-500 rounded-lg shadow-lg shadow-purple-400/25 animate-bounce-subtle animation-delay-300" />
+              <div className="w-4 h-4 bg-gradient-to-br from-orange-400 to-red-500 rounded-md shadow-lg shadow-orange-400/25 animate-bounce-subtle animation-delay-600" />
+            </div>
+          </div>
+
+          {/* Floating particles */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-1/4 left-10 w-1 h-1 bg-blue-400/60 rounded-full animate-particle-float" />
+            <div className="absolute top-1/3 right-16 w-1 h-1 bg-purple-400/60 rounded-full animate-particle-float-delayed" />
+            <div className="absolute bottom-1/4 left-1/3 w-1 h-1 bg-green-400/60 rounded-full animate-particle-float-slow" />
+            <div className="absolute bottom-1/3 right-1/4 w-1 h-1 bg-pink-400/60 rounded-full animate-particle-float-reverse" />
+            <div className="absolute top-1/2 left-1/2 w-1 h-1 bg-teal-400/60 rounded-full animate-particle-float-spiral" />
+          </div>
+
+          {/* Dynamic corner accents */}
+          <div className="absolute top-0 left-0 w-32 h-32 bg-gradient-to-br from-blue-500/10 to-transparent rounded-br-full animate-corner-glow" />
+          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-purple-500/10 to-transparent rounded-bl-full animate-corner-glow-delayed" />
+          <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-green-500/10 to-transparent rounded-tr-full animate-corner-glow-reverse" />
+          <div className="absolute bottom-0 right-0 w-32 h-32 bg-gradient-to-tl from-pink-500/10 to-transparent rounded-tl-full animate-corner-glow-slow" />
+
+          {/* Ambient lighting effects */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-radial from-blue-400/5 via-purple-400/5 to-transparent rounded-full animate-ambient-pulse" />
           </div>
         </main>
       </div>
