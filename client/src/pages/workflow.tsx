@@ -877,8 +877,8 @@ export default function Workflow() {
               </CardHeader>
 
               <CardContent className="relative space-y-6">
-                {/* Excel Column Calculation Grid - 5 Columns in First Row */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 px-4 sm:px-0">
+                {/* Excel Column Calculation Grid - 4 Columns in First Row */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 px-4 sm:px-0">
                   
                   {/* Column C - Finanzierung (Förderung) für Hotelbett */}
                   <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-blue-50/80 to-indigo-50/60 backdrop-blur-sm border border-blue-200/50 p-4 shadow-md h-24">
@@ -997,42 +997,7 @@ export default function Workflow() {
                     </div>
                   </div>
 
-                  {/* Creative ROI Calculation - Return on Investment */}
-                  <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-emerald-50/80 to-green-50/60 backdrop-blur-sm border border-emerald-200/50 p-4 shadow-md h-24">
-                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-400 to-green-400 animate-pulse"></div>
-                    <div className="absolute top-2 right-2 w-2 h-2 bg-emerald-400 rounded-full animate-ping opacity-50"></div>
-                    <div className="flex flex-col space-y-2 h-full justify-between">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce flex-shrink-0"></div>
-                        <span className="text-xs font-bold text-emerald-800 break-words">ROI (Return on Investment)</span>
-                      </div>
-                      <div className="text-2xl font-black text-emerald-900">
-                        {(() => {
-                          // Get actual input values from form
-                          const projectCosts = workflowData.projectCosts || 0;
-                          const stars = workflowData.stars || 0;
-                          const actualPrice = workflowData.averagePrice || 0;
-                          
-                          // Calculate hotel voucher value based on stars
-                          const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30;
-                          
-                          // Formula: Vertragsvolumen Estimate = (Project Costs / Hotel Voucher Value) × (Actual Price × 0.75) × 1.1
-                          const vertragsvolumenEstimate = (projectCosts / voucherValue) * (actualPrice * 0.75) * 1.1;
-                          
-                          // ROI = ((Revenue - Investment) / Investment) × 100
-                          const profit = vertragsvolumenEstimate - projectCosts;
-                          const roi = projectCosts > 0 ? (profit / projectCosts) * 100 : 0;
-                          
-                          // Show 0 when no meaningful input data
-                          if (projectCosts === 0 && actualPrice === 0) {
-                            return '-';
-                          }
-                          
-                          return Math.round(roi).toLocaleString('de-DE') + '%';
-                        })()}
-                      </div>
-                    </div>
-                  </div>
+
 
 
 
@@ -1236,8 +1201,7 @@ export default function Workflow() {
                     </div>
                     <div className="text-sm text-slate-700 bg-slate-100/50 p-3 rounded-lg grid grid-cols-1 md:grid-cols-2 gap-2">
                       <div className="space-y-1">
-                        <div><span className="font-semibold text-blue-700">Row 1:</span> Zielpreis, Laufzeit, Gesamtkosten, Profit, Gesamtvertragswert</div>
-                        <div><span className="font-semibold text-emerald-700">ROI:</span> Return on Investment (Creative calculation)</div>
+                        <div><span className="font-semibold text-blue-700">Row 1 (4 columns):</span> Zielpreis, Laufzeit, Gesamtkosten, Profit, Gesamtvertragswert</div>
                         <div><span className="font-semibold text-green-700">H:</span> Marge</div>
                         <div><span className="font-semibold text-teal-700">I:</span> Vorsteuer Produktkauf</div>
                         <div><span className="font-semibold text-indigo-700">J:</span> Vorsteuer Tripz Provision</div>
