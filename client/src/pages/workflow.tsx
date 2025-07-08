@@ -1282,13 +1282,53 @@ export default function Workflow() {
                       </div>
                     </div>
 
+                    {/* Produkt Section */}
+                    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-50/80 to-gray-50/60 border border-slate-200/50 p-4 backdrop-blur-sm">
+                      <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-slate-400 to-gray-400 animate-pulse"></div>
+                      <div className="space-y-2">
+                        <div className="text-xs font-bold text-slate-700 uppercase tracking-wider">Produkt</div>
+                        <div className="text-sm font-semibold text-slate-800">Finanzierung Rechnung für Dritte</div>
+                      </div>
+                    </div>
+
+                    {/* Kosten in Nächten */}
+                    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-teal-50/80 to-cyan-50/60 border border-teal-200/50 p-4 backdrop-blur-sm">
+                      <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-teal-400 to-cyan-400 animate-pulse"></div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-bold text-teal-800">Kosten in Nächten</span>
+                        <span className="text-xl font-black text-teal-900">
+                          {(() => {
+                            const projectCosts = workflowData.projectCosts || 0;
+                            const stars = workflowData.stars || 0;
+                            const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : 30;
+                            const roomnights = Math.round(projectCosts / voucherValue);
+                            return roomnights > 0 ? roomnights.toLocaleString('de-DE') : '667';
+                          })()}
+                        </span>
+                      </div>
+                    </div>
+
                     {/* Hauptvorteil Card */}
                     <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-500 p-6 shadow-xl">
                       <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/20 to-cyan-400/20 animate-pulse"></div>
                       <div className="relative text-center">
                         <div className="text-white/80 text-sm font-bold uppercase tracking-wider mb-2">Kostenvorteil auf Nettobetrag</div>
-                        <div className="text-4xl font-black text-white mb-1">6.860,10 €</div>
-                        <div className="text-white/90 text-lg font-semibold">Faktor: 0,41</div>
+                        <div className="text-4xl font-black text-white mb-1">
+                          {(() => {
+                            const projectCosts = workflowData.projectCosts || 20000;
+                            const beyondBookingsCosts = 9946.62;
+                            const advantage = projectCosts - beyondBookingsCosts;
+                            return advantage > 0 ? advantage.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €' : '6.860,10 €';
+                          })()}
+                        </div>
+                        <div className="text-white/90 text-lg font-semibold">
+                          Faktor: {(() => {
+                            const projectCosts = workflowData.projectCosts || 20000;
+                            const beyondBookingsCosts = 9946.62;
+                            const factor = beyondBookingsCosts / projectCosts;
+                            return factor > 0 ? factor.toFixed(2) : '0,41';
+                          })()}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1314,25 +1354,49 @@ export default function Workflow() {
                     <div className="grid grid-cols-2 gap-3">
                       <div className="text-center p-3 bg-orange-50/80 rounded-xl border border-orange-200/50">
                         <div className="text-xs font-bold text-orange-700 uppercase tracking-wider">Abo-Kosten</div>
-                        <div className="text-lg font-black text-orange-900">16.806,72 €</div>
+                        <div className="text-lg font-black text-orange-900">
+                          {(() => {
+                            const projectCosts = workflowData.projectCosts || 20000;
+                            const nettoKosten = projectCosts / 1.19; // Remove VAT to get netto
+                            return nettoKosten.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €';
+                          })()}
+                        </div>
                       </div>
                       <div className="text-center p-3 bg-amber-50/80 rounded-xl border border-amber-200/50">
                         <div className="text-xs font-bold text-amber-700 uppercase tracking-wider">Kosten Netto</div>
-                        <div className="text-lg font-black text-amber-900">16.806,72 €</div>
+                        <div className="text-lg font-black text-amber-900">
+                          {(() => {
+                            const projectCosts = workflowData.projectCosts || 20000;
+                            const nettoKosten = projectCosts / 1.19; // Remove VAT to get netto
+                            return nettoKosten.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €';
+                          })()}
+                        </div>
                       </div>
                       <div className="text-center p-3 bg-orange-50/80 rounded-xl border border-orange-200/50">
-                        <div className="text-xs font-bold text-orange-700 uppercase tracking-wider">MwSt 7%</div>
+                        <div className="text-xs font-bold text-orange-700 uppercase tracking-wider">Mehrwertsteuer 7%</div>
                         <div className="text-lg font-black text-orange-900">1.167,25 €</div>
                       </div>
                       <div className="text-center p-3 bg-amber-50/80 rounded-xl border border-amber-200/50">
-                        <div className="text-xs font-bold text-amber-700 uppercase tracking-wider">MwSt 19%</div>
-                        <div className="text-lg font-black text-amber-900">3.193,28 €</div>
+                        <div className="text-xs font-bold text-amber-700 uppercase tracking-wider">Mehrwertsteuer 19%</div>
+                        <div className="text-lg font-black text-amber-900">
+                          {(() => {
+                            const projectCosts = workflowData.projectCosts || 20000;
+                            const nettoKosten = projectCosts / 1.19;
+                            const mwst19 = nettoKosten * 0.19;
+                            return mwst19.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €';
+                          })()}
+                        </div>
                       </div>
                     </div>
 
                     <div className="text-center p-4 bg-gradient-to-r from-orange-500 to-amber-500 rounded-2xl">
                       <div className="text-white/80 text-xs font-bold uppercase tracking-wider">Kosten brutto</div>
-                      <div className="text-2xl font-black text-white">20.000,00 €</div>
+                      <div className="text-2xl font-black text-white">
+                        {(() => {
+                          const projectCosts = workflowData.projectCosts || 20000;
+                          return projectCosts.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €';
+                        })()}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1351,26 +1415,70 @@ export default function Workflow() {
                     </div>
 
                     <div className="space-y-3">
+                      {/* Schritt 1 Header */}
+                      <div className="text-xs font-bold text-emerald-700 uppercase tracking-wider border-b border-emerald-200 pb-2">
+                        Schritt 1: Verkauf unverkaufter Zimmer an Beyond Bookings
+                      </div>
+                      
                       <div className="flex justify-between items-center p-3 bg-emerald-50/80 rounded-xl border border-emerald-200/50">
-                        <span className="text-sm font-bold text-emerald-800">667 Gutscheine × 30€</span>
-                        <span className="text-lg font-black text-emerald-900">20.010,00 €</span>
+                        <span className="text-sm font-bold text-emerald-800">
+                          {(() => {
+                            const projectCosts = workflowData.projectCosts || 20000;
+                            const stars = workflowData.stars || 3;
+                            const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : 30;
+                            const roomnights = Math.round(projectCosts / voucherValue);
+                            return `${roomnights} Gutscheine × ${voucherValue}€ je Gutschein`;
+                          })()}
+                        </span>
+                        <span className="text-lg font-black text-emerald-900">
+                          {(() => {
+                            const projectCosts = workflowData.projectCosts || 20000;
+                            const stars = workflowData.stars || 3;
+                            const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : 30;
+                            const roomnights = Math.round(projectCosts / voucherValue);
+                            const totalValue = roomnights * voucherValue;
+                            return totalValue.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €';
+                          })()}
+                        </span>
+                      </div>
+
+                      <div className="text-xs text-emerald-600 p-2 bg-emerald-50/50 rounded">
+                        Das entspricht 8,1% des Leerstands p.a.
                       </div>
                       
                       <div className="grid grid-cols-2 gap-3">
                         <div className="text-center p-3 bg-green-50/80 rounded-xl border border-green-200/50">
-                          <div className="text-xs font-bold text-green-700 uppercase">MwSt 7%</div>
+                          <div className="text-xs font-bold text-green-700 uppercase">Mehrwertsteuer 7%</div>
                           <div className="text-lg font-black text-green-900">1.167,25 €</div>
                         </div>
                         <div className="text-center p-3 bg-emerald-50/80 rounded-xl border border-emerald-200/50">
-                          <div className="text-xs font-bold text-emerald-700 uppercase">MwSt 19%</div>
+                          <div className="text-xs font-bold text-emerald-700 uppercase">Mehrwertsteuer 19%</div>
                           <div className="text-lg font-black text-emerald-900">633,65 €</div>
                         </div>
                       </div>
 
                       <div className="space-y-2">
+                        <div className="text-xs font-bold text-blue-700 uppercase tracking-wider">Ihre Kosten mit Beyond Bookings</div>
                         <div className="flex justify-between items-center p-3 bg-blue-50/80 rounded-xl border border-blue-200/50">
-                          <span className="text-sm font-bold text-blue-800">17€ je Gutschein × 667 Roomnights</span>
-                          <span className="text-lg font-black text-blue-900">11.339,00 €</span>
+                          <span className="text-sm font-bold text-blue-800">
+                            {(() => {
+                              const projectCosts = workflowData.projectCosts || 20000;
+                              const stars = workflowData.stars || 3;
+                              const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : 30;
+                              const roomnights = Math.round(projectCosts / voucherValue);
+                              return `17€ je Gutschein × ${roomnights} Roomnights`;
+                            })()}
+                          </span>
+                          <span className="text-lg font-black text-blue-900">
+                            {(() => {
+                              const projectCosts = workflowData.projectCosts || 20000;
+                              const stars = workflowData.stars || 3;
+                              const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : 30;
+                              const roomnights = Math.round(projectCosts / voucherValue);
+                              const costs = roomnights * 17;
+                              return costs.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €';
+                            })()}
+                          </span>
                         </div>
                         <div className="flex justify-between items-center p-3 bg-indigo-50/80 rounded-xl border border-indigo-200/50">
                           <span className="text-sm font-bold text-indigo-800">Steuerbelastung</span>
@@ -1378,13 +1486,33 @@ export default function Workflow() {
                         </div>
                         <div className="flex justify-between items-center p-3 bg-purple-50/80 rounded-xl border border-purple-200/50">
                           <span className="text-sm font-bold text-purple-800">Steuervorteil</span>
-                          <span className="text-lg font-black text-purple-900">3.193,28 €</span>
+                          <span className="text-lg font-black text-purple-900">
+                            {(() => {
+                              const projectCosts = workflowData.projectCosts || 20000;
+                              const nettoKosten = projectCosts / 1.19;
+                              const mwst19 = nettoKosten * 0.19;
+                              return mwst19.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €';
+                            })()}
+                          </span>
                         </div>
                       </div>
 
                       <div className="text-center p-4 bg-gradient-to-r from-emerald-500 to-green-500 rounded-2xl">
                         <div className="text-white/80 text-xs font-bold uppercase tracking-wider">Gesamtkosten</div>
-                        <div className="text-2xl font-black text-white">9.946,62 €</div>
+                        <div className="text-2xl font-black text-white">
+                          {(() => {
+                            const projectCosts = workflowData.projectCosts || 20000;
+                            const stars = workflowData.stars || 3;
+                            const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : 30;
+                            const roomnights = Math.round(projectCosts / voucherValue);
+                            const costs = roomnights * 17;
+                            const steuerbelastung = 1800.90;
+                            const nettoKosten = projectCosts / 1.19;
+                            const steuervorteil = nettoKosten * 0.19;
+                            const gesamtkosten = costs + steuerbelastung - steuervorteil;
+                            return gesamtkosten.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €';
+                          })()}
+                        </div>
                       </div>
                     </div>
                   </div>
