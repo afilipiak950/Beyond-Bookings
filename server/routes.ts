@@ -326,7 +326,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/pricing-calculations', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const validatedData = insertPricingCalculationSchema.parse({
         ...req.body,
         userId,
@@ -345,7 +345,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put('/api/pricing-calculations/:id', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const calculationId = parseInt(req.params.id);
       
       const validatedData = insertPricingCalculationSchema.partial().parse(req.body);
@@ -367,7 +367,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete('/api/pricing-calculations/:id', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const calculationId = parseInt(req.params.id);
       
       const success = await storage.deletePricingCalculation(calculationId, userId);
@@ -385,7 +385,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Feedback routes
   app.post('/api/feedback', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const validatedData = insertFeedbackSchema.parse({
         ...req.body,
         userId,
@@ -406,7 +406,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/export/pdf', requireAuth, async (req: any, res) => {
     try {
       const { calculationId } = req.body;
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       
       const pdfBuffer = await storage.exportToPDF(calculationId, userId);
       
@@ -422,7 +422,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/export/excel', requireAuth, async (req: any, res) => {
     try {
       const { calculationId } = req.body;
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       
       const excelBuffer = await storage.exportToExcel(calculationId, userId);
       
@@ -438,7 +438,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin routes
   app.get('/api/admin/users', requireAuth, async (req: any, res) => {
     try {
-      const user = await storage.getUser(req.user.claims.sub);
+      const user = await storage.getUser(req.user.id);
       if (!user || user.role !== 'admin') {
         return res.status(403).json({ message: "Admin access required" });
       }
@@ -453,7 +453,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/admin/users', requireAuth, async (req: any, res) => {
     try {
-      const user = await storage.getUser(req.user.claims.sub);
+      const user = await storage.getUser(req.user.id);
       if (!user || user.role !== 'admin') {
         return res.status(403).json({ message: "Admin access required" });
       }
@@ -476,7 +476,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete('/api/admin/users/:id', requireAuth, async (req: any, res) => {
     try {
-      const user = await storage.getUser(req.user.claims.sub);
+      const user = await storage.getUser(req.user.id);
       if (!user || user.role !== 'admin') {
         return res.status(403).json({ message: "Admin access required" });
       }
