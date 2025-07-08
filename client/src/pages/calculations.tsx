@@ -153,99 +153,53 @@ export default function Calculations() {
           </div>
         </div>
 
-        {/* Ultra-Modern Statistics Cards */}
+        {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {/* Total Calculations Card */}
-          <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-700 p-6 text-white shadow-lg transition-all duration-500 hover:shadow-2xl hover:scale-105">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-400/20 to-indigo-600/20 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-            <div className="absolute -top-4 -right-4 h-16 w-16 rounded-full bg-white/10 blur-2xl transition-all duration-500 group-hover:scale-150" />
-            <div className="absolute -bottom-4 -left-4 h-12 w-12 rounded-full bg-white/5 blur-xl transition-all duration-500 group-hover:scale-125" />
-            
-            <div className="relative z-10">
-              <div className="mb-4 flex items-center justify-between">
-                <div className="rounded-xl bg-white/20 p-3 backdrop-blur-lg transition-transform duration-300 group-hover:scale-110">
-                  <Calculator className="h-6 w-6 text-white" />
-                </div>
-                <div className="text-right">
-                  <div className="text-xs font-medium opacity-80">Total</div>
-                  <div className="text-3xl font-bold transition-all duration-300 group-hover:scale-110">
-                    {totalCalculations}
-                  </div>
-                </div>
-              </div>
-              <h3 className="text-lg font-semibold mb-1">Calculations</h3>
-              <p className="text-sm opacity-80">Active pricing models</p>
-            </div>
-          </div>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Calculations</CardTitle>
+              <Calculator className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{totalCalculations}</div>
+              <p className="text-xs text-muted-foreground">Active pricing models</p>
+            </CardContent>
+          </Card>
 
-          {/* Total Revenue Card */}
-          <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 via-green-600 to-teal-700 p-6 text-white shadow-lg transition-all duration-500 hover:shadow-2xl hover:scale-105">
-            <div className="absolute inset-0 bg-gradient-to-br from-emerald-400/20 to-teal-600/20 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-            <div className="absolute -top-4 -right-4 h-16 w-16 rounded-full bg-white/10 blur-2xl transition-all duration-500 group-hover:scale-150" />
-            <div className="absolute -bottom-4 -left-4 h-12 w-12 rounded-full bg-white/5 blur-xl transition-all duration-500 group-hover:scale-125" />
-            
-            <div className="relative z-10">
-              <div className="mb-4 flex items-center justify-between">
-                <div className="rounded-xl bg-white/20 p-3 backdrop-blur-lg transition-transform duration-300 group-hover:scale-110">
-                  <DollarSign className="h-6 w-6 text-white" />
-                </div>
-                <div className="text-right">
-                  <div className="text-xs font-medium opacity-80">Revenue</div>
-                  <div className="text-2xl font-bold transition-all duration-300 group-hover:scale-110">
-                    {formatCurrency(totalRevenue)}
-                  </div>
-                </div>
-              </div>
-              <h3 className="text-lg font-semibold mb-1">Total Revenue</h3>
-              <p className="text-sm opacity-80">Combined potential</p>
-            </div>
-          </div>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{formatCurrency(totalRevenue)}</div>
+              <p className="text-xs text-muted-foreground">Combined revenue potential</p>
+            </CardContent>
+          </Card>
 
-          {/* Average Profit Card */}
-          <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-500 via-pink-600 to-rose-700 p-6 text-white shadow-lg transition-all duration-500 hover:shadow-2xl hover:scale-105">
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-400/20 to-rose-600/20 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-            <div className="absolute -top-4 -right-4 h-16 w-16 rounded-full bg-white/10 blur-2xl transition-all duration-500 group-hover:scale-150" />
-            <div className="absolute -bottom-4 -left-4 h-12 w-12 rounded-full bg-white/5 blur-xl transition-all duration-500 group-hover:scale-125" />
-            
-            <div className="relative z-10">
-              <div className="mb-4 flex items-center justify-between">
-                <div className="rounded-xl bg-white/20 p-3 backdrop-blur-lg transition-transform duration-300 group-hover:scale-110">
-                  <TrendingUp className="h-6 w-6 text-white" />
-                </div>
-                <div className="text-right">
-                  <div className="text-xs font-medium opacity-80">Profit</div>
-                  <div className="text-2xl font-bold transition-all duration-300 group-hover:scale-110">
-                    {formatCurrency(totalCalculations > 0 ? totalProfit / totalCalculations : 0)}
-                  </div>
-                </div>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Average Profit</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {formatCurrency(totalCalculations > 0 ? totalProfit / totalCalculations : 0)}
               </div>
-              <h3 className="text-lg font-semibold mb-1">Average Profit</h3>
-              <p className="text-sm opacity-80">Per calculation</p>
-            </div>
-          </div>
+              <p className="text-xs text-muted-foreground">Per calculation</p>
+            </CardContent>
+          </Card>
 
-          {/* Unique Hotels Card */}
-          <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-orange-500 via-amber-600 to-yellow-700 p-6 text-white shadow-lg transition-all duration-500 hover:shadow-2xl hover:scale-105">
-            <div className="absolute inset-0 bg-gradient-to-br from-orange-400/20 to-yellow-600/20 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-            <div className="absolute -top-4 -right-4 h-16 w-16 rounded-full bg-white/10 blur-2xl transition-all duration-500 group-hover:scale-150" />
-            <div className="absolute -bottom-4 -left-4 h-12 w-12 rounded-full bg-white/5 blur-xl transition-all duration-500 group-hover:scale-125" />
-            
-            <div className="relative z-10">
-              <div className="mb-4 flex items-center justify-between">
-                <div className="rounded-xl bg-white/20 p-3 backdrop-blur-lg transition-transform duration-300 group-hover:scale-110">
-                  <Building2 className="h-6 w-6 text-white" />
-                </div>
-                <div className="text-right">
-                  <div className="text-xs font-medium opacity-80">Hotels</div>
-                  <div className="text-3xl font-bold transition-all duration-300 group-hover:scale-110">
-                    {uniqueHotels}
-                  </div>
-                </div>
-              </div>
-              <h3 className="text-lg font-semibold mb-1">Unique Hotels</h3>
-              <p className="text-sm opacity-80">Properties analyzed</p>
-            </div>
-          </div>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Unique Hotels</CardTitle>
+              <Building2 className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{uniqueHotels}</div>
+              <p className="text-xs text-muted-foreground">Properties analyzed</p>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Search and Filter */}
