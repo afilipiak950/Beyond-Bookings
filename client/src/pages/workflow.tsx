@@ -9,7 +9,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ChevronRight, Calculator, BarChart3, FileText, Check, ArrowLeft, ArrowRight, Edit3, Brain, Gift, TrendingDown, Star, Download, Plus, Eye, Trash2, Copy, Move, Image, Type, BarChart, PieChart, Presentation, Loader2, Save } from "lucide-react";
 import { useLocation, useRoute } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 import AppLayout from "@/components/layout/app-layout";
+import type { PricingCalculation } from "@shared/schema";
 
 // Import step components - temporarily creating inline to fix imports
 // import PricingCalculatorStep from "@/components/workflow/pricing-calculator-step";
@@ -469,6 +472,47 @@ export default function Workflow() {
     projectCosts: 0,
     hotelVoucherValue: 0
   });
+  const { toast } = useToast();
+  
+  // Get calculation ID from URL parameters
+  const calculationId = new URLSearchParams(window.location.search).get('id');
+  
+  // Load existing calculation if ID is provided
+  const { data: existingCalculation } = useQuery({
+    queryKey: ["/api/pricing-calculations", calculationId],
+    enabled: !!calculationId,
+    retry: false,
+  });
+
+  // Load existing calculation data into workflow
+  useEffect(() => {
+    if (existingCalculation) {
+      const calculation = existingCalculation as PricingCalculation;
+      setWorkflowData(prev => ({
+        ...prev,
+        hotelName: calculation.hotelName || "",
+        stars: calculation.stars || 0,
+        roomCount: calculation.roomCount || 0,
+        occupancyRate: calculation.occupancyRate || 70,
+        averagePrice: parseFloat(calculation.averagePrice || "0"),
+        projectCosts: parseFloat(calculation.operationalCosts || "0"),
+        hotelVoucherValue: parseFloat(calculation.voucherPrice || "0"),
+        calculationResult: {
+          vatAmount: parseFloat(calculation.vatAmount || "0"),
+          profitMargin: parseFloat(calculation.profitMargin || "0"),
+          totalPrice: parseFloat(calculation.totalPrice || "0"),
+          discountVsMarket: parseFloat(calculation.discountVsMarket || "0"),
+          marginPercentage: 0, // This would need to be calculated
+          discountPercentage: 0, // This would need to be calculated
+        }
+      }));
+      
+      toast({
+        title: "Calculation Loaded",
+        description: `Loaded calculation for ${calculation.hotelName}`,
+      });
+    }
+  }, [existingCalculation, toast]);
 
   // AI Price Intelligence State
   const [aiSuggestedPrice, setAiSuggestedPrice] = useState(0);

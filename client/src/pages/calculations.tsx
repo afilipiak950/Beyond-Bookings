@@ -1,9 +1,12 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useState } from "react";
+import { useLocation } from "wouter";
 import AppLayout from "@/components/layout/app-layout";
 import { 
   Calculator,
@@ -21,12 +24,18 @@ import {
   TrendingUp
 } from "lucide-react";
 import { formatCurrency, formatPercentage } from "@/lib/pricing";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import type { PricingCalculation } from "@shared/schema";
 
 export default function Calculations() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState<"date" | "hotel" | "revenue" | "profit">("date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [selectedCalculation, setSelectedCalculation] = useState<PricingCalculation | null>(null);
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: calculations, isLoading } = useQuery({
     queryKey: ["/api/pricing-calculations"],
@@ -34,6 +43,43 @@ export default function Calculations() {
   });
 
   const calculationsData = calculations as PricingCalculation[] || [];
+
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest(`/api/pricing-calculations/${id}`, {
+        method: "DELETE",
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/pricing-calculations"] });
+      toast({
+        title: "Success",
+        description: "Calculation deleted successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to delete calculation",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Action handlers
+  const handleView = (calculation: PricingCalculation) => {
+    setSelectedCalculation(calculation);
+  };
+
+  const handleEdit = (calculation: PricingCalculation) => {
+    // Navigate to workflow with calculation data
+    setLocation(`/workflow?id=${calculation.id}`);
+  };
+
+  const handleDelete = (id: number) => {
+    deleteMutation.mutate(id);
+  };
 
   // Filter and sort calculations
   const filteredCalculations = calculationsData
@@ -252,15 +298,51 @@ export default function Calculations() {
                       </div>
                       <div className="col-span-1">
                         <div className="flex items-center gap-1">
-                          <Button variant="ghost" size="sm">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleView(calculation)}
+                            title="View Details"
+                          >
                             <Eye className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="sm">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleEdit(calculation)}
+                            title="Edit Calculation"
+                          >
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="text-red-600 hover:text-red-700"
+                                title="Delete Calculation"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete Calculation</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to delete this calculation? This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction 
+                                  onClick={() => handleDelete(calculation.id)}
+                                  className="bg-red-600 hover:bg-red-700"
+                                >
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </div>
                       </div>
                     </div>
@@ -274,7 +356,7 @@ export default function Calculations() {
                 <p className="text-muted-foreground mb-4">
                   {searchTerm ? "Try adjusting your search terms" : "Start by creating your first pricing calculation"}
                 </p>
-                <Button>
+                <Button onClick={() => setLocation("/workflow")}>
                   <Plus className="h-4 w-4 mr-2" />
                   Create First Calculation
                 </Button>
@@ -283,6 +365,120 @@ export default function Calculations() {
           </CardContent>
         </Card>
       </div>
+
+      {/* View Dialog */}
+      <Dialog open={!!selectedCalculation} onOpenChange={() => setSelectedCalculation(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Calculation Details</DialogTitle>
+          </DialogHeader>
+          {selectedCalculation && (
+            <div className="space-y-6">
+              {/* Hotel Information */}
+              <div className="bg-muted/50 p-4 rounded-lg">
+                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                  <Building2 className="h-4 w-4" />
+                  Hotel Information
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <div className="text-sm text-muted-foreground">Name</div>
+                    <div className="font-medium">{selectedCalculation.hotelName || "N/A"}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-muted-foreground">Stars</div>
+                    <div className="font-medium">{selectedCalculation.stars || "N/A"}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-muted-foreground">Room Count</div>
+                    <div className="font-medium">{selectedCalculation.roomCount || "N/A"}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-muted-foreground">Occupancy Rate</div>
+                    <div className="font-medium">{selectedCalculation.occupancyRate || "N/A"}%</div>
+                  </div>
+                </div>
+                {selectedCalculation.hotelUrl && (
+                  <div className="mt-3">
+                    <div className="text-sm text-muted-foreground">URL</div>
+                    <div className="font-medium text-blue-600 truncate">{selectedCalculation.hotelUrl}</div>
+                  </div>
+                )}
+              </div>
+
+              {/* Financial Details */}
+              <div className="bg-muted/50 p-4 rounded-lg">
+                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                  <DollarSign className="h-4 w-4" />
+                  Financial Details
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <div className="text-sm text-muted-foreground">Average Price</div>
+                    <div className="font-medium">{formatCurrency(selectedCalculation.averagePrice || 0)}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-muted-foreground">Voucher Price</div>
+                    <div className="font-medium">{formatCurrency(selectedCalculation.voucherPrice || 0)}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-muted-foreground">Operational Costs</div>
+                    <div className="font-medium">{formatCurrency(selectedCalculation.operationalCosts || 0)}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-muted-foreground">VAT Amount</div>
+                    <div className="font-medium">{formatCurrency(selectedCalculation.vatAmount || 0)}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-muted-foreground">VAT Rate</div>
+                    <div className="font-medium">{selectedCalculation.vatRate || 0}%</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-muted-foreground">Profit Margin</div>
+                    <div className="font-medium">{formatCurrency(selectedCalculation.profitMargin || 0)}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Summary */}
+              <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-200 dark:border-green-800">
+                <h3 className="font-semibold mb-2 flex items-center gap-2 text-green-800 dark:text-green-200">
+                  <TrendingUp className="h-4 w-4" />
+                  Total Price
+                </h3>
+                <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                  {formatCurrency(selectedCalculation.totalPrice || 0)}
+                </div>
+                <div className="text-sm text-green-600 dark:text-green-400 mt-1">
+                  Discount vs Market: {formatCurrency(selectedCalculation.discountVsMarket || 0)}
+                </div>
+              </div>
+
+              {/* Timestamps */}
+              <div className="bg-muted/50 p-4 rounded-lg">
+                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  Timeline
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <div className="text-sm text-muted-foreground">Created</div>
+                    <div className="font-medium">
+                      {new Date(selectedCalculation.createdAt || 0).toLocaleString()}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-muted-foreground">Updated</div>
+                    <div className="font-medium">
+                      {new Date(selectedCalculation.updatedAt || 0).toLocaleString()}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }

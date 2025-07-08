@@ -324,6 +324,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/pricing-calculations/:id', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const calculationId = parseInt(req.params.id);
+      const calculation = await storage.getPricingCalculation(calculationId, userId);
+      if (!calculation) {
+        return res.status(404).json({ message: "Calculation not found" });
+      }
+      res.json(calculation);
+    } catch (error) {
+      console.error("Error fetching pricing calculation:", error);
+      res.status(500).json({ message: "Failed to fetch pricing calculation" });
+    }
+  });
+
   app.post('/api/pricing-calculations', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.id;
