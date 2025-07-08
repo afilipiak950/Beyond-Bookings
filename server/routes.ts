@@ -1514,6 +1514,9 @@ What would you like to work on today? I'm here to make your hotel pricing more i
       
       console.log(`Starting Mistral OCR processing for file: ${fileName}`);
       
+      // Track processing time
+      const startTime = Date.now();
+      
       // Process based on file type
       let extractedText = '';
       let ocrMetadata = {};
@@ -1688,7 +1691,7 @@ Return a JSON response with: documentType, keyFindings[], businessInsights[], re
         insights: aiInsights,
         priceData,
         status: 'completed',
-        processingTime: 5000
+        processingTime: Math.min(Date.now() - startTime, 2147483647)
       });
       
       // Update the file's OCR processed status
