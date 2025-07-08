@@ -86,95 +86,30 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
   const [slides, setSlides] = useState([
     {
       id: 1,
-      title: "Hotel Präsentation",
-      content: "Professionelle Hotelanalyse und Preisgestaltung für " + (workflowData.hotelName || "Hotel"),
+      title: "Hotel Pricing Analysis",
+      content: "Professional pricing analysis for " + workflowData.hotelName,
       type: "title",
-      backgroundGradient: "from-blue-600 to-purple-800"
+      backgroundGradient: "from-blue-600 to-purple-600"
     },
     {
       id: 2,
-      title: "Übersicht",
-      content: `${workflowData.hotelName || "Hotel"} • ${workflowData.stars || 0} Sterne • ${workflowData.roomCount || 0} Zimmer`,
+      title: "Hotel Overview",
+      content: `${workflowData.hotelName} • ${workflowData.stars} Stars • ${workflowData.roomCount} Rooms`,
       type: "content",
-      backgroundGradient: "from-emerald-600 to-blue-700"
+      backgroundGradient: "from-emerald-500 to-teal-500"
     },
     {
       id: 3,
-      title: "Preisanalyse",
-      content: "Detaillierte Kostenaufstellung und Gewinnmarge",
+      title: "Pricing Analysis",
+      content: "Cost comparison and savings analysis",
       type: "content",
-      backgroundGradient: "from-orange-600 to-red-700"
-    },
-    {
-      id: 4,
-      title: "Empfehlungen",
-      content: "Strategische Empfehlungen für optimale Preisgestaltung",
-      type: "content",
-      backgroundGradient: "from-purple-600 to-pink-700"
-    },
-    {
-      id: 5,
-      title: "Vielen Dank",
-      content: "Kontakt und weitere Informationen",
-      type: "closing",
-      backgroundGradient: "from-gray-600 to-blue-800"
+      backgroundGradient: "from-orange-500 to-red-500"
     }
   ]);
-  
-  // Load user's presentation as default on component mount
-  useEffect(() => {
-    const loadUserPresentation = async () => {
-      try {
-        // First try to load from localStorage (recent upload)
-        const savedPresentation = localStorage.getItem('defaultPresentation');
-        if (savedPresentation) {
-          const userPresentation = JSON.parse(savedPresentation);
-          if (userPresentation && userPresentation.slides) {
-            console.log('Loading saved user presentation with', userPresentation.slides.length, 'slides');
-            const loadedSlides = userPresentation.slides.map((slide: any, index: number) => ({
-              id: index + 1,
-              title: slide.title || `Slide ${index + 1}`,
-              content: slide.content || 'Inhalt bearbeiten',
-              type: slide.type || 'content',
-              backgroundGradient: slide.backgroundGradient || 'from-blue-600 to-purple-800'
-            }));
-            setSlides(loadedSlides);
-            setIsUserPresentation(true);
-            return;
-          }
-        }
-        
-        // Then try to load from server
-        const response = await fetch('/api/user-presentation');
-        if (response.ok) {
-          const userPresentation = await response.json();
-          if (userPresentation && userPresentation.slides) {
-            console.log('Loading server user presentation with', userPresentation.slides.length, 'slides');
-            const loadedSlides = userPresentation.slides.map((slide: any, index: number) => ({
-              id: index + 1,
-              title: slide.title || `Slide ${index + 1}`,
-              content: slide.content || 'Inhalt bearbeiten',
-              type: slide.type || 'content',
-              backgroundGradient: slide.backgroundGradient || 'from-blue-600 to-purple-800'
-            }));
-            setSlides(loadedSlides);
-            setIsUserPresentation(true);
-            // Save to localStorage for future use
-            localStorage.setItem('defaultPresentation', JSON.stringify(userPresentation));
-          }
-        }
-      } catch (error) {
-        console.error('Error loading user presentation:', error);
-      }
-    };
-    
-    loadUserPresentation();
-  }, []);
   
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isEditing, setIsEditing] = useState(false);
   const [editingText, setEditingText] = useState("");
-  const [isUserPresentation, setIsUserPresentation] = useState(false);
   
   // PowerPoint import functionality
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -211,50 +146,36 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
   const importFromPowerPoint = async (file: File) => {
     setIsImporting(true);
     try {
-      console.log('Starting PowerPoint import for file:', file.name);
-      
       const formData = new FormData();
       formData.append('pptx', file);
       
       const response = await fetch('/api/import/powerpoint', {
         method: 'POST',
-        body: formData,
-        credentials: 'include' // Include cookies for authentication
+        body: formData
       });
       
-      console.log('Import response status:', response.status);
-      
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Import response error:', errorText);
-        throw new Error(`Import failed: ${response.status} ${errorText}`);
+        throw new Error('Import failed');
       }
       
       const importedPresentation = await response.json();
-      console.log('Imported presentation:', importedPresentation);
       
-      // Replace current slides with imported ones - use exact content from your presentation
+      // Replace current slides with imported ones
       const importedSlides = importedPresentation.slides.map((slide: any, index: number) => ({
         id: index + 1,
-        title: slide.title || `Folie ${index + 1}`,
-        content: slide.content || 'Inhalt bearbeiten',
-        type: slide.type || 'content',
-        backgroundGradient: slide.backgroundGradient || 'from-blue-600 to-purple-800'
+        title: slide.title,
+        content: slide.content,
+        type: slide.type,
+        backgroundGradient: slide.backgroundGradient
       }));
-      
-      console.log('Processed slides:', importedSlides);
       
       setSlides(importedSlides);
       setCurrentSlide(0);
-      setIsUserPresentation(true);
       
-      // Save as default presentation in localStorage for future use
-      localStorage.setItem('defaultPresentation', JSON.stringify(importedPresentation));
-      
-      alert(`✅ Ihre Präsentation wurde erfolgreich als Standard-Vorlage gespeichert!\n\n${importedSlides.length} Folien geladen\nTitel: ${importedPresentation.title || 'Hotel Präsentation'}\n\nDiese Präsentation wird ab sofort immer automatisch geladen.`);
+      alert(`Successfully imported ${importedSlides.length} slides from PowerPoint presentation!`);
     } catch (error) {
       console.error('PowerPoint import error:', error);
-      alert(`❌ Fehler beim Laden der PowerPoint-Präsentation: ${error.message}\n\nBitte versuchen Sie es erneut.`);
+      alert('Failed to import PowerPoint presentation. Please try again.');
     } finally {
       setIsImporting(false);
     }
@@ -263,25 +184,12 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
   const handleFileImport = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      console.log('Selected file:', file.name, file.type, file.size);
-      
-      // Check file extension and type
-      const validTypes = [
-        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-        'application/vnd.ms-powerpoint'
-      ];
-      
-      const isValidType = validTypes.includes(file.type) || file.name.toLowerCase().endsWith('.pptx');
-      
-      if (isValidType) {
+      if (file.type === 'application/vnd.openxmlformats-officedocument.presentationml.presentation') {
         importFromPowerPoint(file);
       } else {
-        alert(`Bitte wählen Sie eine PowerPoint-Datei (.pptx) aus. Ausgewählte Datei: ${file.name} (${file.type})`);
+        alert('Please select a PowerPoint file (.pptx)');
       }
     }
-    
-    // Reset input to allow same file selection
-    event.target.value = '';
   };
 
   const exportToPowerPoint = async () => {
@@ -320,151 +228,92 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
   };
 
   return (
-    <div className="h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 overflow-hidden relative">
-      {/* Animated Background Effects */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-20 left-20 w-72 h-72 bg-purple-500/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute top-40 right-32 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute bottom-20 left-1/2 w-80 h-80 bg-emerald-500/20 rounded-full blur-3xl animate-pulse delay-2000"></div>
-        
-        {/* Floating Particles */}
-        <div className="absolute inset-0">
-          {[...Array(15)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute w-1 h-1 bg-white/30 rounded-full animate-ping"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                animationDelay: `${Math.random() * 3}s`,
-                animationDuration: `${2 + Math.random() * 2}s`
-              }}
-            />
-          ))}
-        </div>
-      </div>
-
-      {/* Ultra-Modern Header */}
-      <div className="relative z-10 bg-gradient-to-r from-black/40 via-purple-900/40 to-black/40 backdrop-blur-xl border-b border-purple-500/20 shadow-2xl">
-        <div className="px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-6">
-              <Button 
-                variant="ghost" 
-                onClick={onBack} 
-                className="group flex items-center space-x-3 text-white/80 hover:text-white hover:bg-white/10 transition-all duration-300 rounded-xl px-4 py-2"
-              >
-                <ArrowLeft className="h-5 w-5 group-hover:-translate-x-1 transition-transform" />
-                <span className="font-medium">Zurück</span>
-              </Button>
-              
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-blue-500 rounded-2xl flex items-center justify-center shadow-lg animate-pulse">
-                  <Presentation className="h-6 w-6 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-300 via-blue-300 to-emerald-300 bg-clip-text text-transparent">
-                    PowerPoint Studio
-                  </h1>
-                  <p className="text-white/60 text-sm font-medium">Schritt 3: Professionelle Präsentationen</p>
-                </div>
-              </div>
-            </div>
-            
-            {/* Status Indicator */}
-            {isUserPresentation && (
-              <div className="flex items-center space-x-2 bg-emerald-500/20 px-4 py-2 rounded-full border border-emerald-500/30 backdrop-blur-sm">
-                <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
-                <span className="text-emerald-300 text-sm font-medium">Ihre Präsentation geladen</span>
-              </div>
-            )}
-            
-            {/* Action Buttons */}
+    <div className="h-screen bg-gradient-to-br from-slate-50 to-gray-100 overflow-hidden">
+      <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 p-4 shadow-lg animate-slideInFromTop">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4 animate-slideInFromLeft">
+            <Button variant="ghost" onClick={onBack} className="flex items-center space-x-2 hover:bg-gray-100 transition-colors">
+              <ArrowLeft className="h-4 w-4" />
+              <span>Back</span>
+            </Button>
+            <div className="h-6 w-px bg-gray-300"></div>
             <div className="flex items-center space-x-3">
-              <input
-                ref={fileInputRef}
-                type="file"
-                onChange={handleFileImport}
-                accept=".pptx"
-                className="hidden"
-              />
-              <Button 
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isImporting}
-                className="group relative bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 text-white rounded-xl px-6 py-3 shadow-lg hover:shadow-purple-500/25 transition-all duration-300 transform hover:scale-105 border border-purple-500/30"
-              >
-                <Upload className="h-5 w-5 mr-3 group-hover:rotate-12 transition-transform" />
-                {isImporting ? 'Lädt...' : 'Präsentation laden'}
-              </Button>
-              <Button 
-                onClick={addSlide} 
-                className="group relative bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white rounded-xl px-6 py-3 shadow-lg hover:shadow-emerald-500/25 transition-all duration-300 transform hover:scale-105 border border-emerald-500/30"
-              >
-                <Plus className="h-5 w-5 mr-3 group-hover:rotate-90 transition-transform" />
-                Neue Folie
-              </Button>
-              <Button 
-                onClick={exportToPowerPoint} 
-                className="group relative bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white rounded-xl px-6 py-3 shadow-lg hover:shadow-blue-500/25 transition-all duration-300 transform hover:scale-105 border border-blue-500/30"
-              >
-                <Download className="h-5 w-5 mr-3 group-hover:translate-y-1 transition-transform" />
-                Exportieren
-              </Button>
+              <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl flex items-center justify-center animate-morphGradient">
+                <Presentation className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <h1 className="text-lg font-bold text-gray-900">PowerPoint Editor</h1>
+                <p className="text-sm text-gray-600">Create professional presentations</p>
+              </div>
             </div>
+          </div>
+          <div className="flex items-center space-x-3 animate-slideInFromRight">
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileImport}
+              accept=".pptx"
+              className="hidden"
+            />
+            <Button 
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isImporting}
+              className="bg-purple-600 hover:bg-purple-700 text-white transform hover:scale-105 transition-all duration-300"
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              {isImporting ? 'Importing...' : 'Import PPTX'}
+            </Button>
+            <Button onClick={addSlide} className="bg-emerald-600 hover:bg-emerald-700 text-white transform hover:scale-105 transition-all duration-300">
+              <Plus className="h-4 w-4 mr-2" />
+              New Slide
+            </Button>
+            <Button onClick={exportToPowerPoint} className="bg-blue-600 hover:bg-blue-700 text-white transform hover:scale-105 transition-all duration-300">
+              <Download className="h-4 w-4 mr-2" />
+              Export PPTX
+            </Button>
           </div>
         </div>
       </div>
 
-      {/* Main Content Area */}
-      <div className="flex h-full relative z-10">
-        {/* Ultra-Modern Left Sidebar */}
-        <div className="w-80 bg-gradient-to-b from-black/20 to-purple-900/20 backdrop-blur-xl border-r border-purple-500/20 p-6 overflow-y-auto">
+      <div className="flex h-full">
+        <div className="w-80 bg-white/90 backdrop-blur-sm border-r border-gray-200/50 p-6 overflow-y-auto animate-slideInFromLeft">
           <div className="space-y-6">
             <div className="space-y-4">
-              <h2 className="text-xl font-bold text-white mb-4 flex items-center">
-                <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg flex items-center justify-center mr-3">
-                  <BarChart className="h-4 w-4 text-white" />
-                </div>
-                Workflow Daten
-              </h2>
+              <h2 className="text-xl font-bold text-gray-900 animate-slideTrail">Data Summary</h2>
               
-              <div className="bg-gradient-to-br from-blue-500/20 to-purple-600/20 backdrop-blur-sm rounded-2xl p-5 border border-blue-400/30 hover:border-blue-400/50 transition-all duration-300">
-                <h3 className="font-bold text-blue-300 mb-4 flex items-center">
-                  <div className="w-6 h-6 bg-blue-500 rounded-lg flex items-center justify-center mr-3">
-                    <Calculator className="h-3 w-3 text-white" />
-                  </div>
-                  Schritt 1: Kalkulator
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-4 border border-blue-200/50">
+                <h3 className="font-semibold text-blue-900 mb-3 flex items-center">
+                  <Calculator className="h-4 w-4 mr-2" />
+                  Step 1: Calculator
                 </h3>
-                <div className="space-y-3 text-sm">
-                  <div className="flex justify-between items-center">
-                    <span className="text-white/70">Hotel Name:</span>
-                    <span className="font-semibold text-blue-300 bg-blue-500/20 px-2 py-1 rounded">{workflowData.hotelName || 'Hotel'}</span>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Hotel Name:</span>
+                    <span className="font-medium text-blue-900">{workflowData.hotelName}</span>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-white/70">Sterne:</span>
-                    <span className="font-semibold text-blue-300 bg-blue-500/20 px-2 py-1 rounded">{workflowData.stars} ⭐</span>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Stars:</span>
+                    <span className="font-medium text-blue-900">{workflowData.stars} ⭐</span>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-white/70">Zimmer:</span>
-                    <span className="font-semibold text-blue-300 bg-blue-500/20 px-2 py-1 rounded">{workflowData.roomCount}</span>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Room Count:</span>
+                    <span className="font-medium text-blue-900">{workflowData.roomCount}</span>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-white/70">Preis:</span>
-                    <span className="font-semibold text-blue-300 bg-blue-500/20 px-2 py-1 rounded">€{workflowData.averagePrice}</span>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Average Price:</span>
+                    <span className="font-medium text-blue-900">€{workflowData.averagePrice}</span>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-white/70">Projektkosten:</span>
-                    <span className="font-semibold text-blue-300 bg-blue-500/20 px-2 py-1 rounded">€{workflowData.projectCosts?.toLocaleString('de-DE')}</span>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Project Costs:</span>
+                    <span className="font-medium text-blue-900">€{workflowData.projectCosts?.toLocaleString('de-DE')}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-emerald-500/20 to-green-600/20 backdrop-blur-sm rounded-2xl p-5 border border-emerald-400/30 hover:border-emerald-400/50 transition-all duration-300">
-                <h3 className="font-bold text-emerald-300 mb-4 flex items-center">
-                  <div className="w-6 h-6 bg-emerald-500 rounded-lg flex items-center justify-center mr-3">
-                    <BarChart3 className="h-3 w-3 text-white" />
-                  </div>
-                  Schritt 2: Vergleich
+              <div className="bg-gradient-to-r from-emerald-50 to-green-50 rounded-2xl p-4 border border-emerald-200/50">
+                <h3 className="font-semibold text-emerald-900 mb-3 flex items-center">
+                  <BarChart3 className="h-4 w-4 mr-2" />
+                  Step 2: Comparison
                 </h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">

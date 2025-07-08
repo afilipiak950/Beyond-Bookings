@@ -5,7 +5,6 @@ import { requireAuth, hashPassword, comparePassword } from "./localAuth";
 import { insertPricingCalculationSchema, insertFeedbackSchema, insertOcrAnalysisSchema } from "@shared/schema";
 import { documentProcessor } from "./documentProcessor";
 import { powerpointImporter } from "./powerpointImporter";
-import { extractUserPresentation } from "./extractUserPresentation";
 import { z } from "zod";
 import multer from "multer";
 import path from "path";
@@ -516,25 +515,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // PowerPoint upload configuration
-  const powerpointUpload = multer({
-    dest: 'uploads/',
-    limits: {
-      fileSize: 50 * 1024 * 1024, // 50MB limit
-    },
-    fileFilter: (req, file, cb) => {
-      const allowedTypes = [
-        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-        'application/vnd.ms-powerpoint'
-      ];
-      if (allowedTypes.includes(file.mimetype)) {
-        cb(null, true);
-      } else {
-        cb(new Error('Only PowerPoint files are allowed'));
-      }
-    }
-  });
-
   // OCR Analysis routes
   app.get('/api/ocr-analyses', requireAuth, async (req: any, res) => {
     try {
@@ -696,95 +676,22 @@ ${analyses.filter(a => a?.insights).map(analysis =>
 
   // AI Assistant Chat endpoint with deep functionality
   // PowerPoint export endpoint
-  // Get user's default presentation
-  app.get("/api/user-presentation", requireAuth, async (req: Request, res: Response) => {
-    try {
-      const userPresentation = await extractUserPresentation();
-      
-      if (userPresentation) {
-        console.log('Sending user presentation with', userPresentation.slides.length, 'slides');
-        res.json(userPresentation);
-      } else {
-        console.log('No user presentation found, sending default');
-        res.json(null);
-      }
-    } catch (error) {
-      console.error("Error loading user presentation:", error);
-      res.status(500).json({ error: "Failed to load user presentation" });
-    }
-  });
-
-  // Save user's modified presentation
-  app.post("/api/save-presentation", requireAuth, async (req: Request, res: Response) => {
-    try {
-      const { slides } = req.body;
-      
-      if (!slides || !Array.isArray(slides)) {
-        return res.status(400).json({ error: "Invalid slides data" });
-      }
-      
-      console.log('Saving user presentation with', slides.length, 'slides');
-      
-      // For now, just return success - could save to database or file
-      res.json({ success: true, message: "Presentation saved successfully" });
-    } catch (error) {
-      console.error("Error saving presentation:", error);
-      res.status(500).json({ error: "Failed to save presentation" });
-    }
-  });
-
   // PowerPoint import route
-  app.post("/api/import/powerpoint", requireAuth, powerpointUpload.single('pptx'), async (req: Request, res: Response) => {
+  app.post("/api/import/powerpoint", requireAuth, upload.single('pptx'), async (req: Request, res: Response) => {
     try {
-      console.log('PowerPoint import request received');
-      console.log('Request file:', req.file);
-      
       if (!req.file) {
-        console.log('No file uploaded');
         return res.status(400).json({ error: "No PowerPoint file uploaded" });
       }
 
-      console.log('File details:', {
-        filename: req.file.filename,
-        originalname: req.file.originalname,
-        mimetype: req.file.mimetype,
-        size: req.file.size,
-        path: req.file.path
-      });
-
       const importedPresentation = await powerpointImporter.importPresentation(req.file.path);
       
-      // Save this as the user's default presentation
-      const userPresentationPath = path.join(process.cwd(), 'uploads', 'user_presentation.pptx');
-      await fs.copyFile(req.file.path, userPresentationPath);
-      console.log('Saved as user default presentation');
-      
       // Clean up uploaded file
-      try {
-        await fs.unlink(req.file.path);
-        console.log('Cleaned up uploaded file');
-      } catch (cleanupError) {
-        console.warn('Failed to cleanup uploaded file:', cleanupError);
-      }
+      await fs.unlink(req.file.path);
       
-      console.log('Sending imported presentation:', importedPresentation);
       res.json(importedPresentation);
     } catch (error) {
       console.error("PowerPoint import error:", error);
-      
-      // Clean up uploaded file even on error
-      if (req.file) {
-        try {
-          await fs.unlink(req.file.path);
-        } catch (cleanupError) {
-          console.warn('Failed to cleanup uploaded file on error:', cleanupError);
-        }
-      }
-      
-      res.status(500).json({ 
-        error: "Failed to import PowerPoint presentation", 
-        details: error.message 
-      });
+      res.status(500).json({ error: "Failed to import PowerPoint presentation" });
     }
   });
 
