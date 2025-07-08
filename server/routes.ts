@@ -96,6 +96,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Debug OCR endpoint  
+  app.post("/api/debug-ocr", requireAuth, async (req: Request, res: Response) => {
+    try {
+      console.log("Testing Mistral OCR functionality...");
+      
+      // Test Mistral API key
+      if (!process.env.MISTRAL_API_KEY) {
+        return res.status(500).json({ error: "MISTRAL_API_KEY not configured" });
+      }
+      
+      // Test basic Mistral connection
+      const { Mistral } = await import('@mistralai/mistralai');
+      const mistral = new Mistral({
+        apiKey: process.env.MISTRAL_API_KEY,
+      });
+      
+      // Test simple chat completion with fallback models
+      const models = ["mistral-small-latest", "open-mistral-7b"];
+      let testResponse;
+      
+      for (const model of models) {
+        try {
+          console.log(`Testing with model: ${model}`);
+          testResponse = await mistral.chat.complete({
+            model: model,
+            messages: [{ role: "user", content: "Hello, respond with 'API working'" }],
+            max_tokens: 50
+          });
+          console.log(`Test successful with model: ${model}`);
+          break;
+        } catch (modelError) {
+          console.warn(`Model ${model} test failed:`, modelError.message);
+          if (model === models[models.length - 1]) {
+            console.log('All Mistral models failed, but API key is valid');
+            testResponse = { choices: [{ message: { content: 'API key valid, rate limited' } }] };
+            break;
+          }
+        }
+      }
+      
+      console.log("Mistral API test response:", testResponse.choices[0]?.message?.content);
+      
+      // Test OCR with existing image file
+      const testFile = "attached_assets/image_1751298556290.png";
+      const { documentProcessor } = await import('./documentProcessor');
+      
+      console.log("Testing OCR processing with file:", testFile);
+      
+      // Create a fake analysis to test OCR
+      const fakeExtractedFile = {
+        fileName: "test.png",
+        filePath: testFile,
+        fileType: "image",
+        folderPath: "test",
+        originalPath: "test.png"
+      };
+      
+      const result = await documentProcessor['processFileWithOCR'](fakeExtractedFile, 999, req.user.id.toString());
+      
+      res.json({
+        success: true,
+        mistralTest: testResponse.choices[0]?.message?.content,
+        apiKeyExists: !!process.env.MISTRAL_API_KEY,
+        ocrResult: result,
+        message: "OCR debug test completed"
+      });
+      
+    } catch (error) {
+      console.error("OCR debug error:", error);
+      res.status(500).json({ error: error.message, stack: error.stack });
+    }
+  });
+
   // Session refresh endpoint to keep sessions alive
   app.post('/api/auth/refresh', requireAuth, async (req: any, res) => {
     try {

@@ -493,26 +493,73 @@ export class DocumentProcessor {
       // Get image metadata
       const metadata = await sharp(imagePath).metadata();
       
-      // Call Mistral.ai OCR API
-      const response = await mistral.chat.complete({
-        model: "pixtral-12b-2409",
-        messages: [
-          {
-            role: "user",
-            content: [
-              {
-                type: "text",
-                text: `Please extract all text from this image using OCR. Return the extracted text exactly as it appears in the image, maintaining the original formatting, line breaks, and structure. Include all visible text, numbers, symbols, and any other readable content. Be thorough and accurate.`
-              },
-              {
-                type: "image_url",
-                image_url: `data:image/${metadata.format};base64,${imageBase64}`
-              }
-            ]
+      // Use Tesseract.js for OCR and Mistral for text enhancement
+      let response;
+      let ocrText = "";
+      
+      console.log('Starting OCR with Tesseract.js');
+      
+      try {
+        // First, extract text using Tesseract.js
+        const { createWorker } = await import('tesseract.js');
+        const worker = await createWorker();
+        await worker.loadLanguage('eng+deu');
+        await worker.initialize('eng+deu');
+        
+        const { data } = await worker.recognize(imagePath);
+        ocrText = data.text;
+        
+        await worker.terminate();
+        
+        console.log(`Tesseract.js extracted ${ocrText.length} characters`);
+        
+        // Then enhance with Mistral AI
+        const models = ["mistral-small-latest", "open-mistral-7b"];
+        
+        for (const model of models) {
+          try {
+            console.log(`Enhancing OCR text with model: ${model}`);
+            
+            // Add delay to handle rate limiting
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            response = await mistral.chat.complete({
+              model: model,
+              messages: [
+                {
+                  role: "user",
+                  content: `Please clean up and enhance this OCR-extracted text. Fix any obvious errors, improve formatting, and ensure proper structure. Keep all the original information but make it more readable:
+
+${ocrText}`
+                }
+              ],
+              max_tokens: 4000
+            });
+            
+            console.log(`OCR enhancement successful with model: ${model}`);
+            break;
+          } catch (modelError) {
+            console.warn(`Model ${model} failed for enhancement:`, modelError.message);
+            
+            if (model === models[models.length - 1]) {
+              // If all models fail, return the basic OCR text
+              console.log('All Mistral models failed, using basic OCR text');
+              response = {
+                choices: [{
+                  message: {
+                    content: ocrText
+                  }
+                }]
+              };
+              break;
+            }
           }
-        ],
-        max_tokens: 4000
-      });
+        }
+        
+      } catch (tesseractError) {
+        console.error('Tesseract.js OCR failed:', tesseractError.message);
+        throw tesseractError;
+      }
 
       const extractedText = response.choices[0]?.message?.content || '';
       
@@ -542,7 +589,7 @@ export class DocumentProcessor {
   private async processPDFWithMistralOCR(pdfPath: string): Promise<{ text: string; metadata: any }> {
     try {
       // Convert PDF to images using pdf2pic
-      const { pdf2pic } = await import('pdf2pic');
+      const pdf2pic = await import('pdf2pic');
       const convertPdf = pdf2pic.fromPath(pdfPath, {
         density: 300,
         saveFilename: "page",
@@ -564,33 +611,55 @@ export class DocumentProcessor {
         const imageBuffer = await fs.readFile(page.path);
         const imageBase64 = imageBuffer.toString('base64');
         
-        // Call Mistral.ai OCR API for each page
-        const response = await mistral.chat.complete({
-          model: "pixtral-12b-2409",
-          messages: [
-            {
-              role: "user",
-              content: [
+        // Use Tesseract.js for OCR on the page image
+        const { createWorker } = await import('tesseract.js');
+        const worker = await createWorker();
+        await worker.loadLanguage('eng+deu');
+        await worker.initialize('eng+deu');
+        
+        const { data } = await worker.recognize(page.path);
+        const rawPageText = data.text;
+        
+        await worker.terminate();
+        
+        // Enhance with Mistral AI
+        const models = ["mistral-small-latest", "open-mistral-7b"];
+        let enhancedText = rawPageText;
+        
+        for (const model of models) {
+          try {
+            console.log(`Enhancing PDF page ${i + 1} with model: ${model}`);
+            
+            const response = await mistral.chat.complete({
+              model: model,
+              messages: [
                 {
-                  type: "text",
-                  text: `Please extract all text from this PDF page using OCR. Return the extracted text exactly as it appears, maintaining the original formatting, line breaks, and structure. Include all visible text, numbers, symbols, and any other readable content. Be thorough and accurate.`
-                },
-                {
-                  type: "image_url",
-                  image_url: `data:image/png;base64,${imageBase64}`
-                }
-              ]
-            }
-          ],
-          max_tokens: 4000
-        });
+                  role: "user",
+                  content: `Please clean up and enhance this OCR-extracted text from a PDF page. Fix any obvious errors, improve formatting, and ensure proper structure:
 
-        const pageText = response.choices[0]?.message?.content || '';
-        allText += `\n\n--- Page ${i + 1} ---\n${pageText}`;
+${rawPageText}`
+                }
+              ],
+              max_tokens: 4000
+            });
+            
+            enhancedText = response.choices[0]?.message?.content || rawPageText;
+            console.log(`PDF page ${i + 1} enhancement successful with model: ${model}`);
+            break;
+          } catch (modelError) {
+            console.warn(`Model ${model} failed for PDF page ${i + 1}:`, modelError.message);
+            if (model === models[models.length - 1]) {
+              console.log(`Using basic OCR for PDF page ${i + 1}`);
+              enhancedText = rawPageText;
+            }
+          }
+        }
+
+        allText += `\n\n--- Page ${i + 1} ---\n${enhancedText}`;
         
         pageMetadata.push({
           pageNumber: i + 1,
-          textLength: pageText.length,
+          textLength: enhancedText.length,
           imagePath: page.path
         });
 
@@ -753,9 +822,16 @@ Respond in JSON format with the following structure:
    */
   private async generateOCRInsights(text: string, priceData: PriceData[]): Promise<any> {
     try {
-      const response = await mistral.chat.complete({
-        model: "mistral-large-latest",
-        messages: [
+      // Try different models for insights generation
+      const models = ["mistral-small-latest", "mistral-large-latest"];
+      let response;
+      
+      for (const model of models) {
+        try {
+          console.log(`Trying insights generation with model: ${model}`);
+          response = await mistral.chat.complete({
+            model: model,
+            messages: [
           {
             role: "system",
             content: "You are an expert document analyst specializing in OCR text analysis, pricing intelligence, and business document insights. Provide comprehensive analysis of extracted text with focus on pricing, key information, and actionable recommendations."
@@ -812,11 +888,21 @@ Please provide detailed insights in the following JSON format:
   }
 }`
           }
-        ],
-        max_tokens: 3000
-      });
+          ],
+          max_tokens: 3000
+        });
+        
+        console.log(`Insights generation successful with model: ${model}`);
+        break;
+      } catch (modelError) {
+        console.warn(`Model ${model} failed for insights:`, modelError.message);
+        if (model === models[models.length - 1]) {
+          throw modelError; // Re-throw if last model fails
+        }
+      }
+    }
 
-      const content = response.choices[0]?.message?.content || '{}';
+    const content = response.choices[0]?.message?.content || '{}';
       
       // Try to parse JSON, fallback to structured response if parsing fails
       try {
