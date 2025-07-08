@@ -258,6 +258,15 @@ export default function Workflow() {
   };
 
   const renderStepContent = () => {
+    // Debug workflow data
+    if (currentStep === 2) {
+      console.log("DEBUG: Current workflow data:", workflowData);
+      console.log("DEBUG: Project costs:", workflowData.projectCosts);
+      console.log("DEBUG: Stars:", workflowData.stars);
+      console.log("DEBUG: Hotel voucher value:", workflowData.hotelVoucherValue);
+      console.log("DEBUG: Actual price:", actualPrice);
+    }
+    
     switch (currentStep) {
       case 1:
         return (
@@ -1312,21 +1321,41 @@ export default function Workflow() {
                     <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-500 p-6 shadow-xl">
                       <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/20 to-cyan-400/20 animate-pulse"></div>
                       <div className="relative text-center">
-                        <div className="text-white/80 text-sm font-bold uppercase tracking-wider mb-2">Kostenvorteil auf Nettobetrag</div>
+                        <div className="text-white/80 text-sm font-bold uppercase tracking-wider mb-2">Kostenvorteil</div>
                         <div className="text-4xl font-black text-white mb-1">
                           {(() => {
                             const projectCosts = workflowData.projectCosts || 20000;
-                            const beyondBookingsCosts = 9946.62;
-                            const advantage = projectCosts - beyondBookingsCosts;
-                            return advantage > 0 ? advantage.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €' : '6.860,10 €';
+                            const stars = workflowData.stars || 3;
+                            const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : 30;
+                            const roomnights = Math.round(projectCosts / voucherValue);
+                            
+                            // Beyond Bookings real costs calculation
+                            const beyondBookingsCosts = roomnights * 17; // 17€ per voucher
+                            const steuerbelastung = 1800.90;
+                            const nettoKosten = projectCosts / 1.19;
+                            const steuervorteil = nettoKosten * 0.19;
+                            const gesamtkosten = beyondBookingsCosts + steuerbelastung - steuervorteil;
+                            
+                            const advantage = projectCosts - gesamtkosten;
+                            return advantage.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €';
                           })()}
                         </div>
                         <div className="text-white/90 text-lg font-semibold">
-                          Faktor: {(() => {
+                          Kostenvorteil auf Nettobetrag: {(() => {
                             const projectCosts = workflowData.projectCosts || 20000;
-                            const beyondBookingsCosts = 9946.62;
-                            const factor = beyondBookingsCosts / projectCosts;
-                            return factor > 0 ? factor.toFixed(2) : '0,41';
+                            const stars = workflowData.stars || 3;
+                            const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : 30;
+                            const roomnights = Math.round(projectCosts / voucherValue);
+                            
+                            // Beyond Bookings real costs calculation
+                            const beyondBookingsCosts = roomnights * 17;
+                            const steuerbelastung = 1800.90;
+                            const nettoKosten = projectCosts / 1.19;
+                            const steuervorteil = nettoKosten * 0.19;
+                            const gesamtkosten = beyondBookingsCosts + steuerbelastung - steuervorteil;
+                            
+                            const factor = gesamtkosten / projectCosts;
+                            return factor.toFixed(2);
                           })()}
                         </div>
                       </div>
@@ -1374,7 +1403,7 @@ export default function Workflow() {
                       </div>
                       <div className="text-center p-3 bg-orange-50/80 rounded-xl border border-orange-200/50">
                         <div className="text-xs font-bold text-orange-700 uppercase tracking-wider">Mehrwertsteuer 7%</div>
-                        <div className="text-lg font-black text-orange-900">1.167,25 €</div>
+                        <div className="text-lg font-black text-orange-900">0 €</div>
                       </div>
                       <div className="text-center p-3 bg-amber-50/80 rounded-xl border border-amber-200/50">
                         <div className="text-xs font-bold text-amber-700 uppercase tracking-wider">Mehrwertsteuer 19%</div>
@@ -1448,13 +1477,28 @@ export default function Workflow() {
                       
                       <div className="grid grid-cols-2 gap-3">
                         <div className="text-center p-3 bg-green-50/80 rounded-xl border border-green-200/50">
-                          <div className="text-xs font-bold text-green-700 uppercase">Mehrwertsteuer 7%</div>
-                          <div className="text-lg font-black text-green-900">1.167,25 €</div>
+                          <div className="text-xs font-bold text-green-700 uppercase">MWST-Wert-Beträge 7%</div>
+                          <div className="text-lg font-black text-green-900">0 €</div>
                         </div>
                         <div className="text-center p-3 bg-emerald-50/80 rounded-xl border border-emerald-200/50">
-                          <div className="text-xs font-bold text-emerald-700 uppercase">Mehrwertsteuer 19%</div>
-                          <div className="text-lg font-black text-emerald-900">633,65 €</div>
+                          <div className="text-xs font-bold text-emerald-700 uppercase">MWST-Wert-Beträge 19%</div>
+                          <div className="text-lg font-black text-emerald-900">
+                            {(() => {
+                              const projectCosts = workflowData.projectCosts || 20000;
+                              const stars = workflowData.stars || 3;
+                              const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : 30;
+                              const roomnights = Math.round(projectCosts / voucherValue);
+                              const totalVoucherValue = roomnights * voucherValue;
+                              const mwst19 = totalVoucherValue * 0.19 / 1.19;
+                              return mwst19.toLocaleString('de-DE', {minimumFractionDigits: 0, maximumFractionDigits: 0}) + ' €';
+                            })()}
+                          </div>
                         </div>
+                      </div>
+
+                      {/* Splitting Frühstück pro Zimmer */}
+                      <div className="text-right p-2 bg-emerald-50/50 rounded">
+                        <div className="text-xs text-emerald-600">5 Splitting Frühstück pro Zimmer</div>
                       </div>
 
                       <div className="space-y-2">
