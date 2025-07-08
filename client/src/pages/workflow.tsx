@@ -909,20 +909,23 @@ export default function Workflow() {
                       </div>
                       <div className="text-2xl font-black text-rose-900">
                         {(() => {
-                          // Always calculate, use defaults if no data
                           const projectCosts = workflowData.projectCosts || 0;
-                          const defaultVoucherValue = hotelVoucherValue > 0 ? hotelVoucherValue : 30; // Default 3-star value
-                          const defaultActualPrice = actualPrice > 0 ? actualPrice : 120; // Default price
                           
                           if (projectCosts > 0) {
-                            const vertragsvolumen = (projectCosts / defaultVoucherValue) * (defaultActualPrice * 0.75) * 1.1;
-                            const result = vertragsvolumen - projectCosts;
+                            // Calculate Vertragsvolumen Estimate using the formula
+                            // Vertragsvolumen Estimate = (Project Costs / Hotel Voucher Value) × (Actual Price × 0.75) × 1.1
+                            const defaultVoucherValue = hotelVoucherValue > 0 ? hotelVoucherValue : 30; // Default 3-star value
+                            const defaultActualPrice = actualPrice > 0 ? actualPrice : 120; // Default price
+                            
+                            const vertragsvolumenEstimate = (projectCosts / defaultVoucherValue) * (defaultActualPrice * 0.75) * 1.1;
+                            
+                            // Column F = Vertragsvolumen Estimate - Finanzierung: Projektkosten brutto
+                            const result = vertragsvolumenEstimate - projectCosts;
                             return result.toLocaleString('de-DE', {minimumFractionDigits: 0, maximumFractionDigits: 0});
                           } else {
                             return '5,625'; // Default value when no project costs entered
                           }
-                        })()
-                        }
+                        })()}
                       </div>
                     </div>
                   </div>
@@ -1098,7 +1101,7 @@ export default function Workflow() {
                         <div><span className="font-semibold text-blue-700">C:</span> Zielpreis (in Roomnights) über Gesamtzeit</div>
                         <div><span className="font-semibold text-purple-700">D:</span> Laufzeit</div>
                         <div><span className="font-semibold text-orange-700">E:</span> Gesamtkosten über Laufzeit</div>
-                        <div><span className="font-semibold text-rose-700">F:</span> Profit inkl. Mehrverkauf</div>
+                        <div><span className="font-semibold text-rose-700">F:</span> Vertragsvolumen Estimate - Projektkosten</div>
                         <div><span className="font-semibold text-cyan-700">G:</span> Gesamtvertragswert (brutto)</div>
                         <div><span className="font-semibold text-green-700">H:</span> Marge</div>
                         <div><span className="font-semibold text-teal-700">I:</span> Vorsteuer Produktkauf</div>
