@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ChevronRight, Calculator, BarChart3, FileText, Check, ArrowLeft, Edit3, Brain, Gift } from "lucide-react";
+import { ChevronRight, Calculator, BarChart3, FileText, Check, ArrowLeft, ArrowRight, Edit3, Brain, Gift, TrendingDown, Star } from "lucide-react";
 import { useLocation, useRoute } from "wouter";
 import AppLayout from "@/components/layout/app-layout";
 
@@ -1198,58 +1198,223 @@ export default function Workflow() {
 
       case 2:
         return (
-          <Card className="relative overflow-hidden bg-gradient-to-br from-white/60 to-green-50/40 backdrop-blur-2xl border border-white/30 shadow-2xl">
-            {/* Floating Background Elements */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              <div className="absolute top-8 left-8 w-24 h-24 bg-green-500/10 rounded-full blur-xl animate-float"></div>
-              <div className="absolute bottom-12 right-12 w-20 h-20 bg-blue-500/10 rounded-full blur-lg animate-float-delayed"></div>
-            </div>
-            
-            <CardHeader className="relative">
-              <CardTitle className="flex items-center gap-3">
-                <div className="relative">
-                  <BarChart3 className="h-6 w-6 text-green-600 animate-pulse" />
-                  <div className="absolute inset-0 bg-green-400 rounded-full animate-ping opacity-20"></div>
-                </div>
-                <span className="bg-gradient-to-r from-green-700 to-green-600 bg-clip-text text-transparent font-black text-xl">
-                  Preisvergleichsanalyse
-                </span>
-              </CardTitle>
-              <CardDescription className="text-gray-600 font-medium">
-                Vergleichen Sie mit Marktpreisen und Wettbewerbern
-              </CardDescription>
-            </CardHeader>
-            
-            <CardContent className="relative space-y-6">
-              <div className="relative overflow-hidden bg-gradient-to-br from-blue-50/60 to-indigo-50/40 backdrop-blur-md border border-blue-200/40 rounded-2xl p-6 shadow-inner">
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-indigo-400 animate-gradient-x"></div>
-                <h4 className="font-bold text-blue-900 text-lg mb-2">Ihr Hotel: {workflowData.hotelName}</h4>
-                <p className="text-blue-700 font-medium">Durchschnittspreis: €{workflowData.averagePrice}</p>
-                <p className="text-sm text-blue-600 mt-2 flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
-                  <span>Marktposition wird analysiert...</span>
-                </p>
+          <div className="relative space-y-8">
+            {/* Ultra-Modern Floating Header */}
+            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-white/80 via-emerald-50/60 to-cyan-50/40 backdrop-blur-3xl border border-white/50 shadow-2xl">
+              <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 via-cyan-500/5 to-blue-500/10 animate-gradient-x"></div>
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-400 animate-shimmer"></div>
+              
+              {/* Floating Particles */}
+              <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-4 left-8 w-16 h-16 bg-emerald-500/20 rounded-full blur-xl animate-float"></div>
+                <div className="absolute top-12 right-16 w-12 h-12 bg-cyan-500/20 rounded-full blur-lg animate-float-delayed"></div>
+                <div className="absolute bottom-8 left-1/3 w-8 h-8 bg-blue-500/20 rounded-full blur-md animate-float animation-delay-1000"></div>
               </div>
               
-              <div className="grid grid-cols-2 gap-4">
+              <div className="relative p-8">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="relative">
+                      <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg animate-pulse">
+                        <BarChart3 className="h-8 w-8 text-white" />
+                      </div>
+                      <div className="absolute inset-0 bg-emerald-400 rounded-2xl animate-ping opacity-20"></div>
+                    </div>
+                    <div>
+                      <h2 className="text-3xl font-black bg-gradient-to-r from-emerald-700 via-cyan-600 to-blue-600 bg-clip-text text-transparent">
+                        Kostenvorteil Analyse
+                      </h2>
+                      <p className="text-gray-600 font-medium text-lg mt-1">Beyond Bookings vs. Direktbuchung</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center space-x-3">
+                    <div className="w-3 h-3 bg-emerald-400 rounded-full animate-pulse"></div>
+                    <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse animation-delay-500"></div>
+                    <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse animation-delay-1000"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Main Comparison Grid */}
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+              
+              {/* Left Column - Kostenvorteil */}
+              <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-white/90 via-blue-50/70 to-indigo-50/50 backdrop-blur-3xl border border-white/60 shadow-2xl">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-500/10 animate-pulse"></div>
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-indigo-500 animate-shimmer"></div>
+                
+                <div className="relative p-8 space-y-6">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center">
+                      <TrendingDown className="h-6 w-6 text-white" />
+                    </div>
+                    <h3 className="text-2xl font-black text-blue-900">Kostenvorteil</h3>
+                  </div>
+
+                  {/* Cost Breakdown Cards */}
+                  <div className="space-y-4">
+                    {/* Kosten für leeres Zimmer */}
+                    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-50/80 to-indigo-50/60 border border-blue-200/50 p-4 backdrop-blur-sm">
+                      <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-blue-400 to-indigo-400 animate-pulse"></div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-bold text-blue-800">Kosten für leeres Zimmer</span>
+                        <span className="text-xl font-black text-blue-900">25,00 €</span>
+                      </div>
+                    </div>
+
+                    {/* Kosten für belegtes Zimmer */}
+                    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-50/80 to-purple-50/60 border border-indigo-200/50 p-4 backdrop-blur-sm">
+                      <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-indigo-400 to-purple-400 animate-pulse"></div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-bold text-indigo-800">Kosten für belegtes Zimmer</span>
+                        <span className="text-xl font-black text-indigo-900">42,00 €</span>
+                      </div>
+                    </div>
+
+                    {/* Reale Kosten */}
+                    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-purple-50/80 to-pink-50/60 border border-purple-200/50 p-4 backdrop-blur-sm">
+                      <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-purple-400 to-pink-400 animate-pulse"></div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-bold text-purple-800">Reale Kosten</span>
+                        <span className="text-xl font-black text-purple-900">17,00 €</span>
+                      </div>
+                    </div>
+
+                    {/* Hauptvorteil Card */}
+                    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-500 p-6 shadow-xl">
+                      <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/20 to-cyan-400/20 animate-pulse"></div>
+                      <div className="relative text-center">
+                        <div className="text-white/80 text-sm font-bold uppercase tracking-wider mb-2">Kostenvorteil auf Nettobetrag</div>
+                        <div className="text-4xl font-black text-white mb-1">6.860,10 €</div>
+                        <div className="text-white/90 text-lg font-semibold">Faktor: 0,41</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column - Selbstbeschaffung vs Beyond Bookings */}
+              <div className="space-y-6">
+                
+                {/* Selbstbeschaffung Section */}
+                <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-white/90 via-orange-50/70 to-amber-50/50 backdrop-blur-3xl border border-white/60 shadow-2xl">
+                  <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-amber-500/10 animate-pulse"></div>
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-400 to-amber-500 animate-shimmer"></div>
+                  
+                  <div className="relative p-6 space-y-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-amber-500 rounded-xl flex items-center justify-center">
+                        <Calculator className="h-5 w-5 text-white" />
+                      </div>
+                      <h4 className="text-xl font-black text-orange-900">Selbstbeschaffung</h4>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="text-center p-3 bg-orange-50/80 rounded-xl border border-orange-200/50">
+                        <div className="text-xs font-bold text-orange-700 uppercase tracking-wider">Abo-Kosten</div>
+                        <div className="text-lg font-black text-orange-900">16.806,72 €</div>
+                      </div>
+                      <div className="text-center p-3 bg-amber-50/80 rounded-xl border border-amber-200/50">
+                        <div className="text-xs font-bold text-amber-700 uppercase tracking-wider">Kosten Netto</div>
+                        <div className="text-lg font-black text-amber-900">16.806,72 €</div>
+                      </div>
+                      <div className="text-center p-3 bg-orange-50/80 rounded-xl border border-orange-200/50">
+                        <div className="text-xs font-bold text-orange-700 uppercase tracking-wider">MwSt 7%</div>
+                        <div className="text-lg font-black text-orange-900">1.167,25 €</div>
+                      </div>
+                      <div className="text-center p-3 bg-amber-50/80 rounded-xl border border-amber-200/50">
+                        <div className="text-xs font-bold text-amber-700 uppercase tracking-wider">MwSt 19%</div>
+                        <div className="text-lg font-black text-amber-900">3.193,28 €</div>
+                      </div>
+                    </div>
+
+                    <div className="text-center p-4 bg-gradient-to-r from-orange-500 to-amber-500 rounded-2xl">
+                      <div className="text-white/80 text-xs font-bold uppercase tracking-wider">Kosten brutto</div>
+                      <div className="text-2xl font-black text-white">20.000,00 €</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Beyond Bookings Section */}
+                <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-white/90 via-emerald-50/70 to-green-50/50 backdrop-blur-3xl border border-white/60 shadow-2xl">
+                  <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-green-500/10 animate-pulse"></div>
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-400 to-green-500 animate-shimmer"></div>
+                  
+                  <div className="relative p-6 space-y-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-green-500 rounded-xl flex items-center justify-center">
+                        <Star className="h-5 w-5 text-white" />
+                      </div>
+                      <h4 className="text-xl font-black text-emerald-900">Beyond Bookings Lösung</h4>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center p-3 bg-emerald-50/80 rounded-xl border border-emerald-200/50">
+                        <span className="text-sm font-bold text-emerald-800">667 Gutscheine × 30€</span>
+                        <span className="text-lg font-black text-emerald-900">20.010,00 €</span>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="text-center p-3 bg-green-50/80 rounded-xl border border-green-200/50">
+                          <div className="text-xs font-bold text-green-700 uppercase">MwSt 7%</div>
+                          <div className="text-lg font-black text-green-900">1.167,25 €</div>
+                        </div>
+                        <div className="text-center p-3 bg-emerald-50/80 rounded-xl border border-emerald-200/50">
+                          <div className="text-xs font-bold text-emerald-700 uppercase">MwSt 19%</div>
+                          <div className="text-lg font-black text-emerald-900">633,65 €</div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center p-3 bg-blue-50/80 rounded-xl border border-blue-200/50">
+                          <span className="text-sm font-bold text-blue-800">17€ je Gutschein × 667 Roomnights</span>
+                          <span className="text-lg font-black text-blue-900">11.339,00 €</span>
+                        </div>
+                        <div className="flex justify-between items-center p-3 bg-indigo-50/80 rounded-xl border border-indigo-200/50">
+                          <span className="text-sm font-bold text-indigo-800">Steuerbelastung</span>
+                          <span className="text-lg font-black text-indigo-900">1.800,90 €</span>
+                        </div>
+                        <div className="flex justify-between items-center p-3 bg-purple-50/80 rounded-xl border border-purple-200/50">
+                          <span className="text-sm font-bold text-purple-800">Steuervorteil</span>
+                          <span className="text-lg font-black text-purple-900">3.193,28 €</span>
+                        </div>
+                      </div>
+
+                      <div className="text-center p-4 bg-gradient-to-r from-emerald-500 to-green-500 rounded-2xl">
+                        <div className="text-white/80 text-xs font-bold uppercase tracking-wider">Gesamtkosten</div>
+                        <div className="text-2xl font-black text-white">9.946,62 €</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Navigation Buttons */}
+            <div className="flex justify-center">
+              <div className="flex space-x-6">
                 <Button 
                   variant="outline" 
                   onClick={prevStep}
-                  className="group relative overflow-hidden backdrop-blur-sm border-gray-300/50 hover:border-gray-400/60 transition-all duration-300"
+                  className="group relative overflow-hidden px-8 py-4 backdrop-blur-sm border-gray-300/50 hover:border-blue-400/60 transition-all duration-500 rounded-2xl"
                 >
-                  <span className="relative z-10">Zurück zum Kalkulator</span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 to-indigo-500/0 group-hover:from-blue-500/10 group-hover:to-indigo-500/10 transition-all duration-500"></div>
+                  <ArrowLeft className="h-5 w-5 mr-2" />
+                  <span className="relative z-10 font-semibold">Zurück zum Kalkulator</span>
                 </Button>
                 <Button 
-                  onClick={() => {
-                    nextStep();
-                  }}
-                  className="group relative overflow-hidden bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg shadow-green-500/25 transition-all duration-300"
+                  onClick={nextStep}
+                  className="group relative overflow-hidden px-8 py-4 bg-gradient-to-r from-emerald-600 via-cyan-600 to-blue-600 hover:from-emerald-700 hover:via-cyan-700 hover:to-blue-700 shadow-xl shadow-emerald-500/25 transition-all duration-500 rounded-2xl"
                 >
-                  <span className="relative z-10">PDF-Bericht erstellen</span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/20 to-blue-400/20 animate-pulse"></div>
+                  <span className="relative z-10 font-semibold text-white">PDF-Bericht erstellen</span>
+                  <ArrowRight className="h-5 w-5 ml-2 text-white" />
                 </Button>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         );
       case 3:
         return (
