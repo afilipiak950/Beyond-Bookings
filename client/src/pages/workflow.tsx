@@ -761,7 +761,11 @@ export default function Workflow() {
                             min="0"
                             placeholder="Projektkosten eingeben..."
                             value={workflowData.projectCosts || ''}
-                            onChange={(e) => setWorkflowData({...workflowData, projectCosts: parseFloat(e.target.value) || 0})}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              const numValue = value === '' ? 0 : parseFloat(value) || 0;
+                              setWorkflowData({...workflowData, projectCosts: numValue});
+                            }}
                             className="bg-white/60 backdrop-blur-sm border-rose-300/50 focus:border-rose-500 focus:ring-rose-500/20 text-right font-bold"
                           />
                           <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-rose-600 font-bold">€</div>
@@ -904,17 +908,20 @@ export default function Workflow() {
                         <span className="text-xs font-bold text-rose-800 break-words">Vertragsvolumen Estimate - Projektkosten</span>
                       </div>
                       <div className="text-2xl font-black text-rose-900">
-                        {workflowData.projectCosts > 0 ? 
-                          (() => {
-                            // Use default values if hotel data not yet entered
-                            const defaultVoucherValue = hotelVoucherValue > 0 ? hotelVoucherValue : 30; // Default 3-star value
-                            const defaultActualPrice = actualPrice > 0 ? actualPrice : 120; // Default price
-                            
-                            const vertragsvolumen = (workflowData.projectCosts / defaultVoucherValue) * (defaultActualPrice * 0.75) * 1.1;
-                            const result = vertragsvolumen - workflowData.projectCosts;
+                        {(() => {
+                          // Always calculate, use defaults if no data
+                          const projectCosts = workflowData.projectCosts || 0;
+                          const defaultVoucherValue = hotelVoucherValue > 0 ? hotelVoucherValue : 30; // Default 3-star value
+                          const defaultActualPrice = actualPrice > 0 ? actualPrice : 120; // Default price
+                          
+                          if (projectCosts > 0) {
+                            const vertragsvolumen = (projectCosts / defaultVoucherValue) * (defaultActualPrice * 0.75) * 1.1;
+                            const result = vertragsvolumen - projectCosts;
                             return result.toLocaleString('de-DE', {minimumFractionDigits: 0, maximumFractionDigits: 0});
-                          })() :
-                          '5,625'
+                          } else {
+                            return '5,625'; // Default value when no project costs entered
+                          }
+                        })()
                         }
                       </div>
                     </div>
