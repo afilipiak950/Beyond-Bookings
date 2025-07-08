@@ -160,7 +160,9 @@ export class DocumentProcessor {
             analysisData = await this.processFileWithOCR(file, upload.id, uploadData.userId);
           }
 
+          console.log(`Creating analysis record for ${file.fileName}...`);
           const analysis = await storage.createDocumentAnalysis(analysisData);
+          console.log(`Analysis created with ID: ${analysis.id}`);
           analysisIds.push(analysis.id);
           processedFiles++;
 
@@ -177,6 +179,28 @@ export class DocumentProcessor {
           console.log(`Processed file: ${file.fileName}`);
         } catch (error) {
           console.error(`Error processing file ${file.fileName}:`, error);
+          console.error('Error details:', error.message);
+          console.error('Stack trace:', error.stack);
+          
+          // Create a basic analysis record for failed processing
+          try {
+            const basicAnalysis = await storage.createDocumentAnalysis({
+              uploadId: upload.id,
+              userId: uploadData.userId,
+              fileName: file.fileName,
+              worksheetName: null,
+              analysisType: 'failed',
+              extractedData: { error: error.message },
+              processedData: { processingFailed: true },
+              insights: { error: 'Processing failed', reason: error.message },
+              priceData: [],
+              status: 'error',
+              processingTime: Date.now() - Date.now()
+            });
+            analysisIds.push(basicAnalysis.id);
+          } catch (dbError) {
+            console.error('Failed to create error analysis record:', dbError);
+          }
           
           // Still add file to the list even if processing failed
           filesWithWorksheets.push({
@@ -213,6 +237,17 @@ export class DocumentProcessor {
 
     } catch (error) {
       console.error('Error processing ZIP file:', error);
+      console.error('Stack trace:', error.stack);
+      
+      // Update upload status to error
+      try {
+        await storage.updateDocumentUpload(upload.id, {
+          uploadStatus: 'error'
+        });
+      } catch (updateError) {
+        console.error('Failed to update upload status:', updateError);
+      }
+      
       return {
         success: false,
         message: `Error processing ZIP file: ${error.message}`
@@ -301,10 +336,14 @@ export class DocumentProcessor {
     const startTime = Date.now();
 
     try {
+      console.log(`Reading Excel file: ${file.filePath}`);
+      
       // Read Excel file
       const workbook = XLSX.readFile(file.filePath);
       const worksheets: ExcelWorksheetData[] = [];
       const allPriceData: PriceData[] = [];
+      
+      console.log(`Found ${workbook.SheetNames.length} worksheets: ${workbook.SheetNames.join(', ')}`);
 
       // Process each worksheet
       for (const sheetName of workbook.SheetNames) {
@@ -330,7 +369,16 @@ export class DocumentProcessor {
       }
 
       // Generate AI insights for this Excel file
-      const insights = await this.generateExcelInsights(worksheets, allPriceData);
+      let insights = null;
+      try {
+        insights = await this.generateExcelInsights(worksheets, allPriceData);
+      } catch (insightError) {
+        console.error('Failed to generate Excel insights:', insightError);
+        insights = {
+          summary: 'Failed to generate AI insights',
+          error: insightError.message
+        };
+      }
 
       const processingTime = Date.now() - startTime;
 
@@ -354,7 +402,22 @@ export class DocumentProcessor {
 
     } catch (error) {
       console.error('Error processing Excel file:', error);
-      throw error;
+      console.error('Excel processing stack trace:', error.stack);
+      
+      // Return a basic analysis even if processing fails
+      return {
+        uploadId,
+        userId,
+        fileName: file.fileName,
+        worksheetName: null,
+        analysisType: 'excel_error',
+        extractedData: { error: error.message, filePath: file.filePath },
+        processedData: { processingFailed: true },
+        insights: { error: 'Excel processing failed', reason: error.message },
+        priceData: [],
+        status: 'error',
+        processingTime: Date.now() - startTime
+      };
     }
   }
 
@@ -517,15 +580,19 @@ export class DocumentProcessor {
       
       try {
         // First, extract text using Tesseract.js
-        const { createWorker } = await import('tesseract.js');
-        const worker = await createWorker();
-        await worker.loadLanguage('eng+deu');
-        await worker.initialize('eng+deu');
-        
-        const { data } = await worker.recognize(imagePath);
-        ocrText = data.text;
-        
-        await worker.terminate();
+        try {
+          const { createWorker } = await import('tesseract.js');
+          const worker = await createWorker('eng+deu');
+          
+          const { data } = await worker.recognize(imagePath);
+          ocrText = data.text || '';
+          
+          await worker.terminate();
+          console.log(`OCR extracted ${ocrText.length} characters from image`);
+        } catch (ocrError) {
+          console.error('OCR failed for image:', ocrError);
+          ocrText = `[OCR failed: ${ocrError.message}]`;
+        }
         
         console.log(`Tesseract.js extracted ${ocrText.length} characters`);
         
@@ -628,15 +695,20 @@ ${ocrText}`
         const imageBase64 = imageBuffer.toString('base64');
         
         // Use Tesseract.js for OCR on the page image
-        const { createWorker } = await import('tesseract.js');
-        const worker = await createWorker();
-        await worker.loadLanguage('eng+deu');
-        await worker.initialize('eng+deu');
-        
-        const { data } = await worker.recognize(page.path);
-        const rawPageText = data.text;
-        
-        await worker.terminate();
+        let rawPageText = '';
+        try {
+          const { createWorker } = await import('tesseract.js');
+          const worker = await createWorker('eng+deu');
+          
+          const { data } = await worker.recognize(page.path);
+          rawPageText = data.text || '';
+          
+          await worker.terminate();
+          console.log(`OCR extracted ${rawPageText.length} characters from page ${i + 1}`);
+        } catch (ocrError) {
+          console.error(`OCR failed for page ${i + 1}:`, ocrError);
+          rawPageText = `[OCR failed for page ${i + 1}: ${ocrError.message}]`;
+        }
         
         // Enhance with Mistral AI
         const models = ["mistral-small-latest", "open-mistral-7b"];
