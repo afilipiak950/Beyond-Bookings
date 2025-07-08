@@ -642,28 +642,37 @@ export default function Workflow() {
   const saveCalculation = async () => {
     setIsSaving(true);
     try {
+      // Calculate required fields based on workflow data
+      const projectCosts = workflowData.projectCosts || 20000;
+      const stars = workflowData.stars || 3;
+      const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : 30;
+      const roomCount = workflowData.roomCount || Math.round(projectCosts / voucherValue);
+      const averagePrice = workflowData.averagePrice || 120;
+      const occupancyRate = workflowData.occupancyRate || 70;
+      
+      // Calculate pricing fields
+      const vatRate = 19.0; // 19% VAT
+      const vatAmount = (projectCosts * vatRate) / 100;
+      const operationalCosts = roomCount * 17; // 17€ per room operational cost
+      const profitMargin = projectCosts - operationalCosts - vatAmount;
+      const totalPrice = projectCosts + vatAmount;
+      const discountVsMarket = (averagePrice * roomCount) - totalPrice;
+
       const calculationData = {
         hotelName: workflowData.hotelName || 'Unnamed Hotel',
         hotelUrl: workflowData.hotelUrl || '',
-        stars: workflowData.stars || 0,
-        roomCount: workflowData.roomCount || 0,
-        occupancyRate: workflowData.occupancyRate || 70,
-        averagePrice: workflowData.averagePrice || 0,
-        projectCosts: workflowData.projectCosts || 0,
-        hotelVoucherValue: workflowData.hotelVoucherValue || 0,
-        actualPrice: actualPrice || 0,
-        aiSuggestedPrice: aiSuggestedPrice || 0,
-        calculations: {
-          mwst19: ((workflowData.projectCosts || 0) * 0.19),
-          kostenNetto: ((workflowData.projectCosts || 0) * 1.19),
-          gesamtkosten: ((workflowData.roomCount || 0) * 17.83),
-          kostenvorteil: ((workflowData.projectCosts || 0) * 1.19 - (workflowData.roomCount || 0) * 17.83),
-          gutscheinKosten: ((workflowData.roomCount || 0) * 20),
-          steuerbelastung: ((workflowData.roomCount || 0) * 2.61),
-          umsatzsteuer: ((workflowData.roomCount || 0) * 4.78)
-        },
-        status: 'saved',
-        notes: `Saved from Step ${currentStep} - ${new Date().toLocaleString('de-DE')}`
+        stars: stars,
+        roomCount: roomCount,
+        occupancyRate: occupancyRate.toString(),
+        averagePrice: averagePrice.toString(),
+        voucherPrice: voucherValue.toString(),
+        operationalCosts: operationalCosts.toString(),
+        vatRate: vatRate.toString(),
+        vatAmount: vatAmount.toString(),
+        profitMargin: profitMargin.toString(),
+        totalPrice: totalPrice.toString(),
+        discountVsMarket: discountVsMarket.toString(),
+        isDraft: false
       };
 
       const response = await fetch('/api/pricing-calculations', {
@@ -675,7 +684,9 @@ export default function Workflow() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to save calculation');
+        const errorData = await response.json();
+        console.error('Save error response:', errorData);
+        throw new Error(errorData.message || 'Failed to save calculation');
       }
 
       const savedCalculation = await response.json();
