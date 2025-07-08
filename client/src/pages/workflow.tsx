@@ -904,7 +904,14 @@ export default function Workflow() {
                         <span className="text-xs font-bold text-rose-800 break-words">Profit inkl. Mehrverkauf</span>
                       </div>
                       <div className="text-2xl font-black text-rose-900">
-                        5,625
+                        {workflowData.projectCosts && hotelVoucherValue && actualPrice ? 
+                          (() => {
+                            const vertragsvolumen = (workflowData.projectCosts / hotelVoucherValue) * (actualPrice * 0.75) * 1.1;
+                            const profit = vertragsvolumen - workflowData.projectCosts;
+                            return profit.toLocaleString('de-DE', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+                          })() :
+                          '5,625'
+                        }
                       </div>
                     </div>
                   </div>
