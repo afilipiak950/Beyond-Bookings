@@ -622,11 +622,11 @@ export default function Workflow() {
   const canProceedToStep = (step: number): boolean => {
     switch (step) {
       case 1:
-        return true;
+        return true; // Can always go to step 1
       case 2:
-        return Boolean(workflowData.hotelName && workflowData.averagePrice > 0);
+        return Boolean(workflowData.hotelName && workflowData.projectCosts > 0); // Need basic hotel data
       case 3:
-        return Boolean(workflowData.calculationResult && workflowData.marketAnalysis);
+        return Boolean(workflowData.hotelName && workflowData.projectCosts > 0); // Same requirement as step 2
       default:
         return false;
     }
@@ -2008,16 +2008,16 @@ export default function Workflow() {
                   {/* Step Circle */}
                   <div className="flex flex-col items-center">
                     <div
-                      className={`relative flex items-center justify-center w-12 h-12 rounded-full border-2 transition-all duration-300 cursor-pointer ${
+                      className={`relative flex items-center justify-center w-12 h-12 rounded-full border-2 transition-all duration-300 cursor-pointer transform hover:scale-110 ${
                         currentStep === step.id
-                          ? 'bg-blue-500 border-blue-500 text-white shadow-lg'
+                          ? 'bg-blue-500 border-blue-500 text-white shadow-lg shadow-blue-500/50'
                           : currentStep > step.id
-                          ? 'bg-green-500 border-green-500 text-white'
+                          ? 'bg-green-500 border-green-500 text-white shadow-lg shadow-green-500/50'
                           : canProceedToStep(step.id)
-                          ? 'border-blue-300 text-blue-600 hover:border-blue-400'
-                          : 'border-gray-300 text-gray-400'
+                          ? 'border-blue-300 text-blue-600 hover:border-blue-500 hover:bg-blue-50 hover:shadow-md'
+                          : 'border-gray-300 text-gray-400 hover:border-gray-400 hover:bg-gray-50'
                       }`}
-                      onClick={() => canProceedToStep(step.id) && goToStep(step.id)}
+                      onClick={() => goToStep(step.id)}
                     >
                       {currentStep > step.id ? (
                         <Check className="h-6 w-6" />
@@ -2033,16 +2033,21 @@ export default function Workflow() {
 
                     {/* Step Label */}
                     <div className="mt-2 text-center">
-                      <h3 className={`text-sm font-semibold ${
+                      <h3 className={`text-sm font-semibold cursor-pointer ${
                         currentStep >= step.id ? 'text-gray-900' : 'text-gray-500'
-                      }`}>
+                      }`} onClick={() => goToStep(step.id)}>
                         {step.title}
                       </h3>
-                      <p className={`text-xs ${
+                      <p className={`text-xs cursor-pointer ${
                         currentStep >= step.id ? 'text-gray-600' : 'text-gray-400'
-                      }`}>
+                      }`} onClick={() => goToStep(step.id)}>
                         {step.description}
                       </p>
+                      {canProceedToStep(step.id) && currentStep !== step.id && (
+                        <p className="text-xs text-blue-500 mt-1 hover:text-blue-600">
+                          Click to navigate
+                        </p>
+                      )}
                     </div>
                   </div>
 
