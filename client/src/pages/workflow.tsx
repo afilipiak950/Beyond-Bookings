@@ -104,6 +104,13 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
       content: "Cost comparison and savings analysis",
       type: "content",
       backgroundGradient: "from-orange-500 to-red-500"
+    },
+    {
+      id: 4,
+      title: "bebo convert - Währungsrechner",
+      content: "detailed_currency_calculator",
+      type: "bebo-calculator",
+      backgroundGradient: "from-gray-50 to-white"
     }
   ]);
   
@@ -479,6 +486,194 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
                         className="bg-white/20 text-white placeholder-white/60 border-white/30 text-xl text-center min-h-32 backdrop-blur-sm"
                         placeholder="Slide Content"
                       />
+                    </div>
+                  ) : slides[currentSlide]?.type === 'bebo-calculator' ? (
+                    <div className="w-full h-full bg-white text-black p-8 overflow-auto">
+                      {/* Bebo Convert Currency Calculator - Exact Replica */}
+                      <div className="relative w-full h-full">
+                        {/* Header */}
+                        <div className="mb-6">
+                          <h1 className="text-4xl font-bold text-blue-600 mb-2">bebo convert - Währungsrechner</h1>
+                          <p className="text-lg text-gray-600">Gutscheine werden als Übernachtung (DZ inkl. Frühstück) genutzt</p>
+                        </div>
+
+                        {/* Main Content Layout */}
+                        <div className="grid grid-cols-3 gap-6 h-full">
+                          {/* Left Column - Selbstfinanziert */}
+                          <div className="space-y-6">
+                            <div className="bg-gray-100 border border-gray-300 rounded-lg p-6">
+                              <h2 className="text-xl font-semibold text-center mb-4">Selbstfinanziert:</h2>
+                              <div className="text-center">
+                                <div className="text-lg font-medium mb-2">Lieferantenrechnung</div>
+                                <div className="text-3xl font-bold">30.000,00 €</div>
+                              </div>
+                            </div>
+
+                            <div className="bg-gray-100 border border-gray-300 rounded-lg p-6">
+                              <h2 className="text-xl font-semibold mb-4">Ihre Kosten:</h2>
+                              <div className="space-y-2 text-sm">
+                                <div className="flex justify-between">
+                                  <span>Lieferanten Rechnung Brutto</span>
+                                  <span className="font-semibold">30.000,00 €</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>MwSt. 19 %</span>
+                                  <span className="font-semibold">4.789,92 €</span>
+                                </div>
+                                <div className="flex justify-between border-t pt-2">
+                                  <span className="font-semibold">Kosten netto</span>
+                                  <span className="font-semibold">25.210,08 €</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Middle Column - Bezahlt mit bebo convert */}
+                          <div className="space-y-6">
+                            <div className="bg-white border border-gray-300 rounded-lg p-6">
+                              <div className="flex items-center mb-4">
+                                <div className="w-6 h-6 bg-blue-600 rounded mr-3"></div>
+                                <h2 className="text-xl font-semibold">Bezahlt mit bebo convert:</h2>
+                              </div>
+
+                              <div className="space-y-4">
+                                {/* Schritt 1 */}
+                                <div className="border border-gray-200 rounded p-4">
+                                  <div className="flex items-center mb-2">
+                                    <span className="font-semibold">Schritt 1)</span>
+                                    <span className="ml-2">Du erhältst Deine Lieferantenrechnung in Höhe von</span>
+                                    <span className="font-semibold ml-2">30.000,00 €</span>
+                                  </div>
+                                  <div className="text-sm text-gray-600">
+                                    <div>Du bist weiterhin vorsteuerabzugsberechtigt 19%</div>
+                                    <div className="text-right">+ 4.789,92 € (€)</div>
+                                  </div>
+                                </div>
+
+                                {/* Schritt 2 */}
+                                <div className="border border-gray-200 rounded p-4">
+                                  <div className="flex items-center mb-2">
+                                    <span className="font-semibold">Schritt 2)</span>
+                                    <span className="ml-2">Wir kaufen Dir einen Teil Deiner verkauften Zimmer ab</span>
+                                  </div>
+                                  <div className="text-sm text-gray-600">
+                                    <div>857 Gutscheine (ca. 36 Keiner je phänhlich. Leerstände)</div>
+                                    <div className="text-right">+ 35,00 €</div>
+                                    <div>davon MwSt. 7% bei Einlösung vor Ort</div>
+                                    <div className="text-right">1.799,70 € (€)</div>
+                                    <div>bzw. 19% für Frühstück ca nach Setting (nur 3€)</div>
+                                    <div className="text-right">814,15 € (€)</div>
+                                  </div>
+                                </div>
+
+                                {/* Schritt 3 */}
+                                <div className="border border-gray-200 rounded p-4">
+                                  <div className="flex items-center mb-2">
+                                    <span className="font-semibold">Schritt 3)</span>
+                                    <span className="ml-2">Wir bezahlen Deine Brutto-Rechnung schuldzinsfrei! für Dich beim</span>
+                                  </div>
+                                  <div className="text-sm text-gray-600">Lieferanten</div>
+                                </div>
+
+                                {/* Deine Kosten */}
+                                <div className="bg-blue-50 border border-blue-200 rounded p-4">
+                                  <h3 className="font-semibold text-blue-700 mb-2">Deine Kosten:</h3>
+                                  <div className="space-y-1 text-sm">
+                                    <div className="flex justify-between">
+                                      <span>20,00 € je Gutschein! x 857 Room-Nights</span>
+                                      <span>17.140,00 €</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span>(a) Steuerbelastung bei Gutscheineinlösung</span>
+                                      <span>2.613,85 €</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span>(b) Vorsteuerabzugsberechtigung 19%</span>
+                                      <span>4.789,92 €</span>
+                                    </div>
+                                    <div className="flex justify-between font-semibold border-t pt-2">
+                                      <span>Gesamtkosten</span>
+                                      <span>14.963,15 €</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Right Column - Kostenvorteil */}
+                          <div className="bg-gradient-to-b from-emerald-300 to-emerald-500 rounded-lg p-6 text-white">
+                            <h2 className="text-2xl font-bold mb-2">Ihr Kostenvorteil:</h2>
+                            <div className="text-4xl font-bold mb-1">10.246,15 €</div>
+                            <div className="text-xl">≈ -XX%</div>
+
+                            <div className="mt-8">
+                              <h3 className="text-xl font-semibold mb-4">Weitere Vorteile:</h3>
+                              <div className="space-y-3 text-sm">
+                                <div className="flex items-start">
+                                  <div className="w-4 h-4 bg-white rounded-full mt-1 mr-3 flex-shrink-0"></div>
+                                  <div>
+                                    <div className="font-semibold">Deine Rechnung wird sofort beglichen.</div>
+                                    <div>Deine Kosten dagegen verteilen sich über gesamte Vertragslaufzeit.</div>
+                                  </div>
+                                </div>
+                                <div className="flex items-start">
+                                  <div className="w-4 h-4 bg-white rounded-full mt-1 mr-3 flex-shrink-0"></div>
+                                  <div>
+                                    <div className="font-semibold">Gastejierte Auslastung durch neue Gäste und kostenloses Marketing!</div>
+                                  </div>
+                                </div>
+                                <div className="flex items-start">
+                                  <div className="w-4 h-4 bg-white rounded-full mt-1 mr-3 flex-shrink-0"></div>
+                                  <div>
+                                    <div className="font-semibold">Mehr Umsatz</div>
+                                    <div className="text-right">von ca.</div>
+                                    <div className="font-semibold">20.000,00 € + durch</div>
+                                    <div>Zusatzeinnahmen in Euren Outlets und durch Upselling.</div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="mt-8 text-xs">
+                              <div>1) Im Q1 würde in 2024. bei den von uns befragten Partnerhotels, Zusatzeinnahmen von</div>
+                              <div>rund 25,00 € je Gutschein generiert.</div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Bottom Section */}
+                        <div className="mt-6 flex justify-center">
+                          <div className="bg-gray-100 border border-gray-300 rounded-lg p-4">
+                            <div className="text-center">
+                              <div className="text-sm mb-2">1) Erläuterung Kosten je Gutschein:</div>
+                              <div className="flex space-x-8 text-sm">
+                                <div>🏨 Kosten für ein leeres Zimmer = 25,00 €</div>
+                                <div>🍳 Kosten für ein belegtes Zimmer netto = 35,00 €</div>
+                                <div className="border-l border-gray-400 pl-4">
+                                  <div>Ihre Kosten je</div>
+                                  <div>Gutschein</div>
+                                  <div className="font-semibold">20,00 €</div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Logo in top right */}
+                        <div className="absolute top-4 right-4">
+                          <div className="w-12 h-12 bg-emerald-500 rounded-full flex items-center justify-center">
+                            <div className="w-6 h-6 bg-white rounded-sm"></div>
+                          </div>
+                        </div>
+
+                        {/* Company logo bottom left */}
+                        <div className="absolute bottom-4 left-4">
+                          <div className="w-16 h-8 bg-gradient-to-r from-red-400 to-red-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                            ehypay
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   ) : (
                     <div className="text-center space-y-6 animate-slideTrail">
