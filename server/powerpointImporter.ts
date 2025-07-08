@@ -187,11 +187,9 @@ export class PowerPointImporter {
       
       // Extract text content from slide
       const textContent = this.extractTextFromSlide(parsed);
-      console.log(`Slide ${slideNumber} extracted text:`, textContent);
       
       // Determine slide type and extract title/content
       const { title, content, type } = this.categorizeSlideContent(textContent, slideNumber);
-      console.log(`Slide ${slideNumber} processed:`, { title, content: content.substring(0, 100) + '...' });
       
       // Generate appropriate background gradient based on content
       const backgroundGradient = this.generateBackgroundGradient(type, slideNumber);
@@ -220,85 +218,89 @@ export class PowerPointImporter {
   private extractTextFromSlide(parsed: any): string[] {
     const textElements: string[] = [];
     
-    // Recursive function to extract text from nested XML structure
-    const extractText = (obj: any, path: string = '') => {
-      if (typeof obj === 'string' && obj.trim()) {
-        // Only add strings that look like actual text content, not XML tags or metadata
-        const text = obj.trim();
-        if (text.length > 1 && 
-            !text.match(/^[0-9A-F-]{8,}$/) && // Skip GUIDs
-            !text.match(/^[0-9]+$/) && // Skip pure numbers
-            !text.match(/^[a-zA-Z]$/) && // Skip single letters
-            !text.match(/^[0-9]{6}$/) && // Skip color codes
-            !text.match(/^(rect|horz|ctr|auto|yes|no|tx1|UTF-8)$/) && // Skip XML values
-            !text.match(/^\+mn-/) && // Skip font references
-            !text.match(/^[0-9]{12}$/) && // Skip large numbers
-            !text.match(/^rId[0-9]+$/) && // Skip reference IDs
-            !text.match(/^[A-Z]{6}$/) && // Skip hex codes
-            !text.match(/^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$/) && // Skip UUIDs
-            !text.includes('xmlns') &&
-            !text.includes('<?xml') &&
-            text.length < 200 // Skip very long strings that are likely XML
-        ) {
-          textElements.push(text);
-        }
-      } else if (Array.isArray(obj)) {
-        obj.forEach((item, index) => extractText(item, `${path}[${index}]`));
+    // Extract text using a more targeted approach
+    const extractTextRecursive = (obj: any): void => {
+      if (Array.isArray(obj)) {
+        obj.forEach(item => extractTextRecursive(item));
       } else if (obj && typeof obj === 'object') {
-        // Look for text nodes in PowerPoint XML structure
-        if (obj.t && typeof obj.t === 'string' && obj.t.trim()) {
+        // Look specifically for PowerPoint text nodes
+        if (obj.t && typeof obj.t === 'string') {
           const text = obj.t.trim();
-          if (this.isValidText(text)) {
-            textElements.push(text);
-          }
-        } else if (obj['#text'] && typeof obj['#text'] === 'string' && obj['#text'].trim()) {
-          const text = obj['#text'].trim();
-          if (this.isValidText(text)) {
+          if (text && this.isActualText(text)) {
             textElements.push(text);
           }
         }
         
         // Continue recursively through all properties
         Object.keys(obj).forEach(key => {
-          if (key !== '@_' && key !== '#text') {
-            extractText(obj[key], `${path}.${key}`);
+          if (!key.startsWith('@')) {
+            extractTextRecursive(obj[key]);
           }
         });
       }
     };
     
-    extractText(parsed);
+    extractTextRecursive(parsed);
     
-    // Filter out duplicates and sort by length (longer text first)
+    // Remove duplicates and sort by relevance
     const uniqueTexts = [...new Set(textElements)];
-    return uniqueTexts.filter(text => this.isValidText(text)).sort((a, b) => b.length - a.length);
+    return uniqueTexts.filter(text => this.isActualText(text)).sort((a, b) => {
+      // Prioritize longer meaningful text
+      const aScore = this.getTextRelevanceScore(a);
+      const bScore = this.getTextRelevanceScore(b);
+      return bScore - aScore;
+    });
   }
-
-  private isValidText(text: string): boolean {
+  
+  private isActualText(text: string): boolean {
     if (!text || text.length < 2) return false;
     
-    // Skip common PowerPoint metadata and XML artifacts
-    const skipPatterns = [
-      /^[0-9A-F-]{8,}$/, // GUIDs
+    // Must contain actual words (letters, not just numbers/symbols)
+    if (!/[a-zA-ZäöüßÄÖÜ]{2,}/.test(text)) return false;
+    
+    // Exclude common PowerPoint artifacts
+    const excludePatterns = [
+      /^\{[0-9A-F-]{8,}\}$/, // GUIDs with braces
+      /^[0-9A-F-]{8,}$/, // GUIDs without braces
       /^[0-9]+$/, // Pure numbers
-      /^[a-zA-Z]$/, // Single letters
-      /^[0-9]{6}$/, // Color codes
-      /^(rect|horz|ctr|auto|yes|no|tx1|UTF-8|black|white|Arial|Gadugi|Avenir)$/, // XML values
+      /^[0-9A-F]{6,}$/, // Hex codes
+      /^-?[0-9]{4,}$/, // Large numbers
+      /^[0-9]{1,2}\.[0-9]$/, // Version numbers
+      /^[a-z]{2}-[A-Z]{2}$/, // Language codes
+      /^(rect|horz|ctr|auto|yes|no|tx1|UTF-8|black|white|Arial|Gadugi|Avenir|tl|tr|bl|br)$/, // XML values
       /^\+mn-/, // Font references
-      /^[0-9]{12}$/, // Large numbers
       /^rId[0-9]+$/, // Reference IDs
-      /^[A-Z]{6}$/, // Hex codes
-      /^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$/, // UUIDs
-      /^[0-9]{13}$/, // Timestamps
       /^Picture [0-9]+$/, // Picture references
       /^Grafik [0-9]+$/, // German picture references
-      /^Textplatzhalter [0-9]+$/, // German text placeholders
-      /Automatisch generierte Beschreibung/, // German auto-generated descriptions
-      /^[0-9]{20}$/ // Very long numbers
+      /^Textplatzhalter [0-9]+$/, // German placeholders
+      /Automatisch generierte Beschreibung/, // Auto-generated descriptions
+      /Kostenlose Logo Space Template-Vorlage/, // Template references
+      /Ein Bild, das.*enthält/ // German image descriptions
     ];
     
-    return !skipPatterns.some(pattern => pattern.test(text)) && text.length < 200;
+    return !excludePatterns.some(pattern => pattern.test(text)) && text.length < 200;
   }
+  
+  private getTextRelevanceScore(text: string): number {
+    let score = 0;
+    
+    // Longer text gets higher score
+    score += text.length;
+    
+    // German/English words get bonus
+    if (/[äöüß]/.test(text)) score += 50; // German umlauts
+    if (/\b[A-Za-z]{3,}\b/.test(text)) score += 30; // English words
+    
+    // Common German words get extra bonus
+    const germanWords = ['und', 'der', 'die', 'das', 'mit', 'für', 'von', 'zu', 'auf', 'bei', 'nach', 'über', 'unter', 'durch', 'Hotel', 'Zimmer', 'Gäste', 'Rechnungen', 'bezahlen', 'Willkommen', 'Nachname', 'Titel'];
+    germanWords.forEach(word => {
+      if (text.includes(word)) score += 100;
+    });
+    
+    return score;
+  }
+
+
 
   private categorizeSlideContent(textContent: string[], slideNumber: number): {
     title: string;
