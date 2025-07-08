@@ -121,9 +121,60 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
     }
   ]);
   
+  // Load user's presentation as default on component mount
+  useEffect(() => {
+    const loadUserPresentation = async () => {
+      try {
+        // First try to load from localStorage (recent upload)
+        const savedPresentation = localStorage.getItem('defaultPresentation');
+        if (savedPresentation) {
+          const userPresentation = JSON.parse(savedPresentation);
+          if (userPresentation && userPresentation.slides) {
+            console.log('Loading saved user presentation with', userPresentation.slides.length, 'slides');
+            const loadedSlides = userPresentation.slides.map((slide: any, index: number) => ({
+              id: index + 1,
+              title: slide.title || `Slide ${index + 1}`,
+              content: slide.content || 'Inhalt bearbeiten',
+              type: slide.type || 'content',
+              backgroundGradient: slide.backgroundGradient || 'from-blue-600 to-purple-800'
+            }));
+            setSlides(loadedSlides);
+            setIsUserPresentation(true);
+            return;
+          }
+        }
+        
+        // Then try to load from server
+        const response = await fetch('/api/user-presentation');
+        if (response.ok) {
+          const userPresentation = await response.json();
+          if (userPresentation && userPresentation.slides) {
+            console.log('Loading server user presentation with', userPresentation.slides.length, 'slides');
+            const loadedSlides = userPresentation.slides.map((slide: any, index: number) => ({
+              id: index + 1,
+              title: slide.title || `Slide ${index + 1}`,
+              content: slide.content || 'Inhalt bearbeiten',
+              type: slide.type || 'content',
+              backgroundGradient: slide.backgroundGradient || 'from-blue-600 to-purple-800'
+            }));
+            setSlides(loadedSlides);
+            setIsUserPresentation(true);
+            // Save to localStorage for future use
+            localStorage.setItem('defaultPresentation', JSON.stringify(userPresentation));
+          }
+        }
+      } catch (error) {
+        console.error('Error loading user presentation:', error);
+      }
+    };
+    
+    loadUserPresentation();
+  }, []);
+  
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isEditing, setIsEditing] = useState(false);
   const [editingText, setEditingText] = useState("");
+  const [isUserPresentation, setIsUserPresentation] = useState(false);
   
   // PowerPoint import functionality
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -167,7 +218,8 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
       
       const response = await fetch('/api/import/powerpoint', {
         method: 'POST',
-        body: formData
+        body: formData,
+        credentials: 'include' // Include cookies for authentication
       });
       
       console.log('Import response status:', response.status);
@@ -181,24 +233,28 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
       const importedPresentation = await response.json();
       console.log('Imported presentation:', importedPresentation);
       
-      // Replace current slides with imported ones
+      // Replace current slides with imported ones - use exact content from your presentation
       const importedSlides = importedPresentation.slides.map((slide: any, index: number) => ({
         id: index + 1,
-        title: slide.title || `Slide ${index + 1}`,
+        title: slide.title || `Folie ${index + 1}`,
         content: slide.content || 'Inhalt bearbeiten',
         type: slide.type || 'content',
-        backgroundGradient: slide.backgroundGradient || 'from-gray-600 to-gray-800'
+        backgroundGradient: slide.backgroundGradient || 'from-blue-600 to-purple-800'
       }));
       
       console.log('Processed slides:', importedSlides);
       
       setSlides(importedSlides);
       setCurrentSlide(0);
+      setIsUserPresentation(true);
       
-      alert(`Erfolgreich ${importedSlides.length} Folien aus PowerPoint-Präsentation importiert!\n\nTitel: ${importedPresentation.title}`);
+      // Save as default presentation in localStorage for future use
+      localStorage.setItem('defaultPresentation', JSON.stringify(importedPresentation));
+      
+      alert(`✅ Ihre Präsentation wurde erfolgreich als Standard-Vorlage gespeichert!\n\n${importedSlides.length} Folien geladen\nTitel: ${importedPresentation.title || 'Hotel Präsentation'}\n\nDiese Präsentation wird ab sofort immer automatisch geladen.`);
     } catch (error) {
       console.error('PowerPoint import error:', error);
-      alert(`Fehler beim Importieren der PowerPoint-Präsentation: ${error.message}\n\nBitte versuchen Sie es erneut oder wenden Sie sich an den Support.`);
+      alert(`❌ Fehler beim Laden der PowerPoint-Präsentation: ${error.message}\n\nBitte versuchen Sie es erneut.`);
     } finally {
       setIsImporting(false);
     }
@@ -297,7 +353,7 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
               className="bg-purple-600 hover:bg-purple-700 text-white transform hover:scale-105 transition-all duration-300"
             >
               <Upload className="h-4 w-4 mr-2" />
-              {isImporting ? 'Importing...' : 'Import PPTX'}
+              {isImporting ? 'Lade als Standard...' : 'Präsentation als Standard laden'}
             </Button>
             <Button onClick={addSlide} className="bg-emerald-600 hover:bg-emerald-700 text-white transform hover:scale-105 transition-all duration-300">
               <Plus className="h-4 w-4 mr-2" />
