@@ -437,138 +437,138 @@ export default function Calculations() {
                 </div>
 
                 {/* Main Metrics Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   {/* Revenue Card */}
-                  <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 p-6 text-white shadow-xl">
-                    <div className="absolute -top-4 -right-4 h-16 w-16 rounded-full bg-white/20 blur-xl" />
+                  <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 p-4 text-white shadow-lg">
+                    <div className="absolute -top-2 -right-2 h-8 w-8 rounded-full bg-white/20 blur-lg" />
                     <div className="relative z-10">
-                      <div className="mb-2 flex items-center justify-between">
-                        <DollarSign className="h-8 w-8" />
-                        <div className="text-sm font-medium opacity-80">Revenue</div>
+                      <div className="mb-1 flex items-center justify-between">
+                        <DollarSign className="h-5 w-5" />
+                        <div className="text-xs font-medium opacity-80">Revenue</div>
                       </div>
-                      <div className="text-3xl font-bold">{formatCurrency(totalRevenue)}</div>
-                      <div className="text-sm opacity-80">Per Room: {formatCurrency(revenuePerRoom)}</div>
+                      <div className="text-xl font-bold">{formatCurrency(totalRevenue)}</div>
+                      <div className="text-xs opacity-80">Per Room: {formatCurrency(revenuePerRoom)}</div>
                     </div>
                   </div>
 
                   {/* Profit Card */}
-                  <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 p-6 text-white shadow-xl">
-                    <div className="absolute -top-4 -right-4 h-16 w-16 rounded-full bg-white/20 blur-xl" />
+                  <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 p-4 text-white shadow-lg">
+                    <div className="absolute -top-2 -right-2 h-8 w-8 rounded-full bg-white/20 blur-lg" />
                     <div className="relative z-10">
-                      <div className="mb-2 flex items-center justify-between">
-                        <TrendingUp className="h-8 w-8" />
-                        <div className="text-sm font-medium opacity-80">Net Profit</div>
+                      <div className="mb-1 flex items-center justify-between">
+                        <TrendingUp className="h-5 w-5" />
+                        <div className="text-xs font-medium opacity-80">Net Profit</div>
                       </div>
-                      <div className="text-3xl font-bold">{formatCurrency(netProfit)}</div>
-                      <div className="text-sm opacity-80">Margin: {formatPercentage(profitMarginPercentage)}</div>
+                      <div className="text-xl font-bold">{formatCurrency(netProfit)}</div>
+                      <div className="text-xs opacity-80">Margin: {formatPercentage(profitMarginPercentage)}</div>
                     </div>
                   </div>
 
                   {/* Costs Card */}
-                  <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-orange-500 to-red-500 p-6 text-white shadow-xl">
-                    <div className="absolute -top-4 -right-4 h-16 w-16 rounded-full bg-white/20 blur-xl" />
+                  <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-orange-500 to-red-500 p-4 text-white shadow-lg">
+                    <div className="absolute -top-2 -right-2 h-8 w-8 rounded-full bg-white/20 blur-lg" />
                     <div className="relative z-10">
-                      <div className="mb-2 flex items-center justify-between">
-                        <Calculator className="h-8 w-8" />
-                        <div className="text-sm font-medium opacity-80">Total Costs</div>
+                      <div className="mb-1 flex items-center justify-between">
+                        <Calculator className="h-5 w-5" />
+                        <div className="text-xs font-medium opacity-80">Total Costs</div>
                       </div>
-                      <div className="text-3xl font-bold">{formatCurrency(totalCosts)}</div>
-                      <div className="text-sm opacity-80">Per Room: {formatCurrency(costPerRoom)}</div>
+                      <div className="text-xl font-bold">{formatCurrency(totalCosts)}</div>
+                      <div className="text-xs opacity-80">Per Room: {formatCurrency(costPerRoom)}</div>
                     </div>
                   </div>
 
                   {/* Discount Card */}
-                  <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 p-6 text-white shadow-xl">
-                    <div className="absolute -top-4 -right-4 h-16 w-16 rounded-full bg-white/20 blur-xl" />
+                  <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 p-4 text-white shadow-lg">
+                    <div className="absolute -top-2 -right-2 h-8 w-8 rounded-full bg-white/20 blur-lg" />
                     <div className="relative z-10">
-                      <div className="mb-2 flex items-center justify-between">
-                        <Gift className="h-8 w-8" />
-                        <div className="text-sm font-medium opacity-80">Discount</div>
+                      <div className="mb-1 flex items-center justify-between">
+                        <Gift className="h-5 w-5" />
+                        <div className="text-xs font-medium opacity-80">Discount</div>
                       </div>
-                      <div className="text-3xl font-bold">{formatPercentage(discountPercentage)}</div>
-                      <div className="text-sm opacity-80">Savings: {formatCurrency(discountVsMarket)}</div>
+                      <div className="text-xl font-bold">{formatPercentage(discountPercentage)}</div>
+                      <div className="text-xs opacity-80">Savings: {formatCurrency(discountVsMarket)}</div>
                     </div>
                   </div>
                 </div>
 
                 {/* Detailed Breakdown */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   {/* Pricing Breakdown */}
-                  <div className="rounded-3xl bg-white/60 dark:bg-slate-800/60 p-8 shadow-xl backdrop-blur-lg border border-white/20">
-                    <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
-                      <div className="p-2 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500">
-                        <DollarSign className="h-6 w-6 text-white" />
+                  <div className="rounded-2xl bg-white/60 dark:bg-slate-800/60 p-5 shadow-lg backdrop-blur-lg border border-white/20">
+                    <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                      <div className="p-1.5 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500">
+                        <DollarSign className="h-4 w-4 text-white" />
                       </div>
                       Pricing Analysis
                     </h3>
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center p-4 rounded-2xl bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20">
-                        <span className="font-semibold">Average Market Price</span>
-                        <span className="text-xl font-bold text-blue-600">{formatCurrency(averagePrice)}</span>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center p-3 rounded-xl bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20">
+                        <span className="font-medium text-sm">Average Market Price</span>
+                        <span className="text-lg font-bold text-blue-600">{formatCurrency(averagePrice)}</span>
                       </div>
-                      <div className="flex justify-between items-center p-4 rounded-2xl bg-gradient-to-r from-green-50 to-teal-50 dark:from-green-900/20 dark:to-teal-900/20">
-                        <span className="font-semibold">Voucher Price</span>
-                        <span className="text-xl font-bold text-green-600">{formatCurrency(voucherPrice)}</span>
+                      <div className="flex justify-between items-center p-3 rounded-xl bg-gradient-to-r from-green-50 to-teal-50 dark:from-green-900/20 dark:to-teal-900/20">
+                        <span className="font-medium text-sm">Voucher Price</span>
+                        <span className="text-lg font-bold text-green-600">{formatCurrency(voucherPrice)}</span>
                       </div>
-                      <div className="flex justify-between items-center p-4 rounded-2xl bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20">
-                        <span className="font-semibold">Operational Costs</span>
-                        <span className="text-xl font-bold text-orange-600">{formatCurrency(operationalCosts)}</span>
+                      <div className="flex justify-between items-center p-3 rounded-xl bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20">
+                        <span className="font-medium text-sm">Operational Costs</span>
+                        <span className="text-lg font-bold text-orange-600">{formatCurrency(operationalCosts)}</span>
                       </div>
-                      <div className="flex justify-between items-center p-4 rounded-2xl bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20">
-                        <span className="font-semibold">VAT ({vatPercentage}%)</span>
-                        <span className="text-xl font-bold text-purple-600">{formatCurrency(vatAmount)}</span>
+                      <div className="flex justify-between items-center p-3 rounded-xl bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20">
+                        <span className="font-medium text-sm">VAT ({vatPercentage}%)</span>
+                        <span className="text-lg font-bold text-purple-600">{formatCurrency(vatAmount)}</span>
                       </div>
-                      <div className="border-t-2 border-gray-200 dark:border-gray-700 pt-4">
-                        <div className="flex justify-between items-center p-4 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20">
-                          <span className="font-bold text-lg">Total Price</span>
-                          <span className="text-2xl font-bold text-emerald-600">{formatCurrency(totalPrice)}</span>
+                      <div className="border-t border-gray-200 dark:border-gray-700 pt-3">
+                        <div className="flex justify-between items-center p-3 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20">
+                          <span className="font-bold">Total Price</span>
+                          <span className="text-xl font-bold text-emerald-600">{formatCurrency(totalPrice)}</span>
                         </div>
                       </div>
                     </div>
                   </div>
 
                   {/* Business Metrics */}
-                  <div className="rounded-3xl bg-white/60 dark:bg-slate-800/60 p-8 shadow-xl backdrop-blur-lg border border-white/20">
-                    <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
-                      <div className="p-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500">
-                        <BarChart3 className="h-6 w-6 text-white" />
+                  <div className="rounded-2xl bg-white/60 dark:bg-slate-800/60 p-5 shadow-lg backdrop-blur-lg border border-white/20">
+                    <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                      <div className="p-1.5 rounded-lg bg-gradient-to-r from-emerald-500 to-teal-500">
+                        <BarChart3 className="h-4 w-4 text-white" />
                       </div>
                       Business Metrics
                     </h3>
-                    <div className="space-y-4">
-                      <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20">
+                    <div className="space-y-3">
+                      <div className="p-3 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20">
                         <div className="flex justify-between items-center">
-                          <span className="font-semibold">Total Revenue</span>
-                          <span className="text-xl font-bold text-blue-600">{formatCurrency(totalRevenue)}</span>
+                          <span className="font-medium text-sm">Total Revenue</span>
+                          <span className="text-lg font-bold text-blue-600">{formatCurrency(totalRevenue)}</span>
                         </div>
-                        <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                           {roomCount} rooms × {occupancyRate}% occupancy
                         </div>
                       </div>
-                      <div className="p-4 rounded-2xl bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20">
+                      <div className="p-3 rounded-xl bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20">
                         <div className="flex justify-between items-center">
-                          <span className="font-semibold">Net Profit</span>
-                          <span className="text-xl font-bold text-green-600">{formatCurrency(netProfit)}</span>
+                          <span className="font-medium text-sm">Net Profit</span>
+                          <span className="text-lg font-bold text-green-600">{formatCurrency(netProfit)}</span>
                         </div>
-                        <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                           Profit Margin: {formatPercentage(profitMarginPercentage)}
                         </div>
                       </div>
-                      <div className="p-4 rounded-2xl bg-gradient-to-r from-orange-50 to-yellow-50 dark:from-orange-900/20 dark:to-yellow-900/20">
+                      <div className="p-3 rounded-xl bg-gradient-to-r from-orange-50 to-yellow-50 dark:from-orange-900/20 dark:to-yellow-900/20">
                         <div className="flex justify-between items-center">
-                          <span className="font-semibold">Cost Per Room</span>
-                          <span className="text-xl font-bold text-orange-600">{formatCurrency(costPerRoom)}</span>
+                          <span className="font-medium text-sm">Cost Per Room</span>
+                          <span className="text-lg font-bold text-orange-600">{formatCurrency(costPerRoom)}</span>
                         </div>
-                        <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                           Revenue Per Room: {formatCurrency(revenuePerRoom)}
                         </div>
                       </div>
-                      <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20">
+                      <div className="p-3 rounded-xl bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20">
                         <div className="flex justify-between items-center">
-                          <span className="font-semibold">Customer Savings</span>
-                          <span className="text-xl font-bold text-purple-600">{formatCurrency(discountVsMarket)}</span>
+                          <span className="font-medium text-sm">Customer Savings</span>
+                          <span className="text-lg font-bold text-purple-600">{formatCurrency(discountVsMarket)}</span>
                         </div>
-                        <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                           Discount: {formatPercentage(discountPercentage)}
                         </div>
                       </div>
@@ -577,13 +577,13 @@ export default function Calculations() {
                 </div>
 
                 {/* Timeline Footer */}
-                <div className="rounded-3xl bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-900 dark:to-slate-900 p-6 shadow-xl">
+                <div className="rounded-2xl bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-900 dark:to-slate-900 p-4 shadow-lg">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Calendar className="h-6 w-6 text-gray-600 dark:text-gray-400" />
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-gray-600 dark:text-gray-400" />
                       <div>
-                        <div className="font-semibold text-gray-900 dark:text-gray-100">Created</div>
-                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                        <div className="font-medium text-sm text-gray-900 dark:text-gray-100">Created</div>
+                        <div className="text-xs text-gray-600 dark:text-gray-400">
                           {new Date(selectedCalculation.createdAt || 0).toLocaleDateString('de-DE', {
                             year: 'numeric',
                             month: 'long',
@@ -594,10 +594,10 @@ export default function Calculations() {
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
                       <div className="text-right">
-                        <div className="font-semibold text-gray-900 dark:text-gray-100">Last Updated</div>
-                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                        <div className="font-medium text-sm text-gray-900 dark:text-gray-100">Last Updated</div>
+                        <div className="text-xs text-gray-600 dark:text-gray-400">
                           {new Date(selectedCalculation.updatedAt || 0).toLocaleDateString('de-DE', {
                             year: 'numeric',
                             month: 'long',
@@ -607,7 +607,7 @@ export default function Calculations() {
                           })}
                         </div>
                       </div>
-                      <Calendar className="h-6 w-6 text-gray-600 dark:text-gray-400" />
+                      <Calendar className="h-4 w-4 text-gray-600 dark:text-gray-400" />
                     </div>
                   </div>
                 </div>
