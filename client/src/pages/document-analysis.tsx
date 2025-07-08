@@ -132,6 +132,39 @@ export default function DocumentAnalysis() {
     },
   });
 
+  const ocrMutation = useMutation({
+    mutationFn: async ({ uploadId, fileName }: { uploadId: number; fileName: string }) => {
+      return await apiRequest('/api/process-ocr', {
+        method: 'POST',
+        body: { uploadId, fileName }
+      });
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/document-analyses'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/document-uploads'] });
+      toast({
+        title: "OCR erfolgreich",
+        description: `OCR-Verarbeitung für ${data.analysis?.fileName} abgeschlossen.`,
+      });
+    },
+    onError: (error) => {
+      console.error('OCR error:', error);
+      toast({
+        title: "OCR-Fehler",
+        description: "Fehler bei der OCR-Verarbeitung.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const processWithOCR = (uploadId: number, fileName: string) => {
+    toast({
+      title: "OCR wird verarbeitet",
+      description: `Starte OCR-Verarbeitung für ${fileName}...`,
+    });
+    ocrMutation.mutate({ uploadId, fileName });
+  };
+
   // Dropzone configuration
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
@@ -499,11 +532,34 @@ export default function DocumentAnalysis() {
                                               analysis.fileName === fileInfo.fileName && analysis.extractedData?.text
                                             );
                                             
-                                            return (
-                                              <Badge variant="secondary" className="text-xs">
-                                                {hasOcrAnalysis ? 'OCR verfügbar' : hasRegularAnalysis ? 'Daten verfügbar' : 'Datei anzeigen'}
-                                              </Badge>
-                                            );
+                                            if (hasOcrAnalysis) {
+                                              return (
+                                                <Badge variant="default" className="text-xs bg-green-100 text-green-800">
+                                                  OCR verfügbar
+                                                </Badge>
+                                              );
+                                            } else if (hasRegularAnalysis) {
+                                              return (
+                                                <Badge variant="secondary" className="text-xs">
+                                                  Daten verfügbar
+                                                </Badge>
+                                              );
+                                            } else {
+                                              return (
+                                                <Button
+                                                  size="sm"
+                                                  variant="outline"
+                                                  className="text-xs h-6 px-2"
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    processWithOCR(upload.id, fileInfo.fileName);
+                                                  }}
+                                                >
+                                                  <Zap className="h-3 w-3 mr-1" />
+                                                  OCR verarbeiten
+                                                </Button>
+                                              );
+                                            }
                                           })()}
                                           <Eye className="h-4 w-4 text-blue-600" />
                                         </div>
