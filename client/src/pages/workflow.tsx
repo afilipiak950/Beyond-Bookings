@@ -909,13 +909,24 @@ export default function Workflow() {
                       </div>
                       <div className="text-2xl font-black text-rose-900">
                         {(() => {
-                          // Simple calculation: Vertragsvolumen Estimate - Finanzierung: Projektkosten brutto
-                          // For demonstration using example values from screenshot
-                          const vertragsvolumenEstimate = 28050; // From screenshot
-                          const projektkosten = 15000; // From screenshot
+                          // Get actual input values from form
+                          const projectCosts = workflowData.projectCosts || 0;
+                          const stars = workflowData.stars || 0;
+                          const actualPrice = workflowData.averagePrice || 0;
                           
-                          // Result = Vertragsvolumen Estimate - Projektkosten
-                          const result = vertragsvolumenEstimate - projektkosten;
+                          // Calculate hotel voucher value based on stars
+                          const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30;
+                          
+                          // Formula: Vertragsvolumen Estimate = (Project Costs / Hotel Voucher Value) × (Actual Price × 0.75) × 1.1
+                          const vertragsvolumenEstimate = (projectCosts / voucherValue) * (actualPrice * 0.75) * 1.1;
+                          
+                          // Result = Vertragsvolumen Estimate - Finanzierung: Projektkosten brutto
+                          const result = vertragsvolumenEstimate - projectCosts;
+                          
+                          // Show 0 when no meaningful input data
+                          if (projectCosts === 0 && actualPrice === 0) {
+                            return '0';
+                          }
                           
                           return Math.round(result).toLocaleString('de-DE');
                         })()}
