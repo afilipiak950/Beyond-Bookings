@@ -39,6 +39,8 @@ export interface ExtractedFileInfo {
   fileName: string;
   filePath: string;
   fileType: string;
+  folderPath?: string;
+  originalPath?: string;
   worksheets?: ExcelWorksheetData[];
   extractedText?: string;
   priceData?: PriceData[];
@@ -114,7 +116,9 @@ export class DocumentProcessor {
         extractedFiles: extractedFiles.map(f => ({
           fileName: f.fileName,
           filePath: f.filePath,
-          fileType: f.fileType
+          fileType: f.fileType,
+          folderPath: f.folderPath || 'Root',
+          originalPath: f.originalPath || f.fileName
         })),
         uploadStatus: 'processing'
       });
@@ -122,13 +126,25 @@ export class DocumentProcessor {
       const analysisIds: number[] = [];
       let processedFiles = 0;
 
-      // Process each extracted file
+      // Process each extracted file and collect worksheet info
+      const filesWithWorksheets = [];
+      
       for (const file of extractedFiles) {
         try {
           let analysisData: InsertDocumentAnalysis;
+          let worksheetInfo = [];
 
           if (file.fileType === 'excel') {
             analysisData = await this.processExcelFile(file, upload.id, uploadData.userId);
+            
+            // Extract worksheet information from the analysis data
+            if (analysisData.extractedData && analysisData.extractedData.worksheets) {
+              worksheetInfo = analysisData.extractedData.worksheets.map((ws: any) => ({
+                name: ws.worksheetName,
+                rowCount: ws.rowCount,
+                columnCount: ws.columnCount
+              }));
+            }
           } else {
             // For other file types, use OCR
             analysisData = await this.processFileWithOCR(file, upload.id, uploadData.userId);
@@ -138,9 +154,29 @@ export class DocumentProcessor {
           analysisIds.push(analysis.id);
           processedFiles++;
 
+          // Add worksheet information to the file metadata
+          filesWithWorksheets.push({
+            fileName: file.fileName,
+            filePath: file.filePath,
+            fileType: file.fileType,
+            folderPath: file.folderPath || 'Root',
+            originalPath: file.originalPath || file.fileName,
+            worksheets: worksheetInfo
+          });
+
           console.log(`Processed file: ${file.fileName}`);
         } catch (error) {
           console.error(`Error processing file ${file.fileName}:`, error);
+          
+          // Still add file to the list even if processing failed
+          filesWithWorksheets.push({
+            fileName: file.fileName,
+            filePath: file.filePath,
+            fileType: file.fileType,
+            folderPath: file.folderPath || 'Root',
+            originalPath: file.originalPath || file.fileName,
+            worksheets: []
+          });
         }
       }
 
@@ -149,8 +185,9 @@ export class DocumentProcessor {
         await this.generateCrossDocumentInsights(analysisIds, uploadData.userId, storage);
       }
 
-      // Update upload status
+      // Update upload status with complete file and worksheet information
       await storage.updateDocumentUpload(upload.id, {
+        extractedFiles: filesWithWorksheets,
         uploadStatus: 'completed',
         processedAt: new Date()
       });
@@ -218,7 +255,9 @@ export class DocumentProcessor {
             extractedFiles.push({
               fileName: path.basename(fileName),
               filePath: extractedPath,
-              fileType
+              fileType,
+              folderPath: path.dirname(fileName) === '.' ? 'Root' : path.dirname(fileName),
+              originalPath: fileName
             });
             
             console.log(`Added file to extraction list: ${path.basename(fileName)} (${fileType})`);

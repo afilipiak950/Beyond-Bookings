@@ -393,45 +393,100 @@ export default function DocumentAnalysis() {
                         </div>
                       </div>
 
-                      {/* Detailed File Structure Display */}
+                      {/* Enhanced Folder Structure Display */}
                       {upload.extractedFiles && Array.isArray(upload.extractedFiles) && upload.extractedFiles.length > 0 && (
                         <div className="mt-6 border-t border-gray-200/50 pt-4">
-                          <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                          <h4 className="font-medium text-gray-900 mb-4 flex items-center gap-2">
                             <Folder className="h-4 w-4 text-blue-600" />
-                            Extrahierte Ordnerstruktur
+                            Detaillierte Ordnerstruktur
                           </h4>
-                          <div className="space-y-3">
-                            {upload.extractedFiles.map((fileInfo: any, index: number) => (
-                              <div key={index} className="bg-gray-50/50 rounded-lg p-4 border border-gray-200/30">
-                                <div className="flex items-center gap-3 mb-2">
-                                  <FileSpreadsheet className="h-5 w-5 text-green-600 flex-shrink-0" />
-                                  <div className="flex-1">
-                                    <h5 className="font-medium text-gray-900">{fileInfo.fileName}</h5>
-                                    <p className="text-sm text-gray-600">
-                                      {fileInfo.fileType || 'Excel'} • {fileInfo.folderPath || 'Root'}
-                                    </p>
-                                  </div>
+                          
+                          {/* Organize files by folder */}
+                          {(() => {
+                            const folderMap = new Map<string, any[]>();
+                            
+                            upload.extractedFiles.forEach((fileInfo: any) => {
+                              const folderPath = fileInfo.folderPath || 'Root';
+                              if (!folderMap.has(folderPath)) {
+                                folderMap.set(folderPath, []);
+                              }
+                              folderMap.get(folderPath)?.push(fileInfo);
+                            });
+                            
+                            return Array.from(folderMap.entries()).map(([folderPath, files]) => (
+                              <div key={folderPath} className="mb-4">
+                                {/* Folder Header */}
+                                <div className="flex items-center gap-2 mb-3 p-3 bg-gradient-to-r from-blue-50/80 to-indigo-50/80 rounded-lg border border-blue-200/30">
+                                  <Folder className="h-5 w-5 text-blue-600" />
+                                  <span className="font-medium text-blue-900">
+                                    {folderPath === 'Root' ? '📁 Root-Verzeichnis' : `📁 ${folderPath}`}
+                                  </span>
+                                  <Badge variant="outline" className="text-xs">
+                                    {files.length} {files.length === 1 ? 'Datei' : 'Dateien'}
+                                  </Badge>
                                 </div>
                                 
-                                {fileInfo.worksheets && Array.isArray(fileInfo.worksheets) && fileInfo.worksheets.length > 0 && (
-                                  <div className="ml-8 space-y-1">
-                                    <p className="text-xs font-medium text-gray-700 mb-2">Arbeitsblätter:</p>
-                                    {fileInfo.worksheets.map((worksheet: any, wsIndex: number) => (
-                                      <div key={wsIndex} className="flex items-center gap-2 text-sm text-gray-600">
-                                        <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-                                        <span>{typeof worksheet === 'string' ? worksheet : worksheet.name}</span>
-                                        {typeof worksheet === 'object' && worksheet.rowCount && (
-                                          <Badge variant="secondary" className="text-xs">
-                                            {worksheet.rowCount} Zeilen
-                                          </Badge>
+                                {/* Files in this folder */}
+                                <div className="space-y-3 pl-4">
+                                  {files.map((fileInfo: any, index: number) => (
+                                    <div key={index} className="bg-gray-50/50 rounded-lg p-4 border border-gray-200/30">
+                                      <div className="flex items-center gap-3 mb-2">
+                                        {fileInfo.fileType === 'excel' ? (
+                                          <FileSpreadsheet className="h-5 w-5 text-green-600 flex-shrink-0" />
+                                        ) : fileInfo.fileType === 'pdf' ? (
+                                          <FileText className="h-5 w-5 text-red-600 flex-shrink-0" />
+                                        ) : (
+                                          <FileText className="h-5 w-5 text-gray-600 flex-shrink-0" />
                                         )}
+                                        <div className="flex-1">
+                                          <h5 className="font-medium text-gray-900">{fileInfo.fileName}</h5>
+                                          <p className="text-sm text-gray-600">
+                                            {fileInfo.fileType?.toUpperCase() || 'UNKNOWN'} • {fileInfo.originalPath || fileInfo.fileName}
+                                          </p>
+                                        </div>
                                       </div>
-                                    ))}
-                                  </div>
-                                )}
+                                      
+                                      {/* Worksheet Details for Excel Files */}
+                                      {fileInfo.worksheets && Array.isArray(fileInfo.worksheets) && fileInfo.worksheets.length > 0 && (
+                                        <div className="ml-8 mt-3 space-y-2">
+                                          <p className="text-xs font-medium text-gray-700 mb-2 flex items-center gap-1">
+                                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                            Arbeitsblätter ({fileInfo.worksheets.length}):
+                                          </p>
+                                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                            {fileInfo.worksheets.map((worksheet: any, wsIndex: number) => (
+                                              <div key={wsIndex} className="bg-white/60 rounded-md p-2 border border-gray-200/40">
+                                                <div className="flex items-center gap-2 text-sm">
+                                                  <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                                                  <span className="font-medium text-gray-800">
+                                                    {typeof worksheet === 'string' ? worksheet : worksheet.name}
+                                                  </span>
+                                                </div>
+                                                {typeof worksheet === 'object' && (worksheet.rowCount || worksheet.columnCount) && (
+                                                  <div className="flex gap-2 mt-1">
+                                                    {worksheet.rowCount && (
+                                                      <Badge variant="secondary" className="text-xs">
+                                                        {worksheet.rowCount} Zeilen
+                                                      </Badge>
+                                                    )}
+                                                    {worksheet.columnCount && (
+                                                      <Badge variant="outline" className="text-xs">
+                                                        {worksheet.columnCount} Spalten
+                                                      </Badge>
+                                                    )}
+                                                  </div>
+                                                )}
+                                              </div>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
                               </div>
-                            ))}
-                          </div>
+                            ));
+                          })()}
                         </div>
                       )}
                     </CardContent>
