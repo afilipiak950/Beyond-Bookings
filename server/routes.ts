@@ -515,6 +515,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // PowerPoint upload configuration
+  const powerpointUpload = multer({
+    dest: 'uploads/',
+    limits: {
+      fileSize: 50 * 1024 * 1024, // 50MB limit
+    },
+    fileFilter: (req, file, cb) => {
+      const allowedTypes = [
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        'application/vnd.ms-powerpoint'
+      ];
+      if (allowedTypes.includes(file.mimetype)) {
+        cb(null, true);
+      } else {
+        cb(new Error('Only PowerPoint files are allowed'));
+      }
+    }
+  });
+
   // OCR Analysis routes
   app.get('/api/ocr-analyses', requireAuth, async (req: any, res) => {
     try {
@@ -677,21 +696,52 @@ ${analyses.filter(a => a?.insights).map(analysis =>
   // AI Assistant Chat endpoint with deep functionality
   // PowerPoint export endpoint
   // PowerPoint import route
-  app.post("/api/import/powerpoint", requireAuth, upload.single('pptx'), async (req: Request, res: Response) => {
+  app.post("/api/import/powerpoint", requireAuth, powerpointUpload.single('pptx'), async (req: Request, res: Response) => {
     try {
+      console.log('PowerPoint import request received');
+      console.log('Request file:', req.file);
+      
       if (!req.file) {
+        console.log('No file uploaded');
         return res.status(400).json({ error: "No PowerPoint file uploaded" });
       }
+
+      console.log('File details:', {
+        filename: req.file.filename,
+        originalname: req.file.originalname,
+        mimetype: req.file.mimetype,
+        size: req.file.size,
+        path: req.file.path
+      });
 
       const importedPresentation = await powerpointImporter.importPresentation(req.file.path);
       
       // Clean up uploaded file
-      await fs.unlink(req.file.path);
+      try {
+        await fs.unlink(req.file.path);
+        console.log('Cleaned up uploaded file');
+      } catch (cleanupError) {
+        console.warn('Failed to cleanup uploaded file:', cleanupError);
+      }
       
+      console.log('Sending imported presentation:', importedPresentation);
       res.json(importedPresentation);
     } catch (error) {
       console.error("PowerPoint import error:", error);
-      res.status(500).json({ error: "Failed to import PowerPoint presentation" });
+      
+      // Clean up uploaded file even on error
+      if (req.file) {
+        try {
+          await fs.unlink(req.file.path);
+        } catch (cleanupError) {
+          console.warn('Failed to cleanup uploaded file on error:', cleanupError);
+        }
+      }
+      
+      res.status(500).json({ 
+        error: "Failed to import PowerPoint presentation", 
+        details: error.message 
+      });
     }
   });
 

@@ -86,24 +86,38 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
   const [slides, setSlides] = useState([
     {
       id: 1,
-      title: "Hotel Pricing Analysis",
-      content: "Professional pricing analysis for " + workflowData.hotelName,
+      title: "Hotel Präsentation",
+      content: "Professionelle Hotelanalyse und Preisgestaltung für " + (workflowData.hotelName || "Hotel"),
       type: "title",
-      backgroundGradient: "from-blue-600 to-purple-600"
+      backgroundGradient: "from-blue-600 to-purple-800"
     },
     {
       id: 2,
-      title: "Hotel Overview",
-      content: `${workflowData.hotelName} • ${workflowData.stars} Stars • ${workflowData.roomCount} Rooms`,
+      title: "Übersicht",
+      content: `${workflowData.hotelName || "Hotel"} • ${workflowData.stars || 0} Sterne • ${workflowData.roomCount || 0} Zimmer`,
       type: "content",
-      backgroundGradient: "from-emerald-500 to-teal-500"
+      backgroundGradient: "from-emerald-600 to-blue-700"
     },
     {
       id: 3,
-      title: "Pricing Analysis",
-      content: "Cost comparison and savings analysis",
+      title: "Preisanalyse",
+      content: "Detaillierte Kostenaufstellung und Gewinnmarge",
       type: "content",
-      backgroundGradient: "from-orange-500 to-red-500"
+      backgroundGradient: "from-orange-600 to-red-700"
+    },
+    {
+      id: 4,
+      title: "Empfehlungen",
+      content: "Strategische Empfehlungen für optimale Preisgestaltung",
+      type: "content",
+      backgroundGradient: "from-purple-600 to-pink-700"
+    },
+    {
+      id: 5,
+      title: "Vielen Dank",
+      content: "Kontakt und weitere Informationen",
+      type: "closing",
+      backgroundGradient: "from-gray-600 to-blue-800"
     }
   ]);
   
@@ -146,6 +160,8 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
   const importFromPowerPoint = async (file: File) => {
     setIsImporting(true);
     try {
+      console.log('Starting PowerPoint import for file:', file.name);
+      
       const formData = new FormData();
       formData.append('pptx', file);
       
@@ -154,28 +170,35 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
         body: formData
       });
       
+      console.log('Import response status:', response.status);
+      
       if (!response.ok) {
-        throw new Error('Import failed');
+        const errorText = await response.text();
+        console.error('Import response error:', errorText);
+        throw new Error(`Import failed: ${response.status} ${errorText}`);
       }
       
       const importedPresentation = await response.json();
+      console.log('Imported presentation:', importedPresentation);
       
       // Replace current slides with imported ones
       const importedSlides = importedPresentation.slides.map((slide: any, index: number) => ({
         id: index + 1,
-        title: slide.title,
-        content: slide.content,
-        type: slide.type,
-        backgroundGradient: slide.backgroundGradient
+        title: slide.title || `Slide ${index + 1}`,
+        content: slide.content || 'Inhalt bearbeiten',
+        type: slide.type || 'content',
+        backgroundGradient: slide.backgroundGradient || 'from-gray-600 to-gray-800'
       }));
+      
+      console.log('Processed slides:', importedSlides);
       
       setSlides(importedSlides);
       setCurrentSlide(0);
       
-      alert(`Successfully imported ${importedSlides.length} slides from PowerPoint presentation!`);
+      alert(`Erfolgreich ${importedSlides.length} Folien aus PowerPoint-Präsentation importiert!\n\nTitel: ${importedPresentation.title}`);
     } catch (error) {
       console.error('PowerPoint import error:', error);
-      alert('Failed to import PowerPoint presentation. Please try again.');
+      alert(`Fehler beim Importieren der PowerPoint-Präsentation: ${error.message}\n\nBitte versuchen Sie es erneut oder wenden Sie sich an den Support.`);
     } finally {
       setIsImporting(false);
     }
@@ -184,12 +207,25 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
   const handleFileImport = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      if (file.type === 'application/vnd.openxmlformats-officedocument.presentationml.presentation') {
+      console.log('Selected file:', file.name, file.type, file.size);
+      
+      // Check file extension and type
+      const validTypes = [
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        'application/vnd.ms-powerpoint'
+      ];
+      
+      const isValidType = validTypes.includes(file.type) || file.name.toLowerCase().endsWith('.pptx');
+      
+      if (isValidType) {
         importFromPowerPoint(file);
       } else {
-        alert('Please select a PowerPoint file (.pptx)');
+        alert(`Bitte wählen Sie eine PowerPoint-Datei (.pptx) aus. Ausgewählte Datei: ${file.name} (${file.type})`);
       }
     }
+    
+    // Reset input to allow same file selection
+    event.target.value = '';
   };
 
   const exportToPowerPoint = async () => {
