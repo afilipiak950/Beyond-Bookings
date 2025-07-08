@@ -1077,7 +1077,28 @@ export default function Workflow() {
                         <span className="text-xs font-bold text-indigo-800 break-words">Vorsteuer Tripz Provision</span>
                       </div>
                       <div className="text-2xl font-black text-indigo-900">
-                        4,366
+                        {(() => {
+                          // Get actual input values from form
+                          const projectCosts = workflowData.projectCosts || 0;
+                          const stars = workflowData.stars || 0;
+                          const actualPrice = workflowData.averagePrice || 0;
+                          
+                          // Calculate hotel voucher value based on stars
+                          const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30;
+                          
+                          // Formula: Vertragsvolumen Estimate = (Project Costs / Hotel Voucher Value) × (Actual Price × 0.75) × 1.1
+                          const vertragsvolumenEstimate = (projectCosts / voucherValue) * (actualPrice * 0.75) * 1.1;
+                          
+                          // Vorsteuer Tripz Provision = (Vertragsvolumen Estimate × 0.19) × 0.23
+                          const vorsteuerTripz = (vertragsvolumenEstimate * 0.19) * 0.23;
+                          
+                          // Show 0 when no meaningful input data
+                          if (projectCosts === 0 && actualPrice === 0) {
+                            return '-';
+                          }
+                          
+                          return Math.round(vorsteuerTripz).toLocaleString('de-DE');
+                        })()}
                       </div>
                     </div>
                   </div>
@@ -1092,7 +1113,34 @@ export default function Workflow() {
                         <span className="text-xs font-bold text-pink-800 break-words">Netto Steuerzahlung bei Vermietpreis</span>
                       </div>
                       <div className="text-2xl font-black text-pink-900">
-                        16,716
+                        {(() => {
+                          // Get actual input values from form
+                          const projectCosts = workflowData.projectCosts || 0;
+                          const stars = workflowData.stars || 0;
+                          const actualPrice = workflowData.averagePrice || 0;
+                          
+                          // Calculate hotel voucher value based on stars
+                          const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30;
+                          
+                          // Formula: Vertragsvolumen Estimate = (Project Costs / Hotel Voucher Value) × (Actual Price × 0.75) × 1.1
+                          const vertragsvolumenEstimate = (projectCosts / voucherValue) * (actualPrice * 0.75) * 1.1;
+                          
+                          // Vorsteuer Produktkauf = (Projektkosten × 1.19) - Projektkosten
+                          const vorsteuerProdukt = (projectCosts * 1.19) - projectCosts;
+                          
+                          // Vorsteuer Tripz Provision = (Vertragsvolumen Estimate × 0.19) × 0.23
+                          const vorsteuerTripz = (vertragsvolumenEstimate * 0.19) * 0.23;
+                          
+                          // Netto Steuerzahlung = Vorsteuer Produktkauf - Vorsteuer Tripz Provision
+                          const nettoSteuerzahlung = vorsteuerProdukt - vorsteuerTripz;
+                          
+                          // Show 0 when no meaningful input data
+                          if (projectCosts === 0 && actualPrice === 0) {
+                            return '-';
+                          }
+                          
+                          return Math.round(nettoSteuerzahlung).toLocaleString('de-DE');
+                        })()}
                       </div>
                     </div>
                   </div>
