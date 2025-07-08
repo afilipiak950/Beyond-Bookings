@@ -316,7 +316,7 @@ export default function DocumentAnalysis() {
 
         {/* Results Tabs */}
         <Tabs defaultValue="uploads" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 bg-white/50 backdrop-blur-sm">
+          <TabsList className="grid w-full grid-cols-4 bg-white/50 backdrop-blur-sm">
             <TabsTrigger value="uploads" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
               Uploads ({uploadsArray.length})
@@ -324,6 +324,10 @@ export default function DocumentAnalysis() {
             <TabsTrigger value="analyses" className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
               Analysen ({analysesArray.length})
+            </TabsTrigger>
+            <TabsTrigger value="ocr" className="flex items-center gap-2">
+              <Zap className="h-4 w-4" />
+              Mistral OCR ({analysesArray.filter(a => a.analysisType === 'mistral_ocr').length})
             </TabsTrigger>
             <TabsTrigger value="insights" className="flex items-center gap-2">
               <Brain className="h-4 w-4" />
@@ -565,6 +569,228 @@ export default function DocumentAnalysis() {
                           )}
                         </div>
                       </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* OCR Results Tab */}
+          <TabsContent value="ocr" className="space-y-4">
+            {analysesLoading ? (
+              <div className="text-center py-12">
+                <RefreshCw className="h-8 w-8 animate-spin mx-auto text-blue-600" />
+                <p className="mt-4 text-gray-600">Lade OCR-Ergebnisse...</p>
+              </div>
+            ) : analysesArray.filter(a => a.analysisType === 'mistral_ocr').length === 0 ? (
+              <Card className="bg-gradient-to-br from-gray-50/60 to-white/40 backdrop-blur-xl border border-gray-200/40">
+                <CardContent className="py-12 text-center">
+                  <Zap className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-lg font-medium text-gray-600">Noch keine OCR-Ergebnisse verfügbar</p>
+                  <p className="text-gray-500 mt-2">
+                    OCR-Ergebnisse werden automatisch erstellt, sobald Bilddateien oder PDFs hochgeladen werden.
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-4">
+                {analysesArray.filter(a => a.analysisType === 'mistral_ocr').map((analysis: DocumentAnalysis) => (
+                  <Card key={analysis.id} className="relative overflow-hidden bg-gradient-to-br from-white/60 to-emerald-50/30 backdrop-blur-xl border border-emerald-200/40">
+                    <CardContent className="p-6">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <div className="p-2 bg-emerald-100 dark:bg-emerald-800 rounded-lg">
+                              <Zap className="h-5 w-5 text-emerald-600" />
+                            </div>
+                            <div>
+                              <h3 className="font-semibold text-lg text-gray-900">{analysis.fileName}</h3>
+                              <p className="text-sm text-gray-600">
+                                Mistral OCR • {analysis.processingTime ? `${analysis.processingTime}ms` : 'Verarbeitung'}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="secondary" className="bg-emerald-100 text-emerald-800">
+                            {analysis.status}
+                          </Badge>
+                          <Badge variant="outline">
+                            {analysis.insights?.textQuality?.confidence ? 
+                              `${Math.round(analysis.insights.textQuality.confidence * 100)}% Genauigkeit` : 
+                              'OCR'
+                            }
+                          </Badge>
+                        </div>
+                      </div>
+
+                      {/* OCR Text Quality Indicators */}
+                      {analysis.insights?.textQuality && (
+                        <div className="mb-4 p-4 bg-white/50 rounded-lg">
+                          <h4 className="font-medium text-gray-900 mb-2">Textqualität</h4>
+                          <div className="grid grid-cols-3 gap-4 text-sm">
+                            <div className="text-center">
+                              <div className="text-2xl font-bold text-emerald-600">
+                                {Math.round(analysis.insights.textQuality.confidence * 100)}%
+                              </div>
+                              <div className="text-gray-600">Genauigkeit</div>
+                            </div>
+                            <div className="text-center">
+                              <div className="text-lg font-semibold text-blue-600 capitalize">
+                                {analysis.insights.textQuality.readability}
+                              </div>
+                              <div className="text-gray-600">Lesbarkeit</div>
+                            </div>
+                            <div className="text-center">
+                              <div className="text-lg font-semibold text-purple-600 capitalize">
+                                {analysis.insights.textQuality.completeness}
+                              </div>
+                              <div className="text-gray-600">Vollständigkeit</div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Extracted Text Display */}
+                      {analysis.extractedData?.text && (
+                        <div className="mb-4">
+                          <h4 className="font-medium text-gray-900 mb-2">Extrahierter Text</h4>
+                          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 max-h-60 overflow-y-auto">
+                            <pre className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap font-mono">
+                              {analysis.extractedData.text}
+                            </pre>
+                          </div>
+                          <p className="text-xs text-gray-500 mt-2">
+                            {analysis.extractedData.text.length} Zeichen extrahiert
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Price Data Display */}
+                      {analysis.priceData && analysis.priceData.length > 0 && (
+                        <div className="mb-4">
+                          <h4 className="font-medium text-gray-900 mb-2">Gefundene Preise</h4>
+                          <div className="grid gap-2">
+                            {analysis.priceData.map((price: any, idx: number) => (
+                              <div key={idx} className="flex justify-between items-center bg-green-50 dark:bg-green-900/20 p-2 rounded">
+                                <span className="text-sm text-gray-700 dark:text-gray-300">{price.context}</span>
+                                <span className="font-semibold text-green-600">
+                                  {price.value} {price.currency}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Comprehensive AI Insights */}
+                      {analysis.insights && (
+                        <div className="space-y-3">
+                          <h4 className="font-medium text-gray-900">Detaillierte KI-Analyse</h4>
+                          
+                          {/* Document Type */}
+                          {analysis.insights.documentType && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm text-gray-600">Dokumenttyp:</span>
+                              <Badge variant="outline" className="bg-blue-50 text-blue-800">
+                                {analysis.insights.documentType}
+                              </Badge>
+                            </div>
+                          )}
+
+                          {/* Key Findings */}
+                          {analysis.insights.keyFindings && analysis.insights.keyFindings.length > 0 && (
+                            <div>
+                              <p className="text-sm font-medium text-gray-800 mb-2">Wichtige Erkenntnisse:</p>
+                              <ul className="space-y-1">
+                                {analysis.insights.keyFindings.map((finding: string, idx: number) => (
+                                  <li key={idx} className="text-sm text-gray-700 flex items-start">
+                                    <span className="text-emerald-500 mr-2 flex-shrink-0">•</span>
+                                    <span>{finding}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+
+                          {/* Business Insights */}
+                          {analysis.insights.businessInsights && analysis.insights.businessInsights.length > 0 && (
+                            <div>
+                              <p className="text-sm font-medium text-gray-800 mb-2">Geschäftseinblicke:</p>
+                              <ul className="space-y-1">
+                                {analysis.insights.businessInsights.map((insight: string, idx: number) => (
+                                  <li key={idx} className="text-sm text-gray-700 flex items-start bg-blue-50 dark:bg-blue-900/20 p-2 rounded">
+                                    <span className="text-blue-500 mr-2 flex-shrink-0">💡</span>
+                                    <span>{insight}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+
+                          {/* Extracted Entities */}
+                          {analysis.insights.extractedEntities && (
+                            <div>
+                              <p className="text-sm font-medium text-gray-800 mb-2">Extrahierte Entitäten:</p>
+                              <div className="grid grid-cols-2 gap-2 text-xs">
+                                {analysis.insights.extractedEntities.dates && analysis.insights.extractedEntities.dates.length > 0 && (
+                                  <div className="bg-white/50 p-2 rounded">
+                                    <strong>Daten:</strong> {analysis.insights.extractedEntities.dates.join(', ')}
+                                  </div>
+                                )}
+                                {analysis.insights.extractedEntities.companies && analysis.insights.extractedEntities.companies.length > 0 && (
+                                  <div className="bg-white/50 p-2 rounded">
+                                    <strong>Unternehmen:</strong> {analysis.insights.extractedEntities.companies.join(', ')}
+                                  </div>
+                                )}
+                                {analysis.insights.extractedEntities.emails && analysis.insights.extractedEntities.emails.length > 0 && (
+                                  <div className="bg-white/50 p-2 rounded">
+                                    <strong>E-Mails:</strong> {analysis.insights.extractedEntities.emails.join(', ')}
+                                  </div>
+                                )}
+                                {analysis.insights.extractedEntities.phoneNumbers && analysis.insights.extractedEntities.phoneNumbers.length > 0 && (
+                                  <div className="bg-white/50 p-2 rounded">
+                                    <strong>Telefon:</strong> {analysis.insights.extractedEntities.phoneNumbers.join(', ')}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Recommendations */}
+                          {analysis.insights.recommendations && analysis.insights.recommendations.length > 0 && (
+                            <div>
+                              <p className="text-sm font-medium text-gray-800 mb-2">Empfehlungen:</p>
+                              <ul className="space-y-1">
+                                {analysis.insights.recommendations.map((rec: string, idx: number) => (
+                                  <li key={idx} className="text-sm text-gray-700 flex items-start bg-green-50 dark:bg-green-900/20 p-2 rounded">
+                                    <span className="text-green-500 mr-2 flex-shrink-0">→</span>
+                                    <span>{rec}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Processing Metadata */}
+                      {analysis.extractedData?.ocrMetadata && (
+                        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                          <h4 className="font-medium text-gray-900 mb-2">Verarbeitungsdetails</h4>
+                          <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
+                            <div>Verarbeitungszeit: {analysis.processingTime || 0}ms</div>
+                            <div>Methode: {analysis.extractedData.ocrMetadata.processingMethod || 'Mistral OCR'}</div>
+                            {analysis.extractedData.ocrMetadata.imageWidth && (
+                              <div>Bildgröße: {analysis.extractedData.ocrMetadata.imageWidth}x{analysis.extractedData.ocrMetadata.imageHeight}</div>
+                            )}
+                            {analysis.extractedData.ocrMetadata.pageCount && (
+                              <div>Seiten: {analysis.extractedData.ocrMetadata.pageCount}</div>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 ))}

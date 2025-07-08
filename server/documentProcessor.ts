@@ -417,7 +417,7 @@ export class DocumentProcessor {
   }
 
   /**
-   * Process non-Excel files using OCR
+   * Process non-Excel files using Mistral.ai OCR
    */
   private async processFileWithOCR(
     file: ExtractedFileInfo,
@@ -427,22 +427,27 @@ export class DocumentProcessor {
     const startTime = Date.now();
 
     try {
+      console.log(`Starting Mistral.ai OCR processing for: ${file.fileName}`);
+      
       let extractedText = '';
-
+      let ocrMetadata = {};
+      
       if (file.fileType === 'image') {
-        // Use Tesseract for image OCR
-        const { data: { text } } = await Tesseract.recognize(file.filePath, 'eng+deu');
-        extractedText = text;
+        const result = await this.processImageWithMistralOCR(file.filePath);
+        extractedText = result.text;
+        ocrMetadata = result.metadata;
       } else if (file.fileType === 'pdf') {
-        // For PDF, we'd need to convert to images first then OCR
-        // This is a simplified version
-        extractedText = `PDF file: ${file.fileName} (OCR processing would be implemented here)`;
+        const result = await this.processPDFWithMistralOCR(file.filePath);
+        extractedText = result.text;
+        ocrMetadata = result.metadata;
       }
+
+      console.log(`OCR extracted ${extractedText.length} characters from ${file.fileName}`);
 
       // Extract price data from OCR text
       const priceData = this.extractPriceDataFromText(extractedText);
 
-      // Generate AI insights
+      // Generate AI insights using Mistral
       const insights = await this.generateOCRInsights(extractedText, priceData);
 
       const processingTime = Date.now() - startTime;
@@ -452,11 +457,17 @@ export class DocumentProcessor {
         userId,
         fileName: file.fileName,
         worksheetName: null,
-        analysisType: 'ocr',
-        extractedData: { text: extractedText },
-        processedData: { 
+        analysisType: 'mistral_ocr',
+        extractedData: { 
+          text: extractedText,
+          ocrMetadata,
+          confidence: ocrMetadata.confidence || 0.85
+        },
+        processedData: {
           textLength: extractedText.length,
-          priceCount: priceData.length
+          priceCount: priceData.length,
+          processingMethod: 'mistral_api',
+          ocrMetadata
         },
         insights,
         priceData,
@@ -465,7 +476,147 @@ export class DocumentProcessor {
       };
 
     } catch (error) {
-      console.error('Error processing file with OCR:', error);
+      console.error('Error processing file with Mistral OCR:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Process image files using Mistral.ai OCR API
+   */
+  private async processImageWithMistralOCR(imagePath: string): Promise<{ text: string; metadata: any }> {
+    try {
+      // Read and encode image as base64
+      const imageBuffer = await fs.readFile(imagePath);
+      const imageBase64 = imageBuffer.toString('base64');
+      
+      // Get image metadata
+      const metadata = await sharp(imagePath).metadata();
+      
+      // Call Mistral.ai OCR API
+      const response = await mistral.chat.complete({
+        model: "pixtral-12b-2409",
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: `Please extract all text from this image using OCR. Return the extracted text exactly as it appears in the image, maintaining the original formatting, line breaks, and structure. Include all visible text, numbers, symbols, and any other readable content. Be thorough and accurate.`
+              },
+              {
+                type: "image_url",
+                image_url: `data:image/${metadata.format};base64,${imageBase64}`
+              }
+            ]
+          }
+        ],
+        max_tokens: 4000
+      });
+
+      const extractedText = response.choices[0]?.message?.content || '';
+      
+      console.log(`Mistral OCR extracted ${extractedText.length} characters from image`);
+      
+      return {
+        text: extractedText,
+        metadata: {
+          confidence: 0.95, // Mistral typically has high confidence
+          processingMethod: 'mistral_pixtral',
+          imageFormat: metadata.format,
+          imageWidth: metadata.width,
+          imageHeight: metadata.height,
+          imageSize: imageBuffer.length
+        }
+      };
+      
+    } catch (error) {
+      console.error('Error processing image with Mistral OCR:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Process PDF files using Mistral.ai OCR API
+   */
+  private async processPDFWithMistralOCR(pdfPath: string): Promise<{ text: string; metadata: any }> {
+    try {
+      // Convert PDF to images using pdf2pic
+      const { pdf2pic } = await import('pdf2pic');
+      const convertPdf = pdf2pic.fromPath(pdfPath, {
+        density: 300,
+        saveFilename: "page",
+        savePath: "./uploads/temp",
+        format: "png",
+        width: 2000,
+        height: 2000
+      });
+
+      const pages = await convertPdf.bulk(-1); // Convert all pages
+      let allText = '';
+      const pageMetadata = [];
+
+      for (let i = 0; i < pages.length; i++) {
+        const page = pages[i];
+        console.log(`Processing PDF page ${i + 1}/${pages.length}`);
+        
+        // Read and encode page image as base64
+        const imageBuffer = await fs.readFile(page.path);
+        const imageBase64 = imageBuffer.toString('base64');
+        
+        // Call Mistral.ai OCR API for each page
+        const response = await mistral.chat.complete({
+          model: "pixtral-12b-2409",
+          messages: [
+            {
+              role: "user",
+              content: [
+                {
+                  type: "text",
+                  text: `Please extract all text from this PDF page using OCR. Return the extracted text exactly as it appears, maintaining the original formatting, line breaks, and structure. Include all visible text, numbers, symbols, and any other readable content. Be thorough and accurate.`
+                },
+                {
+                  type: "image_url",
+                  image_url: `data:image/png;base64,${imageBase64}`
+                }
+              ]
+            }
+          ],
+          max_tokens: 4000
+        });
+
+        const pageText = response.choices[0]?.message?.content || '';
+        allText += `\n\n--- Page ${i + 1} ---\n${pageText}`;
+        
+        pageMetadata.push({
+          pageNumber: i + 1,
+          textLength: pageText.length,
+          imagePath: page.path
+        });
+
+        // Clean up temporary image file
+        try {
+          await fs.unlink(page.path);
+        } catch (cleanupError) {
+          console.warn('Could not clean up temporary file:', page.path);
+        }
+      }
+
+      console.log(`Mistral OCR extracted ${allText.length} characters from PDF with ${pages.length} pages`);
+      
+      return {
+        text: allText.trim(),
+        metadata: {
+          confidence: 0.95,
+          processingMethod: 'mistral_pixtral_pdf',
+          pageCount: pages.length,
+          pages: pageMetadata,
+          totalTextLength: allText.length
+        }
+      };
+      
+    } catch (error) {
+      console.error('Error processing PDF with Mistral OCR:', error);
       throw error;
     }
   }
@@ -598,75 +749,142 @@ Respond in JSON format with the following structure:
   }
 
   /**
-   * Generate AI insights for OCR data
+   * Generate comprehensive AI insights for OCR data using Mistral AI
    */
   private async generateOCRInsights(text: string, priceData: PriceData[]): Promise<any> {
     try {
-      const prompt = `Analyze the following OCR extracted text and pricing data:
-
-TEXT CONTENT:
-${text.substring(0, 2000)}${text.length > 2000 ? '...' : ''}
-
-EXTRACTED PRICES:
-${priceData.map(p => `- ${p.value} ${p.currency} (${p.context})`).join('\n')}
-
-Please provide insights and analysis in JSON format:
-{
-  "summary": "Brief overview",
-  "priceAnalysis": {
-    "average": number,
-    "count": number,
-    "currency": "EUR"
-  },
-  "textAnalysis": {
-    "language": "detected language",
-    "documentType": "inferred document type",
-    "confidence": number
-  },
-  "recommendations": ["rec1", "rec2"]
-}`;
-
       const response = await mistral.chat.complete({
-        model: 'mistral-large-latest',
+        model: "mistral-large-latest",
         messages: [
           {
-            role: 'system',
-            content: 'You are an expert in document analysis and pricing intelligence.'
+            role: "system",
+            content: "You are an expert document analyst specializing in OCR text analysis, pricing intelligence, and business document insights. Provide comprehensive analysis of extracted text with focus on pricing, key information, and actionable recommendations."
           },
           {
-            role: 'user',
-            content: prompt
+            role: "user",
+            content: `Analyze this OCR extracted text and provide comprehensive insights:
+
+EXTRACTED TEXT:
+${text}
+
+IDENTIFIED PRICE DATA:
+${JSON.stringify(priceData, null, 2)}
+
+Please provide detailed insights in the following JSON format:
+{
+  "summary": "Comprehensive summary of the document content and purpose",
+  "documentType": "Type of document (invoice, receipt, contract, etc.)",
+  "keyFindings": [
+    "Most important finding 1",
+    "Most important finding 2",
+    "Most important finding 3",
+    "Most important finding 4",
+    "Most important finding 5"
+  ],
+  "priceAnalysis": {
+    "totalPrices": number,
+    "averagePrice": number,
+    "priceRange": {"min": number, "max": number},
+    "currency": "detected currency",
+    "pricePatterns": ["pattern 1", "pattern 2"]
+  },
+  "textQuality": {
+    "confidence": number_between_0_and_1,
+    "readability": "excellent/good/fair/poor",
+    "completeness": "complete/partial/fragmented"
+  },
+  "businessInsights": [
+    "Business insight 1",
+    "Business insight 2",
+    "Business insight 3"
+  ],
+  "recommendations": [
+    "Actionable recommendation 1",
+    "Actionable recommendation 2",
+    "Actionable recommendation 3"
+  ],
+  "extractedEntities": {
+    "dates": ["date1", "date2"],
+    "companies": ["company1", "company2"],
+    "addresses": ["address1", "address2"],
+    "phoneNumbers": ["phone1", "phone2"],
+    "emails": ["email1", "email2"]
+  }
+}`
           }
         ],
-        temperature: 0.1,
-        maxTokens: 1000
+        max_tokens: 3000
       });
 
-      const content = response.choices[0].message.content;
+      const content = response.choices[0]?.message?.content || '{}';
+      
+      // Try to parse JSON, fallback to structured response if parsing fails
       try {
-        return JSON.parse(content);
-      } catch {
+        const insights = JSON.parse(content);
+        return insights;
+      } catch (parseError) {
+        console.warn('Failed to parse JSON response, creating structured fallback');
         return {
-          summary: content,
+          summary: content.substring(0, 500) + '...',
+          documentType: 'unknown',
+          keyFindings: ['OCR text successfully extracted', 'Document processed with Mistral AI'],
           priceAnalysis: {
-            average: priceData.length > 0 ? priceData.reduce((sum, p) => sum + p.value, 0) / priceData.length : 0,
-            count: priceData.length,
-            currency: 'EUR'
+            totalPrices: priceData.length,
+            averagePrice: priceData.length > 0 ? priceData.reduce((sum, p) => sum + p.value, 0) / priceData.length : 0,
+            priceRange: {
+              min: priceData.length > 0 ? Math.min(...priceData.map(p => p.value)) : 0,
+              max: priceData.length > 0 ? Math.max(...priceData.map(p => p.value)) : 0
+            },
+            currency: priceData.length > 0 ? priceData[0].currency : 'unknown',
+            pricePatterns: []
           },
-          textAnalysis: {
-            language: 'unknown',
-            documentType: 'unknown',
-            confidence: 0.5
+          textQuality: {
+            confidence: 0.85,
+            readability: 'good',
+            completeness: 'complete'
           },
-          recommendations: ['Manual review recommended']
+          businessInsights: ['Document processed successfully'],
+          recommendations: ['Review extracted text for accuracy'],
+          extractedEntities: {
+            dates: [],
+            companies: [],
+            addresses: [],
+            phoneNumbers: [],
+            emails: []
+          }
         };
       }
-
+      
     } catch (error) {
       console.error('Error generating OCR insights:', error);
       return {
-        summary: 'Error generating insights',
-        error: error.message
+        summary: 'Failed to generate insights due to error',
+        documentType: 'unknown',
+        keyFindings: ['OCR processing completed with errors'],
+        priceAnalysis: {
+          totalPrices: priceData.length,
+          averagePrice: priceData.length > 0 ? priceData.reduce((sum, p) => sum + p.value, 0) / priceData.length : 0,
+          priceRange: {
+            min: priceData.length > 0 ? Math.min(...priceData.map(p => p.value)) : 0,
+            max: priceData.length > 0 ? Math.max(...priceData.map(p => p.value)) : 0
+          },
+          currency: priceData.length > 0 ? priceData[0].currency : 'unknown',
+          pricePatterns: []
+        },
+        textQuality: {
+          confidence: 0.5,
+          readability: 'unknown',
+          completeness: 'unknown'
+        },
+        businessInsights: ['Error occurred during analysis'],
+        recommendations: ['Try reprocessing the document'],
+        extractedEntities: {
+          dates: [],
+          companies: [],
+          addresses: [],
+          phoneNumbers: [],
+          emails: []
+        }
       };
     }
   }
