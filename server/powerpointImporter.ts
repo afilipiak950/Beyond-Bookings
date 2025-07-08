@@ -218,89 +218,40 @@ export class PowerPointImporter {
   private extractTextFromSlide(parsed: any): string[] {
     const textElements: string[] = [];
     
-    // Extract text using a more targeted approach
-    const extractTextRecursive = (obj: any): void => {
-      if (Array.isArray(obj)) {
-        obj.forEach(item => extractTextRecursive(item));
+    // Recursive function to extract text from nested XML structure
+    const extractText = (obj: any, path: string = '') => {
+      if (typeof obj === 'string' && obj.trim()) {
+        textElements.push(obj.trim());
+      } else if (Array.isArray(obj)) {
+        obj.forEach((item, index) => extractText(item, `${path}[${index}]`));
       } else if (obj && typeof obj === 'object') {
-        // Look specifically for PowerPoint text nodes
-        if (obj.t && typeof obj.t === 'string') {
-          const text = obj.t.trim();
-          if (text && this.isActualText(text)) {
-            textElements.push(text);
-          }
+        // Look for text nodes in PowerPoint XML structure
+        if (obj.t && typeof obj.t === 'string' && obj.t.trim()) {
+          textElements.push(obj.t.trim());
+        } else if (obj['#text'] && typeof obj['#text'] === 'string' && obj['#text'].trim()) {
+          textElements.push(obj['#text'].trim());
         }
         
         // Continue recursively through all properties
         Object.keys(obj).forEach(key => {
-          if (!key.startsWith('@')) {
-            extractTextRecursive(obj[key]);
+          if (key !== '@_' && key !== '#text') {
+            extractText(obj[key], `${path}.${key}`);
           }
         });
       }
     };
     
-    extractTextRecursive(parsed);
+    extractText(parsed);
     
-    // Remove duplicates and sort by relevance
-    const uniqueTexts = [...new Set(textElements)];
-    return uniqueTexts.filter(text => this.isActualText(text)).sort((a, b) => {
-      // Prioritize longer meaningful text
-      const aScore = this.getTextRelevanceScore(a);
-      const bScore = this.getTextRelevanceScore(b);
-      return bScore - aScore;
-    });
+    // Filter out empty strings, duplicates, and common PowerPoint metadata
+    return textElements.filter((text, index, arr) => 
+      text.length > 0 && 
+      arr.indexOf(text) === index &&
+      !text.match(/^[0-9]+$/) && // Remove pure numbers
+      !text.match(/^[a-zA-Z]$/) && // Remove single letters
+      text.length > 2 // Remove very short strings
+    );
   }
-  
-  private isActualText(text: string): boolean {
-    if (!text || text.length < 2) return false;
-    
-    // Must contain actual words (letters, not just numbers/symbols)
-    if (!/[a-zA-ZäöüßÄÖÜ]{2,}/.test(text)) return false;
-    
-    // Exclude common PowerPoint artifacts
-    const excludePatterns = [
-      /^\{[0-9A-F-]{8,}\}$/, // GUIDs with braces
-      /^[0-9A-F-]{8,}$/, // GUIDs without braces
-      /^[0-9]+$/, // Pure numbers
-      /^[0-9A-F]{6,}$/, // Hex codes
-      /^-?[0-9]{4,}$/, // Large numbers
-      /^[0-9]{1,2}\.[0-9]$/, // Version numbers
-      /^[a-z]{2}-[A-Z]{2}$/, // Language codes
-      /^(rect|horz|ctr|auto|yes|no|tx1|UTF-8|black|white|Arial|Gadugi|Avenir|tl|tr|bl|br)$/, // XML values
-      /^\+mn-/, // Font references
-      /^rId[0-9]+$/, // Reference IDs
-      /^Picture [0-9]+$/, // Picture references
-      /^Grafik [0-9]+$/, // German picture references
-      /^Textplatzhalter [0-9]+$/, // German placeholders
-      /Automatisch generierte Beschreibung/, // Auto-generated descriptions
-      /Kostenlose Logo Space Template-Vorlage/, // Template references
-      /Ein Bild, das.*enthält/ // German image descriptions
-    ];
-    
-    return !excludePatterns.some(pattern => pattern.test(text)) && text.length < 200;
-  }
-  
-  private getTextRelevanceScore(text: string): number {
-    let score = 0;
-    
-    // Longer text gets higher score
-    score += text.length;
-    
-    // German/English words get bonus
-    if (/[äöüß]/.test(text)) score += 50; // German umlauts
-    if (/\b[A-Za-z]{3,}\b/.test(text)) score += 30; // English words
-    
-    // Common German words get extra bonus
-    const germanWords = ['und', 'der', 'die', 'das', 'mit', 'für', 'von', 'zu', 'auf', 'bei', 'nach', 'über', 'unter', 'durch', 'Hotel', 'Zimmer', 'Gäste', 'Rechnungen', 'bezahlen', 'Willkommen', 'Nachname', 'Titel'];
-    germanWords.forEach(word => {
-      if (text.includes(word)) score += 100;
-    });
-    
-    return score;
-  }
-
-
 
   private categorizeSlideContent(textContent: string[], slideNumber: number): {
     title: string;
