@@ -521,7 +521,7 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
           </div>
 
           <div className="flex-1 bg-gray-100 p-1 overflow-auto animate-slideInFromBottom">
-            <div className="max-w-md mx-auto px-6">
+            <div className="max-w-sm mx-auto px-8">
               <div
                 className={`aspect-[3/2] bg-gradient-to-r ${slides[currentSlide]?.backgroundGradient} rounded-lg shadow-lg p-2 text-white relative overflow-hidden cursor-text animate-slideReveal animate-morphGradient transition-all duration-500`}
                 onClick={() => setIsEditing(!isEditing)}
