@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   Upload, 
@@ -134,10 +134,7 @@ export default function DocumentAnalysis() {
 
   const ocrMutation = useMutation({
     mutationFn: async ({ uploadId, fileName }: { uploadId: number; fileName: string }) => {
-      return await apiRequest('/api/process-ocr', {
-        method: 'POST',
-        body: { uploadId, fileName }
-      });
+      return await apiRequest('/api/process-ocr', 'POST', { uploadId, fileName });
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/document-analyses'] });
@@ -157,12 +154,85 @@ export default function DocumentAnalysis() {
     }
   });
 
+  const massOcrMutation = useMutation({
+    mutationFn: async (files: { uploadId: number; fileName: string }[]) => {
+      const results = [];
+      for (const file of files) {
+        try {
+          const result = await apiRequest('/api/process-ocr', 'POST', file);
+          results.push({ ...file, success: true, result });
+        } catch (error) {
+          results.push({ ...file, success: false, error: error.message });
+        }
+      }
+      return results;
+    },
+    onSuccess: (results) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/document-analyses'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/document-uploads'] });
+      
+      const successful = results.filter(r => r.success).length;
+      const failed = results.filter(r => !r.success).length;
+      
+      toast({
+        title: "Mass-OCR abgeschlossen",
+        description: `${successful} Dateien erfolgreich verarbeitet${failed > 0 ? `, ${failed} fehlgeschlagen` : ''}.`,
+      });
+    },
+    onError: (error) => {
+      console.error('Mass OCR error:', error);
+      toast({
+        title: "Mass-OCR-Fehler",
+        description: "Fehler bei der Mass-OCR-Verarbeitung.",
+        variant: "destructive",
+      });
+    }
+  });
+
   const processWithOCR = (uploadId: number, fileName: string) => {
     toast({
       title: "OCR wird verarbeitet",
       description: `Starte OCR-Verarbeitung für ${fileName}...`,
     });
     ocrMutation.mutate({ uploadId, fileName });
+  };
+
+  const processAllWithOCR = () => {
+    // Collect all files that haven't been processed yet
+    const filesToProcess = [];
+    
+    uploadsArray.forEach(upload => {
+      if (upload.extractedFiles && Array.isArray(upload.extractedFiles)) {
+        upload.extractedFiles.forEach((fileInfo: any) => {
+          // Check if file hasn't been processed with OCR yet
+          const hasOcrAnalysis = analysesArray.some((analysis: any) => 
+            analysis.fileName === fileInfo.fileName && analysis.analysisType === 'mistral_ocr'
+          );
+          
+          if (!hasOcrAnalysis && ['pdf', 'image', 'excel'].includes(fileInfo.fileType)) {
+            filesToProcess.push({
+              uploadId: upload.id,
+              fileName: fileInfo.fileName
+            });
+          }
+        });
+      }
+    });
+    
+    if (filesToProcess.length === 0) {
+      toast({
+        title: "Keine Dateien zu verarbeiten",
+        description: "Alle unterstützten Dateien wurden bereits mit OCR verarbeitet.",
+      });
+      return;
+    }
+    
+    toast({
+      title: "Mass-OCR gestartet",
+      description: `Verarbeite ${filesToProcess.length} Dateien mit OCR...`,
+    });
+    
+    massOcrMutation.mutate(filesToProcess);
   };
 
   // Dropzone configuration
@@ -387,24 +457,44 @@ export default function DocumentAnalysis() {
 
         {/* Results Tabs */}
         <Tabs defaultValue="uploads" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 bg-white/50 backdrop-blur-sm">
-            <TabsTrigger value="uploads" className="flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              Uploads ({uploadsArray.length})
-            </TabsTrigger>
-            <TabsTrigger value="analyses" className="flex items-center gap-2">
-              <BarChart3 className="h-4 w-4" />
-              Analysen ({analysesArray.length})
-            </TabsTrigger>
-            <TabsTrigger value="ocr" className="flex items-center gap-2">
-              <Zap className="h-4 w-4" />
-              Mistral OCR ({analysesArray.filter(a => a.analysisType === 'mistral_ocr').length})
-            </TabsTrigger>
-            <TabsTrigger value="insights" className="flex items-center gap-2">
-              <Brain className="h-4 w-4" />
-              KI-Erkenntnisse ({insightsArray.length})
-            </TabsTrigger>
-          </TabsList>
+          <div className="flex items-center justify-between mb-6">
+            <TabsList className="grid w-full grid-cols-4 bg-white/50 backdrop-blur-sm">
+              <TabsTrigger value="uploads" className="flex items-center gap-2">
+                <FileText className="h-4 w-4" />
+                Uploads ({uploadsArray.length})
+              </TabsTrigger>
+              <TabsTrigger value="analyses" className="flex items-center gap-2">
+                <BarChart3 className="h-4 w-4" />
+                Analysen ({analysesArray.length})
+              </TabsTrigger>
+              <TabsTrigger value="ocr" className="flex items-center gap-2">
+                <Zap className="h-4 w-4" />
+                Mistral OCR ({analysesArray.filter(a => a.analysisType === 'mistral_ocr').length})
+              </TabsTrigger>
+              <TabsTrigger value="insights" className="flex items-center gap-2">
+                <Brain className="h-4 w-4" />
+                KI-Erkenntnisse ({insightsArray.length})
+              </TabsTrigger>
+            </TabsList>
+            
+            <Button
+              onClick={processAllWithOCR}
+              disabled={massOcrMutation.isPending}
+              className="ml-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white"
+            >
+              {massOcrMutation.isPending ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Verarbeite...
+                </>
+              ) : (
+                <>
+                  <Zap className="h-4 w-4 mr-2" />
+                  Alle OCR verarbeiten
+                </>
+              )}
+            </Button>
+          </div>
 
           {/* Uploads Tab */}
           <TabsContent value="uploads" className="space-y-4">
@@ -993,6 +1083,9 @@ export default function DocumentAnalysis() {
                 </div>
               </div>
             </DialogTitle>
+            <DialogDescription>
+              Zeigt den extrahierten Text und die AI-Analyse für das ausgewählte Dokument an.
+            </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-6">

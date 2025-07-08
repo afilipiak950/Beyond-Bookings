@@ -1688,7 +1688,7 @@ Return a JSON response with: documentType, keyFindings[], businessInsights[], re
         insights: aiInsights,
         priceData,
         status: 'completed',
-        processingTime: Date.now()
+        processingTime: 5000
       });
       
       // Update the file's OCR processed status
