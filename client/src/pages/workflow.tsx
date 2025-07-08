@@ -477,9 +477,14 @@ export default function Workflow() {
   // Get calculation ID from URL parameters
   const calculationId = new URLSearchParams(window.location.search).get('id');
   
+  // Debug: Log the calculation ID
+  useEffect(() => {
+    console.log("Calculation ID from URL:", calculationId);
+  }, [calculationId]);
+  
   // Load existing calculation if ID is provided
-  const { data: existingCalculation } = useQuery({
-    queryKey: ["/api/pricing-calculations", calculationId],
+  const { data: existingCalculation, isLoading: isLoadingCalculation } = useQuery({
+    queryKey: [`/api/pricing-calculations/${calculationId}`],
     enabled: !!calculationId,
     retry: false,
   });
@@ -487,13 +492,15 @@ export default function Workflow() {
   // Load existing calculation data into workflow
   useEffect(() => {
     if (existingCalculation) {
+      console.log("Loading calculation data:", existingCalculation);
       const calculation = existingCalculation as PricingCalculation;
+      
       setWorkflowData(prev => ({
         ...prev,
         hotelName: calculation.hotelName || "",
         stars: calculation.stars || 0,
         roomCount: calculation.roomCount || 0,
-        occupancyRate: calculation.occupancyRate || 70,
+        occupancyRate: parseFloat(calculation.occupancyRate || "70"),
         averagePrice: parseFloat(calculation.averagePrice || "0"),
         projectCosts: parseFloat(calculation.operationalCosts || "0"),
         hotelVoucherValue: parseFloat(calculation.voucherPrice || "0"),
