@@ -79,12 +79,26 @@ export class PowerPointImporter {
         return aNum - bNum;
       });
 
+      console.log(`Found ${slideFiles.length} slides in PowerPoint file`);
+
       for (const slideFile of slideFiles) {
         const slideContent = await zipContent.file(slideFile)?.async('string');
         if (slideContent) {
           const slide = await this.parseSlide(slideContent, slides.length + 1);
           slides.push(slide);
         }
+      }
+
+      // If no slides were found, create a fallback slide
+      if (slides.length === 0) {
+        console.warn('No slides found in PowerPoint file, creating fallback slide');
+        slides.push({
+          id: 'slide-1',
+          title: 'Imported Presentation',
+          content: 'Content could not be extracted from the PowerPoint file. Please edit this slide to add your content.',
+          type: 'title',
+          backgroundGradient: 'from-blue-600 to-purple-800'
+        });
       }
 
       // Extract presentation title from core properties or first slide
@@ -97,7 +111,21 @@ export class PowerPointImporter {
       };
     } catch (error) {
       console.error('Error importing PowerPoint:', error);
-      throw new Error(`Failed to import PowerPoint presentation: ${error.message}`);
+      
+      // Return a fallback presentation if import fails completely
+      return {
+        slides: [
+          {
+            id: 'slide-1',
+            title: 'Import Failed',
+            content: 'The PowerPoint file could not be imported. Please check the file format and try again.',
+            type: 'title',
+            backgroundGradient: 'from-red-600 to-orange-600'
+          }
+        ],
+        title: 'Import Failed',
+        metadata: {}
+      };
     }
   }
 
@@ -160,11 +188,17 @@ export class PowerPointImporter {
     const textElements: string[] = [];
     
     // Recursive function to extract text from nested XML structure
-    const extractText = (obj: any) => {
+    const extractText = (obj: any, depth: number = 0) => {
+      // Prevent infinite recursion
+      if (depth > 20) return;
+      
       if (typeof obj === 'string') {
-        textElements.push(obj.trim());
+        const trimmed = obj.trim();
+        if (trimmed.length > 0) {
+          textElements.push(trimmed);
+        }
       } else if (Array.isArray(obj)) {
-        obj.forEach(item => extractText(item));
+        obj.forEach(item => extractText(item, depth + 1));
       } else if (obj && typeof obj === 'object') {
         // Look for text nodes in PowerPoint XML structure
         if (obj.t || obj['#text']) {
@@ -175,16 +209,23 @@ export class PowerPointImporter {
         }
         
         // Continue recursively through all properties
-        Object.values(obj).forEach(value => extractText(value));
+        Object.values(obj).forEach(value => extractText(value, depth + 1));
       }
     };
     
-    extractText(parsed);
+    try {
+      extractText(parsed);
+    } catch (error) {
+      console.warn('Error extracting text from slide:', error);
+      return ['Slide content could not be extracted'];
+    }
     
-    // Filter out empty strings and duplicates
-    return textElements.filter((text, index, arr) => 
-      text.length > 0 && arr.indexOf(text) === index
-    );
+    // Filter out empty strings and duplicates, limit to reasonable length
+    return textElements
+      .filter((text, index, arr) => 
+        text.length > 0 && text.length < 1000 && arr.indexOf(text) === index
+      )
+      .slice(0, 50); // Limit to first 50 text elements
   }
 
   private categorizeSlideContent(textContent: string[], slideNumber: number): {
