@@ -877,8 +877,8 @@ export default function Workflow() {
               </CardHeader>
 
               <CardContent className="relative space-y-6">
-                {/* Excel Column Calculation Grid - 4 Columns in First Row */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 px-4 sm:px-0">
+                {/* Excel Column Calculation Grid - 5 Columns in First Row */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 px-4 sm:px-0">
                   
                   {/* Column C - Finanzierung (Förderung) für Hotelbett */}
                   <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-blue-50/80 to-indigo-50/60 backdrop-blur-sm border border-blue-200/50 p-4 shadow-md h-24">
@@ -1004,7 +1004,7 @@ export default function Workflow() {
                 </div>
 
                 {/* Second Row - Continuing Excel Columns */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 px-4 sm:px-0">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 px-4 sm:px-0">
                   
                   {/* Column H - Marge */}
                   <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-green-50/80 to-emerald-50/60 backdrop-blur-sm border border-green-200/50 p-4 shadow-md h-24">
@@ -1190,32 +1190,7 @@ export default function Workflow() {
 
                 </div>
 
-                {/* Excel Data Overview */}
-                <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-slate-50/80 to-gray-50/60 backdrop-blur-sm border border-slate-200/50 p-4 shadow-md">
-                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-slate-400 to-gray-400 animate-pulse"></div>
-                  <div className="absolute top-2 right-2 w-2 h-2 bg-slate-400 rounded-full animate-ping opacity-50"></div>
-                  <div className="flex flex-col space-y-3">
-                    <div className="flex items-center space-x-2">
-                      <div className="w-2 h-2 bg-slate-500 rounded-full animate-bounce flex-shrink-0"></div>
-                      <span className="text-sm font-bold text-slate-800 break-words">Excel Columns Mapping</span>
-                    </div>
-                    <div className="text-sm text-slate-700 bg-slate-100/50 p-3 rounded-lg grid grid-cols-1 md:grid-cols-2 gap-2">
-                      <div className="space-y-1">
-                        <div><span className="font-semibold text-blue-700">Row 1 (4 columns):</span> Zielpreis, Laufzeit, Gesamtkosten, Profit, Gesamtvertragswert</div>
-                        <div><span className="font-semibold text-green-700">H:</span> Marge</div>
-                        <div><span className="font-semibold text-teal-700">I:</span> Vorsteuer Produktkauf</div>
-                        <div><span className="font-semibold text-indigo-700">J:</span> Vorsteuer Tripz Provision</div>
-                      </div>
-                      <div className="space-y-1">
-                        <div><span className="font-semibold text-pink-700">K:</span> Netto Steuerzahlung bei Vermietpreis</div>
-                        <div><span className="font-semibold text-yellow-700">Profit Margin:</span> Profit Margin % (Creative calculation)</div>
-                      </div>
-                    </div>
-                    <div className="text-xs text-slate-600 bg-blue-50/50 p-2 rounded border-l-4 border-blue-400">
-                      <strong>Note:</strong> Values are taken directly from Excel screenshot Row 1. Empty cells are marked with "-".
-                    </div>
-                  </div>
-                </div>
+
               </CardContent>
             </Card>
           </>
