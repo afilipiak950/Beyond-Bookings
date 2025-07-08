@@ -5,6 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   Upload, 
   FileText, 
@@ -67,6 +69,8 @@ export default function DocumentAnalysis() {
   const queryClient = useQueryClient();
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState<any>(null);
+  const [documentDialogOpen, setDocumentDialogOpen] = useState(false);
 
   // Queries
   const { data: uploads = [], isLoading: uploadsLoading } = useQuery({
@@ -171,6 +175,30 @@ export default function DocumentAnalysis() {
   const totalPricePoints = analysesArray.reduce((sum: number, analysis: DocumentAnalysis) => 
     sum + (analysis.priceData?.length || 0), 0
   );
+
+  // Handle document click to show OCR content
+  const handleDocumentClick = (fileInfo: any) => {
+    // Find the corresponding analysis with OCR content
+    const ocrAnalysis = analysesArray.find(
+      (analysis: any) => analysis.fileName === fileInfo.fileName && analysis.analysisType === 'mistral_ocr'
+    );
+    
+    if (ocrAnalysis) {
+      setSelectedDocument({
+        ...fileInfo,
+        ocrContent: ocrAnalysis.extractedData?.text || 'Kein OCR-Inhalt verfügbar',
+        insights: ocrAnalysis.insights,
+        priceData: ocrAnalysis.priceData
+      });
+      setDocumentDialogOpen(true);
+    } else {
+      toast({
+        title: "Kein OCR-Inhalt gefunden",
+        description: "Für dieses Dokument ist noch kein OCR-Inhalt verfügbar.",
+        variant: "destructive"
+      });
+    }
+  };
 
   const averagePrice = analysesArray.length > 0 
     ? analysesArray.reduce((sum: number, analysis: DocumentAnalysis) => {
@@ -433,7 +461,11 @@ export default function DocumentAnalysis() {
                                 {/* Files in this folder */}
                                 <div className="space-y-3 pl-4">
                                   {files.map((fileInfo: any, index: number) => (
-                                    <div key={index} className="bg-gray-50/50 rounded-lg p-4 border border-gray-200/30">
+                                    <div 
+                                      key={index} 
+                                      className="bg-gray-50/50 rounded-lg p-4 border border-gray-200/30 cursor-pointer hover:bg-gray-100/70 hover:border-gray-300/50 transition-all duration-200 hover:shadow-md"
+                                      onClick={() => handleDocumentClick(fileInfo)}
+                                    >
                                       <div className="flex items-center gap-3 mb-2">
                                         {fileInfo.fileType === 'excel' ? (
                                           <FileSpreadsheet className="h-5 w-5 text-green-600 flex-shrink-0" />
@@ -447,6 +479,12 @@ export default function DocumentAnalysis() {
                                           <p className="text-sm text-gray-600">
                                             {fileInfo.fileType?.toUpperCase() || 'UNKNOWN'} • {fileInfo.originalPath || fileInfo.fileName}
                                           </p>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                          <Badge variant="secondary" className="text-xs">
+                                            OCR verfügbar
+                                          </Badge>
+                                          <Eye className="h-4 w-4 text-blue-600" />
                                         </div>
                                       </div>
                                       
@@ -862,6 +900,131 @@ export default function DocumentAnalysis() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Document OCR Content Dialog */}
+      <Dialog open={documentDialogOpen} onOpenChange={setDocumentDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3 text-xl font-bold">
+              <div className="p-2 bg-blue-100 dark:bg-blue-800 rounded-lg">
+                <FileText className="h-6 w-6 text-blue-600" />
+              </div>
+              <div>
+                <div className="text-gray-900 dark:text-white">{selectedDocument?.fileName}</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400 font-normal">
+                  OCR-Inhalt • {selectedDocument?.fileType?.toUpperCase() || 'DOKUMENT'}
+                </div>
+              </div>
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-6">
+            {/* OCR Content */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <h3 className="font-semibold text-gray-900 dark:text-white">Extrahierter Text</h3>
+                <Badge variant="outline" className="text-xs">
+                  {selectedDocument?.ocrContent?.length || 0} Zeichen
+                </Badge>
+              </div>
+              
+              <ScrollArea className="h-60 w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+                <div className="p-4">
+                  <pre className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap font-mono leading-relaxed">
+                    {selectedDocument?.ocrContent || 'Kein OCR-Inhalt verfügbar'}
+                  </pre>
+                </div>
+              </ScrollArea>
+            </div>
+
+            {/* Price Data */}
+            {selectedDocument?.priceData && selectedDocument.priceData.length > 0 && (
+              <div className="space-y-3">
+                <h3 className="font-semibold text-gray-900 dark:text-white">Gefundene Preise</h3>
+                <div className="grid gap-2 max-h-32 overflow-y-auto">
+                  {selectedDocument.priceData.map((price: any, idx: number) => (
+                    <div key={idx} className="flex justify-between items-center bg-green-50 dark:bg-green-900/20 p-3 rounded-lg border border-green-200 dark:border-green-800">
+                      <span className="text-sm text-gray-700 dark:text-gray-300">{price.context}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-green-600">
+                          {price.value} {price.currency}
+                        </span>
+                        <Badge variant="secondary" className="text-xs">
+                          {Math.round(price.confidence * 100)}% Genauigkeit
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* AI Insights */}
+            {selectedDocument?.insights && (
+              <div className="space-y-3">
+                <h3 className="font-semibold text-gray-900 dark:text-white">KI-Erkenntnisse</h3>
+                <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
+                  
+                  {/* Document Type */}
+                  {selectedDocument.insights.documentType && (
+                    <div className="mb-3">
+                      <span className="text-sm text-gray-600 dark:text-gray-400">Dokumenttyp:</span>
+                      <Badge variant="outline" className="ml-2 bg-blue-100 text-blue-800">
+                        {selectedDocument.insights.documentType}
+                      </Badge>
+                    </div>
+                  )}
+
+                  {/* Key Findings */}
+                  {selectedDocument.insights.keyFindings && selectedDocument.insights.keyFindings.length > 0 && (
+                    <div className="mb-3">
+                      <p className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">Wichtige Erkenntnisse:</p>
+                      <ul className="space-y-1">
+                        {selectedDocument.insights.keyFindings.map((finding: string, idx: number) => (
+                          <li key={idx} className="text-sm text-gray-700 dark:text-gray-300 flex items-start">
+                            <span className="text-blue-500 mr-2 flex-shrink-0">•</span>
+                            <span>{finding}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Business Insights */}
+                  {selectedDocument.insights.businessInsights && selectedDocument.insights.businessInsights.length > 0 && (
+                    <div className="mb-3">
+                      <p className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">Geschäftseinblicke:</p>
+                      <ul className="space-y-1">
+                        {selectedDocument.insights.businessInsights.map((insight: string, idx: number) => (
+                          <li key={idx} className="text-sm text-gray-700 dark:text-gray-300 flex items-start bg-white dark:bg-gray-800 p-2 rounded">
+                            <span className="text-blue-500 mr-2 flex-shrink-0">💡</span>
+                            <span>{insight}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Recommendations */}
+                  {selectedDocument.insights.recommendations && selectedDocument.insights.recommendations.length > 0 && (
+                    <div>
+                      <p className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">Empfehlungen:</p>
+                      <ul className="space-y-1">
+                        {selectedDocument.insights.recommendations.map((rec: string, idx: number) => (
+                          <li key={idx} className="text-sm text-gray-700 dark:text-gray-300 flex items-start bg-green-50 dark:bg-green-900/20 p-2 rounded">
+                            <span className="text-green-500 mr-2 flex-shrink-0">→</span>
+                            <span>{rec}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }
