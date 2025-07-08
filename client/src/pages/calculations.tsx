@@ -50,9 +50,7 @@ export default function Calculations() {
   // Delete mutation
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      await apiRequest(`/api/pricing-calculations/${id}`, {
-        method: "DELETE",
-      });
+      await apiRequest(`/api/pricing-calculations/${id}`, "DELETE");
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/pricing-calculations"] });
