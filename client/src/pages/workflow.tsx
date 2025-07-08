@@ -521,9 +521,9 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
           </div>
 
           <div className="flex-1 bg-gray-100 p-1 overflow-auto animate-slideInFromBottom">
-            <div className="max-w-2xl mx-auto">
+            <div className="max-w-md mx-auto px-6">
               <div
-                className={`aspect-[4/3] bg-gradient-to-r ${slides[currentSlide]?.backgroundGradient} rounded-lg shadow-lg p-4 text-white relative overflow-hidden cursor-text animate-slideReveal animate-morphGradient transition-all duration-500`}
+                className={`aspect-[3/2] bg-gradient-to-r ${slides[currentSlide]?.backgroundGradient} rounded-lg shadow-lg p-2 text-white relative overflow-hidden cursor-text animate-slideReveal animate-morphGradient transition-all duration-500`}
                 onClick={() => setIsEditing(!isEditing)}
                 onDrop={(e) => {
                   e.preventDefault();
@@ -538,7 +538,7 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
                 
                 <div className="relative z-10 h-full flex flex-col justify-center">
                   {isEditing ? (
-                    <div className="space-y-4 animate-slideInFromTop">
+                    <div className="space-y-2 animate-slideInFromTop">
                       <Input
                         value={editingText || slides[currentSlide]?.title}
                         onChange={(e) => setEditingText(e.target.value)}
@@ -552,20 +552,20 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
                             setIsEditing(false);
                           }
                         }}
-                        className="bg-white/20 text-white placeholder-white/60 border-white/30 text-lg font-bold text-center backdrop-blur-sm"
+                        className="bg-white/20 text-white placeholder-white/60 border-white/30 text-sm font-bold text-center backdrop-blur-sm"
                         placeholder="Slide Title"
                       />
                       <Textarea
                         value={slides[currentSlide]?.content}
                         onChange={(e) => updateSlide(currentSlide, { content: e.target.value })}
-                        className="bg-white/20 text-white placeholder-white/60 border-white/30 text-sm text-center min-h-16 backdrop-blur-sm"
+                        className="bg-white/20 text-white placeholder-white/60 border-white/30 text-xs text-center min-h-12 backdrop-blur-sm"
                         placeholder="Slide Content"
                       />
                     </div>
                   ) : (
-                    <div className="text-center space-y-2 animate-slideTrail">
-                      <h1 className="text-lg font-bold mb-2 drop-shadow-lg">{slides[currentSlide]?.title}</h1>
-                      <p className="text-sm opacity-90 drop-shadow-md">{slides[currentSlide]?.content}</p>
+                    <div className="text-center space-y-1 animate-slideTrail">
+                      <h1 className="text-sm font-bold mb-1 drop-shadow-lg">{slides[currentSlide]?.title}</h1>
+                      <p className="text-xs opacity-90 drop-shadow-md">{slides[currentSlide]?.content}</p>
                     </div>
                   )}
                 </div>
