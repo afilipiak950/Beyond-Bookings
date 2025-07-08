@@ -1019,21 +1019,15 @@ export default function Workflow() {
                           // Formula: Vertragsvolumen Estimate = (Project Costs / Hotel Voucher Value) × (Actual Price × 0.75) × 1.1
                           const vertragsvolumenEstimate = (projectCosts / voucherValue) * (actualPrice * 0.75) * 1.1;
                           
-                          // Column F: Profit inkl. Mehrverkauf = Vertragsvolumen Estimate - Project Costs
-                          const profitInklMehrverkauf = vertragsvolumenEstimate - projectCosts;
-                          
-                          // Column G: Gesamtvertragswert (brutto) = Vertragsvolumen Estimate
-                          const gesamtvertragswert = vertragsvolumenEstimate;
-                          
-                          // Marge = (Profit inkl. Mehrverkauf / Gesamtvertragswert (brutto)) × 100
-                          const marge = gesamtvertragswert > 0 ? (profitInklMehrverkauf / gesamtvertragswert) * 100 : 0;
+                          // Marge = Vertragsvolumen Estimate - Projektkosten brutto (absolute difference)
+                          const marge = vertragsvolumenEstimate - projectCosts;
                           
                           // Show 0 when no meaningful input data
                           if (projectCosts === 0 && actualPrice === 0) {
                             return '-';
                           }
                           
-                          return Math.round(marge) + '%';
+                          return Math.round(marge).toLocaleString('de-DE');
                         })()}
                       </div>
                     </div>
