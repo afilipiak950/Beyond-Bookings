@@ -886,7 +886,10 @@ export default function Workflow() {
                         <span className="text-xs font-bold text-orange-800 break-words">Gesamtkosten über Laufzeit</span>
                       </div>
                       <div className="text-2xl font-black text-orange-900">
-                        3,741
+                        {workflowData.projectCosts ? 
+                          Number(workflowData.projectCosts).toLocaleString('de-DE', {minimumFractionDigits: 0, maximumFractionDigits: 0}) :
+                          '3,741'
+                        }
                       </div>
                     </div>
                   </div>
