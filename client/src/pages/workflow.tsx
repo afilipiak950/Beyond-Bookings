@@ -2019,7 +2019,7 @@ export default function Workflow() {
               {/* Header Section */}
               <div className="mb-8 relative">
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-teal-500 to-green-500 rounded-full animate-gradient-x"></div>
-                <div className="pt-6">
+                <div className="pt-6 text-center">
                   <h1 className="text-4xl font-bold text-blue-600 mb-2 animate-fade-in">
                     bebo convert - Währungsrechner
                   </h1>
