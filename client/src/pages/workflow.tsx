@@ -86,27 +86,6 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
   const [slides, setSlides] = useState([
     {
       id: 1,
-      title: "Hotel Pricing Analysis",
-      content: "Professional pricing analysis for " + workflowData.hotelName,
-      type: "title",
-      backgroundGradient: "from-blue-600 to-purple-600"
-    },
-    {
-      id: 2,
-      title: "Hotel Overview",
-      content: `${workflowData.hotelName} • ${workflowData.stars} Stars • ${workflowData.roomCount} Rooms`,
-      type: "content",
-      backgroundGradient: "from-emerald-500 to-teal-500"
-    },
-    {
-      id: 3,
-      title: "Pricing Analysis",
-      content: "Cost comparison and savings analysis",
-      type: "content",
-      backgroundGradient: "from-orange-500 to-red-500"
-    },
-    {
-      id: 4,
       title: "bebo convert - Währungsrechner",
       content: "detailed_currency_calculator",
       type: "bebo-calculator",
