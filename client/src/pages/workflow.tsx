@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ChevronRight, Calculator, BarChart3, FileText, Check, ArrowLeft, ArrowRight, Edit3, Brain, Gift, TrendingDown, Star } from "lucide-react";
+import { ChevronRight, Calculator, BarChart3, FileText, Check, ArrowLeft, ArrowRight, Edit3, Brain, Gift, TrendingDown, Star, Download, Plus, Eye, Trash2, Copy, Move, Image, Type, BarChart, PieChart, Presentation } from "lucide-react";
 import { useLocation, useRoute } from "wouter";
 import AppLayout from "@/components/layout/app-layout";
 
@@ -80,6 +80,381 @@ const steps = [
     color: "purple"
   }
 ];
+
+// PowerPoint Editor Component
+const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData; onBack: () => void }) => {
+  const [slides, setSlides] = useState([
+    {
+      id: 1,
+      title: "Hotel Pricing Analysis",
+      content: "Professional pricing analysis for " + workflowData.hotelName,
+      type: "title",
+      backgroundGradient: "from-blue-600 to-purple-600"
+    },
+    {
+      id: 2,
+      title: "Hotel Overview",
+      content: `${workflowData.hotelName} • ${workflowData.stars} Stars • ${workflowData.roomCount} Rooms`,
+      type: "content",
+      backgroundGradient: "from-emerald-500 to-teal-500"
+    },
+    {
+      id: 3,
+      title: "Pricing Analysis",
+      content: "Cost comparison and savings analysis",
+      type: "content",
+      backgroundGradient: "from-orange-500 to-red-500"
+    }
+  ]);
+  
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingText, setEditingText] = useState("");
+
+  const addSlide = () => {
+    const newSlide = {
+      id: slides.length + 1,
+      title: "New Slide",
+      content: "Click to edit content",
+      type: "content",
+      backgroundGradient: "from-gray-400 to-gray-600"
+    };
+    setSlides([...slides, newSlide]);
+    setCurrentSlide(slides.length);
+  };
+
+  const updateSlide = (index: number, updates: any) => {
+    const newSlides = [...slides];
+    newSlides[index] = { ...newSlides[index], ...updates };
+    setSlides(newSlides);
+  };
+
+  const deleteSlide = (index: number) => {
+    if (slides.length > 1) {
+      const newSlides = slides.filter((_, i) => i !== index);
+      setSlides(newSlides);
+      if (currentSlide >= newSlides.length) {
+        setCurrentSlide(newSlides.length - 1);
+      }
+    }
+  };
+
+  const exportToPowerPoint = async () => {
+    try {
+      const response = await fetch('/api/export/powerpoint', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          slides: slides.map(slide => ({
+            title: slide.title,
+            content: slide.content,
+            type: slide.type,
+            backgroundGradient: slide.backgroundGradient
+          })),
+          workflowData: workflowData
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Export failed');
+      }
+      
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${workflowData.hotelName}_Presentation.pptx`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('PowerPoint export error:', error);
+      alert('Failed to export PowerPoint presentation. Please try again.');
+    }
+  };
+
+  return (
+    <div className="h-screen bg-gradient-to-br from-slate-50 to-gray-100 overflow-hidden">
+      <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 p-4 shadow-lg animate-slideInFromTop">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4 animate-slideInFromLeft">
+            <Button variant="ghost" onClick={onBack} className="flex items-center space-x-2 hover:bg-gray-100 transition-colors">
+              <ArrowLeft className="h-4 w-4" />
+              <span>Back</span>
+            </Button>
+            <div className="h-6 w-px bg-gray-300"></div>
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl flex items-center justify-center animate-morphGradient">
+                <Presentation className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <h1 className="text-lg font-bold text-gray-900">PowerPoint Editor</h1>
+                <p className="text-sm text-gray-600">Create professional presentations</p>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center space-x-3 animate-slideInFromRight">
+            <Button onClick={addSlide} className="bg-emerald-600 hover:bg-emerald-700 text-white transform hover:scale-105 transition-all duration-300">
+              <Plus className="h-4 w-4 mr-2" />
+              New Slide
+            </Button>
+            <Button onClick={exportToPowerPoint} className="bg-blue-600 hover:bg-blue-700 text-white transform hover:scale-105 transition-all duration-300">
+              <Download className="h-4 w-4 mr-2" />
+              Export PPTX
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex h-full">
+        <div className="w-80 bg-white/90 backdrop-blur-sm border-r border-gray-200/50 p-6 overflow-y-auto animate-slideInFromLeft">
+          <div className="space-y-6">
+            <div className="space-y-4">
+              <h2 className="text-xl font-bold text-gray-900 animate-slideTrail">Data Summary</h2>
+              
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-4 border border-blue-200/50">
+                <h3 className="font-semibold text-blue-900 mb-3 flex items-center">
+                  <Calculator className="h-4 w-4 mr-2" />
+                  Step 1: Calculator
+                </h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Hotel Name:</span>
+                    <span className="font-medium text-blue-900">{workflowData.hotelName}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Stars:</span>
+                    <span className="font-medium text-blue-900">{workflowData.stars} ⭐</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Room Count:</span>
+                    <span className="font-medium text-blue-900">{workflowData.roomCount}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Average Price:</span>
+                    <span className="font-medium text-blue-900">€{workflowData.averagePrice}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Project Costs:</span>
+                    <span className="font-medium text-blue-900">€{workflowData.projectCosts?.toLocaleString('de-DE')}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-r from-emerald-50 to-green-50 rounded-2xl p-4 border border-emerald-200/50">
+                <h3 className="font-semibold text-emerald-900 mb-3 flex items-center">
+                  <BarChart3 className="h-4 w-4 mr-2" />
+                  Step 2: Comparison
+                </h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Voucher Value:</span>
+                    <span className="font-medium text-emerald-900">
+                      €{workflowData.stars === 5 ? 50 : workflowData.stars === 4 ? 40 : workflowData.stars === 3 ? 30 : 30}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Room Nights:</span>
+                    <span className="font-medium text-emerald-900">
+                      {Math.round((workflowData.projectCosts || 0) / (workflowData.stars === 5 ? 50 : workflowData.stars === 4 ? 40 : workflowData.stars === 3 ? 30 : 30))}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Cost Advantage:</span>
+                    <span className="font-medium text-emerald-900">
+                      €{(() => {
+                        const projectCosts = workflowData.projectCosts || 0;
+                        const voucherValue = workflowData.stars === 5 ? 50 : workflowData.stars === 4 ? 40 : workflowData.stars === 3 ? 30 : 30;
+                        const roomnights = Math.round(projectCosts / voucherValue);
+                        const beyondBookingsCosts = roomnights * 17;
+                        const steuerbelastung = 1800.90;
+                        const nettoKosten = projectCosts / 1.19;
+                        const steuervorteil = nettoKosten * 0.19;
+                        const gesamtkosten = beyondBookingsCosts + steuerbelastung - steuervorteil;
+                        const advantage = projectCosts - gesamtkosten;
+                        return advantage.toLocaleString('de-DE');
+                      })()}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-4 border border-purple-200/50">
+                <h3 className="font-semibold text-purple-900 mb-3">Drag to Slides</h3>
+                <div className="space-y-2">
+                  {[
+                    { label: "Hotel Name", value: workflowData.hotelName },
+                    { label: "Star Rating", value: workflowData.stars + " Stars" },
+                    { label: "Room Count", value: workflowData.roomCount },
+                    { label: "Average Price", value: "€" + workflowData.averagePrice },
+                    { label: "Project Costs", value: "€" + workflowData.projectCosts?.toLocaleString('de-DE') },
+                    { label: "Cost Advantage", value: "€" + (() => {
+                      const projectCosts = workflowData.projectCosts || 0;
+                      const voucherValue = workflowData.stars === 5 ? 50 : workflowData.stars === 4 ? 40 : workflowData.stars === 3 ? 30 : 30;
+                      const roomnights = Math.round(projectCosts / voucherValue);
+                      const beyondBookingsCosts = roomnights * 17;
+                      const steuerbelastung = 1800.90;
+                      const nettoKosten = projectCosts / 1.19;
+                      const steuervorteil = nettoKosten * 0.19;
+                      const gesamtkosten = beyondBookingsCosts + steuerbelastung - steuervorteil;
+                      const advantage = projectCosts - gesamtkosten;
+                      return advantage.toLocaleString('de-DE');
+                    })()}
+                  ].map((field, index) => (
+                    <div
+                      key={index}
+                      className="p-3 bg-white/80 rounded-xl border border-purple-200/50 cursor-move hover:bg-purple-50/50 transition-colors"
+                      draggable
+                      onDragStart={(e) => {
+                        e.dataTransfer.setData('text/plain', field.value);
+                      }}
+                    >
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium text-purple-900">{field.label}</span>
+                        <span className="text-xs text-purple-600">{field.value}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex-1 flex flex-col animate-slideInFromRight">
+          <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 p-4 animate-slideInFromTop">
+            <div className="flex space-x-3 overflow-x-auto">
+              {slides.map((slide, index) => (
+                <div
+                  key={slide.id}
+                  className={`relative group min-w-32 h-20 rounded-xl cursor-pointer transition-all duration-300 ${
+                    currentSlide === index
+                      ? 'ring-4 ring-blue-500 shadow-lg scale-105'
+                      : 'hover:shadow-md hover:scale-102'
+                  }`}
+                  onClick={() => setCurrentSlide(index)}
+                >
+                  <div className={`w-full h-full rounded-xl bg-gradient-to-r ${slide.backgroundGradient} p-2 flex flex-col justify-center`}>
+                    <div className="text-white text-xs font-semibold truncate">{slide.title}</div>
+                    <div className="text-white/80 text-xs truncate">{slide.content}</div>
+                  </div>
+                  <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      className="w-6 h-6 p-0"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteSlide(index);
+                      }}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
+                  <div className="absolute bottom-1 right-1 text-white/60 text-xs">
+                    {index + 1}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex-1 bg-gray-100 p-8 overflow-auto animate-slideInFromBottom">
+            <div className="max-w-4xl mx-auto">
+              <div
+                className={`aspect-[16/9] bg-gradient-to-r ${slides[currentSlide]?.backgroundGradient} rounded-2xl shadow-2xl p-12 text-white relative overflow-hidden cursor-text animate-slideReveal animate-morphGradient transition-all duration-500`}
+                onClick={() => setIsEditing(!isEditing)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  const data = e.dataTransfer.getData('text/plain');
+                  updateSlide(currentSlide, { content: slides[currentSlide].content + ' ' + data });
+                }}
+                onDragOver={(e) => e.preventDefault()}
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent"></div>
+                <div className="absolute top-4 right-4 w-24 h-24 bg-white/10 rounded-full blur-xl animate-pulse"></div>
+                <div className="absolute bottom-8 left-8 w-16 h-16 bg-white/5 rounded-full blur-lg animate-pulse"></div>
+                
+                <div className="relative z-10 h-full flex flex-col justify-center">
+                  {isEditing ? (
+                    <div className="space-y-4 animate-slideInFromTop">
+                      <Input
+                        value={editingText || slides[currentSlide]?.title}
+                        onChange={(e) => setEditingText(e.target.value)}
+                        onBlur={() => {
+                          updateSlide(currentSlide, { title: editingText });
+                          setIsEditing(false);
+                        }}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            updateSlide(currentSlide, { title: editingText });
+                            setIsEditing(false);
+                          }
+                        }}
+                        className="bg-white/20 text-white placeholder-white/60 border-white/30 text-4xl font-bold text-center backdrop-blur-sm"
+                        placeholder="Slide Title"
+                      />
+                      <Textarea
+                        value={slides[currentSlide]?.content}
+                        onChange={(e) => updateSlide(currentSlide, { content: e.target.value })}
+                        className="bg-white/20 text-white placeholder-white/60 border-white/30 text-xl text-center min-h-32 backdrop-blur-sm"
+                        placeholder="Slide Content"
+                      />
+                    </div>
+                  ) : (
+                    <div className="text-center space-y-6 animate-slideTrail">
+                      <h1 className="text-4xl font-bold mb-4 drop-shadow-lg">{slides[currentSlide]?.title}</h1>
+                      <p className="text-xl opacity-90 drop-shadow-md">{slides[currentSlide]?.content}</p>
+                    </div>
+                  )}
+                </div>
+                
+                {!isEditing && (
+                  <div className="absolute top-4 left-4 bg-white/20 rounded-full px-3 py-1 text-sm font-medium backdrop-blur-sm animate-pulse">
+                    Click to edit
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-center items-center space-x-4 mt-8">
+                <Button
+                  variant="outline"
+                  onClick={() => setCurrentSlide(Math.max(0, currentSlide - 1))}
+                  disabled={currentSlide === 0}
+                  className="bg-white/80 backdrop-blur-sm"
+                >
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Previous
+                </Button>
+                <div className="flex space-x-2">
+                  {slides.map((_, index) => (
+                    <div
+                      key={index}
+                      className={`w-3 h-3 rounded-full cursor-pointer transition-colors ${
+                        currentSlide === index ? 'bg-blue-600' : 'bg-gray-300'
+                      }`}
+                      onClick={() => setCurrentSlide(index)}
+                    />
+                  ))}
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={() => setCurrentSlide(Math.min(slides.length - 1, currentSlide + 1))}
+                  disabled={currentSlide === slides.length - 1}
+                  className="bg-white/80 backdrop-blur-sm"
+                >
+                  Next
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default function Workflow() {
   const [, navigate] = useLocation();
@@ -1589,68 +1964,7 @@ export default function Workflow() {
           </div>
         );
       case 3:
-        return (
-          <Card className="relative overflow-hidden bg-gradient-to-br from-white/60 to-purple-50/40 backdrop-blur-2xl border border-white/30 shadow-2xl">
-            {/* Floating Background Elements */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              <div className="absolute top-6 left-6 w-28 h-28 bg-purple-500/10 rounded-full blur-xl animate-float"></div>
-              <div className="absolute bottom-8 right-8 w-16 h-16 bg-green-500/10 rounded-full blur-lg animate-float-delayed"></div>
-              <div className="absolute top-1/2 left-1/2 w-12 h-12 bg-blue-500/10 rounded-full blur-md animate-pulse"></div>
-            </div>
-            
-            <CardHeader className="relative">
-              <CardTitle className="flex items-center gap-3">
-                <div className="relative">
-                  <FileText className="h-6 w-6 text-purple-600 animate-pulse" />
-                  <div className="absolute inset-0 bg-purple-400 rounded-full animate-ping opacity-20"></div>
-                </div>
-                <span className="bg-gradient-to-r from-purple-700 to-purple-600 bg-clip-text text-transparent font-black text-xl">
-                  PDF-Bericht erstellen
-                </span>
-              </CardTitle>
-              <CardDescription className="text-gray-600 font-medium">
-                Professionellen Preisbericht erstellen
-              </CardDescription>
-            </CardHeader>
-            
-            <CardContent className="relative space-y-6">
-              <div className="relative overflow-hidden bg-gradient-to-br from-green-50/60 to-emerald-50/40 backdrop-blur-md border border-green-200/40 rounded-2xl p-6 shadow-inner">
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-400 to-emerald-400 animate-gradient-x"></div>
-                <div className="space-y-2">
-                  <h4 className="font-bold text-green-900 text-lg flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                    <span>Bericht bereit für: {workflowData.hotelName}</span>
-                  </h4>
-                  <p className="text-green-700 font-medium">Durchschnittspreis: €{workflowData.averagePrice}</p>
-                  <p className="text-green-700 font-medium">Zimmeranzahl: {workflowData.roomCount}</p>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <Button 
-                  variant="outline" 
-                  onClick={prevStep}
-                  className="group relative overflow-hidden backdrop-blur-sm border-gray-300/50 hover:border-gray-400/60 transition-all duration-300"
-                >
-                  <span className="relative z-10">Zurück zum Vergleich</span>
-                </Button>
-                <Button className="group relative overflow-hidden bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 shadow-lg shadow-purple-500/25 transition-all duration-300">
-                  <span className="relative z-10">PDF-Bericht herunterladen</span>
-                </Button>
-              </div>
-              
-              <div className="text-center pt-4">
-                <Badge className="relative overflow-hidden bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border border-green-200/50 px-4 py-2 rounded-full font-semibold shadow-lg">
-                  <div className="absolute inset-0 bg-gradient-to-r from-green-400/10 to-emerald-400/10 animate-gradient-x"></div>
-                  <span className="relative flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce"></div>
-                    <span>Workflow abgeschlossen</span>
-                  </span>
-                </Badge>
-              </div>
-            </CardContent>
-          </Card>
-        );
+        return <PowerPointEditor workflowData={workflowData} onBack={prevStep} />;
       default:
         return null;
     }

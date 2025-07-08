@@ -674,6 +674,131 @@ ${analyses.filter(a => a?.insights).map(analysis =>
   });
 
   // AI Assistant Chat endpoint with deep functionality
+  // PowerPoint export endpoint
+  app.post("/api/export/powerpoint", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const { slides, workflowData } = req.body;
+      
+      // Import pptxgenjs
+      const PptxGenJS = require("pptxgenjs");
+      const pptx = new PptxGenJS();
+      
+      // Set presentation properties
+      pptx.title = `${workflowData.hotelName} - Pricing Analysis`;
+      pptx.subject = "Hotel Pricing Analysis Report";
+      pptx.author = "Beyond Bookings";
+      pptx.company = "Beyond Bookings";
+      
+      // Add slides
+      slides.forEach((slideData: any, index: number) => {
+        const slide = pptx.addSlide();
+        
+        // Set background gradient
+        const gradientMap: any = {
+          "from-blue-600 to-purple-600": ["0066CC", "9900CC"],
+          "from-emerald-500 to-teal-500": ["10B981", "14B8A6"],
+          "from-orange-500 to-red-500": ["F97316", "EF4444"],
+          "from-gray-400 to-gray-600": ["9CA3AF", "4B5563"]
+        };
+        
+        const colors = gradientMap[slideData.backgroundGradient] || ["0066CC", "9900CC"];
+        slide.background = { fill: colors[0] };
+        
+        // Add title
+        slide.addText(slideData.title, {
+          x: 1,
+          y: 1.5,
+          w: 8,
+          h: 2,
+          fontSize: 44,
+          fontFace: "Arial",
+          color: "FFFFFF",
+          bold: true,
+          align: "center"
+        });
+        
+        // Add content
+        slide.addText(slideData.content, {
+          x: 1,
+          y: 3.5,
+          w: 8,
+          h: 3,
+          fontSize: 24,
+          fontFace: "Arial",
+          color: "FFFFFF",
+          align: "center"
+        });
+        
+        // Add data for specific slides
+        if (index === 1) { // Hotel Overview slide
+          slide.addText(`Project Costs: €${workflowData.projectCosts?.toLocaleString('de-DE')}`, {
+            x: 1,
+            y: 5.5,
+            w: 8,
+            h: 0.5,
+            fontSize: 18,
+            fontFace: "Arial",
+            color: "FFFFFF",
+            align: "center"
+          });
+        }
+        
+        if (index === 2) { // Pricing Analysis slide
+          const projectCosts = workflowData.projectCosts || 0;
+          const voucherValue = workflowData.stars === 5 ? 50 : workflowData.stars === 4 ? 40 : workflowData.stars === 3 ? 30 : 30;
+          const roomnights = Math.round(projectCosts / voucherValue);
+          const beyondBookingsCosts = roomnights * 17;
+          const steuerbelastung = 1800.90;
+          const nettoKosten = projectCosts / 1.19;
+          const steuervorteil = nettoKosten * 0.19;
+          const gesamtkosten = beyondBookingsCosts + steuerbelastung - steuervorteil;
+          const advantage = projectCosts - gesamtkosten;
+          
+          slide.addText(`Cost Advantage: €${advantage.toLocaleString('de-DE')}`, {
+            x: 1,
+            y: 5.5,
+            w: 8,
+            h: 0.5,
+            fontSize: 18,
+            fontFace: "Arial",
+            color: "FFFFFF",
+            align: "center"
+          });
+        }
+        
+        // Add slide number
+        slide.addText(`${index + 1}`, {
+          x: 9,
+          y: 6.5,
+          w: 0.5,
+          h: 0.5,
+          fontSize: 12,
+          fontFace: "Arial",
+          color: "FFFFFF",
+          align: "center"
+        });
+      });
+      
+      // Generate the presentation
+      const fileName = `${workflowData.hotelName}_Presentation.pptx`;
+      
+      // Write to buffer
+      const buffer = await pptx.write("nodebuffer");
+      
+      // Set response headers
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.presentationml.presentation');
+      res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+      res.setHeader('Content-Length', buffer.length);
+      
+      // Send the buffer
+      res.send(buffer);
+      
+    } catch (error) {
+      console.error("PowerPoint export error:", error);
+      res.status(500).json({ error: "Failed to generate PowerPoint presentation" });
+    }
+  });
+
   app.post("/api/ai/chat", requireAuth, async (req: Request, res: Response) => {
     try {
       const { message, context } = req.body;
