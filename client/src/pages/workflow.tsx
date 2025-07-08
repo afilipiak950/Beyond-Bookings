@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ChevronRight, Calculator, BarChart3, FileText, Check, ArrowLeft, ArrowRight, Edit3, Brain, Gift, TrendingDown, Star, Download, Plus, Eye, Trash2, Copy, Move, Image, Type, BarChart, PieChart, Presentation, Upload } from "lucide-react";
+import { ChevronRight, Calculator, BarChart3, FileText, Check, ArrowLeft, ArrowRight, Edit3, Brain, Gift, TrendingDown, Star, Download, Plus, Eye, Trash2, Copy, Move, Image, Type, BarChart, PieChart, Presentation } from "lucide-react";
 import { useLocation, useRoute } from "wouter";
 import AppLayout from "@/components/layout/app-layout";
 
@@ -86,20 +86,30 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
   const [slides, setSlides] = useState([
     {
       id: 1,
-      title: "bebo convert - Währungsrechner",
-      content: "detailed_currency_calculator",
-      type: "bebo-calculator",
-      backgroundGradient: "from-gray-50 to-white"
+      title: "Hotel Pricing Analysis",
+      content: "Professional pricing analysis for " + workflowData.hotelName,
+      type: "title",
+      backgroundGradient: "from-blue-600 to-purple-600"
+    },
+    {
+      id: 2,
+      title: "Hotel Overview",
+      content: `${workflowData.hotelName} • ${workflowData.stars} Stars • ${workflowData.roomCount} Rooms`,
+      type: "content",
+      backgroundGradient: "from-emerald-500 to-teal-500"
+    },
+    {
+      id: 3,
+      title: "Pricing Analysis",
+      content: "Cost comparison and savings analysis",
+      type: "content",
+      backgroundGradient: "from-orange-500 to-red-500"
     }
   ]);
   
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isEditing, setIsEditing] = useState(false);
   const [editingText, setEditingText] = useState("");
-  
-  // PowerPoint import functionality
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isImporting, setIsImporting] = useState(false);
 
   const addSlide = () => {
     const newSlide = {
@@ -125,65 +135,6 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
       setSlides(newSlides);
       if (currentSlide >= newSlides.length) {
         setCurrentSlide(newSlides.length - 1);
-      }
-    }
-  };
-
-  const sanitizeContent = (content: string): string => {
-    return content
-      .replace(/[<>]/g, '') // Remove angle brackets
-      .replace(/\s+/g, ' ') // Replace multiple spaces with single space
-      .replace(/[^\w\s\-.,!?()]/g, '') // Remove special characters except basic punctuation
-      .trim()
-      .substring(0, 500); // Limit content length
-  };
-
-  const importFromPowerPoint = async (file: File) => {
-    setIsImporting(true);
-    try {
-      const formData = new FormData();
-      formData.append('pptx', file);
-      
-      const response = await fetch('/api/import/powerpoint', {
-        method: 'POST',
-        body: formData
-      });
-      
-      if (!response.ok) {
-        throw new Error('Import failed');
-      }
-      
-      const importedPresentation = await response.json();
-      
-      // Replace current slides with imported ones, sanitizing content
-      const importedSlides = importedPresentation.slides.map((slide: any, index: number) => ({
-        id: index + 1,
-        title: sanitizeContent(slide.title || `Slide ${index + 1}`),
-        content: sanitizeContent(slide.content || 'Content from imported slide'),
-        type: slide.type || 'content',
-        backgroundGradient: slide.backgroundGradient || 'from-gray-600 to-gray-800'
-      }));
-      
-      setSlides(importedSlides);
-      setCurrentSlide(0);
-      
-      console.log('Loading saved user presentation with', importedSlides.length, 'slides');
-      alert(`Successfully imported ${importedSlides.length} slides from PowerPoint presentation!`);
-    } catch (error) {
-      console.error('PowerPoint import error:', error);
-      alert('Failed to import PowerPoint presentation. Please try again.');
-    } finally {
-      setIsImporting(false);
-    }
-  };
-
-  const handleFileImport = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      if (file.type === 'application/vnd.openxmlformats-officedocument.presentationml.presentation') {
-        importFromPowerPoint(file);
-      } else {
-        alert('Please select a PowerPoint file (.pptx)');
       }
     }
   };
@@ -244,21 +195,6 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
             </div>
           </div>
           <div className="flex items-center space-x-3 animate-slideInFromRight">
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileImport}
-              accept=".pptx"
-              className="hidden"
-            />
-            <Button 
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isImporting}
-              className="bg-purple-600 hover:bg-purple-700 text-white transform hover:scale-105 transition-all duration-300"
-            >
-              <Upload className="h-4 w-4 mr-2" />
-              {isImporting ? 'Importing...' : 'Import PPTX'}
-            </Button>
             <Button onClick={addSlide} className="bg-emerald-600 hover:bg-emerald-700 text-white transform hover:scale-105 transition-all duration-300">
               <Plus className="h-4 w-4 mr-2" />
               New Slide
@@ -466,202 +402,10 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
                         placeholder="Slide Content"
                       />
                     </div>
-                  ) : slides[currentSlide]?.type === 'bebo-calculator' ? (
-                    <div className="w-full h-full bg-white text-black p-8 overflow-auto">
-                      {/* Bebo Convert Currency Calculator - Exact Replica */}
-                      <div className="relative w-full h-full">
-                        {/* Header */}
-                        <div className="mb-6">
-                          <h1 className="text-4xl font-bold text-blue-600 mb-2">bebo convert - Währungsrechner</h1>
-                          <p className="text-lg text-gray-600">Gutscheine werden als Übernachtung (DZ inkl. Frühstück) genutzt</p>
-                        </div>
-
-                        {/* Main Content Layout */}
-                        <div className="grid grid-cols-3 gap-6 h-full">
-                          {/* Left Column - Selbstfinanziert */}
-                          <div className="space-y-6">
-                            <div className="bg-gray-100 border border-gray-300 rounded-lg p-6">
-                              <h2 className="text-xl font-semibold text-center mb-4">Selbstfinanziert:</h2>
-                              <div className="text-center">
-                                <div className="text-lg font-medium mb-2">Lieferantenrechnung</div>
-                                <div className="text-3xl font-bold">30.000,00 €</div>
-                              </div>
-                            </div>
-
-                            <div className="bg-gray-100 border border-gray-300 rounded-lg p-6">
-                              <h2 className="text-xl font-semibold mb-4">Ihre Kosten:</h2>
-                              <div className="space-y-2 text-sm">
-                                <div className="flex justify-between">
-                                  <span>Lieferanten Rechnung Brutto</span>
-                                  <span className="font-semibold">30.000,00 €</span>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span>MwSt. 19 %</span>
-                                  <span className="font-semibold">4.789,92 €</span>
-                                </div>
-                                <div className="flex justify-between border-t pt-2">
-                                  <span className="font-semibold">Kosten netto</span>
-                                  <span className="font-semibold">25.210,08 €</span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Middle Column - Bezahlt mit bebo convert */}
-                          <div className="space-y-6">
-                            <div className="bg-white border border-gray-300 rounded-lg p-6">
-                              <div className="flex items-center mb-4">
-                                <div className="w-6 h-6 bg-blue-600 rounded mr-3"></div>
-                                <h2 className="text-xl font-semibold">Bezahlt mit bebo convert:</h2>
-                              </div>
-
-                              <div className="space-y-4">
-                                {/* Schritt 1 */}
-                                <div className="border border-gray-200 rounded p-4">
-                                  <div className="flex items-center mb-2">
-                                    <span className="font-semibold">Schritt 1)</span>
-                                    <span className="ml-2">Du erhältst Deine Lieferantenrechnung in Höhe von</span>
-                                    <span className="font-semibold ml-2">30.000,00 €</span>
-                                  </div>
-                                  <div className="text-sm text-gray-600">
-                                    <div>Du bist weiterhin vorsteuerabzugsberechtigt 19%</div>
-                                    <div className="text-right">+ 4.789,92 € (€)</div>
-                                  </div>
-                                </div>
-
-                                {/* Schritt 2 */}
-                                <div className="border border-gray-200 rounded p-4">
-                                  <div className="flex items-center mb-2">
-                                    <span className="font-semibold">Schritt 2)</span>
-                                    <span className="ml-2">Wir kaufen Dir einen Teil Deiner verkauften Zimmer ab</span>
-                                  </div>
-                                  <div className="text-sm text-gray-600">
-                                    <div>857 Gutscheine (ca. 36 Keiner je phänhlich. Leerstände)</div>
-                                    <div className="text-right">+ 35,00 €</div>
-                                    <div>davon MwSt. 7% bei Einlösung vor Ort</div>
-                                    <div className="text-right">1.799,70 € (€)</div>
-                                    <div>bzw. 19% für Frühstück ca nach Setting (nur 3€)</div>
-                                    <div className="text-right">814,15 € (€)</div>
-                                  </div>
-                                </div>
-
-                                {/* Schritt 3 */}
-                                <div className="border border-gray-200 rounded p-4">
-                                  <div className="flex items-center mb-2">
-                                    <span className="font-semibold">Schritt 3)</span>
-                                    <span className="ml-2">Wir bezahlen Deine Brutto-Rechnung schuldzinsfrei! für Dich beim</span>
-                                  </div>
-                                  <div className="text-sm text-gray-600">Lieferanten</div>
-                                </div>
-
-                                {/* Deine Kosten */}
-                                <div className="bg-blue-50 border border-blue-200 rounded p-4">
-                                  <h3 className="font-semibold text-blue-700 mb-2">Deine Kosten:</h3>
-                                  <div className="space-y-1 text-sm">
-                                    <div className="flex justify-between">
-                                      <span>20,00 € je Gutschein! x 857 Room-Nights</span>
-                                      <span>17.140,00 €</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                      <span>(a) Steuerbelastung bei Gutscheineinlösung</span>
-                                      <span>2.613,85 €</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                      <span>(b) Vorsteuerabzugsberechtigung 19%</span>
-                                      <span>4.789,92 €</span>
-                                    </div>
-                                    <div className="flex justify-between font-semibold border-t pt-2">
-                                      <span>Gesamtkosten</span>
-                                      <span>14.963,15 €</span>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Right Column - Kostenvorteil */}
-                          <div className="bg-gradient-to-b from-emerald-300 to-emerald-500 rounded-lg p-6 text-white">
-                            <h2 className="text-2xl font-bold mb-2">Ihr Kostenvorteil:</h2>
-                            <div className="text-4xl font-bold mb-1">10.246,15 €</div>
-                            <div className="text-xl">≈ -XX%</div>
-
-                            <div className="mt-8">
-                              <h3 className="text-xl font-semibold mb-4">Weitere Vorteile:</h3>
-                              <div className="space-y-3 text-sm">
-                                <div className="flex items-start">
-                                  <div className="w-4 h-4 bg-white rounded-full mt-1 mr-3 flex-shrink-0"></div>
-                                  <div>
-                                    <div className="font-semibold">Deine Rechnung wird sofort beglichen.</div>
-                                    <div>Deine Kosten dagegen verteilen sich über gesamte Vertragslaufzeit.</div>
-                                  </div>
-                                </div>
-                                <div className="flex items-start">
-                                  <div className="w-4 h-4 bg-white rounded-full mt-1 mr-3 flex-shrink-0"></div>
-                                  <div>
-                                    <div className="font-semibold">Gastejierte Auslastung durch neue Gäste und kostenloses Marketing!</div>
-                                  </div>
-                                </div>
-                                <div className="flex items-start">
-                                  <div className="w-4 h-4 bg-white rounded-full mt-1 mr-3 flex-shrink-0"></div>
-                                  <div>
-                                    <div className="font-semibold">Mehr Umsatz</div>
-                                    <div className="text-right">von ca.</div>
-                                    <div className="font-semibold">20.000,00 € + durch</div>
-                                    <div>Zusatzeinnahmen in Euren Outlets und durch Upselling.</div>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-
-                            <div className="mt-8 text-xs">
-                              <div>1) Im Q1 würde in 2024. bei den von uns befragten Partnerhotels, Zusatzeinnahmen von</div>
-                              <div>rund 25,00 € je Gutschein generiert.</div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Bottom Section */}
-                        <div className="mt-6 flex justify-center">
-                          <div className="bg-gray-100 border border-gray-300 rounded-lg p-4">
-                            <div className="text-center">
-                              <div className="text-sm mb-2">1) Erläuterung Kosten je Gutschein:</div>
-                              <div className="flex space-x-8 text-sm">
-                                <div>🏨 Kosten für ein leeres Zimmer = 25,00 €</div>
-                                <div>🍳 Kosten für ein belegtes Zimmer netto = 35,00 €</div>
-                                <div className="border-l border-gray-400 pl-4">
-                                  <div>Ihre Kosten je</div>
-                                  <div>Gutschein</div>
-                                  <div className="font-semibold">20,00 €</div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Logo in top right */}
-                        <div className="absolute top-4 right-4">
-                          <div className="w-12 h-12 bg-emerald-500 rounded-full flex items-center justify-center">
-                            <div className="w-6 h-6 bg-white rounded-sm"></div>
-                          </div>
-                        </div>
-
-                        {/* Company logo bottom left */}
-                        <div className="absolute bottom-4 left-4">
-                          <div className="w-16 h-8 bg-gradient-to-r from-red-400 to-red-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
-                            ehypay
-                          </div>
-                        </div>
-                      </div>
-                    </div>
                   ) : (
                     <div className="text-center space-y-6 animate-slideTrail">
-                      <h1 className="text-4xl font-bold mb-4 drop-shadow-lg">
-                        {slides[currentSlide]?.title || 'Slide Title'}
-                      </h1>
-                      <p className="text-xl opacity-90 drop-shadow-md whitespace-pre-wrap break-words">
-                        {slides[currentSlide]?.content || 'Slide Content'}
-                      </p>
+                      <h1 className="text-4xl font-bold mb-4 drop-shadow-lg">{slides[currentSlide]?.title}</h1>
+                      <p className="text-xl opacity-90 drop-shadow-md">{slides[currentSlide]?.content}</p>
                     </div>
                   )}
                 </div>
