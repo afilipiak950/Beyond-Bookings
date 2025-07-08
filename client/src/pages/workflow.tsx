@@ -368,17 +368,17 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
       </div>
 
       <div className="flex h-full">
-        <div className="w-64 bg-white/90 backdrop-blur-sm border-r border-gray-200/50 p-4 overflow-y-auto animate-slideInFromLeft">
-          <div className="space-y-4">
-            <div className="space-y-4">
-              <h2 className="text-xl font-bold text-gray-900 animate-slideTrail">Data Summary</h2>
+        <div className="w-56 bg-white/90 backdrop-blur-sm border-r border-gray-200/50 p-3 overflow-y-auto animate-slideInFromLeft">
+          <div className="space-y-3">
+            <div className="space-y-3">
+              <h2 className="text-lg font-bold text-gray-900 animate-slideTrail">Data Summary</h2>
               
               <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-3 border border-blue-200/50">
-                <h3 className="font-semibold text-blue-900 mb-2 flex items-center">
-                  <Calculator className="h-4 w-4 mr-2" />
+                <h3 className="font-medium text-blue-900 mb-1 flex items-center text-sm">
+                  <Calculator className="h-3 w-3 mr-1" />
                   Step 1: Calculator
                 </h3>
-                <div className="space-y-2 text-sm">
+                <div className="space-y-1 text-xs">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Hotel Name:</span>
                     <span className="font-medium text-blue-900">{workflowData.hotelName}</span>
@@ -403,11 +403,11 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
               </div>
 
               <div className="bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl p-3 border border-emerald-200/50">
-                <h3 className="font-semibold text-emerald-900 mb-2 flex items-center">
-                  <BarChart3 className="h-4 w-4 mr-2" />
+                <h3 className="font-medium text-emerald-900 mb-1 flex items-center text-sm">
+                  <BarChart3 className="h-3 w-3 mr-1" />
                   Step 2: Comparison
                 </h3>
-                <div className="space-y-2 text-sm">
+                <div className="space-y-1 text-xs">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Voucher Value:</span>
                     <span className="font-medium text-emerald-900">
@@ -441,8 +441,8 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
               </div>
 
               <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-3 border border-purple-200/50">
-                <h3 className="font-semibold text-purple-900 mb-2">Drag to Slides</h3>
-                <div className="space-y-2">
+                <h3 className="font-medium text-purple-900 mb-1 text-sm">Drag to Slides</h3>
+                <div className="space-y-1">
                   {[
                     { label: "Hotel Name", value: workflowData.hotelName },
                     { label: "Star Rating", value: workflowData.stars + " Stars" },
@@ -464,15 +464,15 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
                   ].map((field, index) => (
                     <div
                       key={index}
-                      className="p-3 bg-white/80 rounded-xl border border-purple-200/50 cursor-move hover:bg-purple-50/50 transition-colors"
+                      className="p-2 bg-white/80 rounded-lg border border-purple-200/50 cursor-move hover:bg-purple-50/50 transition-colors"
                       draggable
                       onDragStart={(e) => {
                         e.dataTransfer.setData('text/plain', field.value);
                       }}
                     >
                       <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium text-purple-900">{field.label}</span>
-                        <span className="text-xs text-purple-600">{field.value}</span>
+                        <span className="text-xs font-medium text-purple-900">{field.label}</span>
+                        <span className="text-xs text-purple-600 truncate max-w-20">{field.value}</span>
                       </div>
                     </div>
                   ))}
@@ -483,19 +483,19 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
         </div>
 
         <div className="flex-1 flex flex-col animate-slideInFromRight">
-          <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 p-4 animate-slideInFromTop">
-            <div className="flex space-x-3 overflow-x-auto">
+          <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 p-2 animate-slideInFromTop">
+            <div className="flex space-x-2 overflow-x-auto">
               {slides.map((slide, index) => (
                 <div
                   key={slide.id}
-                  className={`relative group min-w-32 h-20 rounded-xl cursor-pointer transition-all duration-300 ${
+                  className={`relative group min-w-24 h-16 rounded-lg cursor-pointer transition-all duration-300 ${
                     currentSlide === index
                       ? 'ring-4 ring-blue-500 shadow-lg scale-105'
                       : 'hover:shadow-md hover:scale-102'
                   }`}
                   onClick={() => setCurrentSlide(index)}
                 >
-                  <div className={`w-full h-full rounded-xl bg-gradient-to-r ${slide.backgroundGradient} p-2 flex flex-col justify-center`}>
+                  <div className={`w-full h-full rounded-lg bg-gradient-to-r ${slide.backgroundGradient} p-1 flex flex-col justify-center`}>
                     <div className="text-white text-xs font-semibold truncate">{slide.title}</div>
                     <div className="text-white/80 text-xs truncate">{slide.content}</div>
                   </div>
@@ -520,8 +520,8 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
             </div>
           </div>
 
-          <div className="flex-1 bg-gray-100 p-4 overflow-auto animate-slideInFromBottom">
-            <div className="max-w-3xl mx-auto">
+          <div className="flex-1 bg-gray-100 p-2 overflow-auto animate-slideInFromBottom">
+            <div className="max-w-4xl mx-auto">
               <div
                 className={`aspect-[16/9] bg-gradient-to-r ${slides[currentSlide]?.backgroundGradient} rounded-xl shadow-xl p-8 text-white relative overflow-hidden cursor-text animate-slideReveal animate-morphGradient transition-all duration-500`}
                 onClick={() => setIsEditing(!isEditing)}
