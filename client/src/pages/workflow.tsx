@@ -905,25 +905,28 @@ export default function Workflow() {
                     <div className="flex flex-col space-y-2 h-full justify-between">
                       <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 bg-rose-500 rounded-full animate-bounce flex-shrink-0"></div>
-                        <span className="text-xs font-bold text-rose-800 break-words">Vertagsvolumen Estimate - Finanzierung: Projektkosten brutto</span>
+                        <span className="text-xs font-bold text-rose-800 break-words">Vertragsvolumen Estimate - Projektkosten</span>
                       </div>
                       <div className="text-2xl font-black text-rose-900">
                         {(() => {
                           const projectCosts = workflowData.projectCosts || 0;
                           
                           if (projectCosts > 0) {
-                            // Use actual values from form if available
-                            const voucherValue = hotelVoucherValue > 0 ? hotelVoucherValue : 30; // Default voucher value
-                            const actualPrice = workflowData.averagePrice > 0 ? workflowData.averagePrice : 120; // Use form price or default
+                            // Calculate hotel voucher value based on stars (30 for 3-star default, adjust for others)
+                            const stars = workflowData.stars || 3;
+                            const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : 20;
                             
-                            // Vertragsvolumen Estimate = (Project Costs / Hotel Voucher Value) × (Actual Price × 0.75) × 1.1
+                            // Use average price from form input or default
+                            const actualPrice = workflowData.averagePrice || 120;
+                            
+                            // Formula: Vertragsvolumen Estimate = (Project Costs / Hotel Voucher Value) × (Actual Price × 0.75) × 1.1
                             const vertragsvolumenEstimate = (projectCosts / voucherValue) * (actualPrice * 0.75) * 1.1;
                             
                             // Result = Vertragsvolumen Estimate - Project Costs
                             const result = vertragsvolumenEstimate - projectCosts;
-                            return result.toLocaleString('de-DE', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+                            return Math.round(result).toLocaleString('de-DE');
                           } else {
-                            return '5,625'; // Default value
+                            return '5,625'; // Default value when no project costs
                           }
                         })()}
                       </div>
@@ -1101,7 +1104,7 @@ export default function Workflow() {
                         <div><span className="font-semibold text-blue-700">C:</span> Zielpreis (in Roomnights) über Gesamtzeit</div>
                         <div><span className="font-semibold text-purple-700">D:</span> Laufzeit</div>
                         <div><span className="font-semibold text-orange-700">E:</span> Gesamtkosten über Laufzeit</div>
-                        <div><span className="font-semibold text-rose-700">F:</span> Vertagsvolumen Estimate - Finanzierung: Projektkosten brutto</div>
+                        <div><span className="font-semibold text-rose-700">F:</span> Vertragsvolumen Estimate - Projektkosten</div>
                         <div><span className="font-semibold text-cyan-700">G:</span> Gesamtvertragswert (brutto)</div>
                         <div><span className="font-semibold text-green-700">H:</span> Marge</div>
                         <div><span className="font-semibold text-teal-700">I:</span> Vorsteuer Produktkauf</div>
