@@ -143,6 +143,15 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
     }
   };
 
+  const sanitizeContent = (content: string): string => {
+    return content
+      .replace(/[<>]/g, '') // Remove angle brackets
+      .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+      .replace(/[^\w\s\-.,!?()]/g, '') // Remove special characters except basic punctuation
+      .trim()
+      .substring(0, 500); // Limit content length
+  };
+
   const importFromPowerPoint = async (file: File) => {
     setIsImporting(true);
     try {
@@ -160,18 +169,19 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
       
       const importedPresentation = await response.json();
       
-      // Replace current slides with imported ones
+      // Replace current slides with imported ones, sanitizing content
       const importedSlides = importedPresentation.slides.map((slide: any, index: number) => ({
         id: index + 1,
-        title: slide.title,
-        content: slide.content,
-        type: slide.type,
-        backgroundGradient: slide.backgroundGradient
+        title: sanitizeContent(slide.title || `Slide ${index + 1}`),
+        content: sanitizeContent(slide.content || 'Content from imported slide'),
+        type: slide.type || 'content',
+        backgroundGradient: slide.backgroundGradient || 'from-gray-600 to-gray-800'
       }));
       
       setSlides(importedSlides);
       setCurrentSlide(0);
       
+      console.log('Loading saved user presentation with', importedSlides.length, 'slides');
       alert(`Successfully imported ${importedSlides.length} slides from PowerPoint presentation!`);
     } catch (error) {
       console.error('PowerPoint import error:', error);
@@ -472,8 +482,12 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
                     </div>
                   ) : (
                     <div className="text-center space-y-6 animate-slideTrail">
-                      <h1 className="text-4xl font-bold mb-4 drop-shadow-lg">{slides[currentSlide]?.title}</h1>
-                      <p className="text-xl opacity-90 drop-shadow-md">{slides[currentSlide]?.content}</p>
+                      <h1 className="text-4xl font-bold mb-4 drop-shadow-lg">
+                        {slides[currentSlide]?.title || 'Slide Title'}
+                      </h1>
+                      <p className="text-xl opacity-90 drop-shadow-md whitespace-pre-wrap break-words">
+                        {slides[currentSlide]?.content || 'Slide Content'}
+                      </p>
                     </div>
                   )}
                 </div>

@@ -233,7 +233,13 @@ export class PowerPointImporter {
     content: string;
     type: 'title' | 'content' | 'section' | 'comparison' | 'closing';
   } {
-    const allText = textContent.join(' ').toLowerCase();
+    // Clean and filter text content
+    const cleanedContent = textContent
+      .filter(text => text.length > 0 && text.length < 200) // Filter out very long strings
+      .map(text => this.cleanText(text))
+      .filter(text => text.length > 0);
+    
+    const allText = cleanedContent.join(' ').toLowerCase();
     
     // Determine slide type based on content and position
     let type: 'title' | 'content' | 'section' | 'comparison' | 'closing' = 'content';
@@ -244,17 +250,29 @@ export class PowerPointImporter {
       type = 'comparison';
     } else if (allText.includes('danke') || allText.includes('thank') || allText.includes('kontakt') || allText.includes('contact')) {
       type = 'closing';
-    } else if (textContent.length <= 2 && textContent[0] && textContent[0].length < 50) {
+    } else if (cleanedContent.length <= 2 && cleanedContent[0] && cleanedContent[0].length < 50) {
       type = 'section';
     }
     
     // Extract title (usually first or largest text block)
-    const title = textContent[0] || `Slide ${slideNumber}`;
+    const title = cleanedContent[0] || `Slide ${slideNumber}`;
     
     // Extract content (remaining text)
-    const content = textContent.slice(1).join('\n\n') || 'Content from imported slide';
+    const content = cleanedContent.slice(1).join('\n\n') || 'Content from imported slide';
     
-    return { title, content, type };
+    return { 
+      title: title.substring(0, 100), // Limit title length
+      content: content.substring(0, 500), // Limit content length
+      type 
+    };
+  }
+
+  private cleanText(text: string): string {
+    return text
+      .replace(/[<>]/g, '') // Remove angle brackets
+      .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+      .replace(/[^\w\s\-.,!?()]/g, '') // Remove special characters except basic punctuation
+      .trim();
   }
 
   private generateBackgroundGradient(type: string, slideNumber: number): string {
