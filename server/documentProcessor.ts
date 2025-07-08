@@ -177,43 +177,61 @@ export class DocumentProcessor {
    * Extract ZIP file and return information about extracted files
    */
   private async extractZipFile(zipPath: string, uploadId: number): Promise<ExtractedFileInfo[]> {
+    console.log(`Extracting ZIP file from: ${zipPath}`);
+    
     const zip = new AdmZip(zipPath);
     const entries = zip.getEntries();
     const extractedFiles: ExtractedFileInfo[] = [];
 
+    console.log(`Found ${entries.length} entries in ZIP file`);
+    
     const extractPath = path.join(this.extractedDir, `upload_${uploadId}`);
     await fs.mkdir(extractPath, { recursive: true });
 
     for (const entry of entries) {
+      console.log(`Processing entry: ${entry.entryName}, isDirectory: ${entry.isDirectory}`);
+      
       if (!entry.isDirectory) {
         const fileName = entry.entryName;
         const fileExt = path.extname(fileName).toLowerCase();
+        
+        console.log(`File: ${fileName}, Extension: ${fileExt}`);
         
         // Only process supported file types
         if (['.xlsx', '.xls', '.csv', '.pdf', '.png', '.jpg', '.jpeg'].includes(fileExt)) {
           const extractedPath = path.join(extractPath, path.basename(fileName));
           
-          // Extract file
-          zip.extractEntryTo(entry, extractPath, false, true);
-          
-          let fileType = 'unknown';
-          if (['.xlsx', '.xls', '.csv'].includes(fileExt)) {
-            fileType = 'excel';
-          } else if (fileExt === '.pdf') {
-            fileType = 'pdf';
-          } else if (['.png', '.jpg', '.jpeg'].includes(fileExt)) {
-            fileType = 'image';
-          }
+          try {
+            // Extract file
+            zip.extractEntryTo(entry, extractPath, false, true);
+            console.log(`Successfully extracted file to: ${extractedPath}`);
+            
+            let fileType = 'unknown';
+            if (['.xlsx', '.xls', '.csv'].includes(fileExt)) {
+              fileType = 'excel';
+            } else if (fileExt === '.pdf') {
+              fileType = 'pdf';
+            } else if (['.png', '.jpg', '.jpeg'].includes(fileExt)) {
+              fileType = 'image';
+            }
 
-          extractedFiles.push({
-            fileName: path.basename(fileName),
-            filePath: extractedPath,
-            fileType
-          });
+            extractedFiles.push({
+              fileName: path.basename(fileName),
+              filePath: extractedPath,
+              fileType
+            });
+            
+            console.log(`Added file to extraction list: ${path.basename(fileName)} (${fileType})`);
+          } catch (error) {
+            console.error(`Error extracting file ${fileName}:`, error);
+          }
+        } else {
+          console.log(`Skipping unsupported file type: ${fileName} (${fileExt})`);
         }
       }
     }
 
+    console.log(`Total extracted files: ${extractedFiles.length}`);
     return extractedFiles;
   }
 
