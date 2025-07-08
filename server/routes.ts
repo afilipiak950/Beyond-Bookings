@@ -592,6 +592,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     fileFilter: (req, file, cb) => {
       const allowedTypes = [
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/vnd.ms-excel.sheet.macroEnabled.12',
         'application/vnd.ms-excel'
       ];
       if (allowedTypes.includes(file.mimetype)) {
@@ -1264,6 +1265,7 @@ What would you like to work on today? I'm here to make your hotel pricing more i
         'application/zip',
         'application/x-zip-compressed',
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/vnd.ms-excel.sheet.macroEnabled.12',
         'application/vnd.ms-excel',
         'text/csv'
       ];

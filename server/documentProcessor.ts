@@ -83,6 +83,13 @@ export class DocumentProcessor {
 
   constructor() {
     this.ensureDirectories();
+    
+    // Check if Mistral API key is available
+    if (!process.env.MISTRAL_API_KEY) {
+      console.error('MISTRAL_API_KEY not found in environment variables');
+    } else {
+      console.log('Mistral API key is configured');
+    }
   }
 
   private async ensureDirectories() {
@@ -131,10 +138,12 @@ export class DocumentProcessor {
       
       for (const file of extractedFiles) {
         try {
+          console.log(`Processing file: ${file.fileName} (${file.fileType})`);
           let analysisData: InsertDocumentAnalysis;
           let worksheetInfo = [];
 
           if (file.fileType === 'excel') {
+            console.log(`Processing Excel file: ${file.fileName}`);
             analysisData = await this.processExcelFile(file, upload.id, uploadData.userId);
             
             // Extract worksheet information from the analysis data
@@ -147,6 +156,7 @@ export class DocumentProcessor {
             }
           } else {
             // For other file types, use OCR
+            console.log(`Processing file with OCR: ${file.fileName} (${file.fileType})`);
             analysisData = await this.processFileWithOCR(file, upload.id, uploadData.userId);
           }
 
@@ -235,7 +245,13 @@ export class DocumentProcessor {
         console.log(`File: ${fileName}, Extension: ${fileExt}`);
         
         // Only process supported file types
-        if (['.xlsx', '.xls', '.csv', '.pdf', '.png', '.jpg', '.jpeg'].includes(fileExt)) {
+        if (['.xlsx', '.xls', '.xlsm', '.csv', '.pdf', '.png', '.jpg', '.jpeg'].includes(fileExt)) {
+          console.log(`Processing supported file type: ${fileName} (${fileExt})`);
+        } else {
+          console.log(`Skipping unsupported file type: ${fileName} (${fileExt})`);
+        }
+        
+        if (['.xlsx', '.xls', '.xlsm', '.csv', '.pdf', '.png', '.jpg', '.jpeg'].includes(fileExt)) {
           const extractedPath = path.join(extractPath, path.basename(fileName));
           
           try {
@@ -244,7 +260,7 @@ export class DocumentProcessor {
             console.log(`Successfully extracted file to: ${extractedPath}`);
             
             let fileType = 'unknown';
-            if (['.xlsx', '.xls', '.csv'].includes(fileExt)) {
+            if (['.xlsx', '.xls', '.xlsm', '.csv'].includes(fileExt)) {
               fileType = 'excel';
             } else if (fileExt === '.pdf') {
               fileType = 'pdf';
