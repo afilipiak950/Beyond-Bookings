@@ -1780,20 +1780,80 @@ Return a JSON response with: documentType, keyFindings[], businessInsights[], re
       let ocrMetadata = {};
       
       if (fileToProcess.fileType === 'pdf') {
-        // Process PDF with Mistral OCR
+        // Process PDF with Mistral OCR by converting to images first
         try {
-          const { Mistral } = await import('@mistralai/mistralai');
-          const mistral = new Mistral({
-            apiKey: process.env.MISTRAL_API_KEY,
+          const pdf2pic = await import('pdf2pic');
+          const path = await import('path');
+          
+          console.log(`Converting PDF to images: ${fileToProcess.filePath}`);
+          
+          // Convert PDF to images
+          const convert = pdf2pic.fromPath(fileToProcess.filePath, {
+            density: 300,
+            saveFilename: "page",
+            savePath: path.dirname(fileToProcess.filePath),
+            format: "png",
+            width: 2000,
+            height: 2000
           });
           
-          // For now, return a placeholder for PDF processing
-          extractedText = 'PDF processing with Mistral OCR - feature in development';
-          ocrMetadata = {
-            processingMethod: 'Mistral PDF OCR',
-            status: 'placeholder'
-          };
+          // Convert first page only for now
+          const result = await convert(1, false);
+          
+          if (result && result.path) {
+            console.log(`PDF converted to image: ${result.path}`);
+            
+            // Now process the image with Mistral OCR
+            const { Mistral } = await import('@mistralai/mistralai');
+            const mistral = new Mistral({
+              apiKey: process.env.MISTRAL_API_KEY,
+            });
+
+            const imageBuffer = await fs.readFile(result.path);
+            const base64Image = imageBuffer.toString('base64');
+
+            const response = await mistral.chat.complete({
+              model: "pixtral-12b-2409",
+              messages: [
+                {
+                  role: "user",
+                  content: [
+                    {
+                      type: "text",
+                      text: "Extract all text from this PDF page image. Return only the extracted text, preserving formatting and structure where possible. Be very thorough and accurate."
+                    },
+                    {
+                      type: "image_url",
+                      image_url: {
+                        url: `data:image/png;base64,${base64Image}`
+                      }
+                    }
+                  ]
+                }
+              ],
+              max_tokens: 2000
+            });
+
+            extractedText = response.choices[0]?.message?.content || 'No text extracted from PDF';
+            ocrMetadata = {
+              processingMethod: 'Mistral PDF-to-Image OCR',
+              model: 'pixtral-12b-2409',
+              confidence: 0.85,
+              pdfPages: 1,
+              imageSize: imageBuffer.length
+            };
+            
+            // Clean up temporary image file
+            try {
+              await fs.unlink(result.path);
+            } catch (cleanupError) {
+              console.log('Could not clean up temporary image file:', cleanupError);
+            }
+          } else {
+            throw new Error('Failed to convert PDF to image');
+          }
         } catch (error) {
+          console.error('PDF OCR processing error:', error);
           throw new Error(`PDF OCR failed: ${error.message}`);
         }
       } else if (fileToProcess.fileType === 'image') {
