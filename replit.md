@@ -223,6 +223,15 @@ Changelog:
   - Enhanced image processing to support all formats via real Mistral vision capabilities
   - Added comprehensive error handling and authentic OCR processing metadata
   - Achieved 98% confidence ratings with genuine Mistral OCR API responses
+- January 9, 2025. Comprehensive OCR system overhaul and Excel multi-worksheet support
+  - Fixed critical issue where manual OCR endpoint was still using old Tesseract implementation
+  - Replaced manual OCR processing with proper Mistral OCR API calls for both PDF and image processing
+  - Added comprehensive Excel (.xlsx, .xls, .xlsm, .csv) multi-worksheet analysis support
+  - Implemented full worksheet scanning - all tabs in Excel files are now processed and analyzed
+  - Enhanced auto-processing flow to include Excel files alongside PDF and image processing
+  - Added detailed worksheet metadata tracking with row/column counts and data presence indicators
+  - Improved file type detection to support wider range of formats (.gif, .bmp, .tiff, .webp)
+  - Created unified processing pipeline ensuring consistent Mistral OCR API usage across all endpoints
 ```
 
 ## User Preferences

@@ -1389,7 +1389,7 @@ What would you like to work on today? I'm here to make your hotel pricing more i
             
             // Auto-trigger OCR processing for all supported files
             console.log("=== AUTO-TRIGGERING OCR FOR ALL EXTRACTED FILES ===");
-            const supportedOcrTypes = ['pdf', 'image', 'word', 'text'];
+            const supportedOcrTypes = ['pdf', 'image', 'excel', 'word', 'text'];
             const filesToProcess = extractedFiles.filter(file => supportedOcrTypes.includes(file.fileType));
             
             console.log(`Found ${filesToProcess.length} files that need OCR processing:`, filesToProcess.map(f => `${f.fileName} (${f.fileType})`));
@@ -1414,6 +1414,41 @@ What would you like to work on today? I'm here to make your hotel pricing more i
                   const imageResult = await documentProcessor['processImageWithMistralOCR'](file.filePath);
                   extractedText = imageResult.text;
                   ocrMetadata = imageResult.metadata;
+                } else if (file.fileType === 'excel') {
+                  // Process Excel file - analyze ALL worksheets/tabs
+                  const XLSX = await import('xlsx');
+                  const workbook = XLSX.readFile(file.filePath);
+                  
+                  let allWorksheetText = '';
+                  const worksheetMetadata = [];
+                  
+                  // Process each worksheet/tab
+                  for (const sheetName of workbook.SheetNames) {
+                    const worksheet = workbook.Sheets[sheetName];
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                    
+                    if (jsonData.length > 0) {
+                      allWorksheetText += `\n=== WORKSHEET: ${sheetName} ===\n`;
+                      allWorksheetText += jsonData.map(row => row.join('\t')).join('\n');
+                      allWorksheetText += '\n';
+                      
+                      worksheetMetadata.push({
+                        name: sheetName,
+                        rows: jsonData.length,
+                        columns: jsonData[0]?.length || 0,
+                        hasData: jsonData.length > 0
+                      });
+                    }
+                  }
+                  
+                  extractedText = allWorksheetText;
+                  ocrMetadata = {
+                    processingMethod: 'Excel Multi-Worksheet Parser',
+                    totalWorksheets: workbook.SheetNames.length,
+                    processedWorksheets: worksheetMetadata.length,
+                    worksheetDetails: worksheetMetadata,
+                    totalTextLength: allWorksheetText.length
+                  };
                 } else if (file.fileType === 'text') {
                   // Read text file directly
                   extractedText = await fs.readFile(file.filePath, 'utf-8');
@@ -1563,7 +1598,7 @@ Return a JSON response with: documentType, keyFindings[], businessInsights[], re
             
             // Auto-trigger OCR processing for single files as well
             console.log("=== AUTO-TRIGGERING OCR FOR SINGLE FILE ===");
-            const supportedOcrTypes = ['pdf', 'image', 'word', 'text'];
+            const supportedOcrTypes = ['pdf', 'image', 'excel', 'word', 'text'];
             const filesToProcess = extractedFiles.filter(file => supportedOcrTypes.includes(file.fileType));
             
             console.log(`Found ${filesToProcess.length} files that need OCR processing:`, filesToProcess.map(f => `${f.fileName} (${f.fileType})`));
@@ -1588,6 +1623,41 @@ Return a JSON response with: documentType, keyFindings[], businessInsights[], re
                   const imageResult = await documentProcessor['processImageWithMistralOCR'](file.filePath);
                   extractedText = imageResult.text;
                   ocrMetadata = imageResult.metadata;
+                } else if (file.fileType === 'excel') {
+                  // Process Excel file - analyze ALL worksheets/tabs
+                  const XLSX = await import('xlsx');
+                  const workbook = XLSX.readFile(file.filePath);
+                  
+                  let allWorksheetText = '';
+                  const worksheetMetadata = [];
+                  
+                  // Process each worksheet/tab
+                  for (const sheetName of workbook.SheetNames) {
+                    const worksheet = workbook.Sheets[sheetName];
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                    
+                    if (jsonData.length > 0) {
+                      allWorksheetText += `\n=== WORKSHEET: ${sheetName} ===\n`;
+                      allWorksheetText += jsonData.map(row => row.join('\t')).join('\n');
+                      allWorksheetText += '\n';
+                      
+                      worksheetMetadata.push({
+                        name: sheetName,
+                        rows: jsonData.length,
+                        columns: jsonData[0]?.length || 0,
+                        hasData: jsonData.length > 0
+                      });
+                    }
+                  }
+                  
+                  extractedText = allWorksheetText;
+                  ocrMetadata = {
+                    processingMethod: 'Excel Multi-Worksheet Parser',
+                    totalWorksheets: workbook.SheetNames.length,
+                    processedWorksheets: worksheetMetadata.length,
+                    worksheetDetails: worksheetMetadata,
+                    totalTextLength: allWorksheetText.length
+                  };
                 } else if (file.fileType === 'text') {
                   // Read text file directly
                   extractedText = await fs.readFile(file.filePath, 'utf-8');
@@ -1780,165 +1850,82 @@ Return a JSON response with: documentType, keyFindings[], businessInsights[], re
       let ocrMetadata = {};
       
       if (fileToProcess.fileType === 'pdf') {
-        // Process PDF with Tesseract OCR (fallback approach)
+        // Process PDF with Mistral OCR API
         try {
-          console.log(`Processing PDF with Tesseract OCR: ${fileToProcess.filePath}`);
+          const pdfResult = await documentProcessor['processPDFWithMistralOCR'](fileToProcess.filePath);
+          extractedText = pdfResult.text;
+          ocrMetadata = pdfResult.metadata;
           
-          // First, convert PDF to images
-          const pdf2pic = await import('pdf2pic');
-          const path = await import('path');
+          console.log(`Mistral OCR processed PDF ${fileToProcess.fileName}:`);
+          console.log(`- Processing method: ${ocrMetadata.processingMethod}`);
+          console.log(`- Pages processed: ${ocrMetadata.pageCount || 'N/A'}`);
+          console.log(`- Total characters extracted: ${extractedText.length}`);
+          console.log(`- Confidence: ${ocrMetadata.confidence || 'N/A'}`);
           
-          const convert = pdf2pic.fromPath(fileToProcess.filePath, {
-            density: 600, // Higher density for better OCR accuracy
-            saveFilename: "page",
-            savePath: path.dirname(fileToProcess.filePath),
-            format: "png",
-            width: 3000, // Larger dimensions for better text clarity
-            height: 3000
-          });
-          
-          // First, detect how many pages the PDF has
-          let totalPages = 1;
-          try {
-            // Try to get page count by attempting to convert a high page number
-            const testResult = await convert(999, false);
-            if (testResult && testResult.path) {
-              // If page 999 exists, we have a lot of pages
-              totalPages = 10;
-            }
-          } catch (error) {
-            // Extract page count from error message if possible
-            const errorMsg = error.message || '';
-            const pageMatch = errorMsg.match(/number of pages in the file: (\d+)/);
-            if (pageMatch) {
-              totalPages = parseInt(pageMatch[1], 10);
-            }
-          }
-          
-          console.log(`PDF has approximately ${totalPages} pages`);
-          
-          // Process all pages up to a reasonable limit
-          let allExtractedText = '';
-          const maxPages = Math.min(totalPages, 10); // Process up to 10 pages
-          
-          for (let pageNum = 1; pageNum <= maxPages; pageNum++) {
-            try {
-              const result = await convert(pageNum, false);
-              if (result && result.path) {
-                console.log(`Processing page ${pageNum}: ${result.path}`);
-                
-                // Use Tesseract for OCR processing with simplified configuration
-                const Tesseract = await import('tesseract.js');
-                const { createWorker } = Tesseract;
-                
-                const worker = await createWorker('eng');
-                // Don't set parameters that cause issues - use defaults
-                
-                const { data: { text, confidence } } = await worker.recognize(result.path);
-                await worker.terminate();
-                
-                if (text && text.trim()) {
-                  allExtractedText += `\n=== PAGE ${pageNum} ===\n${text.trim()}\n`;
-                  console.log(`Page ${pageNum} extracted ${text.trim().length} characters (confidence: ${confidence}%)`);
-                }
-                
-                // Clean up temporary image file
-                try {
-                  await fs.unlink(result.path);
-                } catch (cleanupError) {
-                  console.log('Could not clean up temporary image file:', cleanupError);
-                }
-              } else {
-                console.log(`Page ${pageNum} conversion failed - no more pages`);
-                break;
-              }
-            } catch (pageError) {
-              console.log(`Page ${pageNum} processing failed:`, pageError.message);
-              // Continue to next page instead of breaking
-              continue;
-            }
-          }
-          
-          extractedText = allExtractedText || 'No text extracted from PDF';
-          ocrMetadata = {
-            processingMethod: 'Enhanced Multi-Page Tesseract PDF OCR',
-            confidence: 0.85,
-            pagesProcessed: allExtractedText.split('=== PAGE').length - 1,
-            totalCharacters: allExtractedText.length,
-            totalPagesDetected: totalPages,
-            maxPagesProcessed: maxPages
-          };
-          
-          console.log(`OCR completed for ${fileToProcess.fileName}:`);
-          console.log(`- Total pages detected: ${totalPages}`);
-          console.log(`- Pages processed: ${allExtractedText.split('=== PAGE').length - 1}`);
-          console.log(`- Total characters extracted: ${allExtractedText.length}`);
-          
-
         } catch (error) {
           console.error('PDF OCR processing error:', error);
           throw new Error(`PDF OCR failed: ${error.message}`);
         }
       } else if (fileToProcess.fileType === 'image') {
-        // Process image with Mistral OCR
+        // Process image with Mistral OCR API
         try {
-          const { Mistral } = await import('@mistralai/mistralai');
-          const mistral = new Mistral({
-            apiKey: process.env.MISTRAL_API_KEY,
-          });
-
-          const imageBuffer = await fs.readFile(fileToProcess.filePath);
-          const base64Image = imageBuffer.toString('base64');
-
-          const response = await mistral.chat.complete({
-            model: "pixtral-12b-2409",
-            messages: [
-              {
-                role: "user",
-                content: [
-                  {
-                    type: "text",
-                    text: "Extract all text from this image. Return only the extracted text, no additional commentary."
-                  },
-                  {
-                    type: "image_url",
-                    image_url: {
-                      url: `data:image/jpeg;base64,${base64Image}`
-                    }
-                  }
-                ]
-              }
-            ],
-            max_tokens: 1000
-          });
-
-          extractedText = response.choices[0]?.message?.content || '';
-          ocrMetadata = {
-            processingMethod: 'Mistral Pixtral OCR',
-            model: 'pixtral-12b-2409',
-            confidence: 0.85,
-            imageSize: imageBuffer.length
-          };
+          const imageResult = await documentProcessor['processImageWithMistralOCR'](fileToProcess.filePath);
+          extractedText = imageResult.text;
+          ocrMetadata = imageResult.metadata;
+          
+          console.log(`Mistral OCR processed image ${fileToProcess.fileName}:`);
+          console.log(`- Processing method: ${ocrMetadata.processingMethod}`);
+          console.log(`- Total characters extracted: ${extractedText.length}`);
+          console.log(`- Confidence: ${ocrMetadata.confidence || 'N/A'}`);
+          
         } catch (error) {
+          console.error('Image OCR processing error:', error);
           throw new Error(`Image OCR failed: ${error.message}`);
         }
       } else if (fileToProcess.fileType === 'excel') {
-        // Process Excel file
+        // Process Excel file - analyze ALL worksheets/tabs
         try {
           const XLSX = await import('xlsx');
           const workbook = XLSX.readFile(fileToProcess.filePath);
-          const sheetName = workbook.SheetNames[0];
-          const worksheet = workbook.Sheets[sheetName];
-          const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
           
-          extractedText = jsonData.map(row => row.join('\t')).join('\n');
+          let allWorksheetText = '';
+          const worksheetMetadata = [];
+          
+          // Process each worksheet/tab
+          for (const sheetName of workbook.SheetNames) {
+            const worksheet = workbook.Sheets[sheetName];
+            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+            
+            if (jsonData.length > 0) {
+              allWorksheetText += `\n=== WORKSHEET: ${sheetName} ===\n`;
+              allWorksheetText += jsonData.map(row => row.join('\t')).join('\n');
+              allWorksheetText += '\n';
+              
+              worksheetMetadata.push({
+                name: sheetName,
+                rows: jsonData.length,
+                columns: jsonData[0]?.length || 0,
+                hasData: jsonData.length > 0
+              });
+            }
+          }
+          
+          extractedText = allWorksheetText;
           ocrMetadata = {
-            processingMethod: 'Excel Parser',
-            worksheets: workbook.SheetNames.length,
-            rows: jsonData.length,
-            columns: jsonData[0]?.length || 0
+            processingMethod: 'Excel Multi-Worksheet Parser',
+            totalWorksheets: workbook.SheetNames.length,
+            processedWorksheets: worksheetMetadata.length,
+            worksheetDetails: worksheetMetadata,
+            totalTextLength: allWorksheetText.length
           };
+          
+          console.log(`Excel processed ${fileToProcess.fileName}:`);
+          console.log(`- Total worksheets: ${workbook.SheetNames.length}`);
+          console.log(`- Processed worksheets: ${worksheetMetadata.length}`);
+          console.log(`- Total characters extracted: ${allWorksheetText.length}`);
+          
         } catch (error) {
+          console.error('Excel processing error:', error);
           throw new Error(`Excel processing failed: ${error.message}`);
         }
       } else if (['png', 'jpg', 'jpeg', 'gif', 'bmp', 'tiff'].includes(fileToProcess.fileType?.toLowerCase())) {
