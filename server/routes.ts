@@ -1780,14 +1780,14 @@ Return a JSON response with: documentType, keyFindings[], businessInsights[], re
       let ocrMetadata = {};
       
       if (fileToProcess.fileType === 'pdf') {
-        // Process PDF with Mistral OCR by converting to images first
+        // Process PDF with Tesseract OCR (fallback approach)
         try {
+          console.log(`Processing PDF with Tesseract OCR: ${fileToProcess.filePath}`);
+          
+          // First, convert PDF to images
           const pdf2pic = await import('pdf2pic');
           const path = await import('path');
           
-          console.log(`Converting PDF to images: ${fileToProcess.filePath}`);
-          
-          // Convert PDF to images
           const convert = pdf2pic.fromPath(fileToProcess.filePath, {
             density: 300,
             saveFilename: "page",
@@ -1803,44 +1803,20 @@ Return a JSON response with: documentType, keyFindings[], businessInsights[], re
           if (result && result.path) {
             console.log(`PDF converted to image: ${result.path}`);
             
-            // Now process the image with Mistral OCR
-            const { Mistral } = await import('@mistralai/mistralai');
-            const mistral = new Mistral({
-              apiKey: process.env.MISTRAL_API_KEY,
-            });
-
-            const imageBuffer = await fs.readFile(result.path);
-            const base64Image = imageBuffer.toString('base64');
-
-            const response = await mistral.chat.complete({
-              model: "pixtral-12b-2409",
-              messages: [
-                {
-                  role: "user",
-                  content: [
-                    {
-                      type: "text",
-                      text: "Extract all text from this PDF page image. Return only the extracted text, preserving formatting and structure where possible. Be very thorough and accurate."
-                    },
-                    {
-                      type: "image_url",
-                      image_url: {
-                        url: `data:image/png;base64,${base64Image}`
-                      }
-                    }
-                  ]
-                }
-              ],
-              max_tokens: 2000
-            });
-
-            extractedText = response.choices[0]?.message?.content || 'No text extracted from PDF';
+            // Use Tesseract for OCR processing
+            const Tesseract = await import('tesseract.js');
+            const { createWorker } = Tesseract;
+            
+            const worker = await createWorker('eng');
+            const { data: { text } } = await worker.recognize(result.path);
+            await worker.terminate();
+            
+            extractedText = text || 'No text extracted from PDF';
             ocrMetadata = {
-              processingMethod: 'Mistral PDF-to-Image OCR',
-              model: 'pixtral-12b-2409',
-              confidence: 0.85,
+              processingMethod: 'Tesseract PDF OCR',
+              confidence: 0.8,
               pdfPages: 1,
-              imageSize: imageBuffer.length
+              imageSize: (await fs.readFile(result.path)).length
             };
             
             // Clean up temporary image file
