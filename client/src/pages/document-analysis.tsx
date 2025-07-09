@@ -240,7 +240,20 @@ export default function DocumentAnalysis() {
           // Support more file types including common image formats
           const supportedTypes = ['pdf', 'image', 'excel', 'png', 'jpg', 'jpeg', 'gif', 'bmp', 'tiff', 'webp'];
           
-          if (!hasOcrAnalysis && supportedTypes.includes(fileInfo.fileType?.toLowerCase())) {
+          // Check if file type is supported - handle both direct types and file extensions
+          const fileType = fileInfo.fileType?.toLowerCase();
+          const fileName = fileInfo.fileName?.toLowerCase();
+          const isSupported = supportedTypes.includes(fileType) || 
+                             fileName?.endsWith('.pdf') || 
+                             fileName?.endsWith('.png') || 
+                             fileName?.endsWith('.jpg') || 
+                             fileName?.endsWith('.jpeg') || 
+                             fileName?.endsWith('.gif') || 
+                             fileName?.endsWith('.bmp') || 
+                             fileName?.endsWith('.tiff') || 
+                             fileName?.endsWith('.webp');
+          
+          if (!hasOcrAnalysis && isSupported) {
             console.log(`  ✓ Adding file to process queue: ${fileInfo.fileName} (${fileInfo.fileType})`);
             filesToProcess.push({
               uploadId: upload.id,
@@ -250,6 +263,7 @@ export default function DocumentAnalysis() {
             console.log(`  ⏭️ Skipping already processed file: ${fileInfo.fileName}`);
           } else {
             console.log(`  ❌ Skipping unsupported file type: ${fileInfo.fileName} (${fileInfo.fileType})`);
+            console.log(`  File extension check: ${fileName?.split('.').pop()}`);
           }
         });
       } else {
