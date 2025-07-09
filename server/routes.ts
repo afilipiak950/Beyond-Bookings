@@ -1797,9 +1797,29 @@ Return a JSON response with: documentType, keyFindings[], businessInsights[], re
             height: 3000
           });
           
-          // Process multiple pages if they exist
+          // First, detect how many pages the PDF has
+          let totalPages = 1;
+          try {
+            // Try to get page count by attempting to convert a high page number
+            const testResult = await convert(999, false);
+            if (testResult && testResult.path) {
+              // If page 999 exists, we have a lot of pages
+              totalPages = 10;
+            }
+          } catch (error) {
+            // Extract page count from error message if possible
+            const errorMsg = error.message || '';
+            const pageMatch = errorMsg.match(/number of pages in the file: (\d+)/);
+            if (pageMatch) {
+              totalPages = parseInt(pageMatch[1], 10);
+            }
+          }
+          
+          console.log(`PDF has approximately ${totalPages} pages`);
+          
+          // Process all pages up to a reasonable limit
           let allExtractedText = '';
-          const maxPages = 5; // Limit to first 5 pages for performance
+          const maxPages = Math.min(totalPages, 10); // Process up to 10 pages
           
           for (let pageNum = 1; pageNum <= maxPages; pageNum++) {
             try {
@@ -1807,22 +1827,19 @@ Return a JSON response with: documentType, keyFindings[], businessInsights[], re
               if (result && result.path) {
                 console.log(`Processing page ${pageNum}: ${result.path}`);
                 
-                // Use Tesseract for OCR processing with better configuration
+                // Use Tesseract for OCR processing with simplified configuration
                 const Tesseract = await import('tesseract.js');
                 const { createWorker } = Tesseract;
                 
                 const worker = await createWorker('eng');
-                await worker.setParameters({
-                  tessedit_pageseg_mode: '1', // Automatic page segmentation with OSD
-                  tessedit_ocr_engine_mode: '1', // Use LSTM OCR engine
-                  tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,;:!?()[]{}"-\' €$%&/=+*#@~|\\<>^_`', // Common characters including currency
-                });
+                // Don't set parameters that cause issues - use defaults
                 
-                const { data: { text } } = await worker.recognize(result.path);
+                const { data: { text, confidence } } = await worker.recognize(result.path);
                 await worker.terminate();
                 
                 if (text && text.trim()) {
                   allExtractedText += `\n=== PAGE ${pageNum} ===\n${text.trim()}\n`;
+                  console.log(`Page ${pageNum} extracted ${text.trim().length} characters (confidence: ${confidence}%)`);
                 }
                 
                 // Clean up temporary image file
@@ -1832,22 +1849,30 @@ Return a JSON response with: documentType, keyFindings[], businessInsights[], re
                   console.log('Could not clean up temporary image file:', cleanupError);
                 }
               } else {
-                // No more pages to process
+                console.log(`Page ${pageNum} conversion failed - no more pages`);
                 break;
               }
             } catch (pageError) {
-              console.log(`Page ${pageNum} processing failed or no more pages:`, pageError.message);
-              break;
+              console.log(`Page ${pageNum} processing failed:`, pageError.message);
+              // Continue to next page instead of breaking
+              continue;
             }
           }
           
           extractedText = allExtractedText || 'No text extracted from PDF';
           ocrMetadata = {
-            processingMethod: 'Enhanced Tesseract PDF OCR',
+            processingMethod: 'Enhanced Multi-Page Tesseract PDF OCR',
             confidence: 0.85,
             pagesProcessed: allExtractedText.split('=== PAGE').length - 1,
-            totalCharacters: allExtractedText.length
+            totalCharacters: allExtractedText.length,
+            totalPagesDetected: totalPages,
+            maxPagesProcessed: maxPages
           };
+          
+          console.log(`OCR completed for ${fileToProcess.fileName}:`);
+          console.log(`- Total pages detected: ${totalPages}`);
+          console.log(`- Pages processed: ${allExtractedText.split('=== PAGE').length - 1}`);
+          console.log(`- Total characters extracted: ${allExtractedText.length}`);
           
 
         } catch (error) {
