@@ -97,15 +97,27 @@ export default function DocumentAnalysis() {
       return await apiRequest("/api/document-uploads", "POST", formData);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/document-uploads"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/document-analyses"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/document-insights"] });
       toast({
         title: "Upload erfolgreich",
-        description: "Ihre Datei wird jetzt analysiert. Dies kann einige Minuten dauern.",
+        description: "Datei wird extrahiert und automatisch mit OCR analysiert.",
       });
       setIsUploading(false);
       setUploadProgress(0);
+      
+      // Immediate refresh to show extracted files
+      queryClient.invalidateQueries({ queryKey: ["/api/document-uploads"] });
+      
+      // Progressive refresh to show OCR progress
+      const refreshInterval = setInterval(() => {
+        queryClient.invalidateQueries({ queryKey: ["/api/document-uploads"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/document-analyses"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/document-insights"] });
+      }, 2000); // Refresh every 2 seconds
+      
+      // Stop refreshing after 30 seconds
+      setTimeout(() => {
+        clearInterval(refreshInterval);
+      }, 30000);
       
       // Auto-trigger OCR processing for all documents after upload
       console.log("Auto-triggering OCR processing after upload...");
@@ -445,9 +457,16 @@ export default function DocumentAnalysis() {
                   </div>
                 </div>
                 <Progress value={uploadProgress} className="w-full" />
-                <p className="text-sm text-gray-600 text-center">
-                  Die Datei wird hochgeladen und analysiert. Dies kann einige Minuten dauern.
-                </p>
+                <div className="text-center space-y-2">
+                  <p className="text-sm text-gray-600">
+                    Die Datei wird hochgeladen und analysiert. Dies kann einige Minuten dauern.
+                  </p>
+                  <div className="text-xs text-gray-500">
+                    • Dateien werden extrahiert und sofort angezeigt<br/>
+                    • OCR-Verarbeitung läuft automatisch im Hintergrund<br/>
+                    • Fortschritt wird alle 2 Sekunden aktualisiert
+                  </div>
+                </div>
               </div>
             ) : (
               <div
@@ -678,17 +697,25 @@ export default function DocumentAnalysis() {
                                             const hasRegularAnalysis = analysesArray.some((analysis: any) => 
                                               analysis.fileName === fileInfo.fileName && analysis.extractedData?.text
                                             );
+                                            const isProcessing = fileInfo.ocrProcessed === false;
                                             
                                             if (hasOcrAnalysis) {
                                               return (
                                                 <Badge variant="default" className="text-xs bg-green-100 text-green-800">
-                                                  OCR verfügbar
+                                                  ✓ OCR abgeschlossen
                                                 </Badge>
                                               );
                                             } else if (hasRegularAnalysis) {
                                               return (
                                                 <Badge variant="secondary" className="text-xs">
                                                   Daten verfügbar
+                                                </Badge>
+                                              );
+                                            } else if (isProcessing) {
+                                              return (
+                                                <Badge variant="secondary" className="text-xs bg-yellow-100 text-yellow-800 animate-pulse">
+                                                  <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
+                                                  OCR läuft...
                                                 </Badge>
                                               );
                                             } else {

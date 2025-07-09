@@ -1316,7 +1316,7 @@ What would you like to work on today? I'm here to make your hotel pricing more i
           
           if (req.file.mimetype === 'application/zip' || req.file.mimetype === 'application/x-zip-compressed') {
             // Extract ZIP file and show contents instantly
-            const AdmZip = await import('adm-zip');
+            const AdmZip = (await import('adm-zip')).default;
             const zip = new AdmZip(req.file.path);
             const entries = zip.getEntries();
             
