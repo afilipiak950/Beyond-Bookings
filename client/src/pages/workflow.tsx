@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ChevronRight, Calculator, BarChart3, FileText, Check, ArrowLeft, ArrowRight, Edit3, Brain, Gift, TrendingDown, Star, Download, Plus, Eye, Trash2, Copy, Move, Image, Type, BarChart, PieChart, Presentation, Loader2, Save, Building2 } from "lucide-react";
 import { useLocation, useRoute } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import AppLayout from "@/components/layout/app-layout";
 import type { PricingCalculation } from "@shared/schema";
@@ -632,21 +632,42 @@ export default function Workflow() {
       
       if (response.ok) {
         const newHotel = await response.json();
+        console.log('Created new hotel:', newHotel);
+        
+        // Update the selected hotel ID
         setSelectedHotelId(newHotel.id);
+        
+        // Update workflow data with the new hotel info
+        setWorkflowData(prev => ({
+          ...prev,
+          hotelName: newHotel.name,
+          stars: newHotel.stars || prev.stars,
+          roomCount: newHotel.roomCount || prev.roomCount,
+          averagePrice: newHotel.averagePrice || prev.averagePrice,
+          hotelUrl: newHotel.url || prev.hotelUrl || ''
+        }));
+        
+        // Close the dropdown
         setHotelSearchOpen(false);
+        
+        // Invalidate the hotels query to refetch the updated list
+        // We need to import useQueryClient at the top
+        const queryClient = useQueryClient();
+        queryClient.invalidateQueries({ queryKey: ["/api/hotels"] });
         
         toast({
           title: "Hotel created",
           description: `Created new hotel: ${workflowData.hotelName}`,
         });
       } else {
-        throw new Error('Failed to create hotel');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create hotel');
       }
     } catch (error) {
       console.error('Error creating hotel:', error);
       toast({
         title: "Error",
-        description: "Failed to create hotel. Please try again.",
+        description: `Failed to create hotel: ${error.message}`,
         variant: "destructive",
       });
     }
