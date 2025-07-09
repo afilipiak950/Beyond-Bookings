@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ChevronRight, Calculator, BarChart3, FileText, Check, ArrowLeft, ArrowRight, Edit3, Brain, Gift, TrendingDown, Star, Download, Plus, Eye, Trash2, Copy, Move, Image, Type, BarChart, PieChart, Presentation, Loader2, Save } from "lucide-react";
+import { ChevronRight, Calculator, BarChart3, FileText, Check, ArrowLeft, ArrowRight, Edit3, Brain, Gift, TrendingDown, Star, Download, Plus, Eye, Trash2, Copy, Move, Image, Type, BarChart, PieChart, Presentation, Loader2, Save, Building2 } from "lucide-react";
 import { useLocation, useRoute } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -576,6 +576,94 @@ export default function Workflow() {
 
   // Save calculation state
   const [isSaving, setIsSaving] = useState(false);
+  
+  // Hotel search states
+  const [hotelSearchOpen, setHotelSearchOpen] = useState(false);
+  const [selectedHotelId, setSelectedHotelId] = useState<number | null>(null);
+  
+  // Fetch hotels from database
+  const { data: hotels, isLoading: hotelsLoading } = useQuery({
+    queryKey: ["/api/hotels"],
+    retry: false,
+  });
+  
+  // Filter hotels based on search input
+  const filteredHotels = hotels?.filter((hotel: any) => 
+    hotel.name.toLowerCase().includes(workflowData.hotelName.toLowerCase())
+  ) || [];
+  
+  // Handle hotel selection from dropdown
+  const selectHotel = (hotel: any) => {
+    setSelectedHotelId(hotel.id);
+    setWorkflowData(prev => ({
+      ...prev,
+      hotelName: hotel.name,
+      stars: hotel.stars || 0,
+      roomCount: hotel.roomCount || 0,
+      averagePrice: hotel.averagePrice || 0,
+      hotelUrl: hotel.url || ''
+    }));
+    setHotelSearchOpen(false);
+    
+    toast({
+      title: "Hotel selected",
+      description: `Selected ${hotel.name} from database`,
+    });
+  };
+  
+  // Create new hotel function
+  const createNewHotel = async () => {
+    if (!workflowData.hotelName.trim()) return;
+    
+    try {
+      const response = await fetch('/api/hotels', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: workflowData.hotelName,
+          stars: workflowData.stars || 0,
+          roomCount: workflowData.roomCount || 0,
+          averagePrice: workflowData.averagePrice || 0,
+          url: workflowData.hotelUrl || ''
+        }),
+      });
+      
+      if (response.ok) {
+        const newHotel = await response.json();
+        setSelectedHotelId(newHotel.id);
+        setHotelSearchOpen(false);
+        
+        toast({
+          title: "Hotel created",
+          description: `Created new hotel: ${workflowData.hotelName}`,
+        });
+      } else {
+        throw new Error('Failed to create hotel');
+      }
+    } catch (error) {
+      console.error('Error creating hotel:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create hotel. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.hotel-dropdown-container')) {
+        setHotelSearchOpen(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Calculate AI suggested price (56% of average price, rounded up)
   useEffect(() => {
@@ -872,13 +960,88 @@ export default function Workflow() {
                 
                 <div>
                   <label className="text-sm font-medium text-gray-700">Hotelname</label>
-                  <input 
-                    type="text"
-                    placeholder="z.B. Hampton by Hilton Potsdam"
-                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    value={workflowData.hotelName}
-                    onChange={(e) => updateWorkflowData({ hotelName: e.target.value })}
-                  />
+                  <div className="relative hotel-dropdown-container">
+                    <input 
+                      type="text"
+                      placeholder="Hotel suchen oder neuen Namen eingeben..."
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      value={workflowData.hotelName}
+                      onChange={(e) => {
+                        updateWorkflowData({ hotelName: e.target.value });
+                        setHotelSearchOpen(true);
+                      }}
+                      onFocus={() => setHotelSearchOpen(true)}
+                    />
+                    {hotelSearchOpen && (
+                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                        {hotelsLoading ? (
+                          <div className="p-3 text-center text-gray-500">
+                            <Loader2 className="h-4 w-4 animate-spin mx-auto mb-2" />
+                            Lade Hotels...
+                          </div>
+                        ) : filteredHotels.length > 0 ? (
+                          <>
+                            {filteredHotels.map((hotel) => (
+                              <div
+                                key={hotel.id}
+                                className="p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                                onClick={() => selectHotel(hotel)}
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div className="flex-1">
+                                    <div className="font-medium text-gray-900">{hotel.name}</div>
+                                    <div className="text-sm text-gray-500 flex items-center gap-2">
+                                      <div className="flex items-center gap-1">
+                                        <Star className="h-3 w-3 text-yellow-400" />
+                                        <span>{hotel.stars || 0} Sterne</span>
+                                      </div>
+                                      <div className="flex items-center gap-1">
+                                        <Building2 className="h-3 w-3 text-gray-400" />
+                                        <span>{hotel.roomCount || 0} Zimmer</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="text-right">
+                                    <div className="text-sm font-medium text-blue-600">
+                                      {hotel.averagePrice ? `${hotel.averagePrice.toFixed(2)} €` : 'Kein Preis'}
+                                    </div>
+                                    <div className="text-xs text-gray-400">
+                                      {hotel.location || 'Keine Lage'}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                            {workflowData.hotelName && !filteredHotels.some(h => h.name.toLowerCase() === workflowData.hotelName.toLowerCase()) && (
+                              <div className="p-3 border-t border-gray-200 bg-blue-50">
+                                <button
+                                  onClick={() => createNewHotel()}
+                                  className="w-full text-left flex items-center gap-2 text-blue-600 hover:text-blue-700"
+                                >
+                                  <Plus className="h-4 w-4" />
+                                  <span>Neues Hotel "{workflowData.hotelName}" erstellen</span>
+                                </button>
+                              </div>
+                            )}
+                          </>
+                        ) : workflowData.hotelName ? (
+                          <div className="p-3 border-t border-gray-200 bg-blue-50">
+                            <button
+                              onClick={() => createNewHotel()}
+                              className="w-full text-left flex items-center gap-2 text-blue-600 hover:text-blue-700"
+                            >
+                              <Plus className="h-4 w-4" />
+                              <span>Neues Hotel "{workflowData.hotelName}" erstellen</span>
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="p-3 text-center text-gray-500">
+                            Beginnen Sie mit der Eingabe, um Hotels zu suchen
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
                 
                 <div>
