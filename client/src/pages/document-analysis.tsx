@@ -201,8 +201,14 @@ export default function DocumentAnalysis() {
     // Collect all files that haven't been processed yet
     const filesToProcess = [];
     
+    console.log("=== MASS OCR DEBUG START ===");
+    console.log(`Total uploads: ${uploadsArray.length}`);
+    console.log(`Total analyses: ${analysesArray.length}`);
+    
     uploadsArray.forEach(upload => {
+      console.log(`\nProcessing upload ${upload.id}: ${upload.fileName}`);
       if (upload.extractedFiles && Array.isArray(upload.extractedFiles)) {
+        console.log(`  Found ${upload.extractedFiles.length} extracted files`);
         upload.extractedFiles.forEach((fileInfo: any) => {
           // Check if file hasn't been processed with OCR yet
           const hasOcrAnalysis = analysesArray.some((analysis: any) => 
@@ -210,27 +216,31 @@ export default function DocumentAnalysis() {
           );
           
           // Debug: Log file types being checked
-          console.log(`File: ${fileInfo.fileName}, Type: ${fileInfo.fileType}, HasOCR: ${hasOcrAnalysis}`);
+          console.log(`  File: ${fileInfo.fileName}, Type: ${fileInfo.fileType}, HasOCR: ${hasOcrAnalysis}`);
           
           // Support more file types including common image formats
           const supportedTypes = ['pdf', 'image', 'excel', 'png', 'jpg', 'jpeg', 'gif', 'bmp', 'tiff', 'webp'];
           
           if (!hasOcrAnalysis && supportedTypes.includes(fileInfo.fileType?.toLowerCase())) {
-            console.log(`Adding file to process queue: ${fileInfo.fileName} (${fileInfo.fileType})`);
+            console.log(`  ✓ Adding file to process queue: ${fileInfo.fileName} (${fileInfo.fileType})`);
             filesToProcess.push({
               uploadId: upload.id,
               fileName: fileInfo.fileName
             });
           } else if (hasOcrAnalysis) {
-            console.log(`Skipping already processed file: ${fileInfo.fileName}`);
+            console.log(`  ⏭️ Skipping already processed file: ${fileInfo.fileName}`);
           } else {
-            console.log(`Skipping unsupported file type: ${fileInfo.fileName} (${fileInfo.fileType})`);
+            console.log(`  ❌ Skipping unsupported file type: ${fileInfo.fileName} (${fileInfo.fileType})`);
           }
         });
+      } else {
+        console.log(`  No extracted files found for upload ${upload.id}`);
       }
     });
     
+    console.log(`\n=== MASS OCR SUMMARY ===`);
     console.log(`Found ${filesToProcess.length} files to process:`, filesToProcess);
+    console.log("=== MASS OCR DEBUG END ===");
     
     if (filesToProcess.length === 0) {
       toast({
@@ -490,23 +500,50 @@ export default function DocumentAnalysis() {
               </TabsTrigger>
             </TabsList>
             
-            <Button
-              onClick={processAllWithOCR}
-              disabled={massOcrMutation.isPending}
-              className="ml-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white"
-            >
-              {massOcrMutation.isPending ? (
-                <>
-                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                  Verarbeite...
-                </>
-              ) : (
-                <>
-                  <Zap className="h-4 w-4 mr-2" />
-                  Alle OCR verarbeiten
-                </>
-              )}
-            </Button>
+            <div className="flex gap-2 ml-4">
+              <Button
+                onClick={processAllWithOCR}
+                disabled={massOcrMutation.isPending}
+                className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white"
+              >
+                {massOcrMutation.isPending ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    Verarbeite...
+                  </>
+                ) : (
+                  <>
+                    <Zap className="h-4 w-4 mr-2" />
+                    Alle OCR verarbeiten
+                  </>
+                )}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  // Debug: Log all files and their current state
+                  console.log("=== DEBUG: All Files Analysis ===");
+                  uploadsArray.forEach(upload => {
+                    console.log(`Upload ${upload.id}: ${upload.fileName}`);
+                    if (upload.extractedFiles && Array.isArray(upload.extractedFiles)) {
+                      upload.extractedFiles.forEach((fileInfo: any) => {
+                        const hasOcrAnalysis = analysesArray.some((analysis: any) => 
+                          analysis.fileName === fileInfo.fileName && analysis.analysisType === 'mistral_ocr'
+                        );
+                        console.log(`  - File: ${fileInfo.fileName} (${fileInfo.fileType}) - OCR: ${hasOcrAnalysis ? 'YES' : 'NO'}`);
+                      });
+                    }
+                  });
+                  console.log("=== DEBUG: Analyses Found ===");
+                  analysesArray.forEach(analysis => {
+                    console.log(`Analysis ${analysis.id}: ${analysis.fileName} (${analysis.analysisType})`);
+                  });
+                }}
+                className="text-xs"
+              >
+                Debug
+              </Button>
+            </div>
           </div>
 
           {/* Uploads Tab */}
