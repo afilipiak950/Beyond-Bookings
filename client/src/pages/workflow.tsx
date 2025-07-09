@@ -1157,39 +1157,25 @@ export default function Workflow() {
                               </div>
                             ))}
                             {workflowData.hotelName && !filteredHotels.some(h => h.name.toLowerCase() === workflowData.hotelName.toLowerCase()) && (
-                              <div className="p-3 border-t border-gray-200 bg-blue-50 space-y-2">
+                              <div className="p-3 border-t border-gray-200 bg-green-50">
                                 <button
                                   onClick={() => openHotelExtractionDialog()}
-                                  className="w-full text-left flex items-center gap-2 text-green-600 hover:text-green-700 p-2 rounded-md hover:bg-green-50"
+                                  className="w-full text-left flex items-center gap-2 text-green-600 hover:text-green-700 p-2 rounded-md hover:bg-green-100"
                                 >
                                   <Globe className="h-4 w-4" />
                                   <span>Extract data & create "{workflowData.hotelName}"</span>
-                                </button>
-                                <button
-                                  onClick={() => createNewHotel()}
-                                  className="w-full text-left flex items-center gap-2 text-blue-600 hover:text-blue-700 p-2 rounded-md hover:bg-blue-50"
-                                >
-                                  <Plus className="h-4 w-4" />
-                                  <span>Create basic hotel "{workflowData.hotelName}"</span>
                                 </button>
                               </div>
                             )}
                           </>
                         ) : workflowData.hotelName ? (
-                          <div className="p-3 border-t border-gray-200 bg-blue-50 space-y-2">
+                          <div className="p-3 border-t border-gray-200 bg-green-50">
                             <button
                               onClick={() => openHotelExtractionDialog()}
-                              className="w-full text-left flex items-center gap-2 text-green-600 hover:text-green-700 p-2 rounded-md hover:bg-green-50"
+                              className="w-full text-left flex items-center gap-2 text-green-600 hover:text-green-700 p-2 rounded-md hover:bg-green-100"
                             >
                               <Globe className="h-4 w-4" />
                               <span>Extract data & create "{workflowData.hotelName}"</span>
-                            </button>
-                            <button
-                              onClick={() => createNewHotel()}
-                              className="w-full text-left flex items-center gap-2 text-blue-600 hover:text-blue-700 p-2 rounded-md hover:bg-blue-50"
-                            >
-                              <Plus className="h-4 w-4" />
-                              <span>Create basic hotel "{workflowData.hotelName}"</span>
                             </button>
                           </div>
                         ) : (
