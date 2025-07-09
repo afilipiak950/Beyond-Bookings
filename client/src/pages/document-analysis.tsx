@@ -209,15 +209,28 @@ export default function DocumentAnalysis() {
             analysis.fileName === fileInfo.fileName && analysis.analysisType === 'mistral_ocr'
           );
           
-          if (!hasOcrAnalysis && ['pdf', 'image', 'excel'].includes(fileInfo.fileType)) {
+          // Debug: Log file types being checked
+          console.log(`File: ${fileInfo.fileName}, Type: ${fileInfo.fileType}, HasOCR: ${hasOcrAnalysis}`);
+          
+          // Support more file types including common image formats
+          const supportedTypes = ['pdf', 'image', 'excel', 'png', 'jpg', 'jpeg', 'gif', 'bmp', 'tiff', 'webp'];
+          
+          if (!hasOcrAnalysis && supportedTypes.includes(fileInfo.fileType?.toLowerCase())) {
+            console.log(`Adding file to process queue: ${fileInfo.fileName} (${fileInfo.fileType})`);
             filesToProcess.push({
               uploadId: upload.id,
               fileName: fileInfo.fileName
             });
+          } else if (hasOcrAnalysis) {
+            console.log(`Skipping already processed file: ${fileInfo.fileName}`);
+          } else {
+            console.log(`Skipping unsupported file type: ${fileInfo.fileName} (${fileInfo.fileType})`);
           }
         });
       }
     });
+    
+    console.log(`Found ${filesToProcess.length} files to process:`, filesToProcess);
     
     if (filesToProcess.length === 0) {
       toast({

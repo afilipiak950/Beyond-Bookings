@@ -209,6 +209,12 @@ Changelog:
   - Calculations are saved with current step information and timestamp
   - Users can now save progress at any point and access saved calculations from Calculations page
   - Enhanced workflow with persistent data storage for better user experience
+- January 9, 2025. Comprehensive OCR debugging and file type detection enhancement
+  - Debugged OCR processing issues to identify why not all documents were being processed
+  - Enhanced file type detection to support additional image formats (.gif, .bmp, .tiff, .webp)
+  - Added comprehensive debugging logs to track file processing and type detection
+  - Fixed mass OCR functionality to properly identify and process all supported file types
+  - Improved OCR processing pipeline for better document analysis coverage
 ```
 
 ## User Preferences

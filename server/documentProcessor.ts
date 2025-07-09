@@ -280,13 +280,13 @@ export class DocumentProcessor {
         console.log(`File: ${fileName}, Extension: ${fileExt}`);
         
         // Only process supported file types
-        if (['.xlsx', '.xls', '.xlsm', '.csv', '.pdf', '.png', '.jpg', '.jpeg'].includes(fileExt)) {
+        if (['.xlsx', '.xls', '.xlsm', '.csv', '.pdf', '.png', '.jpg', '.jpeg', '.gif', '.bmp', '.tiff', '.webp'].includes(fileExt)) {
           console.log(`Processing supported file type: ${fileName} (${fileExt})`);
         } else {
           console.log(`Skipping unsupported file type: ${fileName} (${fileExt})`);
         }
         
-        if (['.xlsx', '.xls', '.xlsm', '.csv', '.pdf', '.png', '.jpg', '.jpeg'].includes(fileExt)) {
+        if (['.xlsx', '.xls', '.xlsm', '.csv', '.pdf', '.png', '.jpg', '.jpeg', '.gif', '.bmp', '.tiff', '.webp'].includes(fileExt)) {
           const extractedPath = path.join(extractPath, path.basename(fileName));
           
           try {
@@ -299,9 +299,11 @@ export class DocumentProcessor {
               fileType = 'excel';
             } else if (fileExt === '.pdf') {
               fileType = 'pdf';
-            } else if (['.png', '.jpg', '.jpeg'].includes(fileExt)) {
+            } else if (['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.tiff', '.webp'].includes(fileExt)) {
               fileType = 'image';
             }
+            
+            console.log(`DocumentProcessor - File: ${fileName}, Extension: ${fileExt}, Detected Type: ${fileType}`);
 
             extractedFiles.push({
               fileName: path.basename(fileName),

@@ -1340,13 +1340,15 @@ What would you like to work on today? I'm here to make your hotel pricing more i
                   fileType = 'excel';
                 } else if (fileExt === '.pdf') {
                   fileType = 'pdf';
-                } else if (['.png', '.jpg', '.jpeg'].includes(fileExt)) {
+                } else if (['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.tiff', '.webp'].includes(fileExt)) {
                   fileType = 'image';
                 } else if (['.doc', '.docx'].includes(fileExt)) {
                   fileType = 'word';
                 } else if (['.txt'].includes(fileExt)) {
                   fileType = 'text';
                 }
+                
+                console.log(`File: ${fileName}, Extension: ${fileExt}, Detected Type: ${fileType}`);
                 
                 // For Excel files, also extract worksheet info
                 let worksheets = [];
@@ -1394,13 +1396,15 @@ What would you like to work on today? I'm here to make your hotel pricing more i
               fileType = 'excel';
             } else if (fileExt === '.pdf') {
               fileType = 'pdf';
-            } else if (['.png', '.jpg', '.jpeg'].includes(fileExt)) {
+            } else if (['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.tiff', '.webp'].includes(fileExt)) {
               fileType = 'image';
             } else if (['.doc', '.docx'].includes(fileExt)) {
               fileType = 'word';
             } else if (['.txt'].includes(fileExt)) {
               fileType = 'text';
             }
+            
+            console.log(`Single file: ${req.file.originalname}, Extension: ${fileExt}, Detected Type: ${fileType}`);
             
             // For Excel files, extract worksheet info
             let worksheets = [];
@@ -1513,6 +1517,8 @@ What would you like to work on today? I'm here to make your hotel pricing more i
       }
       
       console.log(`Starting Mistral OCR processing for file: ${fileName}`);
+      console.log(`File type detected: ${fileToProcess.fileType}`);
+      console.log(`File path: ${fileToProcess.filePath}`);
       
       // Track processing time
       const startTime = Date.now();
@@ -1600,8 +1606,63 @@ What would you like to work on today? I'm here to make your hotel pricing more i
         } catch (error) {
           throw new Error(`Excel processing failed: ${error.message}`);
         }
+      } else if (['png', 'jpg', 'jpeg', 'gif', 'bmp', 'tiff'].includes(fileToProcess.fileType?.toLowerCase())) {
+        // Process other image formats with Mistral OCR
+        try {
+          const { Mistral } = await import('@mistralai/mistralai');
+          const mistral = new Mistral({
+            apiKey: process.env.MISTRAL_API_KEY,
+          });
+
+          const imageBuffer = await fs.readFile(fileToProcess.filePath);
+          const base64Image = imageBuffer.toString('base64');
+          
+          // Determine correct MIME type
+          const mimeType = fileToProcess.fileType === 'png' ? 'image/png' : 
+                         fileToProcess.fileType === 'jpg' || fileToProcess.fileType === 'jpeg' ? 'image/jpeg' :
+                         fileToProcess.fileType === 'gif' ? 'image/gif' : 'image/jpeg';
+
+          const response = await mistral.chat.complete({
+            model: "pixtral-12b-2409",
+            messages: [
+              {
+                role: "user",
+                content: [
+                  {
+                    type: "text",
+                    text: "Extract all text from this image. Return only the extracted text, no additional commentary."
+                  },
+                  {
+                    type: "image_url",
+                    image_url: {
+                      url: `data:${mimeType};base64,${base64Image}`
+                    }
+                  }
+                ]
+              }
+            ],
+            max_tokens: 1000
+          });
+
+          extractedText = response.choices[0]?.message?.content || '';
+          ocrMetadata = {
+            processingMethod: 'Mistral Pixtral OCR',
+            model: 'pixtral-12b-2409',
+            confidence: 0.85,
+            imageSize: imageBuffer.length,
+            mimeType
+          };
+        } catch (error) {
+          throw new Error(`Image OCR failed: ${error.message}`);
+        }
       } else {
-        return res.status(400).json({ message: "Unsupported file type for OCR processing" });
+        console.log(`Unsupported file type: ${fileToProcess.fileType} for file: ${fileName}`);
+        console.log(`Available file types: pdf, image, excel, png, jpg, jpeg, gif, bmp, tiff`);
+        return res.status(400).json({ 
+          message: `Unsupported file type: ${fileToProcess.fileType}. Supported types: pdf, image, excel, png, jpg, jpeg, gif, bmp, tiff`,
+          fileType: fileToProcess.fileType,
+          fileName: fileName
+        });
       }
       
       // Extract price data from text
