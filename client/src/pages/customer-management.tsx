@@ -32,6 +32,75 @@ export default function CustomerManagement() {
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
 
+  // Format AI response with proper styling
+  const formatAIResponse = (response: string) => {
+    const lines = response.split('\n');
+    const formattedElements: JSX.Element[] = [];
+    
+    lines.forEach((line, index) => {
+      const trimmedLine = line.trim();
+      
+      if (!trimmedLine) {
+        formattedElements.push(<div key={index} className="h-2" />);
+        return;
+      }
+      
+      // Headers (lines starting with ##, ###, or **bold text**:)
+      if (trimmedLine.startsWith('##') || trimmedLine.startsWith('###') || 
+          (trimmedLine.startsWith('**') && trimmedLine.endsWith('**') && trimmedLine.includes(':'))) {
+        const headerText = trimmedLine.replace(/^#+\s*/, '').replace(/^\*\*(.*)\*\*:?$/, '$1').replace(/:$/, '');
+        formattedElements.push(
+          <h4 key={index} className="font-semibold text-gray-900 mt-3 mb-2 text-base">
+            {headerText}
+          </h4>
+        );
+        return;
+      }
+      
+      // Bullet points (lines starting with - or •)
+      if (trimmedLine.startsWith('-') || trimmedLine.startsWith('•')) {
+        const bulletText = trimmedLine.replace(/^[-•]\s*/, '');
+        formattedElements.push(
+          <div key={index} className="flex items-start gap-2 mb-1">
+            <span className="text-blue-600 mt-1">•</span>
+            <span className="text-gray-700">{bulletText}</span>
+          </div>
+        );
+        return;
+      }
+      
+      // Bold text inline formatting
+      if (trimmedLine.includes('**')) {
+        const parts = trimmedLine.split('**');
+        const formattedParts: JSX.Element[] = [];
+        
+        parts.forEach((part, partIndex) => {
+          if (partIndex % 2 === 0) {
+            formattedParts.push(<span key={partIndex}>{part}</span>);
+          } else {
+            formattedParts.push(<strong key={partIndex} className="font-semibold text-gray-900">{part}</strong>);
+          }
+        });
+        
+        formattedElements.push(
+          <p key={index} className="text-gray-700 mb-2 leading-relaxed">
+            {formattedParts}
+          </p>
+        );
+        return;
+      }
+      
+      // Regular paragraphs
+      formattedElements.push(
+        <p key={index} className="text-gray-700 mb-2 leading-relaxed">
+          {trimmedLine}
+        </p>
+      );
+    });
+    
+    return <div className="space-y-1">{formattedElements}</div>;
+  };
+
   const { data: hotels, isLoading: hotelsLoading } = useQuery({
     queryKey: ["/api/hotels"],
     retry: false,
@@ -660,11 +729,11 @@ export default function CustomerManagement() {
                             </div>
                           </div>
                           
-                          <div className="flex items-start gap-2 p-3 bg-gray-50 rounded-lg">
+                          <div className="flex items-start gap-2 p-4 bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg border border-gray-200">
                             <Bot className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
                             <div className="flex-1">
-                              <div className="text-sm text-gray-800 whitespace-pre-wrap">
-                                {result.response}
+                              <div className="text-sm text-gray-800 space-y-2">
+                                {formatAIResponse(result.response)}
                               </div>
                             </div>
                           </div>
