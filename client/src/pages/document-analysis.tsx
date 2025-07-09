@@ -106,6 +106,13 @@ export default function DocumentAnalysis() {
       });
       setIsUploading(false);
       setUploadProgress(0);
+      
+      // Auto-trigger OCR processing for all documents after upload
+      console.log("Auto-triggering OCR processing after upload...");
+      setTimeout(() => {
+        console.log("Starting automatic OCR processing...");
+        processAllWithOCR();
+      }, 3000); // Wait 3 seconds for data to be ready
     },
     onError: (error: any) => {
       toast({

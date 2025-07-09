@@ -1387,6 +1387,127 @@ What would you like to work on today? I'm here to make your hotel pricing more i
             
             console.log(`Extracted ${extractedFiles.length} files from ZIP`);
             
+            // Auto-trigger OCR processing for all supported files
+            console.log("=== AUTO-TRIGGERING OCR FOR ALL EXTRACTED FILES ===");
+            const supportedOcrTypes = ['pdf', 'image', 'word', 'text'];
+            const filesToProcess = extractedFiles.filter(file => supportedOcrTypes.includes(file.fileType));
+            
+            console.log(`Found ${filesToProcess.length} files that need OCR processing:`, filesToProcess.map(f => `${f.fileName} (${f.fileType})`));
+            
+            // Process each file with OCR automatically
+            for (const file of filesToProcess) {
+              try {
+                console.log(`Auto-processing OCR for: ${file.fileName} (${file.fileType})`);
+                
+                // Call the OCR processing function
+                const startTime = Date.now();
+                let extractedText = '';
+                let ocrMetadata = {};
+                
+                if (file.fileType === 'pdf') {
+                  // Process PDF with Mistral OCR
+                  const pdfResult = await documentProcessor['processPDFWithMistralOCR'](file.filePath);
+                  extractedText = pdfResult.text;
+                  ocrMetadata = pdfResult.metadata;
+                } else if (file.fileType === 'image') {
+                  // Process image with Mistral OCR
+                  const imageResult = await documentProcessor['processImageWithMistralOCR'](file.filePath);
+                  extractedText = imageResult.text;
+                  ocrMetadata = imageResult.metadata;
+                } else if (file.fileType === 'text') {
+                  // Read text file directly
+                  extractedText = await fs.readFile(file.filePath, 'utf-8');
+                  ocrMetadata = { processingMethod: 'direct_text_read' };
+                }
+                
+                // Extract price data from text
+                const priceData = documentProcessor['extractPriceDataFromText'](extractedText);
+                
+                // Generate AI insights
+                let aiInsights = {};
+                try {
+                  const { Mistral } = await import('@mistralai/mistralai');
+                  const mistral = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
+                  
+                  const response = await mistral.chat.complete({
+                    model: "mistral-small-latest",
+                    messages: [
+                      {
+                        role: "user",
+                        content: `Analyze this document text and provide insights in JSON format with:
+1. Document type classification
+2. Key business information
+3. Important findings
+4. Recommendations
+
+Text: ${extractedText.substring(0, 2000)}
+Price data found: ${priceData.length} price points
+
+Return a JSON response with: documentType, keyFindings[], businessInsights[], recommendations[], summary`
+                      }
+                    ],
+                    max_tokens: 1000
+                  });
+                  
+                  const content = response.choices[0]?.message?.content || '{}';
+                  try {
+                    aiInsights = JSON.parse(content);
+                  } catch {
+                    aiInsights.summary = content;
+                  }
+                } catch (error) {
+                  console.error('AI insights error:', error);
+                  aiInsights = { summary: 'AI insights generation failed', error: error.message };
+                }
+                
+                // Create analysis record
+                const analysis = await storage.createDocumentAnalysis({
+                  uploadId: upload.id,
+                  userId,
+                  fileName: file.fileName,
+                  worksheetName: null,
+                  analysisType: 'mistral_ocr',
+                  extractedData: {
+                    text: extractedText,
+                    ocrMetadata
+                  },
+                  processedData: {
+                    textLength: extractedText.length,
+                    pricePointsFound: priceData.length
+                  },
+                  insights: aiInsights,
+                  priceData,
+                  status: 'completed',
+                  processingTime: Math.min(Date.now() - startTime, 2147483647)
+                });
+                
+                console.log(`✅ Auto-OCR completed for ${file.fileName} - Analysis ID: ${analysis.id}`);
+                
+              } catch (error) {
+                console.error(`❌ Auto-OCR failed for ${file.fileName}:`, error);
+                // Create error analysis record
+                try {
+                  await storage.createDocumentAnalysis({
+                    uploadId: upload.id,
+                    userId,
+                    fileName: file.fileName,
+                    worksheetName: null,
+                    analysisType: 'mistral_ocr',
+                    extractedData: { error: error.message },
+                    processedData: { processingFailed: true },
+                    insights: { error: 'OCR processing failed', reason: error.message },
+                    priceData: [],
+                    status: 'error',
+                    processingTime: 0
+                  });
+                } catch (dbError) {
+                  console.error('Failed to create error analysis record:', dbError);
+                }
+              }
+            }
+            
+            console.log(`=== AUTO-OCR PROCESSING COMPLETED FOR ${filesToProcess.length} FILES ===`);
+            
           } else {
             // Handle single files
             const fileExt = path.extname(req.file.originalname).toLowerCase();
@@ -1439,6 +1560,127 @@ What would you like to work on today? I'm here to make your hotel pricing more i
             });
             
             console.log(`Single file processed: ${req.file.originalname}`);
+            
+            // Auto-trigger OCR processing for single files as well
+            console.log("=== AUTO-TRIGGERING OCR FOR SINGLE FILE ===");
+            const supportedOcrTypes = ['pdf', 'image', 'word', 'text'];
+            const filesToProcess = extractedFiles.filter(file => supportedOcrTypes.includes(file.fileType));
+            
+            console.log(`Found ${filesToProcess.length} files that need OCR processing:`, filesToProcess.map(f => `${f.fileName} (${f.fileType})`));
+            
+            // Process each file with OCR automatically
+            for (const file of filesToProcess) {
+              try {
+                console.log(`Auto-processing OCR for: ${file.fileName} (${file.fileType})`);
+                
+                // Call the OCR processing function
+                const startTime = Date.now();
+                let extractedText = '';
+                let ocrMetadata = {};
+                
+                if (file.fileType === 'pdf') {
+                  // Process PDF with Mistral OCR
+                  const pdfResult = await documentProcessor['processPDFWithMistralOCR'](file.filePath);
+                  extractedText = pdfResult.text;
+                  ocrMetadata = pdfResult.metadata;
+                } else if (file.fileType === 'image') {
+                  // Process image with Mistral OCR
+                  const imageResult = await documentProcessor['processImageWithMistralOCR'](file.filePath);
+                  extractedText = imageResult.text;
+                  ocrMetadata = imageResult.metadata;
+                } else if (file.fileType === 'text') {
+                  // Read text file directly
+                  extractedText = await fs.readFile(file.filePath, 'utf-8');
+                  ocrMetadata = { processingMethod: 'direct_text_read' };
+                }
+                
+                // Extract price data from text
+                const priceData = documentProcessor['extractPriceDataFromText'](extractedText);
+                
+                // Generate AI insights
+                let aiInsights = {};
+                try {
+                  const { Mistral } = await import('@mistralai/mistralai');
+                  const mistral = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
+                  
+                  const response = await mistral.chat.complete({
+                    model: "mistral-small-latest",
+                    messages: [
+                      {
+                        role: "user",
+                        content: `Analyze this document text and provide insights in JSON format with:
+1. Document type classification
+2. Key business information
+3. Important findings
+4. Recommendations
+
+Text: ${extractedText.substring(0, 2000)}
+Price data found: ${priceData.length} price points
+
+Return a JSON response with: documentType, keyFindings[], businessInsights[], recommendations[], summary`
+                      }
+                    ],
+                    max_tokens: 1000
+                  });
+                  
+                  const content = response.choices[0]?.message?.content || '{}';
+                  try {
+                    aiInsights = JSON.parse(content);
+                  } catch {
+                    aiInsights.summary = content;
+                  }
+                } catch (error) {
+                  console.error('AI insights error:', error);
+                  aiInsights = { summary: 'AI insights generation failed', error: error.message };
+                }
+                
+                // Create analysis record
+                const analysis = await storage.createDocumentAnalysis({
+                  uploadId: upload.id,
+                  userId,
+                  fileName: file.fileName,
+                  worksheetName: null,
+                  analysisType: 'mistral_ocr',
+                  extractedData: {
+                    text: extractedText,
+                    ocrMetadata
+                  },
+                  processedData: {
+                    textLength: extractedText.length,
+                    pricePointsFound: priceData.length
+                  },
+                  insights: aiInsights,
+                  priceData,
+                  status: 'completed',
+                  processingTime: Math.min(Date.now() - startTime, 2147483647)
+                });
+                
+                console.log(`✅ Auto-OCR completed for ${file.fileName} - Analysis ID: ${analysis.id}`);
+                
+              } catch (error) {
+                console.error(`❌ Auto-OCR failed for ${file.fileName}:`, error);
+                // Create error analysis record
+                try {
+                  await storage.createDocumentAnalysis({
+                    uploadId: upload.id,
+                    userId,
+                    fileName: file.fileName,
+                    worksheetName: null,
+                    analysisType: 'mistral_ocr',
+                    extractedData: { error: error.message },
+                    processedData: { processingFailed: true },
+                    insights: { error: 'OCR processing failed', reason: error.message },
+                    priceData: [],
+                    status: 'error',
+                    processingTime: 0
+                  });
+                } catch (dbError) {
+                  console.error('Failed to create error analysis record:', dbError);
+                }
+              }
+            }
+            
+            console.log(`=== AUTO-OCR PROCESSING COMPLETED FOR ${filesToProcess.length} FILES ===`);
           }
 
         } catch (error) {
