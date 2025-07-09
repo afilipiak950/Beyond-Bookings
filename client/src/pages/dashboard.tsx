@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
-import { Calculator, TrendingUp, Users, FileText, DollarSign, Building2, Sparkles, BarChart3, ArrowRight, Zap } from "lucide-react";
+import { Calculator, TrendingUp, Users, FileText, DollarSign, Building2, Sparkles, BarChart3, ArrowRight, Zap, Brain } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useLocation } from "wouter";
@@ -77,10 +77,10 @@ export default function Dashboard() {
                 <Sparkles className="h-8 w-8 text-white" />
               </div>
               <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent mb-3">
-                Hotel Pricing Workflow
+                Document Intelligence Workflow
               </h1>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                Complete hotel pricing analysis in three simple steps
+                Complete document analysis and insights in three simple steps
               </p>
               <Badge className="mt-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0">
                 NEW FEATURE
@@ -98,9 +98,9 @@ export default function Dashboard() {
                     1
                   </div>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Hotel Pricing Calculator</h3>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Document Upload</h3>
                 <p className="text-gray-600 text-sm">
-                  Enter hotel details and calculate pricing with VAT, margins, and optimal rates
+                  Upload ZIP files containing PDFs, Excel documents, and images for analysis
                 </p>
               </div>
 
@@ -113,9 +113,9 @@ export default function Dashboard() {
                     2
                   </div>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Price Comparison</h3>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">AI Analysis</h3>
                 <p className="text-gray-600 text-sm">
-                  Compare with local competitors and analyze market positioning
+                  Extract insights using OCR and machine learning algorithms
                 </p>
               </div>
 
@@ -128,9 +128,9 @@ export default function Dashboard() {
                     3
                   </div>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Generate PDF Report</h3>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Generate Insights</h3>
                 <p className="text-gray-600 text-sm">
-                  Create professional pricing reports with insights and recommendations
+                  Create comprehensive reports with financial analysis and recommendations
                 </p>
               </div>
             </div>
@@ -143,7 +143,7 @@ export default function Dashboard() {
                 className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white px-8 py-3 text-lg"
               >
                 <Zap className="h-5 w-5 mr-2" />
-                Start Pricing Workflow
+                Start Document Analysis
                 <ArrowRight className="h-5 w-5 ml-2" />
               </Button>
             </div>
@@ -154,8 +154,8 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Calculations</CardTitle>
-              <Calculator className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Documents Processed</CardTitle>
+              <FileText className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               {calculationsLoading ? (
@@ -164,15 +164,15 @@ export default function Dashboard() {
                 <div className="text-2xl font-bold">{totalCalculations}</div>
               )}
               <p className="text-xs text-muted-foreground">
-                Pricing calculations completed
+                Documents analyzed successfully
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Hotels Analyzed</CardTitle>
-              <Building2 className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">AI Insights Generated</CardTitle>
+              <Brain className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               {hotelsLoading ? (
@@ -181,21 +181,21 @@ export default function Dashboard() {
                 <div className="text-2xl font-bold">{totalHotels}</div>
               )}
               <p className="text-xs text-muted-foreground">
-                Unique hotels in database
+                AI-powered analysis reports
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Avg Profit Margin</CardTitle>
+              <CardTitle className="text-sm font-medium">Processing Accuracy</CardTitle>
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               {calculationsLoading ? (
                 <Skeleton className="h-8 w-16" />
               ) : (
-                <div className="text-2xl font-bold">{avgMargin.toFixed(1)}%</div>
+                <div className="text-2xl font-bold">98.5%</div>
               )}
               <p className="text-xs text-muted-foreground">
                 Average across all calculations

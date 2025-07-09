@@ -145,7 +145,7 @@ export type Feedback = typeof feedback.$inferSelect;
 // OCR Analysis table
 export const ocrAnalyses = pgTable("ocr_analyses", {
   id: serial("id").primaryKey(),
-  userId: varchar("user_id").notNull(),
+  userId: integer("user_id").notNull().references(() => users.id),
   fileName: varchar("file_name").notNull(),
   filePath: varchar("file_path").notNull(),
   fileSize: integer("file_size").notNull(),
@@ -189,7 +189,7 @@ export type OcrAnalysis = typeof ocrAnalyses.$inferSelect;
 // AI Vector Database for Self-Learning Price Intelligence
 export const priceIntelligence = pgTable("price_intelligence", {
   id: serial("id").primaryKey(),
-  userId: varchar("user_id").notNull(),
+  userId: integer("user_id").notNull().references(() => users.id),
   hotelName: varchar("hotel_name").notNull(),
   stars: integer("stars").notNull(),
   roomCount: integer("room_count").notNull(),
@@ -239,7 +239,7 @@ export type AiLearningSession = typeof aiLearningSessions.$inferSelect;
 // Document Upload and Analysis System
 export const documentUploads = pgTable("document_uploads", {
   id: serial("id").primaryKey(),
-  userId: varchar("user_id").notNull(),
+  userId: integer("user_id").notNull().references(() => users.id),
   fileName: varchar("file_name").notNull(),
   originalFileName: varchar("original_file_name").notNull(),
   filePath: varchar("file_path").notNull(),
@@ -254,7 +254,7 @@ export const documentUploads = pgTable("document_uploads", {
 export const documentAnalyses = pgTable("document_analyses", {
   id: serial("id").primaryKey(),
   uploadId: integer("upload_id").references(() => documentUploads.id),
-  userId: varchar("user_id").notNull(),
+  userId: integer("user_id").notNull().references(() => users.id),
   fileName: varchar("file_name").notNull(),
   worksheetName: varchar("worksheet_name"), // For Excel files with multiple sheets
   analysisType: varchar("analysis_type").notNull(), // 'ocr', 'excel_parse', 'structured_data'
@@ -271,7 +271,7 @@ export const documentAnalyses = pgTable("document_analyses", {
 
 export const documentInsights = pgTable("document_insights", {
   id: serial("id").primaryKey(),
-  userId: varchar("user_id").notNull(),
+  userId: integer("user_id").notNull().references(() => users.id),
   analysisIds: jsonb("analysis_ids"), // Array of analysis IDs used for this insight (nullable)
   insightType: varchar("insight_type").notNull(), // 'price_average', 'trend_analysis', 'comparison'
   title: varchar("title").notNull(),

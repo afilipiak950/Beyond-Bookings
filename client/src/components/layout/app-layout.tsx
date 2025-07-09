@@ -33,7 +33,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
     {
       id: 1,
       role: 'assistant',
-      content: 'Hello! I\'m your AI assistant for Beyond Bookings. I can help you with pricing calculations, hotel data analysis, system guidance, and answer any questions about your SaaS platform. How can I assist you today?',
+      content: 'Hello! I\'m your AI assistant for DocumentIQ. I can help you with document analysis, OCR processing, financial workflow optimization, and answer any questions about your document intelligence platform. How can I assist you today?',
       timestamp: new Date()
     }
   ]);

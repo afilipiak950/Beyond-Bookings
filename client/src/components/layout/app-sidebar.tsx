@@ -37,45 +37,45 @@ const navigation = [
     gradient: "from-blue-500 to-cyan-500",
   },
   {
-    name: "Pricing Agent",
+    name: "Document Workflow",
     href: "/workflow",
     icon: Sparkles,
-    description: "3-step pricing process",
+    description: "3-step analysis process",
     gradient: "from-green-500 to-blue-500",
     badge: "NEW",
   },
 
   {
-    name: "Calculations",
+    name: "Analysis Results",
     href: "/calculations",
     icon: Calculator,
-    description: "View all pricing calculations",
+    description: "View all document analyses",
     gradient: "from-indigo-500 to-blue-500",
   },
   {
     name: "OCR Analyzer",
     href: "/ocr-analyzer",
     icon: FileText,
-    description: "AI-powered Excel file analysis",
+    description: "AI-powered document analysis",
     gradient: "from-emerald-500 to-teal-500",
   },
   {
-    name: "Document Analysis",
+    name: "Document Intelligence",
     href: "/document-analysis",
     icon: Brain,
-    description: "Advanced ZIP & Excel processing",
+    description: "Advanced ZIP & document processing",
     gradient: "from-purple-500 to-indigo-500",
     badge: "AI",
   },
   {
-    name: "Hotel Database",
+    name: "Data Management",
     href: "/customer-management",
     icon: Database,
-    description: "Smart hotel management",
+    description: "Smart document management",
     gradient: "from-green-500 to-emerald-500",
   },
   {
-    name: "Smart Reports",
+    name: "Intelligence Reports",
     href: "/reports",
     icon: BarChart3,
     description: "Advanced analytics & exports",
@@ -85,7 +85,7 @@ const navigation = [
     name: "AI Settings",
     href: "/settings",
     icon: Settings,
-    description: "System optimization",
+    description: "Document processing optimization",
     gradient: "from-slate-500 to-gray-500",
   },
 ];
@@ -120,10 +120,10 @@ export default function AppSidebar({ className }: SidebarProps) {
         {!isCollapsed && (
           <div className="flex items-center space-x-3 animate-scaleIn">
             <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-green-500 rounded-xl flex items-center justify-center animate-breathe shadow-lg">
-              <Zap className="h-5 w-5 text-white" />
+              <FileText className="h-5 w-5 text-white" />
             </div>
             <div className="flex flex-col">
-              <h1 className="text-base font-bold gradient-text">Beyond Bookings</h1>
+              <h1 className="text-base font-bold gradient-text">DocumentIQ</h1>
             </div>
           </div>
         )}
