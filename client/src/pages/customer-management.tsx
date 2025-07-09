@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Users, Building2, Search, Plus, Globe, MapPin, Star, Loader2, Trash2, MoreHorizontal } from "lucide-react";
+import { Users, Building2, Search, Plus, Globe, MapPin, Star, Loader2, Trash2, MoreHorizontal, Send, Bot, User, Clock } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
 export default function CustomerManagement() {
@@ -24,6 +24,13 @@ export default function CustomerManagement() {
   const [hotelUrl, setHotelUrl] = useState("");
   const [extractedData, setExtractedData] = useState<any>(null);
   const [extractionLoading, setExtractionLoading] = useState(false);
+  
+  // Hotel details dialog state
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [selectedHotel, setSelectedHotel] = useState<any>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchResults, setSearchResults] = useState<any[]>([]);
 
   const { data: hotels, isLoading: hotelsLoading } = useQuery({
     queryKey: ["/api/hotels"],
@@ -183,6 +190,56 @@ export default function CustomerManagement() {
     
     // Navigate to workflow
     setLocation('/workflow');
+  };
+
+  // Handle hotel details view
+  const handleViewDetails = (hotel: any) => {
+    setSelectedHotel(hotel);
+    setSearchQuery("");
+    setSearchResults([]);
+    setDetailsOpen(true);
+  };
+
+  // Handle AI search about hotel
+  const handleHotelSearch = async () => {
+    if (!searchQuery.trim() || !selectedHotel) return;
+    
+    setSearchLoading(true);
+    try {
+      const response = await apiRequest('/api/ai/chat', 'POST', {
+        message: `About ${selectedHotel.name} hotel${selectedHotel.location ? ` in ${selectedHotel.location}` : ''}: ${searchQuery}`,
+        context: {
+          hotelName: selectedHotel.name,
+          location: selectedHotel.location,
+          stars: selectedHotel.stars,
+          category: selectedHotel.category,
+          amenities: selectedHotel.amenities,
+          url: selectedHotel.url
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to get AI response');
+      }
+      
+      const data = await response.json();
+      setSearchResults(prev => [...prev, {
+        query: searchQuery,
+        response: data.response,
+        timestamp: new Date().toISOString()
+      }]);
+      
+      setSearchQuery("");
+    } catch (error) {
+      console.error('AI search error:', error);
+      toast({
+        title: "Search failed",
+        description: "Could not get AI response. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSearchLoading(false);
+    }
   };
 
   // Redirect to home if not authenticated
@@ -469,7 +526,7 @@ export default function CustomerManagement() {
                         </div>
                       </div>
                       <div className="flex items-center space-x-2 mt-4">
-                        <Button size="sm" variant="outline" className="flex-1">
+                        <Button size="sm" variant="outline" className="flex-1" onClick={() => handleViewDetails(hotel)}>
                           View Details
                         </Button>
                         <Button size="sm" className="flex-1" onClick={() => handleNewCalculation(hotel)}>
@@ -496,6 +553,180 @@ export default function CustomerManagement() {
             )}
           </CardContent>
         </Card>
+        
+        {/* Hotel Details Dialog with AI Search */}
+        <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
+          <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Building2 className="h-5 w-5 text-blue-600" />
+                {selectedHotel?.name || 'Hotel Details'}
+              </DialogTitle>
+              <DialogDescription>
+                Ask AI anything about this hotel for detailed information
+              </DialogDescription>
+            </DialogHeader>
+            
+            {selectedHotel && (
+              <div className="space-y-6">
+                {/* Hotel Basic Info */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gradient-to-r from-blue-50 to-green-50 rounded-lg">
+                  <div>
+                    <h3 className="font-semibold text-gray-800 mb-2">Basic Information</h3>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center gap-2">
+                        <Star className="h-4 w-4 text-yellow-500" />
+                        <span>{selectedHotel.stars} Stars</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Building2 className="h-4 w-4 text-blue-600" />
+                        <span>{selectedHotel.roomCount} Rooms</span>
+                      </div>
+                      {selectedHotel.location && (
+                        <div className="flex items-center gap-2">
+                          <MapPin className="h-4 w-4 text-green-600" />
+                          <span className="text-xs">{selectedHotel.location}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-semibold text-gray-800 mb-2">Additional Details</h3>
+                    <div className="space-y-2 text-sm">
+                      {selectedHotel.category && (
+                        <div>
+                          <span className="font-medium">Category:</span> {selectedHotel.category}
+                        </div>
+                      )}
+                      {selectedHotel.url && (
+                        <div className="flex items-center gap-2">
+                          <Globe className="h-4 w-4 text-blue-600" />
+                          <a href={selectedHotel.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-xs">
+                            Visit Website
+                          </a>
+                        </div>
+                      )}
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-gray-500" />
+                        <span className="text-xs">Added: {new Date(selectedHotel.createdAt).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* AI Search Section */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Bot className="h-5 w-5 text-blue-600" />
+                    <h3 className="font-semibold text-gray-800">Ask AI about this hotel</h3>
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="What would you like to know about this hotel? (e.g., amenities, location, reviews, pricing)"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && handleHotelSearch()}
+                      className="flex-1"
+                    />
+                    <Button 
+                      onClick={handleHotelSearch}
+                      disabled={searchLoading || !searchQuery.trim()}
+                      className="px-4"
+                    >
+                      {searchLoading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Send className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                  
+                  {/* Search Results */}
+                  {searchResults.length > 0 && (
+                    <div className="space-y-4 max-h-[400px] overflow-y-auto">
+                      {searchResults.map((result, index) => (
+                        <div key={index} className="space-y-2">
+                          <div className="flex items-start gap-2 p-3 bg-blue-50 rounded-lg">
+                            <User className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-gray-800">{result.query}</p>
+                              <span className="text-xs text-gray-500">
+                                {new Date(result.timestamp).toLocaleTimeString()}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-start gap-2 p-3 bg-gray-50 rounded-lg">
+                            <Bot className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                            <div className="flex-1">
+                              <div className="text-sm text-gray-800 whitespace-pre-wrap">
+                                {result.response}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {/* Quick suggestion buttons */}
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={async () => {
+                        setSearchQuery("What are the key amenities and facilities?");
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                        handleHotelSearch();
+                      }}
+                      disabled={searchLoading}
+                    >
+                      Amenities
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={async () => {
+                        setSearchQuery("What's the location like and nearby attractions?");
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                        handleHotelSearch();
+                      }}
+                      disabled={searchLoading}
+                    >
+                      Location
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={async () => {
+                        setSearchQuery("What do recent reviews say about this hotel?");
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                        handleHotelSearch();
+                      }}
+                      disabled={searchLoading}
+                    >
+                      Reviews
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={async () => {
+                        setSearchQuery("What are typical room rates and pricing?");
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                        handleHotelSearch();
+                      }}
+                      disabled={searchLoading}
+                    >
+                      Pricing
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </AppLayout>
   );
