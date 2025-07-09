@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Users, Building2, Search, Plus, Globe, MapPin, Star, Loader2 } from "lucide-react";
+import { Users, Building2, Search, Plus, Globe, MapPin, Star, Loader2, Trash2, MoreHorizontal } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
 export default function CustomerManagement() {
@@ -86,6 +86,28 @@ export default function CustomerManagement() {
     },
   });
 
+  // Mutation for deleting hotel
+  const deleteHotelMutation = useMutation({
+    mutationFn: async (hotelId: number) => {
+      const response = await apiRequest(`/api/hotels/${hotelId}`, 'DELETE');
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/hotels"] });
+      toast({
+        title: "Hotel deleted successfully!",
+        description: "The hotel has been removed from your database",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to delete hotel",
+        description: error.message || "Could not delete hotel from database",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Handle hotel data extraction
   const handleExtractData = async () => {
     if (!hotelName.trim()) {
@@ -123,6 +145,17 @@ export default function CustomerManagement() {
     }
 
     createHotelMutation.mutate(extractedData);
+  };
+
+  // Handle hotel deletion
+  const handleDeleteHotel = async (hotelId: number, hotelName: string) => {
+    if (confirm(`Are you sure you want to delete "${hotelName}"? This action cannot be undone.`)) {
+      try {
+        await deleteHotelMutation.mutateAsync(hotelId);
+      } catch (error) {
+        console.error('Error deleting hotel:', error);
+      }
+    }
   };
 
   // Redirect to home if not authenticated
@@ -414,6 +447,19 @@ export default function CustomerManagement() {
                         </Button>
                         <Button size="sm" className="flex-1">
                           New Calculation
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="destructive"
+                          onClick={() => handleDeleteHotel(hotel.id, hotel.name)}
+                          disabled={deleteHotelMutation.isPending}
+                          className="px-3"
+                        >
+                          {deleteHotelMutation.isPending ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-4 w-4" />
+                          )}
                         </Button>
                       </div>
                     </CardContent>

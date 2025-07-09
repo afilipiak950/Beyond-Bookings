@@ -545,6 +545,26 @@ Return only JSON, no markdown.`;
     }
   });
 
+  app.delete('/api/hotels/:id', requireAuth, async (req, res) => {
+    try {
+      const hotelId = parseInt(req.params.id);
+      
+      if (!hotelId || isNaN(hotelId)) {
+        return res.status(400).json({ message: "Valid hotel ID is required" });
+      }
+
+      const deleted = await storage.deleteHotel(hotelId);
+      if (!deleted) {
+        return res.status(404).json({ message: "Hotel not found" });
+      }
+      
+      res.json({ message: "Hotel deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting hotel:", error);
+      res.status(500).json({ message: "Failed to delete hotel" });
+    }
+  });
+
   app.post('/api/hotels/scrape', requireAuth, async (req, res) => {
     try {
       const { url } = req.body;
