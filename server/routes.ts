@@ -1354,7 +1354,7 @@ What would you like to work on today? I'm here to make your hotel pricing more i
                 let worksheets = [];
                 if (fileType === 'excel') {
                   try {
-                    const XLSX = await import('xlsx');
+                    const XLSX = (await import('xlsx')).default;
                     const workbook = XLSX.readFile(extractedPath);
                     worksheets = workbook.SheetNames.map(name => ({
                       name,
@@ -1416,7 +1416,7 @@ What would you like to work on today? I'm here to make your hotel pricing more i
                   ocrMetadata = imageResult.metadata;
                 } else if (file.fileType === 'excel') {
                   // Process Excel file - analyze ALL worksheets/tabs
-                  const XLSX = await import('xlsx');
+                  const XLSX = (await import('xlsx')).default;
                   const workbook = XLSX.readFile(file.filePath);
                   
                   let allWorksheetText = '';
@@ -1566,7 +1566,7 @@ Return a JSON response with: documentType, keyFindings[], businessInsights[], re
             let worksheets = [];
             if (fileType === 'excel') {
               try {
-                const XLSX = await import('xlsx');
+                const XLSX = (await import('xlsx')).default;
                 const workbook = XLSX.readFile(req.file.path);
                 worksheets = workbook.SheetNames.map(name => ({
                   name,
@@ -1625,7 +1625,7 @@ Return a JSON response with: documentType, keyFindings[], businessInsights[], re
                   ocrMetadata = imageResult.metadata;
                 } else if (file.fileType === 'excel') {
                   // Process Excel file - analyze ALL worksheets/tabs
-                  const XLSX = await import('xlsx');
+                  const XLSX = (await import('xlsx')).default;
                   const workbook = XLSX.readFile(file.filePath);
                   
                   let allWorksheetText = '';
@@ -1885,7 +1885,7 @@ Return a JSON response with: documentType, keyFindings[], businessInsights[], re
       } else if (fileToProcess.fileType === 'excel') {
         // Process Excel file - analyze ALL worksheets/tabs
         try {
-          const XLSX = await import('xlsx');
+          const XLSX = (await import('xlsx')).default;
           const workbook = XLSX.readFile(fileToProcess.filePath);
           
           let allWorksheetText = '';
