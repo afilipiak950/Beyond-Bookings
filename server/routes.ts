@@ -1743,7 +1743,17 @@ Return a JSON response with: documentType, keyFindings[], businessInsights[], re
   // Process file with Mistral OCR
   app.post("/api/process-ocr", requireAuth, async (req: Request, res: Response) => {
     try {
+      console.log("=== OCR PROCESSING START ===");
+      console.log("Request body:", req.body);
+      console.log("User:", req.user);
+      
       const { uploadId, fileName } = req.body;
+      
+      if (!uploadId || !fileName) {
+        console.log("Missing required fields:", { uploadId, fileName });
+        return res.status(400).json({ message: "Missing uploadId or fileName" });
+      }
+      
       const userId = req.user.id.toString();
       
       // Get the upload record
