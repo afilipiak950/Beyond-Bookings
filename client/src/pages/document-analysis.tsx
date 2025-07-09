@@ -124,7 +124,7 @@ export default function DocumentAnalysis() {
       setTimeout(() => {
         console.log("Starting automatic OCR processing...");
         processAllWithOCR();
-      }, 3000); // Wait 3 seconds for data to be ready
+      }, 5000); // Wait 5 seconds for data to be ready
     },
     onError: (error: any) => {
       toast({
@@ -460,6 +460,27 @@ export default function DocumentAnalysis() {
             <CardDescription>
               Laden Sie ZIP-Dateien mit Excel-Dokumenten hoch für die KI-Analyse
             </CardDescription>
+            {uploadsArray.length > 0 && (
+              <div className="flex gap-2 mt-4">
+                <Button
+                  onClick={processAllWithOCR}
+                  disabled={massOcrMutation.isPending}
+                  className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white"
+                >
+                  {massOcrMutation.isPending ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                      OCR verarbeitet...
+                    </>
+                  ) : (
+                    <>
+                      <Zap className="h-4 w-4 mr-2" />
+                      Alle OCR verarbeiten
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
           </CardHeader>
           <CardContent>
             {isUploading ? (
@@ -711,7 +732,7 @@ export default function DocumentAnalysis() {
                                             const hasRegularAnalysis = analysesArray.some((analysis: any) => 
                                               analysis.fileName === fileInfo.fileName && analysis.extractedData?.text
                                             );
-                                            const isProcessing = fileInfo.ocrProcessed === false;
+                                            const isProcessing = fileInfo.ocrProcessed === false && ocrMutation.isPending;
                                             
                                             if (hasOcrAnalysis) {
                                               return (
@@ -730,6 +751,12 @@ export default function DocumentAnalysis() {
                                                 <Badge variant="secondary" className="text-xs bg-yellow-100 text-yellow-800 animate-pulse">
                                                   <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
                                                   OCR läuft...
+                                                </Badge>
+                                              );
+                                            } else if (fileInfo.ocrProcessed === false) {
+                                              return (
+                                                <Badge variant="secondary" className="text-xs bg-red-100 text-red-800">
+                                                  OCR ausstehend
                                                 </Badge>
                                               );
                                             } else {
