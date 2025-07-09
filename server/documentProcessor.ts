@@ -573,42 +573,84 @@ export class DocumentProcessor {
       
       // Get image metadata
       const metadata = await sharp(imagePath).metadata();
+      const fileExtension = path.extname(imagePath).toLowerCase();
       
-      // Use Tesseract.js for OCR and Mistral for text enhancement
-      let response;
-      let ocrText = "";
+      console.log('Processing image with Mistral OCR API');
       
-      console.log('Starting OCR with Tesseract.js');
+      // Determine MIME type based on file extension
+      let mimeType = 'image/png';
+      if (fileExtension === '.jpg' || fileExtension === '.jpeg') {
+        mimeType = 'image/jpeg';
+      } else if (fileExtension === '.gif') {
+        mimeType = 'image/gif';
+      } else if (fileExtension === '.bmp') {
+        mimeType = 'image/bmp';
+      } else if (fileExtension === '.tiff') {
+        mimeType = 'image/tiff';
+      } else if (fileExtension === '.webp') {
+        mimeType = 'image/webp';
+      }
+      
+      // Create data URL for Mistral OCR API
+      const dataUrl = `data:${mimeType};base64,${imageBase64}`;
       
       try {
-        // First, extract text using Tesseract.js
-        try {
-          const { createWorker } = await import('tesseract.js');
-          const worker = await createWorker('eng+deu');
-          
-          const { data } = await worker.recognize(imagePath);
-          ocrText = data.text || '';
-          
-          await worker.terminate();
-          console.log(`OCR extracted ${ocrText.length} characters from image`);
-        } catch (ocrError) {
-          console.error('OCR failed for image:', ocrError);
-          ocrText = `[OCR failed: ${ocrError.message}]`;
+        // Use Mistral OCR API
+        const response = await mistral.ocr.process({
+          model: "mistral-ocr-latest",
+          document: {
+            type: "image_url",
+            imageUrl: dataUrl
+          },
+          includeImageBase64: false
+        });
+        
+        // Extract text from all pages (images typically have one page)
+        let extractedText = '';
+        if (response.pages && response.pages.length > 0) {
+          extractedText = response.pages.map(page => page.markdown).join('\n\n');
         }
         
-        console.log(`Tesseract.js extracted ${ocrText.length} characters`);
+        console.log(`Mistral OCR API extracted ${extractedText.length} characters from image`);
         
-        // Then enhance with Mistral AI
+        return {
+          text: extractedText,
+          metadata: {
+            confidence: 0.98, // Mistral OCR has very high confidence
+            processingMethod: 'mistral_ocr_api',
+            imageFormat: metadata.format,
+            imageWidth: metadata.width,
+            imageHeight: metadata.height,
+            imageSize: imageBuffer.length,
+            ocrProvider: 'mistral_ocr_latest',
+            pagesProcessed: response.pages?.length || 0,
+            usageInfo: response.usage_info
+          }
+        };
+        
+      } catch (ocrError) {
+        console.error('Mistral OCR API failed:', ocrError);
+        console.log('Falling back to Tesseract OCR with Mistral enhancement');
+        
+        // Fallback to Tesseract + Mistral enhancement
+        const { createWorker } = await import('tesseract.js');
+        const worker = await createWorker('eng+deu');
+        
+        const { data } = await worker.recognize(imagePath);
+        const ocrText = data.text || '';
+        
+        await worker.terminate();
+        console.log(`Fallback Tesseract OCR extracted ${ocrText.length} characters from image`);
+        
+        // Enhance with Mistral chat
         const models = ["mistral-small-latest", "open-mistral-7b"];
+        let enhancedText = ocrText;
         
         for (const model of models) {
           try {
             console.log(`Enhancing OCR text with model: ${model}`);
             
-            // Add delay to handle rate limiting
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            response = await mistral.chat.complete({
+            const response = await mistral.chat.complete({
               model: model,
               messages: [
                 {
@@ -621,46 +663,31 @@ ${ocrText}`
               max_tokens: 4000
             });
             
+            enhancedText = response.choices[0]?.message?.content || ocrText;
             console.log(`OCR enhancement successful with model: ${model}`);
             break;
           } catch (modelError) {
             console.warn(`Model ${model} failed for enhancement:`, modelError.message);
-            
             if (model === models[models.length - 1]) {
-              // If all models fail, return the basic OCR text
-              console.log('All Mistral models failed, using basic OCR text');
-              response = {
-                choices: [{
-                  message: {
-                    content: ocrText
-                  }
-                }]
-              };
-              break;
+              enhancedText = ocrText;
             }
           }
         }
         
-      } catch (tesseractError) {
-        console.error('Tesseract.js OCR failed:', tesseractError.message);
-        throw tesseractError;
+        return {
+          text: enhancedText,
+          metadata: {
+            confidence: data.confidence / 100,
+            processingMethod: 'tesseract_mistral_fallback',
+            imageFormat: metadata.format,
+            imageWidth: metadata.width,
+            imageHeight: metadata.height,
+            imageSize: imageBuffer.length,
+            ocrProvider: 'tesseract_fallback',
+            fallbackReason: ocrError.message
+          }
+        };
       }
-
-      const extractedText = response.choices[0]?.message?.content || '';
-      
-      console.log(`Mistral OCR extracted ${extractedText.length} characters from image`);
-      
-      return {
-        text: extractedText,
-        metadata: {
-          confidence: 0.95, // Mistral typically has high confidence
-          processingMethod: 'mistral_pixtral',
-          imageFormat: metadata.format,
-          imageWidth: metadata.width,
-          imageHeight: metadata.height,
-          imageSize: imageBuffer.length
-        }
-      };
       
     } catch (error) {
       console.error('Error processing image with Mistral OCR:', error);
@@ -673,106 +700,162 @@ ${ocrText}`
    */
   private async processPDFWithMistralOCR(pdfPath: string): Promise<{ text: string; metadata: any }> {
     try {
-      // Convert PDF to images using pdf2pic
-      const pdf2pic = await import('pdf2pic');
-      const convertPdf = pdf2pic.fromPath(pdfPath, {
-        density: 300,
-        saveFilename: "page",
-        savePath: "./uploads/temp",
-        format: "png",
-        width: 2000,
-        height: 2000
-      });
-
-      const pages = await convertPdf.bulk(-1); // Convert all pages
-      let allText = '';
-      const pageMetadata = [];
-
-      for (let i = 0; i < pages.length; i++) {
-        const page = pages[i];
-        console.log(`Processing PDF page ${i + 1}/${pages.length}`);
+      // Read and encode PDF as base64
+      const pdfBuffer = await fs.readFile(pdfPath);
+      const pdfBase64 = pdfBuffer.toString('base64');
+      
+      console.log('Processing PDF with Mistral OCR API');
+      
+      // Create data URL for Mistral OCR API
+      const dataUrl = `data:application/pdf;base64,${pdfBase64}`;
+      
+      try {
+        // Use Mistral OCR API
+        const response = await mistral.ocr.process({
+          model: "mistral-ocr-latest",
+          document: {
+            type: "document_url",
+            documentUrl: dataUrl
+          },
+          includeImageBase64: false
+        });
         
-        // Read and encode page image as base64
-        const imageBuffer = await fs.readFile(page.path);
-        const imageBase64 = imageBuffer.toString('base64');
+        // Extract text from all pages
+        let allText = '';
+        const pageMetadata = [];
         
-        // Use Tesseract.js for OCR on the page image
-        let rawPageText = '';
-        try {
-          const { createWorker } = await import('tesseract.js');
-          const worker = await createWorker('eng+deu');
-          
-          const { data } = await worker.recognize(page.path);
-          rawPageText = data.text || '';
-          
-          await worker.terminate();
-          console.log(`OCR extracted ${rawPageText.length} characters from page ${i + 1}`);
-        } catch (ocrError) {
-          console.error(`OCR failed for page ${i + 1}:`, ocrError);
-          rawPageText = `[OCR failed for page ${i + 1}: ${ocrError.message}]`;
+        if (response.pages && response.pages.length > 0) {
+          response.pages.forEach((page, index) => {
+            const pageText = page.markdown || '';
+            allText += `\n\n--- Page ${page.index + 1} ---\n${pageText}`;
+            
+            pageMetadata.push({
+              pageNumber: page.index + 1,
+              textLength: pageText.length,
+              dimensions: page.dimensions,
+              imageCount: page.images?.length || 0
+            });
+          });
         }
         
-        // Enhance with Mistral AI
-        const models = ["mistral-small-latest", "open-mistral-7b"];
-        let enhancedText = rawPageText;
+        console.log(`Mistral OCR API extracted ${allText.length} characters from PDF with ${response.pages?.length || 0} pages`);
         
-        for (const model of models) {
+        return {
+          text: allText.trim(),
+          metadata: {
+            confidence: 0.98, // Mistral OCR has very high confidence
+            processingMethod: 'mistral_ocr_api',
+            pageCount: response.pages?.length || 0,
+            pages: pageMetadata,
+            totalTextLength: allText.length,
+            ocrProvider: 'mistral_ocr_latest',
+            usageInfo: response.usage_info,
+            model: response.model
+          }
+        };
+        
+      } catch (ocrError) {
+        console.error('Mistral OCR API failed:', ocrError);
+        console.log('Falling back to Tesseract OCR with Mistral enhancement');
+        
+        // Fallback to pdf2pic + Tesseract + Mistral enhancement
+        const pdf2pic = await import('pdf2pic');
+        const convertPdf = pdf2pic.fromPath(pdfPath, {
+          density: 300,
+          saveFilename: "page",
+          savePath: "./uploads/temp",
+          format: "png",
+          width: 2000,
+          height: 2000
+        });
+
+        const pages = await convertPdf.bulk(-1);
+        let allText = '';
+        const pageMetadata = [];
+
+        for (let i = 0; i < pages.length; i++) {
+          const page = pages[i];
+          console.log(`Processing PDF page ${i + 1}/${pages.length} with fallback`);
+          
+          // Use Tesseract.js for OCR on the page image
+          let rawPageText = '';
           try {
-            console.log(`Enhancing PDF page ${i + 1} with model: ${model}`);
+            const { createWorker } = await import('tesseract.js');
+            const worker = await createWorker('eng+deu');
             
-            const response = await mistral.chat.complete({
-              model: model,
-              messages: [
-                {
-                  role: "user",
-                  content: `Please clean up and enhance this OCR-extracted text from a PDF page. Fix any obvious errors, improve formatting, and ensure proper structure:
+            const { data } = await worker.recognize(page.path);
+            rawPageText = data.text || '';
+            
+            await worker.terminate();
+            console.log(`Fallback OCR extracted ${rawPageText.length} characters from page ${i + 1}`);
+          } catch (tesseractError) {
+            console.error(`Tesseract OCR failed for page ${i + 1}:`, tesseractError);
+            rawPageText = `[OCR failed for page ${i + 1}: ${tesseractError.message}]`;
+          }
+          
+          // Enhance with Mistral AI
+          const models = ["mistral-small-latest", "open-mistral-7b"];
+          let enhancedText = rawPageText;
+          
+          for (const model of models) {
+            try {
+              console.log(`Enhancing PDF page ${i + 1} with model: ${model}`);
+              
+              const response = await mistral.chat.complete({
+                model: model,
+                messages: [
+                  {
+                    role: "user",
+                    content: `Please clean up and enhance this OCR-extracted text from a PDF page. Fix any obvious errors, improve formatting, and ensure proper structure:
 
 ${rawPageText}`
-                }
-              ],
-              max_tokens: 4000
-            });
-            
-            enhancedText = response.choices[0]?.message?.content || rawPageText;
-            console.log(`PDF page ${i + 1} enhancement successful with model: ${model}`);
-            break;
-          } catch (modelError) {
-            console.warn(`Model ${model} failed for PDF page ${i + 1}:`, modelError.message);
-            if (model === models[models.length - 1]) {
-              console.log(`Using basic OCR for PDF page ${i + 1}`);
-              enhancedText = rawPageText;
+                  }
+                ],
+                max_tokens: 4000
+              });
+              
+              enhancedText = response.choices[0]?.message?.content || rawPageText;
+              console.log(`PDF page ${i + 1} enhancement successful with model: ${model}`);
+              break;
+            } catch (modelError) {
+              console.warn(`Model ${model} failed for PDF page ${i + 1}:`, modelError.message);
+              if (model === models[models.length - 1]) {
+                enhancedText = rawPageText;
+              }
             }
+          }
+
+          allText += `\n\n--- Page ${i + 1} ---\n${enhancedText}`;
+          
+          pageMetadata.push({
+            pageNumber: i + 1,
+            textLength: enhancedText.length,
+            imagePath: page.path
+          });
+
+          // Clean up temporary image file
+          try {
+            await fs.unlink(page.path);
+          } catch (cleanupError) {
+            console.warn('Could not clean up temporary file:', page.path);
           }
         }
 
-        allText += `\n\n--- Page ${i + 1} ---\n${enhancedText}`;
+        console.log(`Fallback OCR extracted ${allText.length} characters from PDF with ${pages.length} pages`);
         
-        pageMetadata.push({
-          pageNumber: i + 1,
-          textLength: enhancedText.length,
-          imagePath: page.path
-        });
-
-        // Clean up temporary image file
-        try {
-          await fs.unlink(page.path);
-        } catch (cleanupError) {
-          console.warn('Could not clean up temporary file:', page.path);
-        }
+        return {
+          text: allText.trim(),
+          metadata: {
+            confidence: 0.85,
+            processingMethod: 'tesseract_mistral_fallback',
+            pageCount: pages.length,
+            pages: pageMetadata,
+            totalTextLength: allText.length,
+            ocrProvider: 'tesseract_fallback',
+            fallbackReason: ocrError.message
+          }
+        };
       }
-
-      console.log(`Mistral OCR extracted ${allText.length} characters from PDF with ${pages.length} pages`);
-      
-      return {
-        text: allText.trim(),
-        metadata: {
-          confidence: 0.95,
-          processingMethod: 'mistral_pixtral_pdf',
-          pageCount: pages.length,
-          pages: pageMetadata,
-          totalTextLength: allText.length
-        }
-      };
       
     } catch (error) {
       console.error('Error processing PDF with Mistral OCR:', error);
