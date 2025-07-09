@@ -31,11 +31,8 @@ export default function CustomerManagement() {
   // Mutation for scraping hotel data
   const scrapeHotelMutation = useMutation({
     mutationFn: async (data: { name: string; url?: string }) => {
-      const response = await apiRequest('/api/scrape-hotel', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      });
-      return response;
+      const response = await apiRequest('/api/scrape-hotel', 'POST', data);
+      return await response.json();
     },
     onSuccess: (data) => {
       setExtractedData(data);
@@ -56,11 +53,8 @@ export default function CustomerManagement() {
   // Mutation for creating hotel
   const createHotelMutation = useMutation({
     mutationFn: async (hotelData: any) => {
-      const response = await apiRequest('/api/hotels', {
-        method: 'POST',
-        body: JSON.stringify(hotelData),
-      });
-      return response;
+      const response = await apiRequest('/api/hotels', 'POST', hotelData);
+      return await response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/hotels"] });
