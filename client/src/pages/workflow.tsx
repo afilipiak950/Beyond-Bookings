@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ChevronRight, Calculator, BarChart3, FileText, Check, ArrowLeft, ArrowRight, Edit3, Brain, Gift, TrendingDown, Star, Download, Plus, Eye, Trash2, Copy, Move, Image, Type, BarChart, PieChart, Presentation, Loader2, Save, Building2 } from "lucide-react";
+import { ChevronRight, Calculator, BarChart3, FileText, Check, ArrowLeft, ArrowRight, Edit3, Brain, Gift, TrendingDown, Star, Download, Plus, Eye, Trash2, Copy, Move, Image, Type, BarChart, PieChart, Presentation, Loader2, Save, Building2, Globe } from "lucide-react";
 import { useLocation, useRoute } from "wouter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -582,6 +582,13 @@ export default function Workflow() {
   const [hotelSearchOpen, setHotelSearchOpen] = useState(false);
   const [selectedHotelId, setSelectedHotelId] = useState<number | null>(null);
   
+  // Hotel extraction states
+  const [hotelExtractionOpen, setHotelExtractionOpen] = useState(false);
+  const [extractionLoading, setExtractionLoading] = useState(false);
+  const [extractedData, setExtractedData] = useState<any>(null);
+  const [extractHotelName, setExtractHotelName] = useState("");
+  const [extractHotelUrl, setExtractHotelUrl] = useState("");
+  
   // Fetch hotels from database
   const { data: hotels, isLoading: hotelsLoading } = useQuery({
     queryKey: ["/api/hotels"],
@@ -612,12 +619,120 @@ export default function Workflow() {
     });
   };
   
-  // Create new hotel function
+  // Hotel extraction functions
+  const handleExtractData = async () => {
+    if (!extractHotelName.trim()) {
+      toast({
+        title: "Hotel name required",
+        description: "Please enter a hotel name",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setExtractionLoading(true);
+    try {
+      const response = await fetch('/api/scrape-hotel', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          name: extractHotelName.trim(), 
+          url: extractHotelUrl.trim() || undefined 
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setExtractedData(data);
+        toast({
+          title: "Data extracted successfully",
+          description: `Found information for ${data.name}`,
+        });
+      } else {
+        throw new Error('Failed to extract hotel data');
+      }
+    } catch (error) {
+      console.error('Error extracting hotel data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to extract hotel data. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setExtractionLoading(false);
+    }
+  };
+
+  const handleCreateHotelFromExtraction = async () => {
+    if (!extractedData) return;
+    
+    try {
+      const response = await fetch('/api/hotels', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: extractedData.name,
+          location: extractedData.location || null,
+          stars: extractedData.stars || null,
+          roomCount: extractedData.roomCount || null,
+          url: extractedData.url || null,
+        }),
+      });
+      
+      if (response.ok) {
+        const newHotel = await response.json();
+        
+        // Update the selected hotel ID
+        setSelectedHotelId(newHotel.id);
+        
+        // Update workflow data with the new hotel info
+        setWorkflowData(prev => ({
+          ...prev,
+          hotelName: newHotel.name,
+          stars: newHotel.stars || 0,
+          roomCount: newHotel.roomCount || 0,
+          hotelUrl: newHotel.url || ''
+        }));
+        
+        // Close dialogs
+        setHotelExtractionOpen(false);
+        setHotelSearchOpen(false);
+        
+        // Reset extraction state
+        setExtractHotelName("");
+        setExtractHotelUrl("");
+        setExtractedData(null);
+        
+        // Invalidate the hotels query to refetch the updated list
+        queryClient.invalidateQueries({ queryKey: ["/api/hotels"] });
+        
+        toast({
+          title: "Hotel created",
+          description: `Created new hotel: ${newHotel.name}`,
+        });
+      } else {
+        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+        throw new Error(errorData.message || 'Failed to create hotel');
+      }
+    } catch (error) {
+      console.error('Error creating hotel:', error);
+      toast({
+        title: "Error",
+        description: `Failed to create hotel: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Create new hotel function (basic creation without extraction)
   const createNewHotel = async () => {
     if (!workflowData.hotelName.trim()) return;
     
     try {
-      // Match the expected API schema exactly
       const hotelData = {
         name: workflowData.hotelName,
         location: null,
@@ -636,7 +751,6 @@ export default function Workflow() {
       
       if (response.ok) {
         const newHotel = await response.json();
-        console.log('Created new hotel:', newHotel);
         
         // Update the selected hotel ID
         setSelectedHotelId(newHotel.id);
@@ -672,6 +786,14 @@ export default function Workflow() {
         variant: "destructive",
       });
     }
+  };
+
+  // Open hotel extraction dialog
+  const openHotelExtractionDialog = () => {
+    setExtractHotelName(workflowData.hotelName);
+    setExtractHotelUrl(workflowData.hotelUrl || '');
+    setHotelExtractionOpen(true);
+    setHotelSearchOpen(false);
   };
   
   // Close dropdown when clicking outside
@@ -1035,25 +1157,39 @@ export default function Workflow() {
                               </div>
                             ))}
                             {workflowData.hotelName && !filteredHotels.some(h => h.name.toLowerCase() === workflowData.hotelName.toLowerCase()) && (
-                              <div className="p-3 border-t border-gray-200 bg-blue-50">
+                              <div className="p-3 border-t border-gray-200 bg-blue-50 space-y-2">
+                                <button
+                                  onClick={() => openHotelExtractionDialog()}
+                                  className="w-full text-left flex items-center gap-2 text-green-600 hover:text-green-700 p-2 rounded-md hover:bg-green-50"
+                                >
+                                  <Globe className="h-4 w-4" />
+                                  <span>Extract data & create "{workflowData.hotelName}"</span>
+                                </button>
                                 <button
                                   onClick={() => createNewHotel()}
-                                  className="w-full text-left flex items-center gap-2 text-blue-600 hover:text-blue-700"
+                                  className="w-full text-left flex items-center gap-2 text-blue-600 hover:text-blue-700 p-2 rounded-md hover:bg-blue-50"
                                 >
                                   <Plus className="h-4 w-4" />
-                                  <span>Neues Hotel "{workflowData.hotelName}" erstellen</span>
+                                  <span>Create basic hotel "{workflowData.hotelName}"</span>
                                 </button>
                               </div>
                             )}
                           </>
                         ) : workflowData.hotelName ? (
-                          <div className="p-3 border-t border-gray-200 bg-blue-50">
+                          <div className="p-3 border-t border-gray-200 bg-blue-50 space-y-2">
+                            <button
+                              onClick={() => openHotelExtractionDialog()}
+                              className="w-full text-left flex items-center gap-2 text-green-600 hover:text-green-700 p-2 rounded-md hover:bg-green-50"
+                            >
+                              <Globe className="h-4 w-4" />
+                              <span>Extract data & create "{workflowData.hotelName}"</span>
+                            </button>
                             <button
                               onClick={() => createNewHotel()}
-                              className="w-full text-left flex items-center gap-2 text-blue-600 hover:text-blue-700"
+                              className="w-full text-left flex items-center gap-2 text-blue-600 hover:text-blue-700 p-2 rounded-md hover:bg-blue-50"
                             >
                               <Plus className="h-4 w-4" />
-                              <span>Neues Hotel "{workflowData.hotelName}" erstellen</span>
+                              <span>Create basic hotel "{workflowData.hotelName}"</span>
                             </button>
                           </div>
                         ) : (
@@ -2749,6 +2885,136 @@ export default function Workflow() {
           {renderStepContent()}
         </div>
       </div>
+      
+      {/* Hotel Extraction Dialog */}
+      <Dialog open={hotelExtractionOpen} onOpenChange={setHotelExtractionOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Extract Hotel Data</DialogTitle>
+            <DialogDescription>
+              Enter the hotel name and we'll automatically extract all the details
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6">
+            {/* Hotel Name Input */}
+            <div className="space-y-2">
+              <Label htmlFor="extractHotelName">Hotel Name *</Label>
+              <Input
+                id="extractHotelName"
+                value={extractHotelName}
+                onChange={(e) => setExtractHotelName(e.target.value)}
+                placeholder="e.g., Hotel Adlon Berlin, Marriott Frankfurt"
+                className="w-full"
+              />
+            </div>
+
+            {/* Optional URL Input */}
+            <div className="space-y-2">
+              <Label htmlFor="extractHotelUrl">Hotel Website (Optional)</Label>
+              <Input
+                id="extractHotelUrl"
+                value={extractHotelUrl}
+                onChange={(e) => setExtractHotelUrl(e.target.value)}
+                placeholder="https://hotel-website.com"
+                className="w-full"
+              />
+            </div>
+
+            {/* Extract Data Button */}
+            <div className="flex justify-center">
+              <Button
+                onClick={handleExtractData}
+                disabled={extractionLoading || !extractHotelName.trim()}
+                className="bg-gradient-to-r from-blue-500 to-green-500 hover:from-blue-600 hover:to-green-600 text-white px-8"
+              >
+                {extractionLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Extracting Data...
+                  </>
+                ) : (
+                  <>
+                    <Globe className="h-4 w-4 mr-2" />
+                    Extract Hotel Data
+                  </>
+                )}
+              </Button>
+            </div>
+
+            {/* Extracted Data Display */}
+            {extractedData && (
+              <div className="mt-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200">
+                <h3 className="font-semibold text-green-800 mb-3 flex items-center">
+                  <Star className="h-4 w-4 mr-2" />
+                  Extracted Hotel Information
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <strong>Name:</strong> {extractedData.name}
+                  </div>
+                  {extractedData.location && (
+                    <div>
+                      <strong>Location:</strong> {extractedData.location}
+                    </div>
+                  )}
+                  {extractedData.stars && (
+                    <div>
+                      <strong>Stars:</strong> {extractedData.stars} ⭐
+                    </div>
+                  )}
+                  {extractedData.roomCount && (
+                    <div>
+                      <strong>Rooms:</strong> {extractedData.roomCount}
+                    </div>
+                  )}
+                  {extractedData.category && (
+                    <div>
+                      <strong>Category:</strong> {extractedData.category}
+                    </div>
+                  )}
+                  {extractedData.url && (
+                    <div className="md:col-span-2">
+                      <strong>Website:</strong> 
+                      <a href={extractedData.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline ml-1">
+                        {extractedData.url}
+                      </a>
+                    </div>
+                  )}
+                  {extractedData.amenities && extractedData.amenities.length > 0 && (
+                    <div className="md:col-span-2">
+                      <strong>Amenities:</strong> {extractedData.amenities.join(', ')}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex justify-end space-x-3">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setHotelExtractionOpen(false);
+                  setExtractHotelName("");
+                  setExtractHotelUrl("");
+                  setExtractedData(null);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleCreateHotelFromExtraction}
+                disabled={!extractedData}
+                className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Hotel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }
