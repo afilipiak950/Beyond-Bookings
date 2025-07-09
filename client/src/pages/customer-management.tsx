@@ -1,21 +1,122 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import AppLayout from "@/components/layout/app-layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useQuery } from "@tanstack/react-query";
-import { Users, Building2, Search, Plus } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Users, Building2, Search, Plus, Globe, MapPin, Star, Loader2 } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function CustomerManagement() {
   const { toast } = useToast();
   const { isAuthenticated, isLoading } = useAuth();
+  const queryClient = useQueryClient();
+  
+  const [addHotelOpen, setAddHotelOpen] = useState(false);
+  const [hotelName, setHotelName] = useState("");
+  const [hotelUrl, setHotelUrl] = useState("");
+  const [extractedData, setExtractedData] = useState<any>(null);
+  const [extractionLoading, setExtractionLoading] = useState(false);
 
   const { data: hotels, isLoading: hotelsLoading } = useQuery({
     queryKey: ["/api/hotels"],
     retry: false,
   });
+
+  // Mutation for scraping hotel data
+  const scrapeHotelMutation = useMutation({
+    mutationFn: async (data: { name: string; url?: string }) => {
+      const response = await apiRequest('/api/scrape-hotel', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+      return response;
+    },
+    onSuccess: (data) => {
+      setExtractedData(data);
+      toast({
+        title: "Hotel data found!",
+        description: "Successfully extracted hotel information",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Scraping failed",
+        description: error.message || "Could not extract hotel data",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Mutation for creating hotel
+  const createHotelMutation = useMutation({
+    mutationFn: async (hotelData: any) => {
+      const response = await apiRequest('/api/hotels', {
+        method: 'POST',
+        body: JSON.stringify(hotelData),
+      });
+      return response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/hotels"] });
+      setAddHotelOpen(false);
+      setHotelName("");
+      setHotelUrl("");
+      setExtractedData(null);
+      toast({
+        title: "Hotel added successfully!",
+        description: "The hotel has been added to your database",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to add hotel",
+        description: error.message || "Could not add hotel to database",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Handle hotel data extraction
+  const handleExtractData = async () => {
+    if (!hotelName.trim()) {
+      toast({
+        title: "Hotel name required",
+        description: "Please enter a hotel name",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setExtractionLoading(true);
+    try {
+      await scrapeHotelMutation.mutateAsync({ 
+        name: hotelName.trim(), 
+        url: hotelUrl.trim() || undefined 
+      });
+    } finally {
+      setExtractionLoading(false);
+    }
+  };
+
+  // Handle hotel creation
+  const handleCreateHotel = () => {
+    if (!extractedData) {
+      toast({
+        title: "No data to save",
+        description: "Please extract hotel data first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    createHotelMutation.mutate(extractedData);
+  };
 
   // Redirect to home if not authenticated
   useEffect(() => {
@@ -55,10 +156,139 @@ export default function CustomerManagement() {
               Manage your hotel clients and their pricing strategies
             </p>
           </div>
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Customer
-          </Button>
+          <Dialog open={addHotelOpen} onOpenChange={setAddHotelOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Hotel
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[600px]">
+              <DialogHeader>
+                <DialogTitle>Add New Hotel</DialogTitle>
+                <DialogDescription>
+                  Enter the hotel name and we'll automatically extract all the details
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div className="space-y-6">
+                {/* Hotel Name Input */}
+                <div className="space-y-2">
+                  <Label htmlFor="hotelName">Hotel Name *</Label>
+                  <Input
+                    id="hotelName"
+                    value={hotelName}
+                    onChange={(e) => setHotelName(e.target.value)}
+                    placeholder="e.g., Hotel Adlon Berlin, Marriott Frankfurt"
+                    className="w-full"
+                  />
+                </div>
+
+                {/* Optional URL Input */}
+                <div className="space-y-2">
+                  <Label htmlFor="hotelUrl">Hotel Website (Optional)</Label>
+                  <Input
+                    id="hotelUrl"
+                    value={hotelUrl}
+                    onChange={(e) => setHotelUrl(e.target.value)}
+                    placeholder="https://hotel-website.com"
+                    className="w-full"
+                  />
+                </div>
+
+                {/* Extract Data Button */}
+                <div className="flex justify-center">
+                  <Button
+                    onClick={handleExtractData}
+                    disabled={extractionLoading || !hotelName.trim()}
+                    className="bg-gradient-to-r from-blue-500 to-green-500 hover:from-blue-600 hover:to-green-600 text-white px-8"
+                  >
+                    {extractionLoading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Extracting Data...
+                      </>
+                    ) : (
+                      <>
+                        <Globe className="h-4 w-4 mr-2" />
+                        Extract Hotel Data
+                      </>
+                    )}
+                  </Button>
+                </div>
+
+                {/* Extracted Data Display */}
+                {extractedData && (
+                  <div className="mt-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200">
+                    <h3 className="font-semibold text-green-800 mb-3 flex items-center">
+                      <Star className="h-4 w-4 mr-2" />
+                      Extracted Hotel Information
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <strong>Name:</strong> {extractedData.name}
+                      </div>
+                      {extractedData.location && (
+                        <div>
+                          <strong>Location:</strong> {extractedData.location}
+                        </div>
+                      )}
+                      {extractedData.stars && (
+                        <div>
+                          <strong>Stars:</strong> {extractedData.stars} ⭐
+                        </div>
+                      )}
+                      {extractedData.roomCount && (
+                        <div>
+                          <strong>Rooms:</strong> {extractedData.roomCount}
+                        </div>
+                      )}
+                      {extractedData.url && (
+                        <div className="md:col-span-2">
+                          <strong>Website:</strong> 
+                          <a href={extractedData.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline ml-1">
+                            {extractedData.url}
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Action Buttons */}
+                <div className="flex justify-end space-x-3">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setAddHotelOpen(false);
+                      setHotelName("");
+                      setHotelUrl("");
+                      setExtractedData(null);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleCreateHotel}
+                    disabled={!extractedData || createHotelMutation.isPending}
+                    className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white"
+                  >
+                    {createHotelMutation.isPending ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Adding Hotel...
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Hotel
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
 
         {/* Search and Filters */}

@@ -96,6 +96,91 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Scrape hotel data
+  app.post("/api/scrape-hotel", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const { name, url } = req.body;
+      
+      if (!name || typeof name !== 'string') {
+        return res.status(400).json({ message: "Hotel name is required" });
+      }
+
+      console.log(`Scraping hotel data for: ${name}`);
+      
+      // Use Mistral AI to search for hotel information
+      const { Mistral } = await import('@mistralai/mistralai');
+      const mistral = new Mistral({
+        apiKey: process.env.MISTRAL_API_KEY,
+      });
+
+      const searchPrompt = `Find detailed information about the hotel "${name}"${url ? ` with website ${url}` : ''}. 
+      
+      Please provide the following information in JSON format:
+      {
+        "name": "Full hotel name",
+        "location": "City, Country",
+        "stars": "Number of stars (1-5)",
+        "roomCount": "Number of rooms",
+        "url": "Official website URL",
+        "description": "Brief description"
+      }
+      
+      Only return valid JSON. If information is not available, use null for that field.`;
+
+      const response = await mistral.chat.complete({
+        model: "mistral-large-latest",
+        messages: [
+          {
+            role: "user",
+            content: searchPrompt
+          }
+        ],
+        max_tokens: 1000
+      });
+
+      const content = response.choices[0]?.message?.content || '{}';
+      
+      try {
+        const hotelData = JSON.parse(content);
+        
+        // Validate and clean the data
+        const cleanedData = {
+          name: hotelData.name || name,
+          location: hotelData.location || null,
+          stars: hotelData.stars ? parseInt(hotelData.stars) : null,
+          roomCount: hotelData.roomCount ? parseInt(hotelData.roomCount) : null,
+          url: hotelData.url || url || null,
+          description: hotelData.description || null
+        };
+
+        console.log(`Successfully extracted hotel data:`, cleanedData);
+        res.json(cleanedData);
+        
+      } catch (parseError) {
+        console.error('Failed to parse AI response:', parseError);
+        
+        // Fallback: return basic data with the provided name
+        const fallbackData = {
+          name: name,
+          location: null,
+          stars: null,
+          roomCount: null,
+          url: url || null,
+          description: null
+        };
+        
+        res.json(fallbackData);
+      }
+      
+    } catch (error) {
+      console.error('Hotel scraping error:', error);
+      res.status(500).json({ 
+        message: "Failed to extract hotel data", 
+        error: error.message 
+      });
+    }
+  });
+
   // Debug OCR endpoint  
   app.post("/api/debug-ocr", requireAuth, async (req: Request, res: Response) => {
     try {
@@ -382,6 +467,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error scraping hotel data:", error);
       res.status(500).json({ message: "Failed to scrape hotel data" });
+    }
+  });
+
+  app.post('/api/hotels', requireAuth, async (req, res) => {
+    try {
+      const hotelData = req.body;
+      
+      if (!hotelData.name) {
+        return res.status(400).json({ message: "Hotel name is required" });
+      }
+
+      const hotel = await storage.createHotel({
+        name: hotelData.name,
+        location: hotelData.location || null,
+        stars: hotelData.stars || null,
+        roomCount: hotelData.roomCount || null,
+        url: hotelData.url || null,
+      });
+
+      res.json(hotel);
+    } catch (error) {
+      console.error("Error creating hotel:", error);
+      res.status(500).json({ message: "Failed to create hotel" });
     }
   });
 
