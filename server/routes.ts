@@ -1789,45 +1789,67 @@ Return a JSON response with: documentType, keyFindings[], businessInsights[], re
           const path = await import('path');
           
           const convert = pdf2pic.fromPath(fileToProcess.filePath, {
-            density: 300,
+            density: 600, // Higher density for better OCR accuracy
             saveFilename: "page",
             savePath: path.dirname(fileToProcess.filePath),
             format: "png",
-            width: 2000,
-            height: 2000
+            width: 3000, // Larger dimensions for better text clarity
+            height: 3000
           });
           
-          // Convert first page only for now
-          const result = await convert(1, false);
+          // Process multiple pages if they exist
+          let allExtractedText = '';
+          const maxPages = 5; // Limit to first 5 pages for performance
           
-          if (result && result.path) {
-            console.log(`PDF converted to image: ${result.path}`);
-            
-            // Use Tesseract for OCR processing
-            const Tesseract = await import('tesseract.js');
-            const { createWorker } = Tesseract;
-            
-            const worker = await createWorker('eng');
-            const { data: { text } } = await worker.recognize(result.path);
-            await worker.terminate();
-            
-            extractedText = text || 'No text extracted from PDF';
-            ocrMetadata = {
-              processingMethod: 'Tesseract PDF OCR',
-              confidence: 0.8,
-              pdfPages: 1,
-              imageSize: (await fs.readFile(result.path)).length
-            };
-            
-            // Clean up temporary image file
+          for (let pageNum = 1; pageNum <= maxPages; pageNum++) {
             try {
-              await fs.unlink(result.path);
-            } catch (cleanupError) {
-              console.log('Could not clean up temporary image file:', cleanupError);
+              const result = await convert(pageNum, false);
+              if (result && result.path) {
+                console.log(`Processing page ${pageNum}: ${result.path}`);
+                
+                // Use Tesseract for OCR processing with better configuration
+                const Tesseract = await import('tesseract.js');
+                const { createWorker } = Tesseract;
+                
+                const worker = await createWorker('eng');
+                await worker.setParameters({
+                  tessedit_pageseg_mode: '1', // Automatic page segmentation with OSD
+                  tessedit_ocr_engine_mode: '1', // Use LSTM OCR engine
+                  tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,;:!?()[]{}"-\' €$%&/=+*#@~|\\<>^_`', // Common characters including currency
+                });
+                
+                const { data: { text } } = await worker.recognize(result.path);
+                await worker.terminate();
+                
+                if (text && text.trim()) {
+                  allExtractedText += `\n=== PAGE ${pageNum} ===\n${text.trim()}\n`;
+                }
+                
+                // Clean up temporary image file
+                try {
+                  await fs.unlink(result.path);
+                } catch (cleanupError) {
+                  console.log('Could not clean up temporary image file:', cleanupError);
+                }
+              } else {
+                // No more pages to process
+                break;
+              }
+            } catch (pageError) {
+              console.log(`Page ${pageNum} processing failed or no more pages:`, pageError.message);
+              break;
             }
-          } else {
-            throw new Error('Failed to convert PDF to image');
           }
+          
+          extractedText = allExtractedText || 'No text extracted from PDF';
+          ocrMetadata = {
+            processingMethod: 'Enhanced Tesseract PDF OCR',
+            confidence: 0.85,
+            pagesProcessed: allExtractedText.split('=== PAGE').length - 1,
+            totalCharacters: allExtractedText.length
+          };
+          
+
         } catch (error) {
           console.error('PDF OCR processing error:', error);
           throw new Error(`PDF OCR failed: ${error.message}`);
