@@ -250,12 +250,22 @@ export default function CustomerManagement() {
                           <strong>Rooms:</strong> {extractedData.roomCount}
                         </div>
                       )}
+                      {extractedData.category && (
+                        <div>
+                          <strong>Category:</strong> {extractedData.category}
+                        </div>
+                      )}
                       {extractedData.url && (
                         <div className="md:col-span-2">
                           <strong>Website:</strong> 
                           <a href={extractedData.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline ml-1">
                             {extractedData.url}
                           </a>
+                        </div>
+                      )}
+                      {extractedData.amenities && extractedData.amenities.length > 0 && (
+                        <div className="md:col-span-2">
+                          <strong>Amenities:</strong> {extractedData.amenities.join(', ')}
                         </div>
                       )}
                     </div>
