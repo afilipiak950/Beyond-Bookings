@@ -200,26 +200,27 @@ export default function CustomerManagement() {
     setDetailsOpen(true);
   };
 
-  // Handle AI search about hotel
+  // Handle OpenAI search about hotel
   const handleHotelSearch = async () => {
     if (!searchQuery.trim() || !selectedHotel) return;
     
     setSearchLoading(true);
     try {
-      const response = await apiRequest('/api/ai/chat', 'POST', {
-        message: `About ${selectedHotel.name} hotel${selectedHotel.location ? ` in ${selectedHotel.location}` : ''}: ${searchQuery}`,
-        context: {
-          hotelName: selectedHotel.name,
+      const response = await apiRequest('/api/ai/hotel-search', 'POST', {
+        query: searchQuery,
+        hotel: {
+          name: selectedHotel.name,
           location: selectedHotel.location,
           stars: selectedHotel.stars,
           category: selectedHotel.category,
           amenities: selectedHotel.amenities,
-          url: selectedHotel.url
+          url: selectedHotel.url,
+          roomCount: selectedHotel.roomCount
         }
       });
       
       if (!response.ok) {
-        throw new Error('Failed to get AI response');
+        throw new Error('Failed to get OpenAI response');
       }
       
       const data = await response.json();
@@ -231,10 +232,10 @@ export default function CustomerManagement() {
       
       setSearchQuery("");
     } catch (error) {
-      console.error('AI search error:', error);
+      console.error('OpenAI search error:', error);
       toast({
         title: "Search failed",
-        description: "Could not get AI response. Please try again.",
+        description: "Could not get OpenAI response. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -619,7 +620,8 @@ export default function CustomerManagement() {
                 <div className="space-y-4">
                   <div className="flex items-center gap-2">
                     <Bot className="h-5 w-5 text-blue-600" />
-                    <h3 className="font-semibold text-gray-800">Ask AI about this hotel</h3>
+                    <h3 className="font-semibold text-gray-800">Ask OpenAI about this hotel</h3>
+                    <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Powered by GPT-4o</span>
                   </div>
                   
                   <div className="flex gap-2">

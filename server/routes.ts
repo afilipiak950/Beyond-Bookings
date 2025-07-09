@@ -1472,6 +1472,74 @@ What would you like to work on today? I'm here to make your hotel pricing more i
     }
   });
 
+  // OpenAI Hotel Search endpoint
+  app.post("/api/ai/hotel-search", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const { query, hotel } = req.body;
+      
+      if (!query || !hotel) {
+        return res.status(400).json({ message: "Query and hotel data are required" });
+      }
+
+      // Import OpenAI
+      const OpenAI = require('openai');
+      const openai = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY
+      });
+
+      // Create a comprehensive prompt for hotel search
+      const prompt = `You are a hotel information expert. Please provide detailed information about the following hotel query:
+
+Hotel Details:
+- Name: ${hotel.name}
+- Location: ${hotel.location || 'Not specified'}
+- Stars: ${hotel.stars || 'Not specified'}
+- Room Count: ${hotel.roomCount || 'Not specified'}
+- Category: ${hotel.category || 'Not specified'}
+- Website: ${hotel.url || 'Not specified'}
+- Amenities: ${hotel.amenities?.join(', ') || 'Not specified'}
+
+User Query: ${query}
+
+Please provide a comprehensive, informative response that directly answers the user's question about this hotel. Include specific details, facts, and helpful information. If you need to search for current information, provide the most accurate and up-to-date details possible.
+
+Format your response in a clear, well-structured manner with bullet points where appropriate.`;
+
+      // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          {
+            role: "system",
+            content: "You are a helpful hotel information assistant. Provide detailed, accurate information about hotels including amenities, location details, pricing insights, reviews, and recommendations. Be informative and professional."
+          },
+          {
+            role: "user",
+            content: prompt
+          }
+        ],
+        max_tokens: 1000,
+        temperature: 0.7
+      });
+
+      const response = completion.choices[0].message.content;
+
+      res.json({
+        response: response,
+        hotel: hotel.name,
+        query: query,
+        timestamp: new Date().toISOString()
+      });
+
+    } catch (error) {
+      console.error("OpenAI Hotel Search error:", error);
+      res.status(500).json({ 
+        message: "Failed to get hotel information. Please try again.",
+        error: error.message 
+      });
+    }
+  });
+
   // Document Analysis routes - Configure multer for ZIP files
   const documentUpload = multer({
     dest: 'uploads/',
