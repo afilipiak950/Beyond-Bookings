@@ -36,15 +36,25 @@ export default function CustomerManagement() {
     },
     onSuccess: (data) => {
       setExtractedData(data);
-      toast({
-        title: "Hotel data found!",
-        description: "Successfully extracted hotel information",
-      });
+      
+      // Show different messages based on data availability
+      if (data.stars || data.roomCount || data.location) {
+        toast({
+          title: "Hotel data found!",
+          description: "Successfully extracted detailed hotel information",
+        });
+      } else {
+        toast({
+          title: "Basic hotel data created",
+          description: "Hotel name saved. AI extraction limited due to rate limits - you can edit details manually.",
+        });
+      }
     },
     onError: (error: any) => {
+      console.error('Hotel scraping error:', error);
       toast({
-        title: "Scraping failed",
-        description: error.message || "Could not extract hotel data",
+        title: "Extraction failed",
+        description: "Could not extract hotel data. Please check the hotel name and try again.",
         variant: "destructive",
       });
     },
@@ -93,6 +103,9 @@ export default function CustomerManagement() {
         name: hotelName.trim(), 
         url: hotelUrl.trim() || undefined 
       });
+    } catch (error) {
+      console.error('Error during hotel data extraction:', error);
+      // Error is already handled by the mutation's onError callback
     } finally {
       setExtractionLoading(false);
     }

@@ -127,50 +127,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       Only return valid JSON. If information is not available, use null for that field.`;
 
-      const response = await mistral.chat.complete({
-        model: "mistral-large-latest",
-        messages: [
-          {
-            role: "user",
-            content: searchPrompt
-          }
-        ],
-        max_tokens: 1000
-      });
-
-      const content = response.choices[0]?.message?.content || '{}';
+      let cleanedData;
       
       try {
-        const hotelData = JSON.parse(content);
+        // Try with different models in case of rate limiting
+        const models = ["mistral-small-latest", "open-mistral-7b", "mistral-large-latest"];
+        let response;
         
-        // Validate and clean the data
-        const cleanedData = {
-          name: hotelData.name || name,
-          location: hotelData.location || null,
-          stars: hotelData.stars ? parseInt(hotelData.stars) : null,
-          roomCount: hotelData.roomCount ? parseInt(hotelData.roomCount) : null,
-          url: hotelData.url || url || null,
-          description: hotelData.description || null
-        };
+        for (const model of models) {
+          try {
+            console.log(`Trying model: ${model}`);
+            response = await mistral.chat.complete({
+              model: model,
+              messages: [
+                {
+                  role: "user",
+                  content: searchPrompt
+                }
+              ],
+              max_tokens: 1000
+            });
+            break;
+          } catch (modelError: any) {
+            console.warn(`Model ${model} failed:`, modelError.message);
+            if (modelError.statusCode === 429) {
+              console.log(`Rate limited on ${model}, trying next model...`);
+              continue;
+            }
+            throw modelError;
+          }
+        }
 
-        console.log(`Successfully extracted hotel data:`, cleanedData);
-        res.json(cleanedData);
+        if (!response) {
+          throw new Error('All models failed or rate limited');
+        }
+
+        const content = response.choices[0]?.message?.content || '{}';
         
-      } catch (parseError) {
-        console.error('Failed to parse AI response:', parseError);
+        try {
+          const hotelData = JSON.parse(content);
+          
+          // Validate and clean the data
+          cleanedData = {
+            name: hotelData.name || name,
+            location: hotelData.location || null,
+            stars: hotelData.stars ? parseInt(hotelData.stars) : null,
+            roomCount: hotelData.roomCount ? parseInt(hotelData.roomCount) : null,
+            url: hotelData.url || url || null,
+            description: hotelData.description || null
+          };
+
+          console.log(`Successfully extracted hotel data:`, cleanedData);
+          
+        } catch (parseError) {
+          console.error('Failed to parse AI response:', parseError);
+          throw new Error('Failed to parse AI response');
+        }
         
-        // Fallback: return basic data with the provided name
-        const fallbackData = {
-          name: name,
-          location: null,
+      } catch (aiError: any) {
+        console.error('AI extraction failed:', aiError.message);
+        
+        // Enhanced fallback with basic hotel name processing
+        const processedName = name.trim();
+        const locationMatch = processedName.match(/\b(berlin|münchen|munich|hamburg|köln|cologne|frankfurt|düsseldorf|stuttgart|dortmund|essen|leipzig|dresden|hannover|nürnberg|duisburg|bochum|wuppertal|bielefeld|bonn|mannheim|karlsruhe|augsburg|wiesbaden|gelsenkirchen|mönchengladbach|braunschweig|chemnitz|kiel|aachen|halle|magdeburg|freiburg|krefeld|lübeck|oberhausen|erfurt|mainz|rostock|kassel|hagen|potsdam|saarbrücken|hamm|mülheim|ludwigshafen|leverkusen|oldenburg|solingen|osnabrück|regensburg|ingolstadt|würzburg|fürth|ulm|heilbronn|pforzheim|wolfsburg|göttingen|bottrop|trier|salzgitter|recklinghausen|koblenz|jena|neuss|erlangen|moers|siegen|hildesheim|cottbus)\b/i);
+        
+        cleanedData = {
+          name: processedName,
+          location: locationMatch ? locationMatch[0] : null,
           stars: null,
           roomCount: null,
           url: url || null,
-          description: null
+          description: `Hotel information for ${processedName}${locationMatch ? ` in ${locationMatch[0]}` : ''}`
         };
         
-        res.json(fallbackData);
+        console.log(`Using fallback data:`, cleanedData);
       }
+      
+      res.json(cleanedData);
       
     } catch (error) {
       console.error('Hotel scraping error:', error);
