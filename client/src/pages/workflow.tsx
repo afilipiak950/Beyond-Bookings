@@ -2928,50 +2928,82 @@ export default function Workflow() {
               </Button>
             </div>
 
-            {/* Extracted Data Display */}
+            {/* Extracted Data Display - Editable */}
             {extractedData && (
               <div className="mt-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200">
                 <h3 className="font-semibold text-green-800 mb-3 flex items-center">
                   <Star className="h-4 w-4 mr-2" />
-                  Extracted Hotel Information
+                  Hotel Information (Editable)
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <strong>Name:</strong> {extractedData.name}
+                    <Label htmlFor="editName">Hotel Name</Label>
+                    <Input
+                      id="editName"
+                      value={extractedData.name}
+                      onChange={(e) => setExtractedData({...extractedData, name: e.target.value})}
+                      className="mt-1"
+                    />
                   </div>
-                  {extractedData.location && (
-                    <div>
-                      <strong>Location:</strong> {extractedData.location}
-                    </div>
-                  )}
-                  {extractedData.stars && (
-                    <div>
-                      <strong>Stars:</strong> {extractedData.stars} ⭐
-                    </div>
-                  )}
-                  {extractedData.roomCount && (
-                    <div>
-                      <strong>Rooms:</strong> {extractedData.roomCount}
-                    </div>
-                  )}
-                  {extractedData.category && (
-                    <div>
-                      <strong>Category:</strong> {extractedData.category}
-                    </div>
-                  )}
-                  {extractedData.url && (
-                    <div className="md:col-span-2">
-                      <strong>Website:</strong> 
-                      <a href={extractedData.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline ml-1">
-                        {extractedData.url}
-                      </a>
-                    </div>
-                  )}
-                  {extractedData.amenities && extractedData.amenities.length > 0 && (
-                    <div className="md:col-span-2">
-                      <strong>Amenities:</strong> {extractedData.amenities.join(', ')}
-                    </div>
-                  )}
+                  <div>
+                    <Label htmlFor="editLocation">Location</Label>
+                    <Input
+                      id="editLocation"
+                      value={extractedData.location || ''}
+                      onChange={(e) => setExtractedData({...extractedData, location: e.target.value})}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="editStars">Stars</Label>
+                    <Input
+                      id="editStars"
+                      type="number"
+                      min="1"
+                      max="5"
+                      value={extractedData.stars || ''}
+                      onChange={(e) => setExtractedData({...extractedData, stars: parseInt(e.target.value) || 0})}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="editRoomCount">Room Count</Label>
+                    <Input
+                      id="editRoomCount"
+                      type="number"
+                      value={extractedData.roomCount || ''}
+                      onChange={(e) => setExtractedData({...extractedData, roomCount: parseInt(e.target.value) || 0})}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="editCategory">Category</Label>
+                    <Input
+                      id="editCategory"
+                      value={extractedData.category || ''}
+                      onChange={(e) => setExtractedData({...extractedData, category: e.target.value})}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="editUrl">Website URL</Label>
+                    <Input
+                      id="editUrl"
+                      value={extractedData.url || ''}
+                      onChange={(e) => setExtractedData({...extractedData, url: e.target.value})}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <Label htmlFor="editAmenities">Amenities (comma-separated)</Label>
+                    <Input
+                      id="editAmenities"
+                      value={extractedData.amenities ? extractedData.amenities.join(', ') : ''}
+                      onChange={(e) => setExtractedData({...extractedData, amenities: e.target.value.split(',').map(a => a.trim()).filter(a => a)})}
+                      className="mt-1"
+                      placeholder="Wi-Fi, Spa, Restaurant, Bar, etc."
+                    />
+                  </div>
                 </div>
               </div>
             )}
