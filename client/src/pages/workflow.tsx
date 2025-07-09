@@ -473,6 +473,7 @@ export default function Workflow() {
     hotelVoucherValue: 0
   });
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   
   // Get calculation ID from URL parameters
   const calculationId = new URLSearchParams(window.location.search).get('id');
@@ -616,18 +617,21 @@ export default function Workflow() {
     if (!workflowData.hotelName.trim()) return;
     
     try {
+      // Match the expected API schema exactly
+      const hotelData = {
+        name: workflowData.hotelName,
+        location: null,
+        stars: workflowData.stars || null,
+        roomCount: workflowData.roomCount || null,
+        url: workflowData.hotelUrl || null,
+      };
+
       const response = await fetch('/api/hotels', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          name: workflowData.hotelName,
-          stars: workflowData.stars || 0,
-          roomCount: workflowData.roomCount || 0,
-          averagePrice: workflowData.averagePrice || 0,
-          url: workflowData.hotelUrl || ''
-        }),
+        body: JSON.stringify(hotelData),
       });
       
       if (response.ok) {
@@ -643,7 +647,6 @@ export default function Workflow() {
           hotelName: newHotel.name,
           stars: newHotel.stars || prev.stars,
           roomCount: newHotel.roomCount || prev.roomCount,
-          averagePrice: newHotel.averagePrice || prev.averagePrice,
           hotelUrl: newHotel.url || prev.hotelUrl || ''
         }));
         
@@ -651,8 +654,6 @@ export default function Workflow() {
         setHotelSearchOpen(false);
         
         // Invalidate the hotels query to refetch the updated list
-        // We need to import useQueryClient at the top
-        const queryClient = useQueryClient();
         queryClient.invalidateQueries({ queryKey: ["/api/hotels"] });
         
         toast({
@@ -660,14 +661,14 @@ export default function Workflow() {
           description: `Created new hotel: ${workflowData.hotelName}`,
         });
       } else {
-        const errorData = await response.json();
+        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
         throw new Error(errorData.message || 'Failed to create hotel');
       }
     } catch (error) {
       console.error('Error creating hotel:', error);
       toast({
         title: "Error",
-        description: `Failed to create hotel: ${error.message}`,
+        description: `Failed to create hotel: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: "destructive",
       });
     }
