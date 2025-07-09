@@ -1481,8 +1481,8 @@ What would you like to work on today? I'm here to make your hotel pricing more i
         return res.status(400).json({ message: "Query and hotel data are required" });
       }
 
-      // Import OpenAI
-      const OpenAI = require('openai');
+      // Import OpenAI using dynamic import for ES modules
+      const { default: OpenAI } = await import('openai');
       const openai = new OpenAI({
         apiKey: process.env.OPENAI_API_KEY
       });
