@@ -169,15 +169,15 @@ export default function AppSidebar({ className }: SidebarProps) {
                 {/* Navigation Text */}
                 {!isCollapsed && (
                   <div className="flex flex-col items-start flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5 w-full">
                       <span className={cn(
-                        "font-semibold text-sm transition-all duration-300",
+                        "font-semibold text-xs transition-all duration-300 truncate",
                         isActive && "gradient-text"
                       )}>
                         {item.name}
                       </span>
                       {(item as any).badge && (
-                        <Badge className="text-xs bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0 px-1.5 py-0.5">
+                        <Badge className="text-xs bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0 px-1 py-0.5 flex-shrink-0">
                           {(item as any).badge}
                         </Badge>
                       )}
@@ -215,14 +215,14 @@ export default function AppSidebar({ className }: SidebarProps) {
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-foreground truncate">
+                <p className="text-xs font-semibold text-foreground truncate">
                   Beyond Bookings User
                 </p>
-                <div className="flex items-center space-x-2">
-                  <Badge className="text-xs bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0">
+                <div className="flex items-center space-x-1.5">
+                  <Badge className="text-xs bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0 px-1 py-0.5">
                     Premium
                   </Badge>
-                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                  <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
                 </div>
               </div>
             </div>
@@ -244,7 +244,7 @@ export default function AppSidebar({ className }: SidebarProps) {
               <User className="h-3 w-3 text-white" />
             </div>
             {!isCollapsed && (
-              <span className="font-medium text-sm">User Profile</span>
+              <span className="font-medium text-xs">User Profile</span>
             )}
           </Button>
           
@@ -261,7 +261,7 @@ export default function AppSidebar({ className }: SidebarProps) {
               <LogOut className="h-3 w-3 text-white" />
             </div>
             {!isCollapsed && (
-              <span className="font-medium text-sm text-red-600 dark:text-red-400">Sign Out</span>
+              <span className="font-medium text-xs text-red-600 dark:text-red-400">Sign Out</span>
             )}
           </Button>
         </div>
