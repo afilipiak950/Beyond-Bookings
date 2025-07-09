@@ -158,6 +158,31 @@ export default function CustomerManagement() {
     }
   };
 
+  // Handle new calculation with pre-filled hotel data
+  const handleNewCalculation = (hotel: any) => {
+    // Store hotel data in sessionStorage to pass to workflow
+    const hotelData = {
+      hotelName: hotel.name || '',
+      stars: hotel.stars || 0,
+      roomCount: hotel.roomCount || 0,
+      averagePrice: hotel.averagePrice || 0,
+      occupancyRate: 70, // Default value
+      projectCosts: 0, // User will input this
+      hotelVoucherValue: hotel.stars === 5 ? 50 : hotel.stars === 4 ? 40 : hotel.stars === 3 ? 30 : hotel.stars === 2 ? 25 : hotel.stars === 1 ? 20 : 30,
+      date: new Date().toISOString().split('T')[0], // Today's date
+      hotelUrl: hotel.url || '',
+      location: hotel.location || '',
+      category: hotel.category || '',
+      amenities: hotel.amenities || []
+    };
+    
+    // Store in sessionStorage
+    sessionStorage.setItem('prefilledHotelData', JSON.stringify(hotelData));
+    
+    // Navigate to workflow
+    setLocation('/workflow');
+  };
+
   // Redirect to home if not authenticated
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -445,7 +470,7 @@ export default function CustomerManagement() {
                         <Button size="sm" variant="outline" className="flex-1">
                           View Details
                         </Button>
-                        <Button size="sm" className="flex-1">
+                        <Button size="sm" className="flex-1" onClick={() => handleNewCalculation(hotel)}>
                           New Calculation
                         </Button>
                         <Button 

@@ -521,6 +521,41 @@ export default function Workflow() {
     }
   }, [existingCalculation, toast]);
 
+  // Load pre-filled hotel data from sessionStorage (when coming from customer management)
+  useEffect(() => {
+    const prefilledData = sessionStorage.getItem('prefilledHotelData');
+    if (prefilledData && !existingCalculation) {
+      try {
+        const hotelData = JSON.parse(prefilledData);
+        console.log("Loading pre-filled hotel data:", hotelData);
+        
+        setWorkflowData(prev => ({
+          ...prev,
+          hotelName: hotelData.hotelName || "",
+          stars: hotelData.stars || 0,
+          roomCount: hotelData.roomCount || 0,
+          occupancyRate: hotelData.occupancyRate || 70,
+          averagePrice: hotelData.averagePrice || 0,
+          projectCosts: hotelData.projectCosts || 0,
+          hotelVoucherValue: hotelData.hotelVoucherValue || 0,
+          date: hotelData.date || new Date().toISOString().split('T')[0],
+          hotelUrl: hotelData.hotelUrl || '',
+        }));
+        
+        // Clear the sessionStorage after loading
+        sessionStorage.removeItem('prefilledHotelData');
+        
+        toast({
+          title: "Hotel Data Loaded",
+          description: `Pre-filled calculation for ${hotelData.hotelName}`,
+        });
+      } catch (error) {
+        console.error("Error loading pre-filled hotel data:", error);
+        sessionStorage.removeItem('prefilledHotelData');
+      }
+    }
+  }, [existingCalculation, toast]);
+
   // AI Price Intelligence State
   const [aiSuggestedPrice, setAiSuggestedPrice] = useState(0);
   const [actualPrice, setActualPrice] = useState(0);
