@@ -1436,7 +1436,7 @@ export default function DocumentAnalysis() {
               <div className="space-y-3">
                 <h3 className="font-semibold text-gray-900 dark:text-white">KI-Erkenntnisse</h3>
                 <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
-                  <CardContent className="p-4">
+                  <CardContent className="p-4 max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-blue-200 scrollbar-track-blue-50">
                     {(() => {
                       try {
                         // Skip if insights is empty, null, or empty object
@@ -1692,19 +1692,21 @@ export default function DocumentAnalysis() {
                       {finding.analysis && finding.analysis.numericalData && finding.analysis.numericalData.length > 0 && (
                         <div className="mb-4">
                           <h5 className="font-medium text-gray-800 mb-2">Extrahierte Zahlen ({finding.numbersExtracted})</h5>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-32 overflow-y-auto">
-                            {finding.analysis.numericalData.slice(0, 10).map((num: any, numIdx: number) => (
-                              <div key={numIdx} className="bg-gray-50 p-2 rounded text-sm">
-                                <div className="font-medium text-gray-800">{num.value}</div>
-                                <div className="text-gray-600">{num.context}</div>
-                              </div>
-                            ))}
-                          </div>
-                          {finding.analysis.numericalData.length > 10 && (
-                            <div className="text-xs text-gray-500 mt-2">
-                              ... und {finding.analysis.numericalData.length - 10} weitere Zahlen
+                          <div className="bg-gray-50 p-3 rounded-lg max-h-40 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                              {finding.analysis.numericalData.slice(0, 10).map((num: any, numIdx: number) => (
+                                <div key={numIdx} className="bg-white p-2 rounded text-sm border">
+                                  <div className="font-medium text-gray-800">{num.value}</div>
+                                  <div className="text-gray-600 text-xs">{num.context}</div>
+                                </div>
+                              ))}
                             </div>
-                          )}
+                            {finding.analysis.numericalData.length > 10 && (
+                              <div className="text-xs text-gray-500 mt-2 text-center">
+                                ... und {finding.analysis.numericalData.length - 10} weitere Zahlen
+                              </div>
+                            )}
+                          </div>
                         </div>
                       )}
                       
