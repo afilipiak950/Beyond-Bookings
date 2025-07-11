@@ -1440,24 +1440,70 @@ Provide an ultra-detailed, comprehensive response that demonstrates deep analysi
             documentText = documentText.substring(0, 4000) + '... [truncated]';
           }
           
-          // Advanced AI analysis using OpenAI GPT-4o
-          const analysisPrompt = `Analyze this business document and extract comprehensive insights:
+          // Advanced AI analysis using OpenAI GPT-4o for detailed statistical extraction
+          const analysisPrompt = `Extract ALL statistical data and calculations from this Excel/business document. Focus on REAL numbers, formulas, and calculations:
 
 Document: ${analysis.fileName}
 Content: ${documentText}
 
-Please provide detailed analysis focusing on:
-1. All numerical data and calculations
-2. Business metrics and financial information
-3. Key insights and patterns
-4. Strategic recommendations
+EXTRACT ALL NUMERICAL DATA INCLUDING:
+- Every price, cost, revenue, margin, percentage
+- All formulas and calculations with their exact results
+- Financial ratios and metrics
+- Statistical data (averages, totals, counts)
+- Pricing models and calculation methodologies
+- VAT calculations, taxes, discounts
+- Occupancy rates, room counts, rates
+- Profit margins, ROI calculations
+- Any mathematical relationships between values
 
-Return analysis in JSON format with:
-- documentSummary: comprehensive summary
-- extractedNumbers: array of all numbers found with context
-- businessMetrics: key financial/business metrics
-- keyInsights: important findings
-- recommendations: actionable suggestions`;
+Return JSON in this EXACT format:
+{
+  "documentSummary": "Brief summary of document type and content",
+  "statisticalData": [
+    {
+      "category": "string - data category (e.g., 'Pricing', 'Costs', 'Revenue')",
+      "values": [
+        {
+          "label": "string - what this number represents",
+          "value": "number - the actual numerical value",
+          "unit": "string - currency or unit (€, %, rooms, etc.)",
+          "calculation": "string - how this was calculated if applicable",
+          "significance": "string - why this number is important"
+        }
+      ]
+    }
+  ],
+  "calculationBreakdown": [
+    {
+      "formula": "string - the actual formula or calculation",
+      "inputs": ["list of input values with numbers"],
+      "result": "number - the calculated result",
+      "businessPurpose": "string - what this calculation achieves"
+    }
+  ],
+  "keyMetrics": [
+    {
+      "metric": "string - metric name",
+      "value": "number - actual value",
+      "unit": "string - unit",
+      "benchmark": "string - how this compares to industry standards",
+      "trend": "string - is this increasing/decreasing/stable"
+    }
+  ],
+  "financialSummary": {
+    "totalRevenue": "number - if found",
+    "totalCosts": "number - if found", 
+    "profitMargin": "number - if calculable",
+    "averagePrice": "number - if found",
+    "occupancyRate": "number - if found",
+    "roomCount": "number - if found"
+  },
+  "businessInsights": ["actionable business insights based on the numbers"],
+  "recommendations": ["specific recommendations based on statistical analysis"]
+}
+
+IMPORTANT: Extract ALL actual numbers from the document. Do not make up or estimate values. Only include real data found in the document.`;
 
           const aiResponse = await openai.chat.completions.create({
             model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
@@ -1478,20 +1524,30 @@ Return analysis in JSON format with:
           
           const aiAnalysis = JSON.parse(aiResponse.choices[0]?.message?.content || '{}');
           
-          // Extract numbers and insights
-          const numbersFound = aiAnalysis.extractedNumbers || [];
-          const insightsFound = aiAnalysis.keyInsights || [];
+          // Extract statistical data and calculations
+          const statisticalData = aiAnalysis.statisticalData || [];
+          const calculationBreakdown = aiAnalysis.calculationBreakdown || [];
+          const keyMetrics = aiAnalysis.keyMetrics || [];
+          const financialSummary = aiAnalysis.financialSummary || {};
           
-          totalNumbers += numbersFound.length;
-          totalInsights += insightsFound.length;
+          // Count total numbers extracted
+          const totalValuesFound = statisticalData.reduce((sum: number, category: any) => {
+            return sum + (category.values ? category.values.length : 0);
+          }, 0);
+          
+          totalNumbers += totalValuesFound + calculationBreakdown.length + keyMetrics.length;
+          totalInsights += (aiAnalysis.businessInsights || []).length + (aiAnalysis.recommendations || []).length;
           
           comprehensiveFindings.push({
             fileName: analysis.fileName,
             documentSummary: aiAnalysis.documentSummary || 'No summary available',
-            extractedNumbers: numbersFound,
-            businessMetrics: aiAnalysis.businessMetrics || [],
-            keyInsights: insightsFound,
+            statisticalData: statisticalData,
+            calculationBreakdown: calculationBreakdown,
+            keyMetrics: keyMetrics,
+            financialSummary: financialSummary,
+            businessInsights: aiAnalysis.businessInsights || [],
             recommendations: aiAnalysis.recommendations || [],
+            totalNumbers: totalValuesFound,
             processingStatus: 'completed'
           });
           

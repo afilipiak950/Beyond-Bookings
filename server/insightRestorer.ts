@@ -182,50 +182,69 @@ export class InsightRestorer {
         documentText = documentText.substring(0, 4000) + '... [truncated]';
       }
 
-      const prompt = `Analyze this Excel/business document and provide comprehensive insights focusing on calculations, formulas, and financial data in JSON format:
+      const prompt = `Extract DETAILED statistical data and calculations from this Excel/business document. Focus on REAL numbers, formulas, and calculations:
 
 Document: ${analysis.fileName}
 Content: ${documentText}
 
-Please analyze and return JSON in this exact format:
+EXTRACT ALL NUMERICAL DATA INCLUDING:
+- Every price, cost, revenue, margin, percentage
+- All formulas and calculations with their exact results
+- Financial ratios and metrics
+- Statistical data (averages, totals, counts)
+- Pricing models and calculation methodologies
+- VAT calculations, taxes, discounts
+- Occupancy rates, room counts, rates
+- Profit margins, ROI calculations
+- Any mathematical relationships between values
+
+Return JSON in this EXACT format:
 {
   "documentType": "string - type of document",
-  "keyFindings": ["string - key finding 1", "string - key finding 2", ...],
-  "businessInsights": [
+  "statisticalData": [
     {
-      "category": "string - insight category",
-      "insight": "string - specific insight"
+      "category": "string - data category (e.g., 'Pricing', 'Costs', 'Revenue')",
+      "values": [
+        {
+          "label": "string - what this number represents",
+          "value": "number - the actual numerical value",
+          "unit": "string - currency or unit (€, %, rooms, etc.)",
+          "calculation": "string - how this was calculated if applicable",
+          "significance": "string - why this number is important"
+        }
+      ]
     }
   ],
-  "calculationInsights": [
+  "calculationBreakdown": [
     {
-      "calculation": "string - formula or calculation found",
-      "result": "string - calculated result",
-      "businessMeaning": "string - what this calculation means for business"
+      "formula": "string - the actual formula or calculation",
+      "inputs": ["list of input values with numbers"],
+      "result": "number - the calculated result",
+      "businessPurpose": "string - what this calculation achieves"
     }
   ],
-  "financialMetrics": [
+  "keyMetrics": [
     {
-      "metric": "string - financial metric name",
-      "value": "string - metric value",
-      "analysis": "string - analysis of this metric"
+      "metric": "string - metric name",
+      "value": "number - actual value",
+      "unit": "string - unit",
+      "benchmark": "string - how this compares to industry standards",
+      "trend": "string - is this increasing/decreasing/stable"
     }
   ],
-  "recommendations": ["string - actionable recommendation 1", "string - actionable recommendation 2", ...],
-  "summary": "string - comprehensive summary including all calculations and their business implications"
+  "financialSummary": {
+    "totalRevenue": "number - if found",
+    "totalCosts": "number - if found", 
+    "profitMargin": "number - if calculable",
+    "averagePrice": "number - if found",
+    "occupancyRate": "number - if found",
+    "roomCount": "number - if found"
+  },
+  "recommendations": ["string - actionable recommendation based on the numbers"],
+  "summary": "string - comprehensive summary of all the numerical findings"
 }
 
-Focus specifically on:
-1. ALL numerical calculations and formulas in the Excel file
-2. Financial metrics, pricing, costs, revenues, margins
-3. Business logic behind calculations (VAT, discounts, profit margins)
-4. Relationships between different calculated values
-5. Excel formulas and their business meaning
-6. ROI calculations, pricing strategies, financial projections
-7. Any pricing models or calculation methodologies used
-8. Identify all calculated fields and their business significance
-9. Extract insights from cell formulas and their results
-10. Analyze the complete calculation workflow from input to output`;
+IMPORTANT: Extract ALL actual numbers from the document. Do not make up or estimate values. Only include real data found in the document.`;
 
       const response = await this.openai.chat.completions.create({
         model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user

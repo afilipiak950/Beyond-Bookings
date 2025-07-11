@@ -1855,47 +1855,102 @@ export default function DocumentAnalysis() {
                               </div>
                             )}
 
-                            {/* Calculation Insights */}
-                            {actualInsights.calculationInsights && actualInsights.calculationInsights.length > 0 && (
+                            {/* Statistical Data */}
+                            {actualInsights.statisticalData && actualInsights.statisticalData.length > 0 && (
                               <div className="mb-3">
-                                <div className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">Berechnungseinblicke:</div>
-                                <ul className="space-y-2">
-                                  {actualInsights.calculationInsights.map((calc: any, idx: number) => (
-                                    <li key={idx} className="text-sm bg-emerald-50 dark:bg-emerald-900/20 p-3 rounded-lg border border-emerald-200 dark:border-emerald-800">
-                                      <div className="font-medium text-emerald-800 dark:text-emerald-200 mb-1">
-                                        📊 {calc.calculation}
+                                <div className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">Statistische Daten:</div>
+                                <div className="space-y-2">
+                                  {actualInsights.statisticalData.map((category: any, catIdx: number) => (
+                                    <div key={catIdx} className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
+                                      <div className="font-medium text-blue-800 dark:text-blue-200 mb-2">
+                                        📊 {category.category}
                                       </div>
-                                      <div className="text-emerald-700 dark:text-emerald-300 mb-1">
-                                        <strong>Ergebnis:</strong> {calc.result}
+                                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                        {category.values && category.values.map((value: any, valIdx: number) => (
+                                          <div key={valIdx} className="bg-white dark:bg-gray-800 p-2 rounded text-xs">
+                                            <div className="font-medium text-gray-800 dark:text-gray-200">{value.label}</div>
+                                            <div className="text-blue-600 dark:text-blue-400 font-bold">{value.value} {value.unit}</div>
+                                            {value.calculation && (
+                                              <div className="text-gray-600 dark:text-gray-400 text-xs mt-1">
+                                                <strong>Berechnung:</strong> {value.calculation}
+                                              </div>
+                                            )}
+                                            <div className="text-gray-500 dark:text-gray-500 text-xs mt-1">{value.significance}</div>
+                                          </div>
+                                        ))}
                                       </div>
-                                      <div className="text-emerald-600 dark:text-emerald-400 text-xs">
-                                        <strong>Bedeutung:</strong> {calc.businessMeaning}
-                                      </div>
-                                    </li>
+                                    </div>
                                   ))}
-                                </ul>
+                                </div>
                               </div>
                             )}
 
-                            {/* Financial Metrics */}
-                            {actualInsights.financialMetrics && actualInsights.financialMetrics.length > 0 && (
+                            {/* Calculation Breakdown */}
+                            {actualInsights.calculationBreakdown && actualInsights.calculationBreakdown.length > 0 && (
                               <div className="mb-3">
-                                <div className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">Finanzielle Kennzahlen:</div>
-                                <ul className="space-y-2">
-                                  {actualInsights.financialMetrics.map((metric: any, idx: number) => (
-                                    <li key={idx} className="text-sm bg-indigo-50 dark:bg-indigo-900/20 p-3 rounded-lg border border-indigo-200 dark:border-indigo-800">
-                                      <div className="font-medium text-indigo-800 dark:text-indigo-200 mb-1">
-                                        💰 {metric.metric}
+                                <div className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">Berechnungsaufschlüsselung:</div>
+                                <div className="space-y-2">
+                                  {actualInsights.calculationBreakdown.map((calc: any, idx: number) => (
+                                    <div key={idx} className="bg-emerald-50 dark:bg-emerald-900/20 p-3 rounded-lg border border-emerald-200 dark:border-emerald-800">
+                                      <div className="font-medium text-emerald-800 dark:text-emerald-200 mb-1">
+                                        🧮 {calc.formula}
                                       </div>
-                                      <div className="text-indigo-700 dark:text-indigo-300 mb-1">
-                                        <strong>Wert:</strong> {metric.value}
+                                      <div className="text-emerald-700 dark:text-emerald-300 mb-1 text-sm">
+                                        <strong>Eingaben:</strong> {calc.inputs.join(', ')}
                                       </div>
-                                      <div className="text-indigo-600 dark:text-indigo-400 text-xs">
-                                        <strong>Analyse:</strong> {metric.analysis}
+                                      <div className="text-emerald-600 dark:text-emerald-400 mb-1 text-sm">
+                                        <strong>Ergebnis:</strong> {calc.result}
                                       </div>
-                                    </li>
+                                      <div className="text-emerald-500 dark:text-emerald-500 text-xs">
+                                        <strong>Zweck:</strong> {calc.businessPurpose}
+                                      </div>
+                                    </div>
                                   ))}
-                                </ul>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Key Metrics */}
+                            {actualInsights.keyMetrics && actualInsights.keyMetrics.length > 0 && (
+                              <div className="mb-3">
+                                <div className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">Schlüsselkennzahlen:</div>
+                                <div className="space-y-2">
+                                  {actualInsights.keyMetrics.map((metric: any, idx: number) => (
+                                    <div key={idx} className="bg-purple-50 dark:bg-purple-900/20 p-3 rounded-lg border border-purple-200 dark:border-purple-800">
+                                      <div className="font-medium text-purple-800 dark:text-purple-200 mb-1">
+                                        📈 {metric.metric}
+                                      </div>
+                                      <div className="text-purple-700 dark:text-purple-300 mb-1 text-sm">
+                                        <strong>Wert:</strong> {metric.value} {metric.unit}
+                                      </div>
+                                      <div className="text-purple-600 dark:text-purple-400 text-xs mb-1">
+                                        <strong>Benchmark:</strong> {metric.benchmark}
+                                      </div>
+                                      <div className="text-purple-500 dark:text-purple-500 text-xs">
+                                        <strong>Trend:</strong> {metric.trend}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Financial Summary */}
+                            {actualInsights.financialSummary && Object.keys(actualInsights.financialSummary).length > 0 && (
+                              <div className="mb-3">
+                                <div className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">Finanzielle Zusammenfassung:</div>
+                                <div className="bg-amber-50 dark:bg-amber-900/20 p-3 rounded-lg border border-amber-200 dark:border-amber-800">
+                                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                                    {Object.entries(actualInsights.financialSummary).map(([key, value]: [string, any], sumIdx: number) => (
+                                      value && (
+                                        <div key={sumIdx} className="bg-white dark:bg-gray-800 p-2 rounded text-sm text-center">
+                                          <div className="text-gray-600 dark:text-gray-400 text-xs">{key}</div>
+                                          <div className="font-bold text-amber-700 dark:text-amber-300">{value}</div>
+                                        </div>
+                                      )
+                                    ))}
+                                  </div>
+                                </div>
                               </div>
                             )}
 
@@ -2072,23 +2127,89 @@ export default function DocumentAnalysis() {
                         </div>
                       )}
                       
-                      {finding.analysis && finding.analysis.numericalData && finding.analysis.numericalData.length > 0 && (
+                      {/* Statistical Data Section */}
+                      {finding.analysis && finding.analysis.statisticalData && finding.analysis.statisticalData.length > 0 && (
                         <div className="mb-4">
-                          <h5 className="font-medium text-gray-800 mb-2">Extrahierte Zahlen ({finding.numbersExtracted})</h5>
-                          <div className="bg-gray-50 p-3 rounded-lg max-h-40 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                              {finding.analysis.numericalData.slice(0, 10).map((num: any, numIdx: number) => (
-                                <div key={numIdx} className="bg-white p-2 rounded text-sm border">
-                                  <div className="font-medium text-gray-800">{num.value}</div>
-                                  <div className="text-gray-600 text-xs">{num.context}</div>
+                          <h5 className="font-medium text-gray-800 mb-2">Statistische Daten ({finding.totalNumbers || 0})</h5>
+                          <div className="bg-gray-50 p-3 rounded-lg max-h-60 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                            <div className="space-y-3">
+                              {finding.analysis.statisticalData.map((category: any, catIdx: number) => (
+                                <div key={catIdx} className="bg-white p-3 rounded-lg border">
+                                  <div className="font-semibold text-blue-700 mb-2">{category.category}</div>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                    {category.values && category.values.map((value: any, valIdx: number) => (
+                                      <div key={valIdx} className="bg-blue-50 p-2 rounded text-sm">
+                                        <div className="font-medium text-gray-800">{value.label}</div>
+                                        <div className="text-blue-600 font-bold">{value.value} {value.unit}</div>
+                                        {value.calculation && (
+                                          <div className="text-gray-600 text-xs mt-1">Berechnung: {value.calculation}</div>
+                                        )}
+                                        <div className="text-gray-500 text-xs mt-1">{value.significance}</div>
+                                      </div>
+                                    ))}
+                                  </div>
                                 </div>
                               ))}
                             </div>
-                            {finding.analysis.numericalData.length > 10 && (
-                              <div className="text-xs text-gray-500 mt-2 text-center">
-                                ... und {finding.analysis.numericalData.length - 10} weitere Zahlen
-                              </div>
-                            )}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Calculation Breakdown Section */}
+                      {finding.analysis && finding.analysis.calculationBreakdown && finding.analysis.calculationBreakdown.length > 0 && (
+                        <div className="mb-4">
+                          <h5 className="font-medium text-gray-800 mb-2">Berechnungsaufschlüsselung</h5>
+                          <div className="bg-emerald-50 p-3 rounded-lg max-h-40 overflow-y-auto scrollbar-thin scrollbar-thumb-emerald-300 scrollbar-track-emerald-100">
+                            <div className="space-y-2">
+                              {finding.analysis.calculationBreakdown.map((calc: any, calcIdx: number) => (
+                                <div key={calcIdx} className="bg-white p-3 rounded-lg border border-emerald-200">
+                                  <div className="font-semibold text-emerald-700 mb-1">{calc.formula}</div>
+                                  <div className="text-gray-600 text-sm mb-1">
+                                    Eingaben: {calc.inputs.join(', ')}
+                                  </div>
+                                  <div className="text-emerald-600 font-bold">Ergebnis: {calc.result}</div>
+                                  <div className="text-gray-500 text-xs mt-1">{calc.businessPurpose}</div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Key Metrics Section */}
+                      {finding.analysis && finding.analysis.keyMetrics && finding.analysis.keyMetrics.length > 0 && (
+                        <div className="mb-4">
+                          <h5 className="font-medium text-gray-800 mb-2">Schlüsselkennzahlen</h5>
+                          <div className="bg-purple-50 p-3 rounded-lg">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                              {finding.analysis.keyMetrics.map((metric: any, metricIdx: number) => (
+                                <div key={metricIdx} className="bg-white p-2 rounded text-sm border border-purple-200">
+                                  <div className="font-medium text-purple-700">{metric.metric}</div>
+                                  <div className="text-purple-600 font-bold">{metric.value} {metric.unit}</div>
+                                  <div className="text-gray-600 text-xs">{metric.benchmark}</div>
+                                  <div className="text-gray-500 text-xs">Trend: {metric.trend}</div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Financial Summary Section */}
+                      {finding.analysis && finding.analysis.financialSummary && Object.keys(finding.analysis.financialSummary).length > 0 && (
+                        <div className="mb-4">
+                          <h5 className="font-medium text-gray-800 mb-2">Finanzielle Zusammenfassung</h5>
+                          <div className="bg-amber-50 p-3 rounded-lg border border-amber-200">
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                              {Object.entries(finding.analysis.financialSummary).map(([key, value]: [string, any], sumIdx: number) => (
+                                value && (
+                                  <div key={sumIdx} className="bg-white p-2 rounded text-sm text-center">
+                                    <div className="text-gray-600 text-xs">{key}</div>
+                                    <div className="font-bold text-amber-700">{value}</div>
+                                  </div>
+                                )
+                              ))}
+                            </div>
                           </div>
                         </div>
                       )}
