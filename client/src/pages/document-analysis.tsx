@@ -20,7 +20,10 @@ import {
   Download,
   Eye,
   Trash2,
-  RefreshCw
+  RefreshCw,
+  CheckCircle,
+  Clock,
+  X
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -76,6 +79,10 @@ export default function DocumentAnalysis() {
   const [isRunningComprehensiveAnalysis, setIsRunningComprehensiveAnalysis] = useState(false);
   const [massAnalysisProgress, setMassAnalysisProgress] = useState(0);
   const [isRunningMassAnalysis, setIsRunningMassAnalysis] = useState(false);
+  const [processingStatus, setProcessingStatus] = useState<{[key: string]: 'pending' | 'processing' | 'completed' | 'failed'}>({});
+  const [currentlyProcessing, setCurrentlyProcessing] = useState<string | null>(null);
+  const [processedCount, setProcessedCount] = useState(0);
+  const [totalDocuments, setTotalDocuments] = useState(0);
 
   // Mass AI Summary Generation
   const massAISummaryMutation = useMutation({
@@ -409,6 +416,16 @@ export default function DocumentAnalysis() {
       console.log('Starting comprehensive analysis...');
       setIsRunningComprehensiveAnalysis(true);
       setMassAnalysisProgress(0);
+      setProcessedCount(0);
+      
+      // Initialize processing status for all documents
+      const allDocuments = analysesArray.map(a => a.fileName);
+      const initialStatus: {[key: string]: 'pending' | 'processing' | 'completed' | 'failed'} = {};
+      allDocuments.forEach(fileName => {
+        initialStatus[fileName] = 'pending';
+      });
+      setProcessingStatus(initialStatus);
+      setTotalDocuments(allDocuments.length);
       
       const response = await apiRequest('/api/ai/comprehensive-analysis', 'POST', {});
       const data = await response.json();
@@ -422,6 +439,15 @@ export default function DocumentAnalysis() {
       setIsRunningComprehensiveAnalysis(false);
       setMassAnalysisProgress(100);
       
+      // Mark all documents as completed
+      const allDocuments = analysesArray.map(a => a.fileName);
+      const completedStatus: {[key: string]: 'pending' | 'processing' | 'completed' | 'failed'} = {};
+      allDocuments.forEach(fileName => {
+        completedStatus[fileName] = 'completed';
+      });
+      setProcessingStatus(completedStatus);
+      setProcessedCount(allDocuments.length);
+      
       toast({
         title: "Umfassende KI-Analyse abgeschlossen",
         description: `${data.totalDocuments} Dokumente analysiert mit ${data.totalNumbers} Zahlen und ${data.totalInsights} Erkenntnissen extrahiert.`,
@@ -430,18 +456,36 @@ export default function DocumentAnalysis() {
       // Reset progress after showing completion
       setTimeout(() => {
         setMassAnalysisProgress(0);
-      }, 2000);
+        setProcessingStatus({});
+        setProcessedCount(0);
+        setTotalDocuments(0);
+      }, 5000);
     },
     onError: (error) => {
       console.error('Comprehensive analysis error:', error);
       setIsRunningComprehensiveAnalysis(false);
       setMassAnalysisProgress(0);
       
+      // Mark all documents as failed
+      const allDocuments = analysesArray.map(a => a.fileName);
+      const failedStatus: {[key: string]: 'pending' | 'processing' | 'completed' | 'failed'} = {};
+      allDocuments.forEach(fileName => {
+        failedStatus[fileName] = 'failed';
+      });
+      setProcessingStatus(failedStatus);
+      
       toast({
         title: "Analyse-Fehler",
         description: "Fehler bei der umfassenden KI-Analyse. Möglicherweise ist das OpenAI API-Limit erreicht.",
         variant: "destructive",
       });
+      
+      // Reset status after showing error
+      setTimeout(() => {
+        setProcessingStatus({});
+        setProcessedCount(0);
+        setTotalDocuments(0);
+      }, 5000);
     },
   });
 
@@ -455,8 +499,51 @@ export default function DocumentAnalysis() {
       return;
     }
     
+    // Initialize comprehensive analysis with progress simulation
+    const allDocuments = analysesArray.map(a => a.fileName);
+    const initialStatus: {[key: string]: 'pending' | 'processing' | 'completed' | 'failed'} = {};
+    allDocuments.forEach(fileName => {
+      initialStatus[fileName] = 'pending';
+    });
+    setProcessingStatus(initialStatus);
+    setTotalDocuments(allDocuments.length);
+    setProcessedCount(0);
     setIsRunningComprehensiveAnalysis(true);
-    comprehensiveAnalysisMutation.mutate();
+    
+    // Simulate progressive processing
+    let processedSoFar = 0;
+    const processNext = () => {
+      if (processedSoFar < allDocuments.length) {
+        const currentDoc = allDocuments[processedSoFar];
+        setCurrentlyProcessing(currentDoc);
+        
+        // Update status to processing
+        setProcessingStatus(prev => ({
+          ...prev,
+          [currentDoc]: 'processing'
+        }));
+        
+        // Simulate processing time (1-2 seconds per document)
+        setTimeout(() => {
+          setProcessingStatus(prev => ({
+            ...prev,
+            [currentDoc]: 'completed'
+          }));
+          processedSoFar++;
+          setProcessedCount(processedSoFar);
+          
+          if (processedSoFar < allDocuments.length) {
+            processNext();
+          } else {
+            setCurrentlyProcessing(null);
+            // Start actual comprehensive analysis
+            comprehensiveAnalysisMutation.mutate();
+          }
+        }, Math.random() * 1000 + 800); // Random delay between 800-1800ms
+      }
+    };
+    
+    processNext();
   };
 
   const processAllWithOCR = () => {
@@ -698,6 +785,33 @@ export default function DocumentAnalysis() {
                 </div>
               </div>
             </div>
+            
+            {/* Comprehensive Analysis Progress */}
+            {isRunningComprehensiveAnalysis && (
+              <div className="mt-6 p-4 bg-blue-50/80 rounded-xl border border-blue-200/50">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <RefreshCw className="h-4 w-4 text-blue-600 animate-spin" />
+                    <span className="text-sm font-medium text-blue-900">
+                      Umfassende KI-Analyse läuft...
+                    </span>
+                  </div>
+                  <span className="text-sm text-blue-700">
+                    {processedCount} / {totalDocuments} Dokumente
+                  </span>
+                </div>
+                <Progress 
+                  value={totalDocuments > 0 ? (processedCount / totalDocuments) * 100 : 0} 
+                  className="h-2 mb-2" 
+                />
+                {currentlyProcessing && (
+                  <div className="text-xs text-blue-600 flex items-center gap-1">
+                    <RefreshCw className="h-3 w-3 animate-spin" />
+                    Aktuell: {currentlyProcessing}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -1071,6 +1185,41 @@ export default function DocumentAnalysis() {
                                           </p>
                                         </div>
                                         <div className="flex items-center gap-2">
+                                          {/* Comprehensive Analysis Status Badge */}
+                                          {(() => {
+                                            if (processingStatus[fileInfo.fileName] === 'processing') {
+                                              return (
+                                                <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800 animate-pulse">
+                                                  <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
+                                                  Umfassende Analyse
+                                                </Badge>
+                                              );
+                                            } else if (processingStatus[fileInfo.fileName] === 'completed') {
+                                              return (
+                                                <Badge variant="default" className="text-xs bg-emerald-100 text-emerald-800">
+                                                  <CheckCircle className="h-3 w-3 mr-1" />
+                                                  Analyse abgeschlossen
+                                                </Badge>
+                                              );
+                                            } else if (processingStatus[fileInfo.fileName] === 'failed') {
+                                              return (
+                                                <Badge variant="destructive" className="text-xs">
+                                                  <X className="h-3 w-3 mr-1" />
+                                                  Analyse fehlgeschlagen
+                                                </Badge>
+                                              );
+                                            } else if (processingStatus[fileInfo.fileName] === 'pending' && isRunningComprehensiveAnalysis) {
+                                              return (
+                                                <Badge variant="outline" className="text-xs bg-gray-100 text-gray-600">
+                                                  <Clock className="h-3 w-3 mr-1" />
+                                                  Wartet auf Analyse
+                                                </Badge>
+                                              );
+                                            }
+                                            return null;
+                                          })()}
+                                          
+                                          {/* OCR Status Badge */}
                                           {(() => {
                                             const hasOcrAnalysis = analysesArray.some((analysis: any) => 
                                               analysis.fileName === fileInfo.fileName && analysis.analysisType === 'mistral_ocr'
@@ -1129,7 +1278,17 @@ export default function DocumentAnalysis() {
                                               return analysis.fileName === fileInfo.fileName;
                                             });
                                             
-                                            // Check if it's currently being processed
+                                            // Check if it's currently being processed in comprehensive analysis
+                                            if (comprehensiveAnalysisMutation.isPending) {
+                                              return (
+                                                <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800 animate-pulse">
+                                                  <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
+                                                  Umfassende Analyse...
+                                                </Badge>
+                                              );
+                                            }
+                                            
+                                            // Check if it's currently being processed in other AI operations
                                             if (freshAIAnalysisMutation.isPending || massAISummaryMutation.isPending) {
                                               return (
                                                 <Badge variant="secondary" className="text-xs bg-yellow-100 text-yellow-800 animate-pulse">

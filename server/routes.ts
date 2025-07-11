@@ -1440,85 +1440,96 @@ Provide an ultra-detailed, comprehensive response that demonstrates deep analysi
             documentText = documentText.substring(0, 4000) + '... [truncated]';
           }
           
-          // Advanced AI analysis using OpenAI GPT-4o for detailed statistical extraction
-          const analysisPrompt = `Extract ALL statistical data and calculations from this Excel/business document. Focus on REAL numbers, formulas, and calculations:
+          // Advanced AI analysis using OpenAI GPT-4o for exhaustive statistical extraction
+          const analysisPrompt = `You are an expert financial analyst. Extract EVERY calculation, formula, number, and insight from this document. Be extremely thorough and detailed:
 
 Document: ${analysis.fileName}
 Content: ${documentText}
 
-EXTRACT ALL NUMERICAL DATA INCLUDING:
-- Every price, cost, revenue, margin, percentage
-- All formulas and calculations with their exact results
-- Financial ratios and metrics
-- Statistical data (averages, totals, counts)
-- Pricing models and calculation methodologies
-- VAT calculations, taxes, discounts
-- Occupancy rates, room counts, rates
-- Profit margins, ROI calculations
-- Any mathematical relationships between values
+EXTRACT EVERYTHING NUMERICAL:
+- Every single number with its context and meaning
+- All calculations, formulas, and mathematical operations
+- Financial metrics: prices, costs, revenues, margins, percentages, ratios
+- Statistical data: averages, totals, counts, distributions
+- Business calculations: ROI, profitability, break-even, pricing models
+- VAT calculations, taxes, discounts, fees
+- Hotel metrics: occupancy rates, room counts, ADR, RevPAR
+- Operational data: capacity, utilization, performance indicators
+- Time-based data: monthly, quarterly, yearly figures
+- Benchmarks and comparisons
+- Forecasts and projections
 
-Return JSON in this EXACT format:
+Return comprehensive JSON with ALL extracted data:
 {
-  "documentSummary": "Brief summary of document type and content",
+  "documentSummary": "Detailed summary of document type, purpose, and key content",
   "statisticalData": [
     {
-      "category": "string - data category (e.g., 'Pricing', 'Costs', 'Revenue')",
+      "category": "Revenue Analysis | Cost Structure | Pricing Strategy | Profitability | Operational Metrics",
       "values": [
         {
-          "label": "string - what this number represents",
-          "value": "number - the actual numerical value",
-          "unit": "string - currency or unit (€, %, rooms, etc.)",
-          "calculation": "string - how this was calculated if applicable",
-          "significance": "string - why this number is important"
+          "label": "Specific metric name",
+          "value": "Exact numerical value",
+          "unit": "€ | % | rooms | nights | ratio | count",
+          "calculation": "Exact formula or calculation method",
+          "significance": "Business impact and importance"
         }
       ]
     }
   ],
   "calculationBreakdown": [
     {
-      "formula": "string - the actual formula or calculation",
-      "inputs": ["list of input values with numbers"],
-      "result": "number - the calculated result",
-      "businessPurpose": "string - what this calculation achieves"
+      "formula": "Exact mathematical formula with variables",
+      "inputs": ["All input values with their actual numbers"],
+      "result": "Calculated result with units",
+      "businessPurpose": "Strategic importance and business application"
     }
   ],
   "keyMetrics": [
     {
-      "metric": "string - metric name",
-      "value": "number - actual value",
-      "unit": "string - unit",
-      "benchmark": "string - how this compares to industry standards",
-      "trend": "string - is this increasing/decreasing/stable"
+      "metric": "KPI or performance indicator name",
+      "value": "Current value with precision",
+      "unit": "Measurement unit",
+      "benchmark": "Industry standard or comparison value",
+      "trend": "Growth/decline pattern with percentages"
     }
   ],
   "financialSummary": {
-    "totalRevenue": "number - if found",
-    "totalCosts": "number - if found", 
-    "profitMargin": "number - if calculable",
-    "averagePrice": "number - if found",
-    "occupancyRate": "number - if found",
-    "roomCount": "number - if found"
+    "totalRevenue": "Total revenue if available",
+    "totalCosts": "Total costs if available", 
+    "grossProfit": "Gross profit if available",
+    "netProfit": "Net profit if available",
+    "margins": "All margin percentages",
+    "keyRatios": "Important financial ratios",
+    "averagePrice": "Average price if found",
+    "occupancyRate": "Occupancy rate if found",
+    "roomCount": "Room count if found"
   },
-  "businessInsights": ["actionable business insights based on the numbers"],
-  "recommendations": ["specific recommendations based on statistical analysis"]
+  "businessInsights": [
+    {
+      "category": "Financial Performance | Operations | Pricing | Revenue | Costs | Profitability",
+      "insight": "Detailed insight with specific numbers and context",
+      "supportingData": ["Numerical evidence and calculations"]
+    }
+  ],
+  "recommendations": ["Detailed actionable recommendations based on comprehensive analysis"]
 }
 
-IMPORTANT: Extract ALL actual numbers from the document. Do not make up or estimate values. Only include real data found in the document.`;
+CRITICAL: Extract ALL actual numbers from the document. Be exhaustive in your analysis. Include every calculation, formula, and numerical relationship found.`;
 
           const aiResponse = await openai.chat.completions.create({
             model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
             messages: [
               {
                 role: "system",
-                content: "You are an expert business analyst. Provide comprehensive analysis in JSON format."
+                content: "You are an expert financial analyst specializing in comprehensive document analysis. Extract ALL calculations, formulas, and numerical data. Provide exhaustive analysis in JSON format."
               },
               {
                 role: "user",
                 content: analysisPrompt
               }
             ],
-            max_tokens: 2000,
-            temperature: 0.3,
+            max_tokens: 4000,
+            temperature: 0.2,
             response_format: { type: "json_object" }
           });
           

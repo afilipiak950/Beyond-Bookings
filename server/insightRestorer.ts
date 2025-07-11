@@ -182,63 +182,76 @@ export class InsightRestorer {
         documentText = documentText.substring(0, 4000) + '... [truncated]';
       }
 
-      const prompt = `Extract DETAILED statistical data and calculations from this Excel/business document. Focus on REAL numbers, formulas, and calculations:
+      const prompt = `You are an expert financial analyst. Extract EVERY calculation, formula, and number from this document. Be extremely thorough and detailed:
 
 Document: ${analysis.fileName}
 Content: ${documentText}
 
-EXTRACT ALL NUMERICAL DATA INCLUDING:
-- Every price, cost, revenue, margin, percentage
-- All formulas and calculations with their exact results
-- Financial ratios and metrics
-- Statistical data (averages, totals, counts)
-- Pricing models and calculation methodologies
-- VAT calculations, taxes, discounts
-- Occupancy rates, room counts, rates
-- Profit margins, ROI calculations
-- Any mathematical relationships between values
+EXTRACT EVERYTHING NUMERICAL:
+- Every single number with its context and meaning
+- All calculations, formulas, and mathematical operations
+- Financial metrics: prices, costs, revenues, margins, percentages, ratios
+- Statistical data: averages, totals, counts, distributions
+- Business calculations: ROI, profitability, break-even, pricing models
+- VAT calculations, taxes, discounts, fees
+- Hotel metrics: occupancy rates, room counts, ADR, RevPAR
+- Operational data: capacity, utilization, performance indicators
+- Time-based data: monthly, quarterly, yearly figures
+- Benchmarks and comparisons
+- Forecasts and projections
 
-Return JSON in this EXACT format:
+Return comprehensive JSON with ALL extracted data:
 {
-  "documentType": "string - type of document",
+  "documentType": "Detailed document classification",
+  "keyFindings": ["List ALL significant discoveries - be exhaustive"],
+  "businessInsights": [
+    {
+      "category": "Financial Performance | Operations | Pricing | Revenue | Costs | Profitability | Risk Analysis",
+      "insight": "Detailed insight with specific numbers and context",
+      "insights": ["Multiple detailed sub-insights with numerical data"]
+    }
+  ],
   "statisticalData": [
     {
-      "category": "string - data category (e.g., 'Pricing', 'Costs', 'Revenue')",
+      "category": "Revenue Analysis | Cost Structure | Pricing Strategy | Profitability | Operational Metrics",
       "values": [
         {
-          "label": "string - what this number represents",
-          "value": "number - the actual numerical value",
-          "unit": "string - currency or unit (€, %, rooms, etc.)",
-          "calculation": "string - how this was calculated if applicable",
-          "significance": "string - why this number is important"
+          "label": "Specific metric name",
+          "value": "Exact numerical value",
+          "unit": "€ | % | rooms | nights | ratio | count",
+          "calculation": "Exact formula or calculation method",
+          "significance": "Business impact and importance"
         }
       ]
     }
   ],
   "calculationBreakdown": [
     {
-      "formula": "string - the actual formula or calculation",
-      "inputs": ["list of input values with numbers"],
-      "result": "number - the calculated result",
-      "businessPurpose": "string - what this calculation achieves"
+      "formula": "Exact mathematical formula with variables",
+      "inputs": ["All input values with their actual numbers"],
+      "result": "Calculated result with units",
+      "businessPurpose": "Strategic importance and business application"
     }
   ],
   "keyMetrics": [
     {
-      "metric": "string - metric name",
-      "value": "number - actual value",
-      "unit": "string - unit",
-      "benchmark": "string - how this compares to industry standards",
-      "trend": "string - is this increasing/decreasing/stable"
+      "metric": "KPI or performance indicator name",
+      "value": "Current value with precision",
+      "unit": "Measurement unit",
+      "benchmark": "Industry standard or comparison value",
+      "trend": "Growth/decline pattern with percentages"
     }
   ],
   "financialSummary": {
-    "totalRevenue": "number - if found",
-    "totalCosts": "number - if found", 
-    "profitMargin": "number - if calculable",
-    "averagePrice": "number - if found",
-    "occupancyRate": "number - if found",
-    "roomCount": "number - if found"
+    "totalRevenue": "Total revenue if available",
+    "totalCosts": "Total costs if available", 
+    "grossProfit": "Gross profit if available",
+    "netProfit": "Net profit if available",
+    "margins": "All margin percentages",
+    "keyRatios": "Important financial ratios",
+    "averagePrice": "Average price if found",
+    "occupancyRate": "Occupancy rate if found",
+    "roomCount": "Room count if found"
   },
   "recommendations": ["string - actionable recommendation based on the numbers"],
   "summary": "string - comprehensive summary of all the numerical findings"
@@ -251,15 +264,15 @@ IMPORTANT: Extract ALL actual numbers from the document. Do not make up or estim
         messages: [
           {
             role: "system",
-            content: "You are an expert business analyst specializing in document analysis. Always respond with valid JSON only."
+            content: "You are an expert financial analyst specializing in comprehensive document analysis. Extract ALL calculations, formulas, and numerical data. Provide exhaustive analysis in JSON format."
           },
           {
             role: "user",
             content: prompt
           }
         ],
-        max_tokens: 2000,
-        temperature: 0.3,
+        max_tokens: 4000,
+        temperature: 0.2,
         response_format: { type: "json_object" }
       });
 
