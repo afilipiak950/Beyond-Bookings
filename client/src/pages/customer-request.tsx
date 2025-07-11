@@ -92,8 +92,8 @@ export default function CustomerRequest() {
 
       try {
         const response = await apiRequest('/api/scrape-hotel', 'POST', {
-          hotelName,
-          hotelUrl: hotelUrl || `https://www.google.com/search?q=${encodeURIComponent(hotelName + " hotel")}`
+          name: hotelName,
+          url: hotelUrl || `https://www.google.com/search?q=${encodeURIComponent(hotelName + " hotel")}`
         });
         
         clearInterval(progressInterval);
