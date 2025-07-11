@@ -816,7 +816,9 @@ export default function DocumentAnalysis() {
         </div>
 
         {/* Upload Section */}
-        <Card className="relative overflow-hidden bg-gradient-to-br from-white/60 to-gray-50/40 backdrop-blur-xl border border-white/30 shadow-2xl">
+        <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-50 via-white to-blue-50 rounded-2xl opacity-60"></div>
+          <Card className="relative glass-card border-blue-200/30 rounded-2xl shadow-2xl">
           <CardHeader>
             <CardTitle className="flex items-center gap-3">
               <Upload className="h-6 w-6 text-blue-600" />
@@ -998,6 +1000,7 @@ export default function DocumentAnalysis() {
             )}
           </CardContent>
         </Card>
+      </div>
 
         {/* Results Tabs */}
         <Tabs defaultValue="uploads" className="space-y-6">
@@ -1075,7 +1078,9 @@ export default function DocumentAnalysis() {
                 <p className="mt-4 text-gray-600">Lade Uploads...</p>
               </div>
             ) : uploadsArray.length === 0 ? (
-              <Card className="bg-gradient-to-br from-gray-50/60 to-white/40 backdrop-blur-xl border border-gray-200/40">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-gray-50 via-white to-gray-50 rounded-2xl opacity-60"></div>
+                <Card className="relative glass-card border-gray-200/30 rounded-2xl shadow-2xl">
                 <CardContent className="py-12 text-center">
                   <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-lg font-medium text-gray-600">Noch keine Dateien hochgeladen</p>
@@ -1084,6 +1089,7 @@ export default function DocumentAnalysis() {
                   </p>
                 </CardContent>
               </Card>
+            </div>
             ) : (
               <div className="grid gap-4">
                 {uploadsArray.map((upload: DocumentUpload) => (
@@ -1446,7 +1452,9 @@ export default function DocumentAnalysis() {
                 <p className="mt-4 text-gray-600">Lade Analysen...</p>
               </div>
             ) : analysesArray.length === 0 ? (
-              <Card className="bg-gradient-to-br from-gray-50/60 to-white/40 backdrop-blur-xl border border-gray-200/40">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-gray-50 via-white to-gray-50 rounded-2xl opacity-60"></div>
+                <Card className="relative glass-card border-gray-200/30 rounded-2xl shadow-2xl">
                 <CardContent className="py-12 text-center">
                   <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-lg font-medium text-gray-600">Noch keine Analysen verfügbar</p>
@@ -1455,10 +1463,13 @@ export default function DocumentAnalysis() {
                   </p>
                 </CardContent>
               </Card>
+            </div>
             ) : (
               <div className="grid gap-4">
                 {analysesArray.map((analysis: DocumentAnalysis) => (
-                  <Card key={analysis.id} className="relative overflow-hidden bg-gradient-to-br from-white/60 to-gray-50/30 backdrop-blur-xl border border-white/30">
+                  <div key={analysis.id} className="relative">
+                    <div className="absolute inset-0 bg-gradient-to-r from-green-50 via-white to-green-50 rounded-2xl opacity-60"></div>
+                    <Card className="relative glass-card border-green-200/30 rounded-2xl shadow-2xl">
                     <CardContent className="p-6">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
@@ -1509,6 +1520,7 @@ export default function DocumentAnalysis() {
                       </div>
                     </CardContent>
                   </Card>
+                </div>
                 ))}
               </div>
             )}
@@ -1522,7 +1534,9 @@ export default function DocumentAnalysis() {
                 <p className="mt-4 text-gray-600">Lade OCR-Ergebnisse...</p>
               </div>
             ) : analysesArray.filter(a => a.analysisType === 'mistral_ocr').length === 0 ? (
-              <Card className="bg-gradient-to-br from-gray-50/60 to-white/40 backdrop-blur-xl border border-gray-200/40">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-emerald-50 via-white to-emerald-50 rounded-2xl opacity-60"></div>
+                <Card className="relative glass-card border-emerald-200/30 rounded-2xl shadow-2xl">
                 <CardContent className="py-12 text-center">
                   <Zap className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-lg font-medium text-gray-600">Noch keine OCR-Ergebnisse verfügbar</p>
@@ -1531,10 +1545,13 @@ export default function DocumentAnalysis() {
                   </p>
                 </CardContent>
               </Card>
+            </div>
             ) : (
               <div className="grid gap-4">
                 {analysesArray.filter(a => a.analysisType === 'mistral_ocr').map((analysis: DocumentAnalysis) => (
-                  <Card key={analysis.id} className="relative overflow-hidden bg-gradient-to-br from-white/60 to-emerald-50/30 backdrop-blur-xl border border-emerald-200/40">
+                  <div key={analysis.id} className="relative">
+                    <div className="absolute inset-0 bg-gradient-to-r from-emerald-50 via-white to-emerald-50 rounded-2xl opacity-60"></div>
+                    <Card className="relative glass-card border-emerald-200/30 rounded-2xl shadow-2xl">
                     <CardContent className="p-6">
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex-1">
@@ -1731,6 +1748,7 @@ export default function DocumentAnalysis() {
                       )}
                     </CardContent>
                   </Card>
+                </div>
                 ))}
               </div>
             )}
@@ -1744,7 +1762,9 @@ export default function DocumentAnalysis() {
                 <p className="mt-4 text-gray-600">Lade Erkenntnisse...</p>
               </div>
             ) : insightsArray.length === 0 ? (
-              <Card className="bg-gradient-to-br from-gray-50/60 to-white/40 backdrop-blur-xl border border-gray-200/40">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-50 via-white to-purple-50 rounded-2xl opacity-60"></div>
+                <Card className="relative glass-card border-purple-200/30 rounded-2xl shadow-2xl">
                 <CardContent className="py-12 text-center">
                   <Brain className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-lg font-medium text-gray-600">Noch keine KI-Erkenntnisse verfügbar</p>
@@ -1753,10 +1773,13 @@ export default function DocumentAnalysis() {
                   </p>
                 </CardContent>
               </Card>
+            </div>
             ) : (
               <div className="grid gap-4">
                 {insightsArray.map((insight: DocumentInsight) => (
-                  <Card key={insight.id} className="relative overflow-hidden bg-gradient-to-br from-white/60 to-purple-50/30 backdrop-blur-xl border border-purple-200/40">
+                  <div key={insight.id} className="relative">
+                    <div className="absolute inset-0 bg-gradient-to-r from-purple-50 via-white to-purple-50 rounded-2xl opacity-60"></div>
+                    <Card className="relative glass-card border-purple-200/30 rounded-2xl shadow-2xl">
                     <CardContent className="p-6">
                       <div className="flex items-start space-x-4">
                         <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-indigo-500/20 flex items-center justify-center flex-shrink-0">
@@ -1794,6 +1817,7 @@ export default function DocumentAnalysis() {
                       </div>
                     </CardContent>
                   </Card>
+                </div>
                 ))}
               </div>
             )}
