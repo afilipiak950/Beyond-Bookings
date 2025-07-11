@@ -1091,7 +1091,7 @@ ${analyses.filter(a => a?.insights).map(analysis =>
       };
 
       // Enhanced AI prompt with comprehensive context
-      const aiPrompt = `You are an expert AI assistant for Beyond Bookings, a comprehensive hotel pricing and document intelligence platform. You have access to all user data and should provide detailed, personalized responses.
+      const aiPrompt = `You are an expert AI assistant for Beyond Bookings, a comprehensive hotel pricing and document intelligence platform. You have access to all user data and provide ultra-detailed, personalized responses with specific insights.
 
 USER CONTEXT:
 - User: ${userContext.profile.name} (${userContext.profile.email})
@@ -1100,59 +1100,109 @@ USER CONTEXT:
 - Pricing calculations: ${userContext.calculations.total}
 - Document uploads: ${userContext.documents.uploads}
 
-HOTEL DATA:
-${userContext.hotels.list.map(h => `• ${h.name} (${h.stars}★) - ${h.location}, ${h.rooms} rooms`).join('\n')}
+DETAILED HOTEL PORTFOLIO:
+${userContext.hotels.list.map(h => `• **${h.name}** (${h.stars}★) - ${h.location}, ${h.rooms} rooms${h.category ? `, Category: ${h.category}` : ''}${h.url ? `, URL: ${h.url}` : ''}`).join('\n')}
 
-RECENT CALCULATIONS:
-${userContext.calculations.recent.map(c => `• ${c.hotelName}: €${c.roomPrice} room price, €${c.totalCost} total cost, ${c.profitMargin}% margin`).join('\n')}
+RECENT PRICING CALCULATIONS:
+${userContext.calculations.recent.map(c => `• **${c.hotelName}**: €${c.roomPrice} room price → €${c.totalCost} total cost (${c.profitMargin}% margin) - ${c.createdAt ? new Date(c.createdAt).toLocaleDateString() : 'Recent'}`).join('\n')}
 
-PLATFORM STATISTICS:
+PLATFORM ANALYTICS:
 - Total Hotels: ${userContext.platformStats.totalHotels}
 - Total Calculations: ${userContext.platformStats.totalCalculations}
 - Total Documents: ${userContext.platformStats.totalDocuments}
 - Average Room Price: €${userContext.platformStats.averageRoomPrice.toFixed(2)}
+- Average Profit Margin: ${userContext.calculations.total > 0 ? (userContext.calculations.recent.reduce((sum, c) => sum + (c.profitMargin || 0), 0) / userContext.calculations.recent.length).toFixed(1) : 0}%
 
-CAPABILITIES:
-1. Hotel Management: Help with hotel data, star ratings, pricing analysis
-2. Pricing Calculations: Explain VAT calculations, profit margins, competitive analysis
-3. Document Intelligence: OCR analysis, financial document processing
-4. Platform Features: Workflow guidance, export options, data visualization
-5. Business Intelligence: Market insights, pricing strategies, performance analysis
+ADVANCED CAPABILITIES:
+1. **Portfolio Analysis**: Deep dive into hotel performance, star ratings, location analysis
+2. **Pricing Intelligence**: VAT calculations, profit optimization, competitive positioning
+3. **Document Processing**: OCR analysis, financial document insights, data extraction
+4. **Market Intelligence**: Industry benchmarks, pricing trends, competitive analysis
+5. **Business Intelligence**: Performance metrics, revenue optimization, strategic recommendations
+6. **Platform Optimization**: Feature guidance, workflow optimization, export strategies
 
-PERSONALITY:
-- Professional but approachable
-- Highly knowledgeable about hotel industry and pricing
-- Provide specific, actionable advice
-- Reference user's actual data when relevant
-- Offer detailed explanations and step-by-step guidance
+RESPONSE STYLE:
+- Ultra-detailed and comprehensive
+- Reference specific user data and calculations
+- Provide actionable business recommendations
+- Use professional business terminology
+- Include specific numbers and percentages
+- Offer step-by-step guidance
+- Create bullet points and structured responses
 
 USER QUESTION: "${message}"
 
-Please provide a comprehensive, detailed response that leverages the user's actual data and demonstrates deep understanding of their business needs. Use markdown formatting for better readability.`;
+Provide an ultra-detailed, comprehensive response that demonstrates deep analysis of the user's actual business data. Include specific insights, recommendations, and actionable advice based on their hotel portfolio and pricing calculations. Use markdown formatting for clear structure.`;
 
-      // Call OpenAI API with comprehensive context
-      const OpenAI = await import('openai');
-      const openai = new OpenAI.default({
-        apiKey: process.env.OPENAI_API_KEY,
-      });
-
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-        messages: [
-          {
-            role: "system",
-            content: aiPrompt
-          },
-          {
-            role: "user",
-            content: message
+      // Enhanced AI with web search capabilities
+      let aiResponse = '';
+      
+      // First, try to use Perplexity for web search capabilities if question needs current market data
+      const needsWebSearch = message.toLowerCase().includes('market') || 
+                           message.toLowerCase().includes('trend') || 
+                           message.toLowerCase().includes('competitive') ||
+                           message.toLowerCase().includes('industry') ||
+                           message.toLowerCase().includes('benchmark');
+      
+      if (needsWebSearch && process.env.PERPLEXITY_API_KEY) {
+        try {
+          const perplexityResponse = await fetch('https://api.perplexity.ai/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${process.env.PERPLEXITY_API_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              model: 'llama-3.1-sonar-small-128k-online',
+              messages: [
+                {
+                  role: 'system',
+                  content: 'You are a hotel industry expert providing current market insights, trends, and competitive analysis. Use recent data and industry reports.'
+                },
+                {
+                  role: 'user',
+                  content: message
+                }
+              ],
+              max_tokens: 1000,
+              temperature: 0.7
+            })
+          });
+          
+          if (perplexityResponse.ok) {
+            const perplexityData = await perplexityResponse.json();
+            aiResponse = perplexityData.choices[0]?.message?.content || '';
           }
-        ],
-        max_tokens: 2000,
-        temperature: 0.7
-      });
+        } catch (perplexityError) {
+          console.log('Perplexity API not available, falling back to OpenAI');
+        }
+      }
 
-      const aiResponse = response.choices[0]?.message?.content || 'I apologize, but I encountered an issue processing your request. Please try again.';
+      // If no web search response, use OpenAI with comprehensive context
+      if (!aiResponse) {
+        const OpenAI = await import('openai');
+        const openai = new OpenAI.default({
+          apiKey: process.env.OPENAI_API_KEY,
+        });
+
+        const response = await openai.chat.completions.create({
+          model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+          messages: [
+            {
+              role: "system",
+              content: aiPrompt
+            },
+            {
+              role: "user",
+              content: message
+            }
+          ],
+          max_tokens: 2000,
+          temperature: 0.7
+        });
+
+        aiResponse = response.choices[0]?.message?.content || 'I apologize, but I encountered an issue processing your request. Please try again.';
+      }
 
       res.json({ 
         message: aiResponse,

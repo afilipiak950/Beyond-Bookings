@@ -217,7 +217,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
                     </div>
                     <div>
                       <h2 className="text-lg font-bold text-gray-900">Beyond Bookings AI Assistant</h2>
-                      <p className="text-sm text-gray-600">Powered by GPT-4o • Real-time Data Analysis</p>
+                      <p className="text-sm text-gray-600">Powered by GPT-4o + Perplexity • Real-time Data + Web Search</p>
                     </div>
                     <div className="flex items-center gap-2 ml-auto">
                       <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
@@ -227,8 +227,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
                     </div>
                   </DialogTitle>
                   <DialogDescription className="mt-2 text-sm text-gray-700">
-                    Your intelligent assistant with **full access** to your hotel data, pricing calculations, and platform analytics. 
-                    Ask complex questions about your business performance, pricing strategies, or platform features.
+                    Your intelligent assistant with **full access** to your hotel data, pricing calculations, platform analytics, and **real-time web search**. 
+                    Ask complex questions about market trends, competitive analysis, or current industry insights.
                   </DialogDescription>
                 </DialogHeader>
 
@@ -287,13 +287,13 @@ export default function AppLayout({ children }: AppLayoutProps) {
                           <div className="inline-block px-4 py-3 rounded-lg bg-gradient-to-r from-slate-50 to-blue-50 border border-slate-200 rounded-bl-none">
                             <div className="flex items-center gap-2">
                               <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
-                              <span className="text-sm text-slate-700">AI is analyzing your data and generating insights...</span>
+                              <span className="text-sm text-slate-700">AI is analyzing your data and searching for market insights...</span>
                             </div>
                             <div className="flex items-center gap-1 mt-2">
                               <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />
                               <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }} />
                               <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }} />
-                              <span className="text-xs text-slate-500 ml-2">Processing with GPT-4o</span>
+                              <span className="text-xs text-slate-500 ml-2">GPT-4o + Web Search</span>
                             </div>
                           </div>
                         </div>
