@@ -732,7 +732,7 @@ export default function CustomerRequest() {
                         Neue Anfrage erstellen
                       </Button>
                       <Button
-                        onClick={() => window.location.href = '/pricing-calculator'}
+                        onClick={() => window.location.href = '/calculations'}
                         className="h-11 px-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
                       >
                         Zu Berechnungen
