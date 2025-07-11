@@ -1593,19 +1593,34 @@ export default function DocumentAnalysis() {
             )}
 
             {/* AI Insights */}
-            {selectedDocument?.insights && (
-              <div className="space-y-3">
-                <h3 className="font-semibold text-gray-900 dark:text-white">KI-Erkenntnisse</h3>
-                <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
-                  <CardContent className="p-4 max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-blue-200 scrollbar-track-blue-50">
-                    {(() => {
-                      try {
-                        // Skip if insights is empty, null, or empty object
-                        if (!selectedDocument.insights || 
-                            selectedDocument.insights === '{}' ||
-                            (typeof selectedDocument.insights === 'object' && Object.keys(selectedDocument.insights).length === 0)) {
-                          return <div className="text-sm text-gray-500">Keine KI-Erkenntnisse verfügbar</div>;
-                        }
+            <div className="space-y-3">
+              <h3 className="font-semibold text-gray-900 dark:text-white">KI-Erkenntnisse</h3>
+              <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
+                <CardContent className="p-4 max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-blue-200 scrollbar-track-blue-50">
+                  {(() => {
+                    // Check if insights exist and are not empty
+                    if (!selectedDocument?.insights || 
+                        selectedDocument.insights === '{}' ||
+                        (typeof selectedDocument.insights === 'object' && Object.keys(selectedDocument.insights).length === 0)) {
+                      return (
+                        <div className="text-center py-8 text-gray-500">
+                          <div className="mb-4">
+                            <div className="h-16 w-16 mx-auto bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
+                              <Brain className="h-8 w-8 text-gray-400" />
+                            </div>
+                          </div>
+                          <div className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                            Keine KI-Erkenntnisse verfügbar
+                          </div>
+                          <div className="text-xs text-gray-500 dark:text-gray-500 space-y-1">
+                            <div>Dieses Dokument wurde noch nicht durch KI analysiert</div>
+                            <div>Verwenden Sie "KI-Analyse für alle" oder "Neue KI-Analyse für alle" um Erkenntnisse zu generieren</div>
+                          </div>
+                        </div>
+                      );
+                    }
+                    
+                    try {
 
                         // Parse the insights JSON string
                         let insights;
@@ -1785,8 +1800,7 @@ export default function DocumentAnalysis() {
                   </CardContent>
                 </Card>
               </div>
-            )}
-          </div>
+            </div>
         </DialogContent>
       </Dialog>
 
