@@ -2831,6 +2831,142 @@ Return a JSON response with: documentType, keyFindings[], businessInsights[], re
     }
   });
 
+  // Mass AI Summary Generation endpoint
+  app.post('/api/ai/mass-summary', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const user = req.user!;
+      
+      // Get all analyses that don't have proper insights
+      const analyses = await db.query.documentAnalyses.findMany({
+        where: eq(documentAnalyses.userId, user.id),
+        orderBy: [desc(documentAnalyses.createdAt)],
+      });
+
+      console.log(`Found ${analyses.length} total analyses for mass AI summary`);
+
+      // Filter analyses that need AI insights (empty or invalid insights)
+      const analysesNeedingInsights = analyses.filter(analysis => {
+        if (!analysis.insights) return true;
+        
+        try {
+          const insights = typeof analysis.insights === 'string' ? JSON.parse(analysis.insights) : analysis.insights;
+          return !insights || Object.keys(insights).length === 0;
+        } catch (error) {
+          return true; // If parsing fails, it needs new insights
+        }
+      });
+
+      console.log(`Found ${analysesNeedingInsights.length} analyses needing AI insights`);
+
+      if (analysesNeedingInsights.length === 0) {
+        return res.json({ 
+          message: 'All documents already have AI insights', 
+          processedDocuments: 0,
+          totalDocuments: analyses.length
+        });
+      }
+
+      // Initialize OpenAI
+      const openai = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY,
+      });
+
+      let processedCount = 0;
+      
+      // Process each analysis that needs insights
+      for (const analysis of analysesNeedingInsights) {
+        try {
+          console.log(`Processing AI summary for: ${analysis.fileName}`);
+          
+          // Prepare the document text for analysis
+          const documentText = analysis.extractedData || '';
+          
+          if (!documentText || documentText.trim().length === 0) {
+            console.log(`Skipping ${analysis.fileName} - no extracted data`);
+            continue;
+          }
+
+          const prompt = `Analyze this business document and provide comprehensive insights in JSON format:
+
+Document: ${analysis.fileName}
+Content: ${documentText}
+
+Please analyze and return JSON in this exact format:
+{
+  "documentType": "string - type of document",
+  "keyFindings": ["string - key finding 1", "string - key finding 2", ...],
+  "businessInsights": [
+    {
+      "category": "string - insight category",
+      "insight": "string - specific insight"
+    }
+  ],
+  "recommendations": ["string - actionable recommendation 1", "string - actionable recommendation 2", ...],
+  "summary": "string - comprehensive summary of the document"
+}
+
+Focus on:
+1. Identify the document type and purpose
+2. Extract key business findings and numbers
+3. Provide strategic business insights
+4. Give actionable recommendations
+5. Summarize the document comprehensively`;
+
+          const response = await openai.chat.completions.create({
+            model: 'gpt-4o', // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+            messages: [
+              {
+                role: 'system',
+                content: 'You are a business analyst specializing in document analysis. Provide detailed, actionable insights in valid JSON format.'
+              },
+              {
+                role: 'user',
+                content: prompt
+              }
+            ],
+            response_format: { type: 'json_object' },
+            max_tokens: 2000,
+            temperature: 0.1,
+          });
+
+          const aiInsights = response.choices[0].message.content;
+          
+          if (aiInsights) {
+            // Update the analysis with new AI insights
+            await db.update(documentAnalyses)
+              .set({ 
+                insights: JSON.stringify({ summary: aiInsights })
+              })
+              .where(eq(documentAnalyses.id, analysis.id));
+            
+            processedCount++;
+            console.log(`✓ Generated AI insights for: ${analysis.fileName}`);
+          }
+          
+          // Add small delay to avoid rate limiting
+          await new Promise(resolve => setTimeout(resolve, 100));
+          
+        } catch (error) {
+          console.error(`Error processing ${analysis.fileName}:`, error);
+          // Continue with next document even if one fails
+        }
+      }
+
+      console.log(`Mass AI summary completed. Processed ${processedCount} documents.`);
+
+      res.json({
+        message: 'Mass AI summary completed successfully',
+        processedDocuments: processedCount,
+        totalDocuments: analyses.length,
+        documentsNeedingInsights: analysesNeedingInsights.length
+      });
+      
+    } catch (error) {
+      console.error('Mass AI summary error:', error);
+      res.status(500).json({ error: 'Failed to generate mass AI summary' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

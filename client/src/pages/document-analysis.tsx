@@ -75,6 +75,44 @@ export default function DocumentAnalysis() {
   const [comprehensiveAnalysisData, setComprehensiveAnalysisData] = useState<any>(null);
   const [isRunningComprehensiveAnalysis, setIsRunningComprehensiveAnalysis] = useState(false);
 
+  // Mass AI Summary Generation
+  const massAISummaryMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest('/api/ai/mass-summary', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({})
+      });
+      return response;
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "KI-Zusammenfassung abgeschlossen",
+        description: `${data.processedDocuments} Dokumente wurden erfolgreich analysiert.`,
+      });
+      
+      // Refresh the analyses to show new insights
+      queryClient.invalidateQueries({ queryKey: ['/api/document-analyses'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Fehler bei der KI-Zusammenfassung",
+        description: error.message || "Ein Fehler ist aufgetreten",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const generateMassAISummary = async () => {
+    try {
+      await massAISummaryMutation.mutateAsync();
+    } catch (error) {
+      console.error('Mass AI Summary failed:', error);
+    }
+  };
+
   // Queries
   const { data: uploads = [], isLoading: uploadsLoading } = useQuery({
     queryKey: ["/api/document-uploads"],
@@ -537,6 +575,24 @@ export default function DocumentAnalysis() {
                     <>
                       <TrendingUp className="h-4 w-4 mr-2" />
                       Umfassende KI-Analyse
+                    </>
+                  )}
+                </Button>
+
+                <Button
+                  onClick={() => generateMassAISummary()}
+                  disabled={massAISummaryMutation.isPending || analyses.length === 0}
+                  className="bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white"
+                >
+                  {massAISummaryMutation.isPending ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                      KI-Zusammenfassung läuft...
+                    </>
+                  ) : (
+                    <>
+                      <Brain className="h-4 w-4 mr-2" />
+                      KI-Zusammenfassung für alle
                     </>
                   )}
                 </Button>
