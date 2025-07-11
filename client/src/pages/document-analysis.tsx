@@ -1331,23 +1331,51 @@ export default function DocumentAnalysis() {
                   <CardContent className="p-4">
                     {(() => {
                       try {
-                        // Skip if insights is empty object
+                        // Skip if insights is empty, null, or empty object
                         if (!selectedDocument.insights || 
+                            selectedDocument.insights === '{}' ||
                             (typeof selectedDocument.insights === 'object' && Object.keys(selectedDocument.insights).length === 0)) {
                           return <div className="text-sm text-gray-500">Keine KI-Erkenntnisse verfügbar</div>;
                         }
 
                         // Parse the insights JSON string
-                        const insights = typeof selectedDocument.insights === 'string' 
-                          ? JSON.parse(selectedDocument.insights) 
-                          : selectedDocument.insights;
+                        let insights;
+                        if (typeof selectedDocument.insights === 'string') {
+                          // Handle empty string case
+                          if (selectedDocument.insights.trim() === '' || selectedDocument.insights.trim() === '{}') {
+                            return <div className="text-sm text-gray-500">Keine KI-Erkenntnisse verfügbar</div>;
+                          }
+                          insights = JSON.parse(selectedDocument.insights);
+                        } else {
+                          insights = selectedDocument.insights;
+                        }
+                        
+                        // Check if insights is empty object after parsing
+                        if (!insights || Object.keys(insights).length === 0) {
+                          return <div className="text-sm text-gray-500">Keine KI-Erkenntnisse verfügbar</div>;
+                        }
                         
                         // Check if insights has a summary property that contains the actual data
-                        const actualInsights = insights.summary 
-                          ? (typeof insights.summary === 'string' 
-                              ? JSON.parse(insights.summary.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim())
-                              : insights.summary)
-                          : insights;
+                        let actualInsights;
+                        if (insights.summary) {
+                          if (typeof insights.summary === 'string') {
+                            // Clean up markdown formatting
+                            const cleanSummary = insights.summary.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+                            if (cleanSummary === '' || cleanSummary === '{}') {
+                              return <div className="text-sm text-gray-500">Keine KI-Erkenntnisse verfügbar</div>;
+                            }
+                            actualInsights = JSON.parse(cleanSummary);
+                          } else {
+                            actualInsights = insights.summary;
+                          }
+                        } else {
+                          actualInsights = insights;
+                        }
+                        
+                        // Final check - if actualInsights is empty
+                        if (!actualInsights || Object.keys(actualInsights).length === 0) {
+                          return <div className="text-sm text-gray-500">Keine KI-Erkenntnisse verfügbar</div>;
+                        }
 
                         return (
                           <>
