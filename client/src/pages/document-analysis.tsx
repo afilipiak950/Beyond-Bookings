@@ -71,6 +71,9 @@ export default function DocumentAnalysis() {
   const [isUploading, setIsUploading] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<any>(null);
   const [documentDialogOpen, setDocumentDialogOpen] = useState(false);
+  const [showComprehensiveAnalysis, setShowComprehensiveAnalysis] = useState(false);
+  const [comprehensiveAnalysisData, setComprehensiveAnalysisData] = useState<any>(null);
+  const [isRunningComprehensiveAnalysis, setIsRunningComprehensiveAnalysis] = useState(false);
 
   // Queries
   const { data: uploads = [], isLoading: uploadsLoading } = useQuery({
@@ -214,6 +217,46 @@ export default function DocumentAnalysis() {
       description: `Starte OCR-Verarbeitung für ${fileName}...`,
     });
     ocrMutation.mutate({ uploadId, fileName });
+  };
+
+  // Comprehensive AI Analysis Mutation
+  const comprehensiveAnalysisMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest('/api/ai/comprehensive-analysis', 'POST', {});
+      return await response.json();
+    },
+    onSuccess: (data) => {
+      setComprehensiveAnalysisData(data);
+      setShowComprehensiveAnalysis(true);
+      setIsRunningComprehensiveAnalysis(false);
+      toast({
+        title: "KI-Analyse abgeschlossen",
+        description: `${data.totalDocuments} Dokumente analysiert mit ${data.totalNumbers} Zahlen extrahiert.`,
+      });
+    },
+    onError: (error) => {
+      console.error('Comprehensive analysis error:', error);
+      setIsRunningComprehensiveAnalysis(false);
+      toast({
+        title: "Analyse-Fehler",
+        description: "Fehler bei der umfassenden KI-Analyse.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const runComprehensiveAnalysis = () => {
+    if (analyses.length === 0) {
+      toast({
+        title: "Keine Dokumente",
+        description: "Bitte laden Sie zuerst Dokumente hoch, um eine Analyse durchzuführen.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsRunningComprehensiveAnalysis(true);
+    comprehensiveAnalysisMutation.mutate();
   };
 
   const processAllWithOCR = () => {
@@ -476,6 +519,24 @@ export default function DocumentAnalysis() {
                     <>
                       <Zap className="h-4 w-4 mr-2" />
                       Alle OCR verarbeiten
+                    </>
+                  )}
+                </Button>
+
+                <Button
+                  onClick={() => runComprehensiveAnalysis()}
+                  disabled={isRunningComprehensiveAnalysis || analyses.length === 0}
+                  className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white"
+                >
+                  {isRunningComprehensiveAnalysis ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                      KI-Analyse läuft...
+                    </>
+                  ) : (
+                    <>
+                      <TrendingUp className="h-4 w-4 mr-2" />
+                      Umfassende KI-Analyse
                     </>
                   )}
                 </Button>
@@ -1266,66 +1327,213 @@ export default function DocumentAnalysis() {
             {selectedDocument?.insights && (
               <div className="space-y-3">
                 <h3 className="font-semibold text-gray-900 dark:text-white">KI-Erkenntnisse</h3>
-                <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
-                  
-                  {/* Document Type */}
-                  {selectedDocument.insights.documentType && (
-                    <div className="mb-3">
-                      <span className="text-sm text-gray-600 dark:text-gray-400">Dokumenttyp:</span>
-                      <Badge variant="outline" className="ml-2 bg-blue-100 text-blue-800">
-                        {selectedDocument.insights.documentType}
-                      </Badge>
-                    </div>
-                  )}
+                <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
+                  <CardContent className="p-4">
+                    {/* Document Type */}
+                    {selectedDocument.insights.documentType && (
+                      <div className="mb-3">
+                        <span className="text-sm text-gray-600 dark:text-gray-400">Dokumenttyp:</span>
+                        <Badge variant="outline" className="ml-2 bg-blue-100 text-blue-800">
+                          {selectedDocument.insights.documentType}
+                        </Badge>
+                      </div>
+                    )}
 
-                  {/* Key Findings */}
-                  {selectedDocument.insights.keyFindings && selectedDocument.insights.keyFindings.length > 0 && (
-                    <div className="mb-3">
-                      <p className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">Wichtige Erkenntnisse:</p>
-                      <ul className="space-y-1">
-                        {selectedDocument.insights.keyFindings.map((finding: string, idx: number) => (
-                          <li key={idx} className="text-sm text-gray-700 dark:text-gray-300 flex items-start">
-                            <span className="text-blue-500 mr-2 flex-shrink-0">•</span>
-                            <span>{finding}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
+                    {/* Key Findings */}
+                    {selectedDocument.insights.keyFindings && selectedDocument.insights.keyFindings.length > 0 && (
+                      <div className="mb-3">
+                        <p className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">Wichtige Erkenntnisse:</p>
+                        <ul className="space-y-1">
+                          {selectedDocument.insights.keyFindings.map((finding: string, idx: number) => (
+                            <li key={idx} className="text-sm text-gray-700 dark:text-gray-300 flex items-start">
+                              <span className="text-blue-500 mr-2 flex-shrink-0">•</span>
+                              <span>{finding}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
 
-                  {/* Business Insights */}
-                  {selectedDocument.insights.businessInsights && selectedDocument.insights.businessInsights.length > 0 && (
-                    <div className="mb-3">
-                      <p className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">Geschäftseinblicke:</p>
-                      <ul className="space-y-1">
-                        {selectedDocument.insights.businessInsights.map((insight: string, idx: number) => (
-                          <li key={idx} className="text-sm text-gray-700 dark:text-gray-300 flex items-start bg-white dark:bg-gray-800 p-2 rounded">
-                            <span className="text-blue-500 mr-2 flex-shrink-0">💡</span>
-                            <span>{insight}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
+                    {/* Business Insights */}
+                    {selectedDocument.insights.businessInsights && selectedDocument.insights.businessInsights.length > 0 && (
+                      <div className="mb-3">
+                        <p className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">Geschäftseinblicke:</p>
+                        <ul className="space-y-1">
+                          {selectedDocument.insights.businessInsights.map((insight: string, idx: number) => (
+                            <li key={idx} className="text-sm text-gray-700 dark:text-gray-300 flex items-start bg-white dark:bg-gray-800 p-2 rounded">
+                              <span className="text-blue-500 mr-2 flex-shrink-0">💡</span>
+                              <span>{insight}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
 
-                  {/* Recommendations */}
-                  {selectedDocument.insights.recommendations && selectedDocument.insights.recommendations.length > 0 && (
-                    <div>
-                      <p className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">Empfehlungen:</p>
-                      <ul className="space-y-1">
-                        {selectedDocument.insights.recommendations.map((rec: string, idx: number) => (
-                          <li key={idx} className="text-sm text-gray-700 dark:text-gray-300 flex items-start bg-green-50 dark:bg-green-900/20 p-2 rounded">
-                            <span className="text-green-500 mr-2 flex-shrink-0">→</span>
-                            <span>{rec}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
+                    {/* Recommendations */}
+                    {selectedDocument.insights.recommendations && selectedDocument.insights.recommendations.length > 0 && (
+                      <div>
+                        <p className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">Empfehlungen:</p>
+                        <ul className="space-y-1">
+                          {selectedDocument.insights.recommendations.map((rec: string, idx: number) => (
+                            <li key={idx} className="text-sm text-gray-700 dark:text-gray-300 flex items-start bg-green-50 dark:bg-green-900/20 p-2 rounded">
+                              <span className="text-green-500 mr-2 flex-shrink-0">→</span>
+                              <span>{rec}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
               </div>
             )}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Comprehensive Analysis Results Dialog */}
+      <Dialog open={showComprehensiveAnalysis} onOpenChange={setShowComprehensiveAnalysis}>
+        <DialogContent className="max-w-6xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-emerald-600" />
+              Umfassende KI-Analyse Ergebnisse
+            </DialogTitle>
+            <DialogDescription>
+              Detaillierte Analyse aller hochgeladenen Dokumente mit KI-gestützter Datenextraktion
+            </DialogDescription>
+          </DialogHeader>
+          
+          {comprehensiveAnalysisData && (
+            <div className="space-y-6">
+              {/* Summary Stats */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <Card className="bg-blue-50 border-blue-200">
+                  <CardContent className="p-4">
+                    <div className="text-2xl font-bold text-blue-600">
+                      {comprehensiveAnalysisData.totalDocuments}
+                    </div>
+                    <div className="text-sm text-gray-600">Dokumente analysiert</div>
+                  </CardContent>
+                </Card>
+                <Card className="bg-green-50 border-green-200">
+                  <CardContent className="p-4">
+                    <div className="text-2xl font-bold text-green-600">
+                      {comprehensiveAnalysisData.totalNumbers}
+                    </div>
+                    <div className="text-sm text-gray-600">Zahlen extrahiert</div>
+                  </CardContent>
+                </Card>
+                <Card className="bg-purple-50 border-purple-200">
+                  <CardContent className="p-4">
+                    <div className="text-2xl font-bold text-purple-600">
+                      {comprehensiveAnalysisData.totalInsights}
+                    </div>
+                    <div className="text-sm text-gray-600">Erkenntnisse gewonnen</div>
+                  </CardContent>
+                </Card>
+                <Card className="bg-amber-50 border-amber-200">
+                  <CardContent className="p-4">
+                    <div className="text-2xl font-bold text-amber-600">
+                      {comprehensiveAnalysisData.documentFindings?.filter(f => f.processingStatus === 'completed').length || 0}
+                    </div>
+                    <div className="text-sm text-gray-600">Erfolgreich verarbeitet</div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Strategic Summary */}
+              {comprehensiveAnalysisData.strategicSummary && (
+                <Card className="bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-200">
+                  <CardHeader>
+                    <CardTitle className="text-emerald-800">Strategische Zusammenfassung</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {comprehensiveAnalysisData.strategicSummary.overallSummary && (
+                        <div>
+                          <h4 className="font-semibold text-gray-800 mb-2">Gesamtübersicht</h4>
+                          <p className="text-gray-700">{comprehensiveAnalysisData.strategicSummary.overallSummary}</p>
+                        </div>
+                      )}
+                      
+                      {comprehensiveAnalysisData.strategicSummary.strategicRecommendations && (
+                        <div>
+                          <h4 className="font-semibold text-gray-800 mb-2">Strategische Empfehlungen</h4>
+                          <ul className="space-y-1">
+                            {comprehensiveAnalysisData.strategicSummary.strategicRecommendations.map((rec: string, idx: number) => (
+                              <li key={idx} className="flex items-start">
+                                <span className="text-emerald-600 mr-2">→</span>
+                                <span className="text-gray-700">{rec}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Document Findings */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-800">Dokumentenbefunde</h3>
+                {comprehensiveAnalysisData.documentFindings?.map((finding: any, idx: number) => (
+                  <Card key={idx} className="border-gray-200">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-base">{finding.documentName}</CardTitle>
+                        <Badge variant={finding.processingStatus === 'completed' ? 'default' : 'destructive'}>
+                          {finding.processingStatus}
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      {finding.analysis && finding.analysis.documentSummary && (
+                        <div className="mb-4">
+                          <h5 className="font-medium text-gray-800 mb-2">Dokumentzusammenfassung</h5>
+                          <p className="text-gray-700 text-sm">{finding.analysis.documentSummary}</p>
+                        </div>
+                      )}
+                      
+                      {finding.analysis && finding.analysis.numericalData && finding.analysis.numericalData.length > 0 && (
+                        <div className="mb-4">
+                          <h5 className="font-medium text-gray-800 mb-2">Extrahierte Zahlen ({finding.numbersExtracted})</h5>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-32 overflow-y-auto">
+                            {finding.analysis.numericalData.slice(0, 10).map((num: any, numIdx: number) => (
+                              <div key={numIdx} className="bg-gray-50 p-2 rounded text-sm">
+                                <div className="font-medium text-gray-800">{num.value}</div>
+                                <div className="text-gray-600">{num.context}</div>
+                              </div>
+                            ))}
+                          </div>
+                          {finding.analysis.numericalData.length > 10 && (
+                            <div className="text-xs text-gray-500 mt-2">
+                              ... und {finding.analysis.numericalData.length - 10} weitere Zahlen
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
+                      {finding.analysis && finding.analysis.keyFindings && finding.analysis.keyFindings.length > 0 && (
+                        <div className="mb-4">
+                          <h5 className="font-medium text-gray-800 mb-2">Wichtige Erkenntnisse</h5>
+                          <ul className="space-y-1">
+                            {finding.analysis.keyFindings.map((kf: string, kfIdx: number) => (
+                              <li key={kfIdx} className="flex items-start text-sm">
+                                <span className="text-blue-600 mr-2">•</span>
+                                <span className="text-gray-700">{kf}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </AppLayout>
