@@ -2853,8 +2853,40 @@ Return a JSON response with: documentType, keyFindings[], businessInsights[], re
         if (!analysis.insights) return true;
         
         try {
-          const insights = typeof analysis.insights === 'string' ? JSON.parse(analysis.insights) : analysis.insights;
-          return !insights || Object.keys(insights).length === 0;
+          let insights;
+          if (typeof analysis.insights === 'string') {
+            // Handle empty string or "{}" cases
+            if (analysis.insights.trim() === '' || analysis.insights.trim() === '{}') {
+              return true;
+            }
+            insights = JSON.parse(analysis.insights);
+          } else {
+            insights = analysis.insights;
+          }
+          
+          // Check if insights is empty or just has empty summary
+          if (!insights || Object.keys(insights).length === 0) {
+            return true;
+          }
+          
+          // Check if it has summary property with nested JSON
+          if (insights.summary) {
+            if (typeof insights.summary === 'string') {
+              // Clean up markdown formatting
+              const cleanSummary = insights.summary.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+              if (cleanSummary === '' || cleanSummary === '{}') {
+                return true;
+              }
+              try {
+                const nestedInsights = JSON.parse(cleanSummary);
+                return !nestedInsights || Object.keys(nestedInsights).length === 0;
+              } catch (parseError) {
+                return true; // If nested parsing fails, it needs new insights
+              }
+            }
+          }
+          
+          return false; // Has valid insights
         } catch (error) {
           return true; // If parsing fails, it needs new insights
         }
