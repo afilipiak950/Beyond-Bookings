@@ -1329,60 +1329,115 @@ export default function DocumentAnalysis() {
                 <h3 className="font-semibold text-gray-900 dark:text-white">KI-Erkenntnisse</h3>
                 <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
                   <CardContent className="p-4">
-                    {/* Document Type */}
-                    {selectedDocument.insights.documentType && (
-                      <div className="mb-3">
-                        <span className="text-sm text-gray-600 dark:text-gray-400">Dokumenttyp:</span>
-                        <Badge variant="outline" className="ml-2 bg-blue-100 text-blue-800">
-                          {selectedDocument.insights.documentType}
-                        </Badge>
-                      </div>
-                    )}
+                    {(() => {
+                      try {
+                        // Parse the insights JSON string
+                        const insights = typeof selectedDocument.insights === 'string' 
+                          ? JSON.parse(selectedDocument.insights) 
+                          : selectedDocument.insights;
+                        
+                        // Check if insights has a summary property that contains the actual data
+                        const actualInsights = insights.summary 
+                          ? (typeof insights.summary === 'string' 
+                              ? JSON.parse(insights.summary.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim())
+                              : insights.summary)
+                          : insights;
 
-                    {/* Key Findings */}
-                    {selectedDocument.insights.keyFindings && selectedDocument.insights.keyFindings.length > 0 && (
-                      <div className="mb-3">
-                        <p className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">Wichtige Erkenntnisse:</p>
-                        <ul className="space-y-1">
-                          {selectedDocument.insights.keyFindings.map((finding: string, idx: number) => (
-                            <li key={idx} className="text-sm text-gray-700 dark:text-gray-300 flex items-start">
-                              <span className="text-blue-500 mr-2 flex-shrink-0">•</span>
-                              <span>{finding}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
+                        return (
+                          <>
+                            {/* Document Type */}
+                            {actualInsights.documentType && (
+                              <div className="mb-3">
+                                <span className="text-sm text-gray-600 dark:text-gray-400">Dokumenttyp:</span>
+                                <Badge variant="outline" className="ml-2 bg-blue-100 text-blue-800">
+                                  {actualInsights.documentType}
+                                </Badge>
+                              </div>
+                            )}
 
-                    {/* Business Insights */}
-                    {selectedDocument.insights.businessInsights && selectedDocument.insights.businessInsights.length > 0 && (
-                      <div className="mb-3">
-                        <p className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">Geschäftseinblicke:</p>
-                        <ul className="space-y-1">
-                          {selectedDocument.insights.businessInsights.map((insight: string, idx: number) => (
-                            <li key={idx} className="text-sm text-gray-700 dark:text-gray-300 flex items-start bg-white dark:bg-gray-800 p-2 rounded">
-                              <span className="text-blue-500 mr-2 flex-shrink-0">💡</span>
-                              <span>{insight}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
+                            {/* Key Findings */}
+                            {actualInsights.keyFindings && actualInsights.keyFindings.length > 0 && (
+                              <div className="mb-3">
+                                <p className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">Wichtige Erkenntnisse:</p>
+                                <ul className="space-y-1">
+                                  {actualInsights.keyFindings.map((finding: string, idx: number) => (
+                                    <li key={idx} className="text-sm text-gray-700 dark:text-gray-300 flex items-start">
+                                      <span className="text-blue-500 mr-2 flex-shrink-0">•</span>
+                                      <span>{finding}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
 
-                    {/* Recommendations */}
-                    {selectedDocument.insights.recommendations && selectedDocument.insights.recommendations.length > 0 && (
-                      <div>
-                        <p className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">Empfehlungen:</p>
-                        <ul className="space-y-1">
-                          {selectedDocument.insights.recommendations.map((rec: string, idx: number) => (
-                            <li key={idx} className="text-sm text-gray-700 dark:text-gray-300 flex items-start bg-green-50 dark:bg-green-900/20 p-2 rounded">
-                              <span className="text-green-500 mr-2 flex-shrink-0">→</span>
-                              <span>{rec}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
+                            {/* Business Insights */}
+                            {actualInsights.businessInsights && actualInsights.businessInsights.length > 0 && (
+                              <div className="mb-3">
+                                <p className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">Geschäftseinblicke:</p>
+                                <ul className="space-y-1">
+                                  {actualInsights.businessInsights.map((insight: any, idx: number) => (
+                                    <li key={idx} className="text-sm text-gray-700 dark:text-gray-300 flex items-start bg-white dark:bg-gray-800 p-2 rounded mb-2">
+                                      <span className="text-blue-500 mr-2 flex-shrink-0">💡</span>
+                                      <div>
+                                        {typeof insight === 'string' ? (
+                                          <span>{insight}</span>
+                                        ) : (
+                                          <div>
+                                            {insight.category && <div className="font-medium text-blue-600 mb-1">{insight.category}</div>}
+                                            {insight.insight && <div>{insight.insight}</div>}
+                                            {insight.insights && insight.insights.map((subInsight: string, subIdx: number) => (
+                                              <div key={subIdx} className="ml-3 text-xs text-gray-600">→ {subInsight}</div>
+                                            ))}
+                                          </div>
+                                        )}
+                                      </div>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+
+                            {/* Recommendations */}
+                            {actualInsights.recommendations && actualInsights.recommendations.length > 0 && (
+                              <div className="mb-3">
+                                <p className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">Empfehlungen:</p>
+                                <ul className="space-y-1">
+                                  {actualInsights.recommendations.map((rec: string, idx: number) => (
+                                    <li key={idx} className="text-sm text-gray-700 dark:text-gray-300 flex items-start bg-green-50 dark:bg-green-900/20 p-2 rounded">
+                                      <span className="text-green-500 mr-2 flex-shrink-0">→</span>
+                                      <span>{rec}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+
+                            {/* Summary */}
+                            {actualInsights.summary && typeof actualInsights.summary === 'string' && (
+                              <div>
+                                <p className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">Zusammenfassung:</p>
+                                <div className="text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 p-3 rounded">
+                                  {actualInsights.summary}
+                                </div>
+                              </div>
+                            )}
+                          </>
+                        );
+                      } catch (error) {
+                        console.error('Error parsing insights:', error);
+                        return (
+                          <div className="text-sm text-gray-500">
+                            <p>Fehler beim Laden der KI-Erkenntnisse</p>
+                            <details className="mt-2">
+                              <summary className="cursor-pointer">Raw Data (Debug)</summary>
+                              <pre className="text-xs mt-1 bg-gray-100 p-2 rounded overflow-auto max-h-32">
+                                {JSON.stringify(selectedDocument.insights, null, 2)}
+                              </pre>
+                            </details>
+                          </div>
+                        );
+                      }
+                    })()}
                   </CardContent>
                 </Card>
               </div>
