@@ -403,27 +403,43 @@ export default function DocumentAnalysis() {
     ocrMutation.mutate({ uploadId, fileName });
   };
 
-  // Comprehensive AI Analysis Mutation
+  // Comprehensive AI Analysis Mutation with Progress Tracking
   const comprehensiveAnalysisMutation = useMutation({
     mutationFn: async () => {
+      console.log('Starting comprehensive analysis...');
+      setIsRunningComprehensiveAnalysis(true);
+      setMassAnalysisProgress(0);
+      
       const response = await apiRequest('/api/ai/comprehensive-analysis', 'POST', {});
-      return await response.json();
+      const data = await response.json();
+      
+      console.log('Comprehensive analysis response:', data);
+      return data;
     },
     onSuccess: (data) => {
       setComprehensiveAnalysisData(data);
       setShowComprehensiveAnalysis(true);
       setIsRunningComprehensiveAnalysis(false);
+      setMassAnalysisProgress(100);
+      
       toast({
-        title: "KI-Analyse abgeschlossen",
-        description: `${data.totalDocuments} Dokumente analysiert mit ${data.totalNumbers} Zahlen extrahiert.`,
+        title: "Umfassende KI-Analyse abgeschlossen",
+        description: `${data.totalDocuments} Dokumente analysiert mit ${data.totalNumbers} Zahlen und ${data.totalInsights} Erkenntnissen extrahiert.`,
       });
+      
+      // Reset progress after showing completion
+      setTimeout(() => {
+        setMassAnalysisProgress(0);
+      }, 2000);
     },
     onError: (error) => {
       console.error('Comprehensive analysis error:', error);
       setIsRunningComprehensiveAnalysis(false);
+      setMassAnalysisProgress(0);
+      
       toast({
         title: "Analyse-Fehler",
-        description: "Fehler bei der umfassenden KI-Analyse.",
+        description: "Fehler bei der umfassenden KI-Analyse. Möglicherweise ist das OpenAI API-Limit erreicht.",
         variant: "destructive",
       });
     },
@@ -774,27 +790,41 @@ export default function DocumentAnalysis() {
             )}
             
             {/* Progress tracking for AI analysis */}
-            {(freshAIAnalysisMutation.isPending || intelligentRestorationMutation.isPending || isRunningMassAnalysis || massAnalysisProgress > 0) && (
+            {(freshAIAnalysisMutation.isPending || intelligentRestorationMutation.isPending || isRunningMassAnalysis || isRunningComprehensiveAnalysis || massAnalysisProgress > 0) && (
               <div className="mt-4 p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200">
                 <div className="flex items-center space-x-3 mb-3">
                   <div className="w-3 h-3 bg-purple-500 rounded-full animate-pulse"></div>
                   <span className="text-sm font-medium text-purple-800">
-                    {freshAIAnalysisMutation.isPending || intelligentRestorationMutation.isPending || isRunningMassAnalysis 
-                      ? (freshAIAnalysisMutation.isPending ? 'Neue KI-Analyse wird verarbeitet...' : 
-                         intelligentRestorationMutation.isPending ? 'Intelligente Wiederherstellung wird verarbeitet...' : 
-                         'KI-Analyse wird verarbeitet...') 
-                      : 'Verarbeitung abgeschlossen'}
+                    {freshAIAnalysisMutation.isPending ? 'Neue KI-Analyse wird verarbeitet...' : 
+                     intelligentRestorationMutation.isPending ? 'Intelligente Wiederherstellung wird verarbeitet...' : 
+                     isRunningComprehensiveAnalysis ? 'Umfassende KI-Analyse wird verarbeitet...' :
+                     isRunningMassAnalysis ? 'KI-Analyse wird verarbeitet...' : 'Verarbeitung abgeschlossen'}
                   </span>
                 </div>
                 <Progress 
-                  value={freshAIAnalysisMutation.isPending || intelligentRestorationMutation.isPending || isRunningMassAnalysis ? 50 : massAnalysisProgress} 
+                  value={freshAIAnalysisMutation.isPending || intelligentRestorationMutation.isPending || isRunningMassAnalysis || isRunningComprehensiveAnalysis ? 
+                    (isRunningComprehensiveAnalysis ? 65 : 50) : massAnalysisProgress} 
                   className="w-full"
                 />
                 <div className="text-xs text-purple-600 mt-2">
                   {freshAIAnalysisMutation.isPending ? 'Alle Insights werden gelöscht und neu mit OpenAI GPT-4o analysiert...' : 
                    intelligentRestorationMutation.isPending ? 'Fehlende KI-Insights werden selektiv wiederhergestellt...' :
+                   isRunningComprehensiveAnalysis ? `Umfassende Analyse von ${analysesArray.length} Dokumenten läuft. Bitte warten...` :
                    isRunningMassAnalysis ? 'KI-Analyse wird verarbeitet...' : 'Analyse erfolgreich abgeschlossen'}
                 </div>
+                
+                {/* Document count during comprehensive analysis */}
+                {isRunningComprehensiveAnalysis && (
+                  <div className="mt-3 p-3 bg-white/70 rounded-lg border border-purple-100">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-purple-700">Dokumentenanalyse:</span>
+                      <span className="font-medium text-purple-800">{analysesArray.length} Dokumente</span>
+                    </div>
+                    <div className="text-xs text-purple-600 mt-1">
+                      Jedes Dokument wird mit OpenAI GPT-4o für detaillierte Erkenntnisse analysiert
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </CardHeader>

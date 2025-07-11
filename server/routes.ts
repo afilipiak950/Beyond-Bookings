@@ -1373,7 +1373,7 @@ Provide an ultra-detailed, comprehensive response that demonstrates deep analysi
     }
   });
 
-  // AI-powered comprehensive document analysis
+  // AI-powered comprehensive document analysis with progress tracking
   app.post("/api/ai/comprehensive-analysis", requireAuth, async (req: Request, res: Response) => {
     try {
       const userId = (req as any).user?.id;
@@ -1394,112 +1394,134 @@ Provide an ultra-detailed, comprehensive response that demonstrates deep analysi
         });
       }
       
+      console.log(`Starting comprehensive analysis for ${analyses.length} documents`);
+      
       const comprehensiveFindings = [];
       let totalNumbers = 0;
       let totalInsights = 0;
+      let processedCount = 0;
+      
+      // Initialize OpenAI
+      const OpenAI = await import('openai');
+      const openai = new OpenAI.default({
+        apiKey: process.env.OPENAI_API_KEY,
+      });
       
       // Process each document with advanced AI analysis
-      for (const analysis of analyses) {
+      for (let i = 0; i < analyses.length; i++) {
+        const analysis = analyses[i];
+        
         try {
-          const documentData = {
-            fileName: analysis.upload.fileName,
-            fileType: analysis.fileType,
-            extractedText: analysis.extractedText,
-            worksheetData: analysis.worksheetData,
-            priceData: analysis.priceData,
-            aiInsights: analysis.aiInsights
-          };
+          console.log(`Processing document ${i + 1}/${analyses.length}: ${analysis.fileName}`);
+          
+          // Prepare document text for analysis
+          let documentText = '';
+          if (analysis.extractedData) {
+            if (typeof analysis.extractedData === 'string') {
+              documentText = analysis.extractedData;
+            } else if (analysis.extractedData.text) {
+              documentText = analysis.extractedData.text;
+            } else if (analysis.extractedData.worksheets) {
+              documentText = analysis.extractedData.worksheets.map((ws: any) => {
+                return `=== ${ws.worksheetName} ===\n${ws.data?.map((row: any) => row.join('\t')).join('\n') || 'No data'}`;
+              }).join('\n\n');
+            } else if (typeof analysis.extractedData === 'object') {
+              documentText = JSON.stringify(analysis.extractedData);
+            }
+          }
+          
+          if (!documentText || documentText.trim().length === 0) {
+            console.log(`Skipping ${analysis.fileName} - no extractable text`);
+            continue;
+          }
+          
+          // Truncate if too long
+          if (documentText.length > 4000) {
+            documentText = documentText.substring(0, 4000) + '... [truncated]';
+          }
           
           // Advanced AI analysis using OpenAI GPT-4o
-          const OpenAI = await import('openai');
-          const openai = new OpenAI.default({
-            apiKey: process.env.OPENAI_API_KEY,
-          });
-          
-          const analysisPrompt = `You are an expert financial document analyst. Analyze this document thoroughly and extract ALL relevant data, numbers, and insights.
+          const analysisPrompt = `Analyze this business document and extract comprehensive insights:
 
-Document: ${documentData.fileName}
-Type: ${documentData.fileType}
-Content: ${documentData.extractedText || 'No text extracted'}
-Worksheet Data: ${JSON.stringify(documentData.worksheetData)}
-Price Data: ${JSON.stringify(documentData.priceData)}
+Document: ${analysis.fileName}
+Content: ${documentText}
 
-Please provide a comprehensive analysis including:
-1. ALL numerical data found (prices, percentages, quantities, dates, etc.)
-2. Key financial metrics and ratios
-3. Business insights and recommendations
-4. Data patterns and trends
-5. Actionable intelligence
+Please provide detailed analysis focusing on:
+1. All numerical data and calculations
+2. Business metrics and financial information
+3. Key insights and patterns
+4. Strategic recommendations
 
-Format your response as structured JSON with these fields:
-{
-  "documentSummary": "Brief summary of the document",
-  "numericalData": [
-    {
-      "value": "actual number",
-      "context": "what this number represents",
-      "location": "where found in document",
-      "importance": "high/medium/low"
-    }
-  ],
-  "keyFindings": ["list of important findings"],
-  "businessInsights": ["actionable business insights"],
-  "recommendations": ["specific recommendations"],
-  "dataQuality": "assessment of data completeness and accuracy"
-}`;
-          
-          const response = await openai.chat.completions.create({
+Return analysis in JSON format with:
+- documentSummary: comprehensive summary
+- extractedNumbers: array of all numbers found with context
+- businessMetrics: key financial/business metrics
+- keyInsights: important findings
+- recommendations: actionable suggestions`;
+
+          const aiResponse = await openai.chat.completions.create({
             model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
             messages: [
               {
                 role: "system",
-                content: "You are an expert financial document analyst specializing in extracting comprehensive insights from business documents. Always respond with valid JSON."
+                content: "You are an expert business analyst. Provide comprehensive analysis in JSON format."
               },
               {
                 role: "user",
                 content: analysisPrompt
               }
             ],
-            max_tokens: 3000,
+            max_tokens: 2000,
             temperature: 0.3,
             response_format: { type: "json_object" }
           });
           
-          const aiAnalysis = JSON.parse(response.choices[0]?.message?.content || '{}');
+          const aiAnalysis = JSON.parse(aiResponse.choices[0]?.message?.content || '{}');
           
-          // Count extracted numbers
-          const numbersFound = aiAnalysis.numericalData?.length || 0;
-          totalNumbers += numbersFound;
-          totalInsights += (aiAnalysis.keyFindings?.length || 0) + (aiAnalysis.businessInsights?.length || 0);
+          // Extract numbers and insights
+          const numbersFound = aiAnalysis.extractedNumbers || [];
+          const insightsFound = aiAnalysis.keyInsights || [];
+          
+          totalNumbers += numbersFound.length;
+          totalInsights += insightsFound.length;
           
           comprehensiveFindings.push({
-            documentName: documentData.fileName,
-            fileType: documentData.fileType,
-            analysis: aiAnalysis,
-            numbersExtracted: numbersFound,
-            processingStatus: "completed"
+            fileName: analysis.fileName,
+            documentSummary: aiAnalysis.documentSummary || 'No summary available',
+            extractedNumbers: numbersFound,
+            businessMetrics: aiAnalysis.businessMetrics || [],
+            keyInsights: insightsFound,
+            recommendations: aiAnalysis.recommendations || [],
+            processingStatus: 'completed'
           });
           
-        } catch (docError) {
-          console.error(`Error processing document ${analysis.upload.fileName}:`, docError);
+          processedCount++;
+          console.log(`✓ Processed ${analysis.fileName} (${processedCount}/${analyses.length})`);
+          
+        } catch (error) {
+          console.error(`Error processing ${analysis.fileName}:`, error);
+          
           comprehensiveFindings.push({
-            documentName: analysis.upload.fileName,
-            fileType: analysis.fileType,
-            analysis: { error: "Failed to analyze document" },
-            numbersExtracted: 0,
-            processingStatus: "failed"
+            fileName: analysis.fileName,
+            documentSummary: 'Processing failed',
+            extractedNumbers: [],
+            businessMetrics: [],
+            keyInsights: [],
+            recommendations: [],
+            processingStatus: 'failed',
+            error: error.message
           });
         }
       }
       
-      // Generate comprehensive summary
+      console.log(`Comprehensive analysis completed. Processed ${processedCount}/${analyses.length} documents.`);
+      
+      // Generate comprehensive summary using OpenAI
       const summaryPrompt = `Based on the analysis of ${analyses.length} documents, provide a comprehensive business intelligence summary.
 
-Documents analyzed: ${comprehensiveFindings.map(f => f.documentName).join(', ')}
+Documents analyzed: ${comprehensiveFindings.map(f => f.fileName).join(', ')}
 Total numbers extracted: ${totalNumbers}
 Total insights generated: ${totalInsights}
-
-Findings: ${JSON.stringify(comprehensiveFindings)}
 
 Provide a strategic business summary including:
 1. Cross-document patterns and trends
@@ -1509,11 +1531,6 @@ Provide a strategic business summary including:
 5. Action items for immediate implementation
 
 Format as JSON with fields: overallSummary, keyPatterns, strategicRecommendations, riskAssessment, actionItems`;
-      
-      const OpenAI = await import('openai');
-      const openai = new OpenAI.default({
-        apiKey: process.env.OPENAI_API_KEY,
-      });
       
       const summaryResponse = await openai.chat.completions.create({
         model: "gpt-4o",
