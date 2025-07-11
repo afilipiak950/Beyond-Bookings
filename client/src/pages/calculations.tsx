@@ -155,75 +155,89 @@ export default function Calculations() {
 
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Calculations</CardTitle>
-              <Calculator className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totalCalculations}</div>
-              <p className="text-xs text-muted-foreground">Active pricing models</p>
-            </CardContent>
-          </Card>
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-50 via-white to-blue-50 rounded-2xl opacity-60"></div>
+            <Card className="relative glass-card border-blue-200/30 rounded-2xl">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Calculations</CardTitle>
+                <Calculator className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{totalCalculations}</div>
+                <p className="text-xs text-muted-foreground">Active pricing models</p>
+              </CardContent>
+            </Card>
+          </div>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{formatCurrency(totalRevenue)}</div>
-              <p className="text-xs text-muted-foreground">Combined revenue potential</p>
-            </CardContent>
-          </Card>
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-green-50 via-white to-green-50 rounded-2xl opacity-60"></div>
+            <Card className="relative glass-card border-green-200/30 rounded-2xl">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{formatCurrency(totalRevenue)}</div>
+                <p className="text-xs text-muted-foreground">Combined revenue potential</p>
+              </CardContent>
+            </Card>
+          </div>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Average Profit</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {formatCurrency(totalCalculations > 0 ? totalProfit / totalCalculations : 0)}
-              </div>
-              <p className="text-xs text-muted-foreground">Per calculation</p>
-            </CardContent>
-          </Card>
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-50 via-white to-purple-50 rounded-2xl opacity-60"></div>
+            <Card className="relative glass-card border-purple-200/30 rounded-2xl">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Average Profit</CardTitle>
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {formatCurrency(totalCalculations > 0 ? totalProfit / totalCalculations : 0)}
+                </div>
+                <p className="text-xs text-muted-foreground">Per calculation</p>
+              </CardContent>
+            </Card>
+          </div>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Unique Hotels</CardTitle>
-              <Building2 className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{uniqueHotels}</div>
-              <p className="text-xs text-muted-foreground">Properties analyzed</p>
-            </CardContent>
-          </Card>
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-emerald-50 via-white to-emerald-50 rounded-2xl opacity-60"></div>
+            <Card className="relative glass-card border-emerald-200/30 rounded-2xl">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Unique Hotels</CardTitle>
+                <Building2 className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{uniqueHotels}</div>
+                <p className="text-xs text-muted-foreground">Properties analyzed</p>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
         {/* Search and Filter */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Pricing Calculations</CardTitle>
-              <div className="flex items-center gap-2">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                  <Input
-                    placeholder="Search hotels..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 w-64"
-                  />
+        <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-indigo-50 via-white to-indigo-50 rounded-2xl opacity-60"></div>
+          <Card className="relative glass-card border-indigo-200/30 rounded-2xl">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Pricing Calculations</CardTitle>
+                <div className="flex items-center gap-2">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                    <Input
+                      placeholder="Search hotels..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10 w-64"
+                    />
+                  </div>
+                  <Button variant="outline" size="sm">
+                    <Filter className="h-4 w-4 mr-2" />
+                    Filter
+                  </Button>
                 </div>
-                <Button variant="outline" size="sm">
-                  <Filter className="h-4 w-4 mr-2" />
-                  Filter
-                </Button>
               </div>
-            </div>
-          </CardHeader>
+            </CardHeader>
           <CardContent>
             {isLoading ? (
               <div className="space-y-4">
@@ -365,6 +379,7 @@ export default function Calculations() {
             )}
           </CardContent>
         </Card>
+      </div>
       </div>
 
       {/* View Dialog - Ultra Modern Design */}
