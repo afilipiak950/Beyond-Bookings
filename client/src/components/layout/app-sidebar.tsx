@@ -125,13 +125,13 @@ export default function AppSidebar({ className }: SidebarProps) {
       <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-green-500/5 pointer-events-none" />
       
       {/* Ultra-Modern Header */}
-      <div className="flex items-center justify-between h-16 px-4 glass-nav animate-slideInUp relative z-10">
+      <div className="flex items-center justify-center h-16 px-2 glass-nav animate-slideInUp relative z-10">
         {!isCollapsed && (
-          <div className="flex items-center space-x-3 animate-scaleIn">
+          <div className="flex items-center justify-center w-full animate-scaleIn">
             <img 
               src={beyondBookingsLogo} 
               alt="Beyond Bookings Logo" 
-              className="h-12 w-auto object-contain"
+              className="w-full h-auto max-h-12 object-contain"
             />
           </div>
         )}
