@@ -1432,14 +1432,10 @@ export default function DocumentAnalysis() {
                       } catch (error) {
                         console.error('Error parsing insights:', error);
                         return (
-                          <div className="text-sm text-gray-500">
-                            <p>Fehler beim Laden der KI-Erkenntnisse</p>
-                            <details className="mt-2">
-                              <summary className="cursor-pointer">Raw Data (Debug)</summary>
-                              <pre className="text-xs mt-1 bg-gray-100 p-2 rounded overflow-auto max-h-32">
-                                {JSON.stringify(selectedDocument.insights, null, 2)}
-                              </pre>
-                            </details>
+                          <div className="text-sm text-gray-500 text-center py-4">
+                            <div className="text-gray-400 mb-2">⚠️</div>
+                            <div>KI-Erkenntnisse werden noch verarbeitet...</div>
+                            <div className="text-xs text-gray-400 mt-1">Bitte versuchen Sie es später erneut</div>
                           </div>
                         );
                       }
