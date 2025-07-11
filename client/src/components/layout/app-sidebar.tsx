@@ -23,6 +23,7 @@ import {
   Database,
   Zap
 } from "lucide-react";
+import beyondBookingsLogo from "@assets/bc Logo NEU Slogan_1752244229726.png";
 
 interface SidebarProps {
   className?: string;
@@ -120,7 +121,7 @@ export default function AppSidebar({ className }: SidebarProps) {
         {!isCollapsed && (
           <div className="flex items-center space-x-3 animate-scaleIn">
             <img 
-              src="/attached_assets/bc Logo NEU Slogan_1752244229726.png" 
+              src={beyondBookingsLogo} 
               alt="Beyond Bookings Logo" 
               className="h-12 w-auto object-contain"
             />
