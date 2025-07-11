@@ -2866,7 +2866,13 @@ Return a JSON response with: documentType, keyFindings[], businessInsights[], re
         return res.json({ 
           message: 'All documents already have AI insights', 
           processedDocuments: 0,
-          totalDocuments: analyses.length
+          totalDocuments: analyses.length,
+          detailedStatus: {
+            totalAnalyses: analyses.length,
+            withInsights: analyses.length - analysesNeedingInsights.length,
+            needingInsights: analysesNeedingInsights.length,
+            statusMessage: 'All processed documents have AI insights. Upload new documents to generate more insights.'
+          }
         });
       }
 

@@ -96,9 +96,14 @@ export default function DocumentAnalysis() {
           description: `${data.processedDocuments} Dokumente wurden erfolgreich analysiert.`,
         });
       } else {
+        // Show detailed status information
+        const statusMsg = data.detailedStatus 
+          ? `${data.detailedStatus.totalAnalyses} Analysen total, ${data.detailedStatus.withInsights} mit KI-Insights, ${data.detailedStatus.needingInsights} benötigen Insights`
+          : "Alle Dokumente haben bereits KI-Analysen.";
+        
         toast({
-          title: "Keine Dokumente verarbeitet",
-          description: "Alle Dokumente haben bereits KI-Analysen.",
+          title: "Keine neuen Dokumente verarbeitet",
+          description: statusMsg,
         });
       }
       
