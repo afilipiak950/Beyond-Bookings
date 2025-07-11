@@ -182,7 +182,7 @@ export class InsightRestorer {
         documentText = documentText.substring(0, 4000) + '... [truncated]';
       }
 
-      const prompt = `Analyze this business document and provide comprehensive insights in JSON format:
+      const prompt = `Analyze this Excel/business document and provide comprehensive insights focusing on calculations, formulas, and financial data in JSON format:
 
 Document: ${analysis.fileName}
 Content: ${documentText}
@@ -197,16 +197,35 @@ Please analyze and return JSON in this exact format:
       "insight": "string - specific insight"
     }
   ],
+  "calculationInsights": [
+    {
+      "calculation": "string - formula or calculation found",
+      "result": "string - calculated result",
+      "businessMeaning": "string - what this calculation means for business"
+    }
+  ],
+  "financialMetrics": [
+    {
+      "metric": "string - financial metric name",
+      "value": "string - metric value",
+      "analysis": "string - analysis of this metric"
+    }
+  ],
   "recommendations": ["string - actionable recommendation 1", "string - actionable recommendation 2", ...],
-  "summary": "string - comprehensive summary of the document"
+  "summary": "string - comprehensive summary including all calculations and their business implications"
 }
 
-Focus on:
-1. Identify the document type and purpose
-2. Extract key business findings and numbers
-3. Provide strategic business insights
-4. Give actionable recommendations
-5. Summarize the document comprehensively`;
+Focus specifically on:
+1. ALL numerical calculations and formulas in the Excel file
+2. Financial metrics, pricing, costs, revenues, margins
+3. Business logic behind calculations (VAT, discounts, profit margins)
+4. Relationships between different calculated values
+5. Excel formulas and their business meaning
+6. ROI calculations, pricing strategies, financial projections
+7. Any pricing models or calculation methodologies used
+8. Identify all calculated fields and their business significance
+9. Extract insights from cell formulas and their results
+10. Analyze the complete calculation workflow from input to output`;
 
       const response = await this.openai.chat.completions.create({
         model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user

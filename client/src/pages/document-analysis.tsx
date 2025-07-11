@@ -1825,6 +1825,50 @@ export default function DocumentAnalysis() {
                               </div>
                             )}
 
+                            {/* Calculation Insights */}
+                            {actualInsights.calculationInsights && actualInsights.calculationInsights.length > 0 && (
+                              <div className="mb-3">
+                                <div className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">Berechnungseinblicke:</div>
+                                <ul className="space-y-2">
+                                  {actualInsights.calculationInsights.map((calc: any, idx: number) => (
+                                    <li key={idx} className="text-sm bg-emerald-50 dark:bg-emerald-900/20 p-3 rounded-lg border border-emerald-200 dark:border-emerald-800">
+                                      <div className="font-medium text-emerald-800 dark:text-emerald-200 mb-1">
+                                        📊 {calc.calculation}
+                                      </div>
+                                      <div className="text-emerald-700 dark:text-emerald-300 mb-1">
+                                        <strong>Ergebnis:</strong> {calc.result}
+                                      </div>
+                                      <div className="text-emerald-600 dark:text-emerald-400 text-xs">
+                                        <strong>Bedeutung:</strong> {calc.businessMeaning}
+                                      </div>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+
+                            {/* Financial Metrics */}
+                            {actualInsights.financialMetrics && actualInsights.financialMetrics.length > 0 && (
+                              <div className="mb-3">
+                                <div className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">Finanzielle Kennzahlen:</div>
+                                <ul className="space-y-2">
+                                  {actualInsights.financialMetrics.map((metric: any, idx: number) => (
+                                    <li key={idx} className="text-sm bg-indigo-50 dark:bg-indigo-900/20 p-3 rounded-lg border border-indigo-200 dark:border-indigo-800">
+                                      <div className="font-medium text-indigo-800 dark:text-indigo-200 mb-1">
+                                        💰 {metric.metric}
+                                      </div>
+                                      <div className="text-indigo-700 dark:text-indigo-300 mb-1">
+                                        <strong>Wert:</strong> {metric.value}
+                                      </div>
+                                      <div className="text-indigo-600 dark:text-indigo-400 text-xs">
+                                        <strong>Analyse:</strong> {metric.analysis}
+                                      </div>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+
                             {/* Recommendations */}
                             {actualInsights.recommendations && actualInsights.recommendations.length > 0 && (
                               <div className="mb-3">
