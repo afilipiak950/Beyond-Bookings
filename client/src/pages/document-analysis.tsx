@@ -78,13 +78,7 @@ export default function DocumentAnalysis() {
   // Mass AI Summary Generation
   const massAISummaryMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest('/api/ai/mass-summary', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({})
-      });
+      const response = await apiRequest('/api/ai/mass-summary', 'POST', {});
       return response;
     },
     onSuccess: (data) => {
