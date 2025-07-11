@@ -1164,10 +1164,19 @@ Please provide a comprehensive, detailed response that leverages the user's actu
       });
     } catch (error) {
       console.error('AI Chat error:', error);
-      res.status(500).json({ 
-        message: "I'm experiencing technical difficulties. Please ensure your OpenAI API key is configured correctly and try again.",
-        error: error.message 
-      });
+      
+      // Handle quota exceeded specifically
+      if (error.code === 'insufficient_quota') {
+        res.status(500).json({ 
+          message: "🚨 **OpenAI Quota Exceeded**\n\nYour OpenAI API key has run out of credits. To continue using the AI assistant:\n\n• **Add credits** at https://platform.openai.com/account/billing\n• **Check your usage** at https://platform.openai.com/usage\n• **Upgrade your plan** if needed\n\nThe AI assistant will work immediately after adding funds to your OpenAI account.",
+          error: "OpenAI quota exceeded - please add credits to your account"
+        });
+      } else {
+        res.status(500).json({ 
+          message: "I'm experiencing technical difficulties. Please ensure your OpenAI API key is configured correctly and try again.",
+          error: error.message 
+        });
+      }
     }
   });
 
