@@ -405,68 +405,22 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
         {/* Ultra-Modern Main Content Area */}
         <main className="flex-1 overflow-auto relative">
-          {/* Advanced Animated Background */}
-          <div className="fixed inset-0 pointer-events-none overflow-hidden">
-            {/* Holographic Grid Pattern */}
-            <div className="absolute inset-0 opacity-20 dark:opacity-10">
-              <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.15)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.15)_1px,transparent_1px)] bg-[size:32px_32px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_0%,black_70%,transparent_110%)] animate-pulse" />
-            </div>
-            
-            {/* Floating Glass Orbs */}
-            <div className="absolute top-20 left-20 w-32 h-32 rounded-full bg-gradient-to-br from-blue-400/20 via-cyan-400/10 to-transparent backdrop-blur-3xl animate-[float_8s_ease-in-out_infinite] border border-blue-400/30 shadow-2xl" />
-            <div className="absolute top-40 right-32 w-24 h-24 rounded-full bg-gradient-to-br from-emerald-400/20 via-green-400/10 to-transparent backdrop-blur-3xl animate-[float_6s_ease-in-out_infinite_reverse] border border-emerald-400/30 shadow-2xl" />
-            <div className="absolute bottom-32 left-1/3 w-20 h-20 rounded-full bg-gradient-to-br from-purple-400/20 via-pink-400/10 to-transparent backdrop-blur-3xl animate-[float_10s_ease-in-out_infinite] border border-purple-400/30 shadow-2xl" />
-            
-            {/* Dynamic Light Rays */}
-            <div className="absolute inset-0 opacity-30">
-              <div className="absolute top-0 left-1/4 w-px h-full bg-gradient-to-b from-blue-500/60 via-transparent to-cyan-500/60 animate-[pulse_4s_ease-in-out_infinite]" />
-              <div className="absolute top-0 right-1/3 w-px h-full bg-gradient-to-b from-emerald-500/60 via-transparent to-green-500/60 animate-[pulse_3s_ease-in-out_infinite_reverse]" />
-              <div className="absolute left-0 top-1/4 w-full h-px bg-gradient-to-r from-purple-500/60 via-transparent to-pink-500/60 animate-[pulse_5s_ease-in-out_infinite]" />
-            </div>
-            
-            {/* Mesh Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent via-emerald-500/5 to-purple-500/5 animate-[morphing_15s_ease-in-out_infinite]" />
-          </div>
-
-          {/* Content Container with Advanced Glass Effect */}
-          <div className="w-full h-full relative">
-            <div className="w-full h-full relative backdrop-blur-sm bg-gradient-to-br from-white/10 via-white/5 to-transparent border-l border-white/20 dark:from-black/10 dark:via-black/5 dark:border-gray-800/20">
+          <div className="w-full h-full animate-fadeInUp">
+            <div className="w-full h-full neo-card rounded-none relative overflow-hidden animate-scaleIn">
+              {/* Content Glow Effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-transparent to-green-500/5 pointer-events-none" />
               
-              {/* Content Area */}
-              <div className="relative z-10 p-8 w-full h-full">
-                {/* Subtle Inner Glow */}
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/3 via-transparent to-emerald-500/3 rounded-3xl pointer-events-none" />
-                
-                {/* Main Content */}
-                <div className="relative z-10 w-full h-full">
-                  {children}
-                </div>
+              <div className="p-6 w-full h-full bg-transparent">
+                {children}
               </div>
-
-              {/* Edge Highlight */}
-              <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-blue-500/10 via-transparent to-emerald-500/10 pointer-events-none [mask-image:linear-gradient(to_right,transparent_2px,black_2px,black_calc(100%-2px),transparent_calc(100%-2px))]" />
             </div>
           </div>
 
-          {/* Modern Status Panel */}
-          <div className="fixed bottom-8 right-8 z-50">
-            <div className="flex flex-col space-y-4">
-              {/* Activity Indicator */}
-              <div className="flex items-center space-x-2 backdrop-blur-xl bg-white/30 dark:bg-black/30 rounded-full px-4 py-2 border border-white/20 dark:border-gray-800/30 shadow-2xl">
-                <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-                <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Active</span>
-              </div>
-              
-              {/* Dynamic Status Grid */}
-              <div className="grid grid-cols-3 gap-1.5 justify-items-center">
-                <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-[twinkle_2s_ease-in-out_infinite] shadow-lg" />
-                <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-[twinkle_2s_ease-in-out_infinite_0.5s] shadow-lg" />
-                <div className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-[twinkle_2s_ease-in-out_infinite_1s] shadow-lg" />
-                <div className="w-1 h-1 bg-cyan-400 rounded-full animate-[twinkle_3s_ease-in-out_infinite_0.2s] shadow-lg" />
-                <div className="w-1 h-1 bg-pink-400 rounded-full animate-[twinkle_3s_ease-in-out_infinite_0.7s] shadow-lg" />
-                <div className="w-1 h-1 bg-yellow-400 rounded-full animate-[twinkle_3s_ease-in-out_infinite_1.2s] shadow-lg" />
-              </div>
-            </div>
+          {/* Floating Status Indicators */}
+          <div className="fixed bottom-6 right-6 flex flex-col space-y-3 animate-slideInRight">
+            <div className="w-3 h-3 bg-green-400 rounded-full animate-glowPulse shadow-lg" />
+            <div className="w-2 h-2 bg-blue-400 rounded-full animate-twinkle animation-delay-1000" />
+            <div className="w-2 h-2 bg-green-300 rounded-full animate-twinkle animation-delay-2000" />
           </div>
         </main>
       </div>
