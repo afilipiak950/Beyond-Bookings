@@ -509,22 +509,32 @@ export default function DocumentAnalysis() {
 
   // Handle document click to show OCR content
   const handleDocumentClick = (fileInfo: any) => {
-    // Find the corresponding analysis with OCR content
-    const ocrAnalysis = analysesArray.find(
-      (analysis: any) => analysis.fileName === fileInfo.fileName && analysis.analysisType === 'mistral_ocr'
+    // Find ANY analysis for this file that has extracted data
+    const analysis = analysesArray.find(
+      (analysis: any) => analysis.fileName === fileInfo.fileName && analysis.extractedData
     );
-    
-    // Also check for regular analyses with extracted text
-    const regularAnalysis = analysesArray.find(
-      (analysis: any) => analysis.fileName === fileInfo.fileName && analysis.extractedData?.text
-    );
-    
-    const analysis = ocrAnalysis || regularAnalysis;
     
     if (analysis) {
+      let ocrContent = '';
+      
+      // Extract OCR content from different possible formats
+      if (analysis.extractedData?.text) {
+        ocrContent = analysis.extractedData.text;
+      } else if (typeof analysis.extractedData === 'string') {
+        ocrContent = analysis.extractedData;
+      } else if (analysis.extractedData?.worksheets) {
+        // For Excel files, combine all worksheet data
+        const worksheetTexts = analysis.extractedData.worksheets.map((ws: any) => {
+          return `=== ${ws.worksheetName} ===\n${ws.data?.map((row: any) => row.join('\t')).join('\n') || 'Keine Daten'}`;
+        }).join('\n\n');
+        ocrContent = worksheetTexts;
+      } else {
+        ocrContent = JSON.stringify(analysis.extractedData, null, 2);
+      }
+      
       setSelectedDocument({
         ...fileInfo,
-        ocrContent: analysis.extractedData?.text || 'Kein OCR-Inhalt verfügbar',
+        ocrContent: ocrContent || 'Kein OCR-Inhalt verfügbar',
         insights: analysis.insights,
         priceData: analysis.priceData
       });
