@@ -101,6 +101,170 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // User Management Routes
+  const userManagementSchema = z.object({
+    email: z.string().email(),
+    password: z.string().min(6),
+    firstName: z.string().min(1),
+    lastName: z.string().min(1),
+    role: z.enum(["admin", "user"]),
+  });
+
+  const updateUserSchema = z.object({
+    email: z.string().email(),
+    firstName: z.string().min(1),
+    lastName: z.string().min(1),
+    role: z.enum(["admin", "user"]),
+  });
+
+  // Get all users (admin only)
+  app.get('/api/users', requireAuth, async (req: any, res) => {
+    try {
+      const currentUser = await storage.getUser(req.user.id);
+      if (!currentUser || currentUser.role !== 'admin') {
+        return res.status(403).json({ message: "Access denied. Admin privileges required." });
+      }
+
+      const users = await storage.getAllUsers();
+      res.json(users);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  // Create new user (admin only)
+  app.post('/api/users', requireAuth, async (req: any, res) => {
+    try {
+      const currentUser = await storage.getUser(req.user.id);
+      if (!currentUser || currentUser.role !== 'admin') {
+        return res.status(403).json({ message: "Access denied. Admin privileges required." });
+      }
+
+      const { email, password, firstName, lastName, role } = userManagementSchema.parse(req.body);
+      
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ message: "User with this email already exists" });
+      }
+
+      const hashedPassword = await hashPassword(password);
+      const newUser = await storage.createUserByAdmin({
+        email,
+        password: hashedPassword,
+        firstName,
+        lastName,
+        role,
+      });
+
+      res.json({
+        id: newUser.id,
+        email: newUser.email,
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
+        role: newUser.role,
+        createdAt: newUser.createdAt,
+      });
+    } catch (error) {
+      console.error("Error creating user:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid user data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create user" });
+    }
+  });
+
+  // Update user (admin only)
+  app.put('/api/users/:id', requireAuth, async (req: any, res) => {
+    try {
+      const currentUser = await storage.getUser(req.user.id);
+      if (!currentUser || currentUser.role !== 'admin') {
+        return res.status(403).json({ message: "Access denied. Admin privileges required." });
+      }
+
+      const userId = parseInt(req.params.id);
+      const { email, firstName, lastName, role } = updateUserSchema.parse(req.body);
+
+      // Check if user exists
+      const existingUser = await storage.getUser(userId);
+      if (!existingUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Check if email is already taken by another user
+      const emailUser = await storage.getUserByEmail(email);
+      if (emailUser && emailUser.id !== userId) {
+        return res.status(400).json({ message: "Email already in use by another user" });
+      }
+
+      const updatedUser = await storage.updateUser(userId, {
+        email,
+        firstName,
+        lastName,
+        role,
+      });
+
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json({
+        id: updatedUser.id,
+        email: updatedUser.email,
+        firstName: updatedUser.firstName,
+        lastName: updatedUser.lastName,
+        role: updatedUser.role,
+        createdAt: updatedUser.createdAt,
+        updatedAt: updatedUser.updatedAt,
+      });
+    } catch (error) {
+      console.error("Error updating user:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid user data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update user" });
+    }
+  });
+
+  // Delete user (admin only)
+  app.delete('/api/users/:id', requireAuth, async (req: any, res) => {
+    try {
+      const currentUser = await storage.getUser(req.user.id);
+      if (!currentUser || currentUser.role !== 'admin') {
+        return res.status(403).json({ message: "Access denied. Admin privileges required." });
+      }
+
+      const userId = parseInt(req.params.id);
+      
+      // Prevent deleting self
+      if (userId === currentUser.id) {
+        return res.status(400).json({ message: "Cannot delete your own account" });
+      }
+
+      const success = await storage.deleteUser(userId);
+      if (!success) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json({ message: "User deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      res.status(500).json({ message: "Failed to delete user" });
+    }
+  });
+
+  app.post('/api/auth/logout', (req, res) => {
+    req.session.destroy((err) => {
+      if (err) {
+        console.error("Logout error:", err);
+        return res.status(500).json({ message: "Failed to logout" });
+      }
+      res.clearCookie('connect.sid');
+      res.json({ message: "Logged out successfully" });
+    });
+  });
+
   // Scrape hotel data with real web search
   app.post("/api/scrape-hotel", requireAuth, async (req: Request, res: Response) => {
     try {

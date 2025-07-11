@@ -76,6 +76,14 @@ const navigation = [
     gradient: "from-green-500 to-emerald-500",
   },
   {
+    name: "User Management",
+    href: "/user-management",
+    icon: Users,
+    description: "Manage platform users",
+    gradient: "from-red-500 to-pink-500",
+    adminOnly: true,
+  },
+  {
     name: "Intelligence Reports",
     href: "/reports",
     icon: BarChart3,
@@ -134,6 +142,11 @@ export default function AppSidebar({ className }: SidebarProps) {
         {navigation.map((item, index) => {
           const Icon = item.icon;
           const isActive = location === item.href;
+          
+          // Filter admin-only items for non-admin users
+          if (item.adminOnly && (!user || user.role !== 'admin')) {
+            return null;
+          }
           
           return (
             <div
