@@ -82,10 +82,23 @@ export default function DocumentAnalysis() {
       return response;
     },
     onSuccess: (data) => {
-      toast({
-        title: "KI-Zusammenfassung abgeschlossen",
-        description: `${data.processedDocuments} Dokumente wurden erfolgreich analysiert.`,
-      });
+      if (data.quotaWarning) {
+        toast({
+          title: "OpenAI API Limit erreicht",
+          description: data.quotaWarning,
+          variant: "destructive",
+        });
+      } else if (data.processedDocuments > 0) {
+        toast({
+          title: "KI-Zusammenfassung abgeschlossen",
+          description: `${data.processedDocuments} Dokumente wurden erfolgreich analysiert.`,
+        });
+      } else {
+        toast({
+          title: "Keine Dokumente verarbeitet",
+          description: "Alle Dokumente haben bereits KI-Analysen.",
+        });
+      }
       
       // Refresh the analyses to show new insights
       queryClient.invalidateQueries({ queryKey: ['/api/document-analyses'] });
@@ -93,7 +106,7 @@ export default function DocumentAnalysis() {
     onError: (error: any) => {
       toast({
         title: "Fehler bei der KI-Zusammenfassung",
-        description: error.message || "Ein Fehler ist aufgetreten",
+        description: error.message || "Möglicherweise ist das OpenAI API-Limit erreicht. Bitte prüfen Sie Ihre Abrechnung und Nutzung.",
         variant: "destructive",
       });
     },
@@ -887,6 +900,51 @@ export default function DocumentAnalysis() {
                                               );
                                             }
                                           })()}
+                                          
+                                          {(() => {
+                                            // Check AI summary status
+                                            const documentAnalysis = analysesArray.find((analysis: any) => 
+                                              analysis.fileName === fileInfo.fileName
+                                            );
+                                            
+                                            if (documentAnalysis?.insights) {
+                                              try {
+                                                const insights = typeof documentAnalysis.insights === 'string' 
+                                                  ? JSON.parse(documentAnalysis.insights) 
+                                                  : documentAnalysis.insights;
+                                                
+                                                if (insights && Object.keys(insights).length > 0) {
+                                                  return (
+                                                    <Badge variant="default" className="text-xs bg-purple-100 text-purple-800">
+                                                      <Brain className="h-3 w-3 mr-1" />
+                                                      KI-Analyse ✓
+                                                    </Badge>
+                                                  );
+                                                }
+                                              } catch (error) {
+                                                // Invalid insights JSON
+                                              }
+                                            }
+                                            
+                                            // Check if it's currently being processed
+                                            if (massAISummaryMutation.isPending) {
+                                              return (
+                                                <Badge variant="secondary" className="text-xs bg-yellow-100 text-yellow-800 animate-pulse">
+                                                  <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
+                                                  KI-Analyse...
+                                                </Badge>
+                                              );
+                                            }
+                                            
+                                            // No AI insights available
+                                            return (
+                                              <Badge variant="outline" className="text-xs bg-gray-100 text-gray-600">
+                                                <Brain className="h-3 w-3 mr-1" />
+                                                KI-Analyse ausstehend
+                                              </Badge>
+                                            );
+                                          })()}
+                                          
                                           <Eye className="h-4 w-4 text-blue-600" />
                                         </div>
                                       </div>

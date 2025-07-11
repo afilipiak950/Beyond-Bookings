@@ -2951,18 +2951,30 @@ Focus on:
           await new Promise(resolve => setTimeout(resolve, 100));
           
         } catch (error) {
-          console.error(`Error processing ${analysis.fileName}:`, error);
-          // Continue with next document even if one fails
+          console.error(`Error processing document ${analysis.fileName}:`, error);
+          
+          // Check if it's a quota/rate limit error
+          if (error.status === 429 || error.code === 'insufficient_quota') {
+            console.log('OpenAI API quota exceeded - stopping mass processing');
+            break; // Stop processing more documents
+          }
+          
+          // Continue with next document for other errors
         }
       }
 
       console.log(`Mass AI summary completed. Processed ${processedCount} documents.`);
 
+      const message = processedCount > 0 ? 
+        `Mass AI summary completed successfully. Processed ${processedCount} documents.` :
+        'Mass AI summary completed, but no documents were processed. This might be due to OpenAI API quota limits.';
+
       res.json({
-        message: 'Mass AI summary completed successfully',
+        message,
         processedDocuments: processedCount,
         totalDocuments: analyses.length,
-        documentsNeedingInsights: analysesNeedingInsights.length
+        documentsNeedingInsights: analysesNeedingInsights.length,
+        quotaWarning: processedCount === 0 ? 'OpenAI API quota may be exceeded. Please check your billing and usage.' : null
       });
       
     } catch (error) {
