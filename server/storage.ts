@@ -11,6 +11,7 @@ import {
   documentInsights,
   type User,
   type UpsertUser,
+  type CreateUser,
   type Hotel,
   type InsertHotel,
   type PricingCalculation,
@@ -40,8 +41,9 @@ export interface IStorage {
   createUser(user: UpsertUser): Promise<User>;
   updateUser(id: number, user: Partial<UpsertUser>): Promise<User | undefined>;
   getAllUsers(): Promise<User[]>;
-  createUserByAdmin(user: UpsertUser): Promise<User>;
+  createUserByAdmin(user: CreateUser): Promise<User>;
   deleteUser(id: number): Promise<boolean>;
+  canCreateUsers(userEmail: string): Promise<boolean>;
 
   // Hotel operations
   getHotels(): Promise<Hotel[]>;
@@ -134,21 +136,22 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(users).orderBy(desc(users.createdAt));
   }
 
-  async createUserByAdmin(userData: UpsertUser): Promise<User> {
+  async createUserByAdmin(userData: CreateUser): Promise<User> {
     const [user] = await db
       .insert(users)
-      .values({
-        ...userData,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      })
+      .values(userData)
       .returning();
     return user;
   }
 
-  async deleteUser(id: string): Promise<boolean> {
+  async deleteUser(id: number): Promise<boolean> {
     const result = await db.delete(users).where(eq(users.id, id));
     return (result.rowCount ?? 0) > 0;
+  }
+
+  async canCreateUsers(userEmail: string): Promise<boolean> {
+    // Only test@example.com can create users
+    return userEmail === "test@example.com";
   }
 
   // Hotel operations
@@ -494,7 +497,21 @@ ${calculation.hotelName},${calculation.hotelUrl || ''},${calculation.stars || ''
   async deleteDocumentInsight(id: number, userId: string): Promise<boolean> {
     const result = await db.delete(documentInsights)
       .where(and(eq(documentInsights.id, id), eq(documentInsights.userId, userId)));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Missing methods for AI Price Intelligence
+  async getPriceIntelligence(userId: string): Promise<PriceIntelligence[]> {
+    return await db.select().from(priceIntelligence).where(eq(priceIntelligence.userId, parseInt(userId)));
+  }
+
+  async createPriceIntelligence(data: InsertPriceIntelligence): Promise<PriceIntelligence> {
+    const [intelligence] = await db.insert(priceIntelligence).values(data).returning();
+    return intelligence;
+  }
+
+  async getAiLearningSessions(limit: number = 10): Promise<AiLearningSession[]> {
+    return await db.select().from(aiLearningSessions).limit(limit);
   }
 }
 
