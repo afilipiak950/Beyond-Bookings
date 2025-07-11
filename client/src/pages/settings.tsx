@@ -65,7 +65,9 @@ export default function Settings() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Appearance Settings */}
-          <Card>
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-50 via-white to-blue-50 rounded-2xl opacity-60"></div>
+            <Card className="relative glass-card border-blue-200/30 rounded-2xl shadow-2xl">
             <CardHeader>
               <CardTitle className="flex items-center">
                 <SettingsIcon className="h-5 w-5 mr-2" />
@@ -94,9 +96,12 @@ export default function Settings() {
               </div>
             </CardContent>
           </Card>
+        </div>
 
           {/* Notifications */}
-          <Card>
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-green-50 via-white to-green-50 rounded-2xl opacity-60"></div>
+            <Card className="relative glass-card border-green-200/30 rounded-2xl shadow-2xl">
             <CardHeader>
               <CardTitle className="flex items-center">
                 <Bell className="h-5 w-5 mr-2" />
@@ -163,10 +168,13 @@ export default function Settings() {
               </div>
             </CardContent>
           </Card>
+        </div>
 
           {/* Admin Settings */}
           {isAdmin && (
-            <Card>
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-50 via-white to-purple-50 rounded-2xl opacity-60"></div>
+              <Card className="relative glass-card border-purple-200/30 rounded-2xl shadow-2xl">
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Shield className="h-5 w-5 mr-2" />
@@ -232,11 +240,14 @@ export default function Settings() {
                 </Button>
               </CardContent>
             </Card>
+          </div>
           )}
         </div>
 
         {/* Account Actions */}
-        <Card>
+        <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-emerald-50 via-white to-emerald-50 rounded-2xl opacity-60"></div>
+          <Card className="relative glass-card border-emerald-200/30 rounded-2xl shadow-2xl">
           <CardHeader>
             <CardTitle>Account Actions</CardTitle>
             <CardDescription>
@@ -265,6 +276,7 @@ export default function Settings() {
             </div>
           </CardContent>
         </Card>
+      </div>
       </div>
     </AppLayout>
   );

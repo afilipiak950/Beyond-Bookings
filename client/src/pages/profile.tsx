@@ -319,7 +319,9 @@ export default function Profile() {
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Profile Overview Sidebar */}
-          <Card className="lg:col-span-1">
+          <div className="lg:col-span-1 relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-50 via-white to-blue-50 rounded-2xl opacity-60"></div>
+            <Card className="relative glass-card border-blue-200/30 rounded-2xl shadow-2xl">
             <CardHeader className="text-center pb-4">
               <div className="relative mx-auto mb-4">
                 <Avatar className="w-24 h-24">
@@ -378,6 +380,7 @@ export default function Profile() {
               </div>
             </CardContent>
           </Card>
+        </div>
 
           {/* Main Content */}
           <div className="lg:col-span-3">
@@ -390,7 +393,9 @@ export default function Profile() {
 
               {/* Profile Information Tab */}
               <TabsContent value="profile">
-                <Card>
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-r from-green-50 via-white to-green-50 rounded-2xl opacity-60"></div>
+                  <Card className="relative glass-card border-green-200/30 rounded-2xl shadow-2xl">
                   <CardHeader>
                     <CardTitle>Personal Information</CardTitle>
                     <CardDescription>
@@ -509,11 +514,14 @@ export default function Profile() {
                     </div>
                   </CardContent>
                 </Card>
+              </div>
               </TabsContent>
 
               {/* Security Tab */}
               <TabsContent value="security">
-                <Card>
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-50 via-white to-purple-50 rounded-2xl opacity-60"></div>
+                  <Card className="relative glass-card border-purple-200/30 rounded-2xl shadow-2xl">
                   <CardHeader>
                     <CardTitle>Password & Security</CardTitle>
                     <CardDescription>
@@ -626,11 +634,14 @@ export default function Profile() {
                     </div>
                   </CardContent>
                 </Card>
+              </div>
               </TabsContent>
 
               {/* Account Actions Tab */}
               <TabsContent value="account">
-                <Card>
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-r from-emerald-50 via-white to-emerald-50 rounded-2xl opacity-60"></div>
+                  <Card className="relative glass-card border-emerald-200/30 rounded-2xl shadow-2xl">
                   <CardHeader>
                     <CardTitle>Account Management</CardTitle>
                     <CardDescription>
@@ -739,6 +750,7 @@ export default function Profile() {
                     </div>
                   </CardContent>
                 </Card>
+              </div>
               </TabsContent>
             </Tabs>
           </div>
