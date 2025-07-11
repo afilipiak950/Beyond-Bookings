@@ -448,13 +448,15 @@ export default function OCRAnalyzer() {
           {/* File Upload and List */}
           <div className="lg:col-span-1 space-y-6">
             {/* Upload Area */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Upload Excel Files</CardTitle>
-                <CardDescription>
-                  Drop your Excel files here for OCR analysis
-                </CardDescription>
-              </CardHeader>
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-indigo-50 via-white to-indigo-50 rounded-2xl opacity-60"></div>
+              <Card className="relative glass-card border-indigo-200/30 rounded-2xl shadow-2xl">
+                <CardHeader>
+                  <CardTitle>Upload Excel Files</CardTitle>
+                  <CardDescription>
+                    Drop your Excel files here for OCR analysis
+                  </CardDescription>
+                </CardHeader>
               <CardContent>
                 <div
                   {...getRootProps()}
@@ -485,9 +487,12 @@ export default function OCRAnalyzer() {
                 )}
               </CardContent>
             </Card>
+          </div>
 
             {/* Files List */}
-            <Card>
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-teal-50 via-white to-teal-50 rounded-2xl opacity-60"></div>
+              <Card className="relative glass-card border-teal-200/30 rounded-2xl shadow-2xl">
               <CardHeader>
                 <CardTitle>Recent Files</CardTitle>
                 <CardDescription>
@@ -555,10 +560,13 @@ export default function OCRAnalyzer() {
               </CardContent>
             </Card>
           </div>
+        </div>
 
           {/* Analysis Results */}
           <div className="lg:col-span-2">
-            <Card className="h-full">
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-orange-50 via-white to-orange-50 rounded-2xl opacity-60"></div>
+              <Card className="relative glass-card border-orange-200/30 rounded-2xl shadow-2xl h-full">
               <CardHeader>
                 <CardTitle>Analysis Results</CardTitle>
                 <CardDescription>
@@ -709,6 +717,7 @@ export default function OCRAnalyzer() {
           </div>
         </div>
       </div>
+    </div>
     </AppLayout>
   );
 }
