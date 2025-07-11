@@ -116,7 +116,7 @@ export default function AppSidebar({ className }: SidebarProps) {
               <FileText className="h-5 w-5 text-white" />
             </div>
             <div className="flex flex-col">
-              <h1 className="text-base font-bold gradient-text">DocumentIQ</h1>
+              <h1 className="text-base font-bold gradient-text">Beyond Bookings</h1>
             </div>
           </div>
         )}
