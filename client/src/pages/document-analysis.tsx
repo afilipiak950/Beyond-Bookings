@@ -1005,19 +1005,30 @@ export default function DocumentAnalysis() {
                                           })()}
                                           
                                           {(() => {
-                                            // Check AI summary status - improved matching
+                                            // Check AI summary status - simplified logic
                                             const documentAnalysis = analysesArray.find((analysis: any) => {
                                               return analysis.fileName === fileInfo.fileName;
                                             });
                                             
-                                            // Debug logging removed for performance
+                                            // Check if it's currently being processed
+                                            if (freshAIAnalysisMutation.isPending || massAISummaryMutation.isPending) {
+                                              return (
+                                                <Badge variant="secondary" className="text-xs bg-yellow-100 text-yellow-800 animate-pulse">
+                                                  <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
+                                                  KI-Analyse...
+                                                </Badge>
+                                              );
+                                            }
                                             
+                                            // Check if we have meaningful insights
                                             if (documentAnalysis?.insights) {
                                               try {
                                                 let insights;
+                                                
+                                                // Parse insights if they're a string
                                                 if (typeof documentAnalysis.insights === 'string') {
-                                                  // Handle empty string or empty object cases
                                                   if (documentAnalysis.insights.trim() === '' || documentAnalysis.insights.trim() === '{}') {
+                                                    // Empty or null insights
                                                     return (
                                                       <Badge variant="outline" className="text-xs bg-gray-100 text-gray-600">
                                                         <Brain className="h-3 w-3 mr-1" />
@@ -1030,11 +1041,20 @@ export default function DocumentAnalysis() {
                                                   insights = documentAnalysis.insights;
                                                 }
                                                 
-                                                // More thorough validation of insights content
-                                                if (insights && Object.keys(insights).length > 0) {
-                                                  // Check if it's a summary wrapper with actual content
+                                                // Check if insights have meaningful content
+                                                if (insights && typeof insights === 'object' && Object.keys(insights).length > 0) {
+                                                  // New format: direct insights object
+                                                  if (insights.documentType || insights.keyFindings || insights.businessInsights || insights.summary) {
+                                                    return (
+                                                      <Badge variant="default" className="text-xs bg-purple-100 text-purple-800">
+                                                        <CheckCircle className="h-3 w-3 mr-1" />
+                                                        KI-Analyse ✓
+                                                      </Badge>
+                                                    );
+                                                  }
+                                                  
+                                                  // Legacy format: summary wrapper
                                                   if (insights.summary && typeof insights.summary === 'string') {
-                                                    // Parse the nested summary if it's JSON
                                                     try {
                                                       const nestedSummary = JSON.parse(insights.summary);
                                                       if (nestedSummary && (nestedSummary.documentType || nestedSummary.keyFindings || nestedSummary.businessInsights)) {
@@ -1057,19 +1077,9 @@ export default function DocumentAnalysis() {
                                                       }
                                                     }
                                                   }
-                                                  
-                                                  // Check for direct insight properties
-                                                  if (insights.documentType || insights.keyFindings || insights.businessInsights) {
-                                                    return (
-                                                      <Badge variant="default" className="text-xs bg-purple-100 text-purple-800">
-                                                        <CheckCircle className="h-3 w-3 mr-1" />
-                                                        KI-Analyse ✓
-                                                      </Badge>
-                                                    );
-                                                  }
                                                 }
                                                 
-                                                // If we get here, insights exist but are not valid/meaningful
+                                                // Insights exist but are not meaningful
                                                 return (
                                                   <Badge variant="outline" className="text-xs bg-gray-100 text-gray-600">
                                                     <Brain className="h-3 w-3 mr-1" />
@@ -1077,19 +1087,14 @@ export default function DocumentAnalysis() {
                                                   </Badge>
                                                 );
                                               } catch (error) {
-                                                console.log(`Error parsing insights for ${fileInfo.fileName}:`, error);
                                                 // Invalid insights JSON
+                                                return (
+                                                  <Badge variant="outline" className="text-xs bg-gray-100 text-gray-600">
+                                                    <Brain className="h-3 w-3 mr-1" />
+                                                    KI-Analyse ausstehend
+                                                  </Badge>
+                                                );
                                               }
-                                            }
-                                            
-                                            // Check if it's currently being processed
-                                            if (massAISummaryMutation.isPending) {
-                                              return (
-                                                <Badge variant="secondary" className="text-xs bg-yellow-100 text-yellow-800 animate-pulse">
-                                                  <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
-                                                  KI-Analyse...
-                                                </Badge>
-                                              );
                                             }
                                             
                                             // No AI insights available
