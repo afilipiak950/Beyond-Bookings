@@ -1331,6 +1331,12 @@ export default function DocumentAnalysis() {
                   <CardContent className="p-4">
                     {(() => {
                       try {
+                        // Skip if insights is empty object
+                        if (!selectedDocument.insights || 
+                            (typeof selectedDocument.insights === 'object' && Object.keys(selectedDocument.insights).length === 0)) {
+                          return <div className="text-sm text-gray-500">Keine KI-Erkenntnisse verfügbar</div>;
+                        }
+
                         // Parse the insights JSON string
                         const insights = typeof selectedDocument.insights === 'string' 
                           ? JSON.parse(selectedDocument.insights) 
@@ -1358,7 +1364,7 @@ export default function DocumentAnalysis() {
                             {/* Key Findings */}
                             {actualInsights.keyFindings && actualInsights.keyFindings.length > 0 && (
                               <div className="mb-3">
-                                <p className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">Wichtige Erkenntnisse:</p>
+                                <div className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">Wichtige Erkenntnisse:</div>
                                 <ul className="space-y-1">
                                   {actualInsights.keyFindings.map((finding: string, idx: number) => (
                                     <li key={idx} className="text-sm text-gray-700 dark:text-gray-300 flex items-start">
@@ -1373,7 +1379,7 @@ export default function DocumentAnalysis() {
                             {/* Business Insights */}
                             {actualInsights.businessInsights && actualInsights.businessInsights.length > 0 && (
                               <div className="mb-3">
-                                <p className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">Geschäftseinblicke:</p>
+                                <div className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">Geschäftseinblicke:</div>
                                 <ul className="space-y-1">
                                   {actualInsights.businessInsights.map((insight: any, idx: number) => (
                                     <li key={idx} className="text-sm text-gray-700 dark:text-gray-300 flex items-start bg-white dark:bg-gray-800 p-2 rounded mb-2">
@@ -1400,7 +1406,7 @@ export default function DocumentAnalysis() {
                             {/* Recommendations */}
                             {actualInsights.recommendations && actualInsights.recommendations.length > 0 && (
                               <div className="mb-3">
-                                <p className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">Empfehlungen:</p>
+                                <div className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">Empfehlungen:</div>
                                 <ul className="space-y-1">
                                   {actualInsights.recommendations.map((rec: string, idx: number) => (
                                     <li key={idx} className="text-sm text-gray-700 dark:text-gray-300 flex items-start bg-green-50 dark:bg-green-900/20 p-2 rounded">
@@ -1415,7 +1421,7 @@ export default function DocumentAnalysis() {
                             {/* Summary */}
                             {actualInsights.summary && typeof actualInsights.summary === 'string' && (
                               <div>
-                                <p className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">Zusammenfassung:</p>
+                                <div className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">Zusammenfassung:</div>
                                 <div className="text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 p-3 rounded">
                                   {actualInsights.summary}
                                 </div>
