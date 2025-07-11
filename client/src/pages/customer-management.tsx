@@ -528,11 +528,13 @@ export default function CustomerManagement() {
         </div>
 
         {/* Search and Filters */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Search Customers</CardTitle>
-            <CardDescription>Find and filter your hotel clients</CardDescription>
-          </CardHeader>
+        <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-50 via-white to-blue-50 rounded-2xl opacity-60"></div>
+          <Card className="relative glass-card border-blue-200/30 rounded-2xl shadow-2xl">
+            <CardHeader>
+              <CardTitle>Search Customers</CardTitle>
+              <CardDescription>Find and filter your hotel clients</CardDescription>
+            </CardHeader>
           <CardContent>
             <div className="flex items-center space-x-4">
               <div className="relative flex-1">
@@ -546,15 +548,18 @@ export default function CustomerManagement() {
             </div>
           </CardContent>
         </Card>
+      </div>
 
         {/* Customers List */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Hotel Clients</CardTitle>
-            <CardDescription>
-              {hotels?.length || 0} hotels in your database
-            </CardDescription>
-          </CardHeader>
+        <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-green-50 via-white to-green-50 rounded-2xl opacity-60"></div>
+          <Card className="relative glass-card border-green-200/30 rounded-2xl shadow-2xl">
+            <CardHeader>
+              <CardTitle>Hotel Clients</CardTitle>
+              <CardDescription>
+                {hotels?.length || 0} hotels in your database
+              </CardDescription>
+            </CardHeader>
           <CardContent>
             {hotelsLoading ? (
               <div className="text-center py-6">
@@ -575,7 +580,9 @@ export default function CustomerManagement() {
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
                 {hotels.map((hotel: any) => (
-                  <Card key={hotel.id} className="hover:shadow-md transition-shadow">
+                  <div key={hotel.id} className="relative">
+                    <div className="absolute inset-0 bg-gradient-to-r from-purple-50 via-white to-purple-50 rounded-xl opacity-60"></div>
+                    <Card className="relative glass-card border-purple-200/30 rounded-xl shadow-lg hover:shadow-xl transition-shadow">
                     <CardHeader className="pb-3">
                       <div className="flex items-start justify-between">
                         <div className="flex items-center space-x-3">
@@ -650,11 +657,13 @@ export default function CustomerManagement() {
                       </div>
                     </CardContent>
                   </Card>
+                </div>
                 ))}
               </div>
             )}
           </CardContent>
         </Card>
+      </div>
         
         {/* Hotel Details Dialog with AI Search */}
         <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
