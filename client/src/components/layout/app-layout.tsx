@@ -410,7 +410,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
               {/* Content Glow Effect */}
               <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-transparent to-green-500/5 pointer-events-none" />
               
-              <div className="p-6 w-full h-full bg-white">
+              <div className="p-6 w-full h-full bg-transparent">
                 {children}
               </div>
             </div>
