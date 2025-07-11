@@ -98,7 +98,7 @@ export class InsightRestorer {
       if (insights.trim() === '' || insights.trim() === '{}') return false;
       try {
         const parsed = JSON.parse(insights);
-        return this.isValidInsightObject(parsed);
+        return this.hasComprehensiveInsights(parsed);
       } catch {
         return insights.length > 50; // Raw text insights with decent length
       }
@@ -106,9 +106,31 @@ export class InsightRestorer {
     
     // Handle object insights
     if (typeof insights === 'object') {
-      return this.isValidInsightObject(insights);
+      return this.hasComprehensiveInsights(insights);
     }
     
+    return false;
+  }
+
+  /**
+   * Check if insights contain comprehensive analysis data
+   */
+  private hasComprehensiveInsights(insights: any): boolean {
+    if (!insights || typeof insights !== 'object') return false;
+    
+    // Check for new comprehensive analysis structure
+    const hasStatisticalData = insights.statisticalData && Array.isArray(insights.statisticalData) && insights.statisticalData.length > 0;
+    const hasCalculationBreakdown = insights.calculationBreakdown && Array.isArray(insights.calculationBreakdown) && insights.calculationBreakdown.length > 0;
+    const hasKeyMetrics = insights.keyMetrics && Array.isArray(insights.keyMetrics) && insights.keyMetrics.length > 0;
+    const hasFinancialSummary = insights.financialSummary && typeof insights.financialSummary === 'object';
+    const hasBusinessInsights = insights.businessInsights && Array.isArray(insights.businessInsights) && insights.businessInsights.length > 0;
+    
+    // For now, force regeneration of all insights to get the new comprehensive format
+    // Later we can check: Must have at least 3 of these comprehensive analysis components
+    // const comprehensiveCount = [hasStatisticalData, hasCalculationBreakdown, hasKeyMetrics, hasFinancialSummary, hasBusinessInsights].filter(Boolean).length;
+    // return comprehensiveCount >= 3;
+    
+    // Force regeneration by always returning false for now
     return false;
   }
 
