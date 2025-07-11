@@ -1899,8 +1899,7 @@ export default function DocumentAnalysis() {
                     }
                     
                     try {
-
-                        // Parse the insights JSON string
+                        // Parse the insights JSON data
                         let insights;
                         if (typeof selectedDocument.insights === 'string') {
                           // Handle empty string case
@@ -1917,43 +1916,8 @@ export default function DocumentAnalysis() {
                           return <div className="text-sm text-gray-500">Keine KI-Erkenntnisse verfügbar</div>;
                         }
                         
-                        // Check if insights has a summary property that contains the actual data
-                        let actualInsights;
-                        if (insights.summary) {
-                          if (typeof insights.summary === 'string') {
-                            // Clean up markdown formatting and extract JSON
-                            let cleanSummary = insights.summary;
-                            
-                            // Remove markdown code blocks
-                            cleanSummary = cleanSummary.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-                            
-                            // If it still contains explanatory text, try to extract just the JSON part
-                            const jsonMatch = cleanSummary.match(/\{[\s\S]*\}/);
-                            if (jsonMatch) {
-                              cleanSummary = jsonMatch[0];
-                            }
-                            
-                            if (cleanSummary === '' || cleanSummary === '{}') {
-                              return <div className="text-sm text-gray-500">Keine KI-Erkenntnisse verfügbar</div>;
-                            }
-                            
-                            try {
-                              actualInsights = JSON.parse(cleanSummary);
-                            } catch (parseError) {
-                              // If parsing fails, try to show the raw text as a fallback
-                              console.warn('Failed to parse cleaned summary:', parseError);
-                              actualInsights = {
-                                summary: cleanSummary,
-                                documentType: 'Analysedokument',
-                                keyFindings: ['Rohe Erkenntnisse verfügbar - siehe Zusammenfassung']
-                              };
-                            }
-                          } else {
-                            actualInsights = insights.summary;
-                          }
-                        } else {
-                          actualInsights = insights;
-                        }
+                        // Use insights directly - no need to parse summary as it's already the correct format
+                        const actualInsights = insights;
                         
                         // Final check - if actualInsights is empty
                         if (!actualInsights || Object.keys(actualInsights).length === 0) {
