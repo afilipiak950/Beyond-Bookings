@@ -156,15 +156,15 @@ export default function CustomerRequest() {
           hotelUrl: data.hotelUrl,
           stars: hotelData?.stars || 3,
           roomCount: data.expectedRoomCount,
-          averagePrice: data.averageRoomPrice,
-          occupancyRate: data.occupancyRate,
-          voucherPrice: data.averageRoomPrice * 0.6, // 60% of average price
-          operationalCosts: data.averageRoomPrice * 0.3, // 30% operational costs
-          vatRate: 19, // 19% VAT
-          vatAmount: (data.averageRoomPrice * 0.6) * 0.19, // VAT calculation
-          profitMargin: (data.averageRoomPrice * 0.6) * 0.1, // 10% profit margin
-          totalPrice: (data.averageRoomPrice * 0.6) * 1.29, // Total with VAT and profit
-          financingVolume: data.financingVolume,
+          averagePrice: data.averageRoomPrice.toString(),
+          occupancyRate: data.occupancyRate.toString(),
+          voucherPrice: (data.averageRoomPrice * 0.6).toString(), // 60% of average price
+          operationalCosts: (data.averageRoomPrice * 0.3).toString(), // 30% operational costs
+          vatRate: "19", // 19% VAT
+          vatAmount: ((data.averageRoomPrice * 0.6) * 0.19).toString(), // VAT calculation
+          profitMargin: ((data.averageRoomPrice * 0.6) * 0.1).toString(), // 10% profit margin
+          totalPrice: ((data.averageRoomPrice * 0.6) * 1.29).toString(), // Total with VAT and profit
+          financingVolume: data.financingVolume.toString(),
           contactPerson: data.contactPerson,
           contactEmail: data.email,
           contactPhone: data.phone,
