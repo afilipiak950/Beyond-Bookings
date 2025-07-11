@@ -143,6 +143,67 @@ export default function DocumentAnalysis() {
     }
   };
 
+  // Fresh AI Analysis - Delete existing insights and process new ones
+  const freshAIAnalysisMutation = useMutation({
+    mutationFn: async () => {
+      console.log('Starting fresh AI analysis...');
+      setIsRunningMassAnalysis(true);
+      setMassAnalysisProgress(0);
+      
+      const response = await apiRequest('/api/ai/fresh-analysis', 'POST', {});
+      console.log('Fresh AI analysis response:', response);
+      return response;
+    },
+    onSuccess: (data) => {
+      setIsRunningMassAnalysis(false);
+      setMassAnalysisProgress(100);
+      
+      if (data.quotaWarning) {
+        toast({
+          title: "OpenAI API Limit erreicht",
+          description: data.quotaWarning,
+          variant: "destructive",
+        });
+      } else if (data.processedDocuments > 0) {
+        toast({
+          title: "Neue KI-Analyse abgeschlossen",
+          description: `${data.processedDocuments} Dokumente wurden komplett neu analysiert.`,
+        });
+      } else {
+        toast({
+          title: "Keine Dokumente verarbeitet",
+          description: "Keine Dokumente zum Verarbeiten gefunden.",
+        });
+      }
+      
+      // Refresh the analyses to show new insights
+      queryClient.invalidateQueries({ queryKey: ['/api/document-analyses'] });
+      
+      // Reset progress after a delay
+      setTimeout(() => {
+        setMassAnalysisProgress(0);
+      }, 2000);
+    },
+    onError: (error: any) => {
+      setIsRunningMassAnalysis(false);
+      setMassAnalysisProgress(0);
+      
+      toast({
+        title: "Fehler bei der neuen KI-Analyse",
+        description: error.message || "Möglicherweise ist das OpenAI API-Limit erreicht.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const generateFreshAIAnalysis = async () => {
+    try {
+      await freshAIAnalysisMutation.mutateAsync();
+    } catch (error) {
+      console.error('Fresh AI Analysis failed:', error);
+    }
+  };
+
   // Queries
   const { data: uploads = [], isLoading: uploadsLoading } = useQuery({
     queryKey: ["/api/document-uploads"],
@@ -610,40 +671,40 @@ export default function DocumentAnalysis() {
                 </Button>
 
                 <Button
-                  onClick={() => generateMassAISummary()}
-                  disabled={massAISummaryMutation.isPending || analyses.length === 0}
+                  onClick={() => generateFreshAIAnalysis()}
+                  disabled={freshAIAnalysisMutation.isPending || analyses.length === 0}
                   className="bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white"
                 >
-                  {massAISummaryMutation.isPending ? (
+                  {freshAIAnalysisMutation.isPending ? (
                     <>
                       <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                      KI-Zusammenfassung läuft...
+                      Neue KI-Analyse läuft...
                     </>
                   ) : (
                     <>
                       <Brain className="h-4 w-4 mr-2" />
-                      KI-Zusammenfassung für alle
+                      Neue KI-Analyse für alle
                     </>
                   )}
                 </Button>
               </div>
             )}
             
-            {/* Progress tracking for mass analysis */}
-            {(isRunningMassAnalysis || massAnalysisProgress > 0) && (
+            {/* Progress tracking for fresh analysis */}
+            {(freshAIAnalysisMutation.isPending || isRunningMassAnalysis || massAnalysisProgress > 0) && (
               <div className="mt-4 p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200">
                 <div className="flex items-center space-x-3 mb-3">
                   <div className="w-3 h-3 bg-purple-500 rounded-full animate-pulse"></div>
                   <span className="text-sm font-medium text-purple-800">
-                    {isRunningMassAnalysis ? 'KI-Zusammenfassung wird verarbeitet...' : 'Verarbeitung abgeschlossen'}
+                    {freshAIAnalysisMutation.isPending || isRunningMassAnalysis ? 'Neue KI-Analyse wird verarbeitet...' : 'Verarbeitung abgeschlossen'}
                   </span>
                 </div>
                 <Progress 
-                  value={isRunningMassAnalysis ? 50 : massAnalysisProgress} 
+                  value={freshAIAnalysisMutation.isPending || isRunningMassAnalysis ? 50 : massAnalysisProgress} 
                   className="w-full"
                 />
                 <div className="text-xs text-purple-600 mt-2">
-                  {isRunningMassAnalysis ? 'Dokumente werden mit OpenAI GPT-4o analysiert...' : 'Analyse erfolgreich abgeschlossen'}
+                  {freshAIAnalysisMutation.isPending || isRunningMassAnalysis ? 'Alle Insights werden gelöscht und neu mit OpenAI GPT-4o analysiert...' : 'Neue Analyse erfolgreich abgeschlossen'}
                 </div>
               </div>
             )}

@@ -2921,7 +2921,16 @@ Return a JSON response with: documentType, keyFindings[], businessInsights[], re
           console.log(`Processing AI summary for: ${analysis.fileName}`);
           
           // Prepare the document text for analysis
-          const documentText = analysis.extractedData || '';
+          let documentText = '';
+          if (analysis.extractedData) {
+            if (typeof analysis.extractedData === 'string') {
+              documentText = analysis.extractedData;
+            } else if (analysis.extractedData.text) {
+              documentText = analysis.extractedData.text;
+            } else if (typeof analysis.extractedData === 'object') {
+              documentText = JSON.stringify(analysis.extractedData);
+            }
+          }
           
           if (!documentText || documentText.trim().length === 0) {
             console.log(`Skipping ${analysis.fileName} - no extracted data`);
@@ -3018,6 +3027,164 @@ Focus on:
     } catch (error) {
       console.error('Mass AI summary error:', error);
       res.status(500).json({ error: 'Failed to generate mass AI summary' });
+    }
+  });
+
+  // Fresh AI Analysis endpoint - Delete existing insights and process new ones
+  app.post('/api/ai/fresh-analysis', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const user = req.user!;
+      
+      // Get all analyses for this user
+      const analyses = await db.query.documentAnalyses.findMany({
+        where: eq(documentAnalyses.userId, user.id),
+        orderBy: [desc(documentAnalyses.createdAt)],
+      });
+
+      console.log(`Found ${analyses.length} total analyses for fresh AI analysis`);
+
+      if (analyses.length === 0) {
+        return res.json({ 
+          message: 'No documents to process', 
+          processedDocuments: 0,
+          totalDocuments: 0
+        });
+      }
+
+      // Clear all existing insights first
+      console.log('Clearing all existing insights...');
+      await db.update(documentAnalyses)
+        .set({ insights: null })
+        .where(eq(documentAnalyses.userId, user.id));
+
+      // Initialize OpenAI
+      const openai = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY,
+      });
+
+      let processedCount = 0;
+      
+      // Process each analysis
+      for (const analysis of analyses) {
+        try {
+          console.log(`Processing fresh AI analysis for: ${analysis.fileName}`);
+          
+          // Prepare the document text for analysis
+          let documentText = '';
+          if (analysis.extractedData) {
+            if (typeof analysis.extractedData === 'string') {
+              documentText = analysis.extractedData;
+            } else if (analysis.extractedData.text) {
+              documentText = analysis.extractedData.text;
+            } else if (typeof analysis.extractedData === 'object') {
+              documentText = JSON.stringify(analysis.extractedData);
+            }
+          }
+          
+          if (!documentText || documentText.trim().length === 0) {
+            console.log(`Skipping ${analysis.fileName} - no extracted data`);
+            continue;
+          }
+
+          const prompt = `Analyze this business document and provide comprehensive insights in JSON format:
+
+Document: ${analysis.fileName}
+Content: ${documentText}
+
+Please analyze and return JSON in this exact format:
+{
+  "documentType": "string - type of document",
+  "keyFindings": ["string - key finding 1", "string - key finding 2", ...],
+  "businessInsights": [
+    {
+      "category": "string - insight category",
+      "insight": "string - specific insight"
+    }
+  ],
+  "recommendations": ["string - actionable recommendation 1", "string - actionable recommendation 2", ...],
+  "summary": "string - comprehensive summary of the document"
+}
+
+Focus on:
+1. Identify the document type and purpose
+2. Extract key business findings and numbers
+3. Provide strategic business insights
+4. Give actionable recommendations
+5. Summarize the document comprehensively`;
+
+          const response = await openai.chat.completions.create({
+            model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+            messages: [
+              {
+                role: "system",
+                content: "You are an expert business analyst specializing in document analysis. Always respond with valid JSON only."
+              },
+              {
+                role: "user",
+                content: prompt
+              }
+            ],
+            max_tokens: 2000,
+            temperature: 0.3,
+            response_format: { type: "json_object" }
+          });
+
+          const aiInsights = JSON.parse(response.choices[0]?.message?.content || '{}');
+          
+          // Update the analysis with new insights
+          await db.update(documentAnalyses)
+            .set({ insights: aiInsights })
+            .where(eq(documentAnalyses.id, analysis.id));
+
+          processedCount++;
+          console.log(`✓ Generated fresh AI insights for: ${analysis.fileName}`);
+          
+          // Add small delay to avoid rate limiting
+          await new Promise(resolve => setTimeout(resolve, 100));
+          
+        } catch (docError) {
+          console.error(`Error processing fresh analysis for ${analysis.fileName}:`, docError);
+          
+          // Check if it's a quota/rate limit error
+          if (docError.status === 429 || docError.code === 'insufficient_quota') {
+            console.log('OpenAI API quota exceeded - stopping fresh analysis');
+            break; // Stop processing more documents
+          }
+          
+          continue;
+        }
+      }
+
+      console.log(`Fresh AI analysis completed. Processed ${processedCount} documents.`);
+      
+      const message = processedCount > 0 ? 
+        `Fresh AI analysis completed successfully. Processed ${processedCount} documents.` :
+        'Fresh AI analysis completed, but no documents were processed. This might be due to OpenAI API quota limits.';
+
+      res.json({ 
+        message,
+        processedDocuments: processedCount,
+        totalDocuments: analyses.length,
+        quotaWarning: processedCount === 0 ? 'OpenAI API quota may be exceeded. Please check your billing and usage.' : null
+      });
+
+    } catch (error) {
+      console.error("Fresh AI analysis error:", error);
+      
+      // Check if it's an OpenAI API quota error
+      if (error.status === 429) {
+        return res.json({
+          message: 'OpenAI API quota exceeded',
+          quotaWarning: 'Das OpenAI API-Limit wurde erreicht. Bitte prüfen Sie Ihre Abrechnung und versuchen Sie es später erneut.',
+          processedDocuments: 0
+        });
+      }
+      
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to process fresh AI analysis",
+        error: error.message 
+      });
     }
   });
 
