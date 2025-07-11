@@ -56,7 +56,9 @@ export default function Reports() {
 
         {/* Export Options */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card>
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-red-50 via-white to-red-50 rounded-2xl opacity-60"></div>
+            <Card className="relative glass-card border-red-200/30 rounded-2xl shadow-2xl">
             <CardHeader>
               <FileText className="h-8 w-8 text-red-500 mb-2" />
               <CardTitle>PDF Reports</CardTitle>
@@ -82,8 +84,11 @@ export default function Reports() {
               </Button>
             </CardContent>
           </Card>
+        </div>
 
-          <Card>
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-green-50 via-white to-green-50 rounded-2xl opacity-60"></div>
+            <Card className="relative glass-card border-green-200/30 rounded-2xl shadow-2xl">
             <CardHeader>
               <TrendingUp className="h-8 w-8 text-accent mb-2" />
               <CardTitle>Excel Exports</CardTitle>
@@ -110,9 +115,12 @@ export default function Reports() {
             </CardContent>
           </Card>
         </div>
+        </div>
 
         {/* Recent Reports */}
-        <Card>
+        <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-50 via-white to-blue-50 rounded-2xl opacity-60"></div>
+          <Card className="relative glass-card border-blue-200/30 rounded-2xl shadow-2xl">
           <CardHeader>
             <CardTitle>Recent Calculations</CardTitle>
             <CardDescription>
@@ -193,6 +201,7 @@ export default function Reports() {
             )}
           </CardContent>
         </Card>
+      </div>
       </div>
     </AppLayout>
   );

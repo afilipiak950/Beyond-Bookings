@@ -300,7 +300,9 @@ export default function CustomerRequest() {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               {/* Step 1: Hotel Information */}
               {currentStep === 1 && (
-                <Card className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl border border-white/20 shadow-xl">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-50 via-white to-blue-50 rounded-2xl opacity-60"></div>
+                  <Card className="relative glass-card border-blue-200/30 rounded-2xl shadow-2xl">
                   <CardHeader className="pb-6">
                     <CardTitle className="flex items-center gap-2 text-2xl">
                       <Building2 className="h-6 w-6 text-blue-600" />
@@ -421,11 +423,14 @@ export default function CustomerRequest() {
                     )}
                   </CardContent>
                 </Card>
+              </div>
               )}
 
               {/* Step 2: Financing Details */}
               {currentStep === 2 && (
-                <Card className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl border border-white/20 shadow-xl">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-r from-green-50 via-white to-green-50 rounded-2xl opacity-60"></div>
+                  <Card className="relative glass-card border-green-200/30 rounded-2xl shadow-2xl">
                   <CardHeader className="pb-6">
                     <CardTitle className="flex items-center gap-2 text-2xl">
                       <DollarSign className="h-6 w-6 text-green-600" />
@@ -704,11 +709,14 @@ export default function CustomerRequest() {
                     )}
                   </CardContent>
                 </Card>
+              </div>
               )}
 
               {/* Step 3: Confirmation */}
               {currentStep === 3 && (
-                <Card className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl border border-white/20 shadow-xl">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-50 via-white to-purple-50 rounded-2xl opacity-60"></div>
+                  <Card className="relative glass-card border-purple-200/30 rounded-2xl shadow-2xl">
                   <CardContent className="py-12 text-center">
                     <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-green-500 to-blue-500 rounded-full mb-6 shadow-lg">
                       <CheckCircle className="h-10 w-10 text-white" />
@@ -740,6 +748,7 @@ export default function CustomerRequest() {
                     </div>
                   </CardContent>
                 </Card>
+              </div>
               )}
             </form>
           </Form>
