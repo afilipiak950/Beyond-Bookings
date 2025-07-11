@@ -204,6 +204,61 @@ export default function DocumentAnalysis() {
     }
   };
 
+  // Intelligent Restoration - Smarter AI insight restoration
+  const intelligentRestorationMutation = useMutation({
+    mutationFn: async () => {
+      console.log('Starting intelligent restoration...');
+      setIsRunningMassAnalysis(true);
+      setMassAnalysisProgress(0);
+      
+      const response = await apiRequest('/api/ai/intelligent-restoration', 'POST', {});
+      console.log('Intelligent restoration response:', response);
+      return response;
+    },
+    onSuccess: (data) => {
+      setIsRunningMassAnalysis(false);
+      setMassAnalysisProgress(100);
+      
+      if (data.processedDocuments > 0) {
+        toast({
+          title: "Intelligente Wiederherstellung abgeschlossen",
+          description: `${data.processedDocuments} Dokumente verarbeitet, ${data.skippedDocuments} übersprungen (bereits gut), ${data.failedDocuments} fehlgeschlagen.`,
+        });
+      } else {
+        toast({
+          title: "Alle Dokumente haben bereits gute KI-Analysen",
+          description: `${data.skippedDocuments} Dokumente wurden übersprungen, da sie bereits vollständige KI-Erkenntnisse haben.`,
+        });
+      }
+      
+      // Refresh the analyses to show restored insights
+      queryClient.invalidateQueries({ queryKey: ['/api/document-analyses'] });
+      
+      // Reset progress after a delay
+      setTimeout(() => {
+        setMassAnalysisProgress(0);
+      }, 2000);
+    },
+    onError: (error: any) => {
+      setIsRunningMassAnalysis(false);
+      setMassAnalysisProgress(0);
+      
+      toast({
+        title: "Fehler bei der intelligenten Wiederherstellung",
+        description: error.message || "Die intelligente Wiederherstellung konnte nicht abgeschlossen werden.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const generateIntelligentRestoration = async () => {
+    try {
+      await intelligentRestorationMutation.mutateAsync();
+    } catch (error) {
+      console.error('Intelligent Restoration failed:', error);
+    }
+  };
+
   // Queries
   const { data: uploads = [], isLoading: uploadsLoading } = useQuery({
     queryKey: ["/api/document-uploads"],
@@ -697,24 +752,48 @@ export default function DocumentAnalysis() {
                     </>
                   )}
                 </Button>
+
+                <Button
+                  onClick={() => generateIntelligentRestoration()}
+                  disabled={intelligentRestorationMutation.isPending || analyses.length === 0}
+                  className="bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 text-white"
+                >
+                  {intelligentRestorationMutation.isPending ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                      Intelligente Wiederherstellung läuft...
+                    </>
+                  ) : (
+                    <>
+                      <Brain className="h-4 w-4 mr-2" />
+                      Intelligente Wiederherstellung
+                    </>
+                  )}
+                </Button>
               </div>
             )}
             
-            {/* Progress tracking for fresh analysis */}
-            {(freshAIAnalysisMutation.isPending || isRunningMassAnalysis || massAnalysisProgress > 0) && (
+            {/* Progress tracking for AI analysis */}
+            {(freshAIAnalysisMutation.isPending || intelligentRestorationMutation.isPending || isRunningMassAnalysis || massAnalysisProgress > 0) && (
               <div className="mt-4 p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200">
                 <div className="flex items-center space-x-3 mb-3">
                   <div className="w-3 h-3 bg-purple-500 rounded-full animate-pulse"></div>
                   <span className="text-sm font-medium text-purple-800">
-                    {freshAIAnalysisMutation.isPending || isRunningMassAnalysis ? 'Neue KI-Analyse wird verarbeitet...' : 'Verarbeitung abgeschlossen'}
+                    {freshAIAnalysisMutation.isPending || intelligentRestorationMutation.isPending || isRunningMassAnalysis 
+                      ? (freshAIAnalysisMutation.isPending ? 'Neue KI-Analyse wird verarbeitet...' : 
+                         intelligentRestorationMutation.isPending ? 'Intelligente Wiederherstellung wird verarbeitet...' : 
+                         'KI-Analyse wird verarbeitet...') 
+                      : 'Verarbeitung abgeschlossen'}
                   </span>
                 </div>
                 <Progress 
-                  value={freshAIAnalysisMutation.isPending || isRunningMassAnalysis ? 50 : massAnalysisProgress} 
+                  value={freshAIAnalysisMutation.isPending || intelligentRestorationMutation.isPending || isRunningMassAnalysis ? 50 : massAnalysisProgress} 
                   className="w-full"
                 />
                 <div className="text-xs text-purple-600 mt-2">
-                  {freshAIAnalysisMutation.isPending || isRunningMassAnalysis ? 'Alle Insights werden gelöscht und neu mit OpenAI GPT-4o analysiert...' : 'Neue Analyse erfolgreich abgeschlossen'}
+                  {freshAIAnalysisMutation.isPending ? 'Alle Insights werden gelöscht und neu mit OpenAI GPT-4o analysiert...' : 
+                   intelligentRestorationMutation.isPending ? 'Fehlende KI-Insights werden selektiv wiederhergestellt...' :
+                   isRunningMassAnalysis ? 'KI-Analyse wird verarbeitet...' : 'Analyse erfolgreich abgeschlossen'}
                 </div>
               </div>
             )}

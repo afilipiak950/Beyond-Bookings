@@ -4,13 +4,14 @@ import { storage } from "./storage";
 import { requireAuth, hashPassword, comparePassword } from "./localAuth";
 import { insertPricingCalculationSchema, insertFeedbackSchema, insertOcrAnalysisSchema } from "@shared/schema";
 import { documentProcessor } from "./documentProcessor";
+import { insightRestorer } from "./insightRestorer";
 import { z } from "zod";
 import multer from "multer";
 import path from "path";
 import fs from "fs/promises";
 import { db } from "./db";
 import { documentAnalyses } from "@shared/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and, or, isNull } from "drizzle-orm";
 import OpenAI from "openai";
 
 // Login/Register schemas
@@ -3051,11 +3052,18 @@ Focus on:
         });
       }
 
-      // Clear all existing insights first
-      console.log('Clearing all existing insights...');
+      // Only clear insights that are null, empty, or problematic - preserve good insights
+      console.log('Clearing problematic insights only...');
       await db.update(documentAnalyses)
         .set({ insights: null })
-        .where(eq(documentAnalyses.userId, user.id));
+        .where(and(
+          eq(documentAnalyses.userId, user.id),
+          or(
+            isNull(documentAnalyses.insights),
+            eq(documentAnalyses.insights, '{}'),
+            eq(documentAnalyses.insights, '')
+          )
+        ));
 
       // Initialize OpenAI
       const openai = new OpenAI({
@@ -3064,9 +3072,19 @@ Focus on:
 
       let processedCount = 0;
       
-      // Process each analysis
+      // Process each analysis - only those without good insights
       for (const analysis of analyses) {
         try {
+          // Skip if this analysis already has good insights
+          if (analysis.insights && 
+              analysis.insights !== '{}' && 
+              analysis.insights !== '' &&
+              typeof analysis.insights === 'object' &&
+              Object.keys(analysis.insights).length > 0) {
+            console.log(`Skipping ${analysis.fileName} - already has good insights`);
+            continue;
+          }
+          
           console.log(`Processing fresh AI analysis for: ${analysis.fileName}`);
           
           // Prepare the document text for analysis
@@ -3185,6 +3203,28 @@ Focus on:
         message: "Failed to process fresh AI analysis",
         error: error.message 
       });
+    }
+  });
+
+  // Intelligent Insight Restoration - Smarter than fresh analysis
+  app.post('/api/ai/intelligent-restoration', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const user = req.user!;
+      
+      console.log('Starting intelligent insight restoration...');
+      const results = await insightRestorer.restoreInsights(user.id);
+      
+      res.json({
+        message: `Intelligent restoration completed. Processed ${results.processed} documents, skipped ${results.skipped} (already good), failed ${results.failed}.`,
+        processedDocuments: results.processed,
+        skippedDocuments: results.skipped,
+        failedDocuments: results.failed,
+        totalDocuments: results.processed + results.skipped + results.failed
+      });
+      
+    } catch (error) {
+      console.error('Intelligent restoration error:', error);
+      res.status(500).json({ error: 'Failed to process intelligent insight restoration' });
     }
   });
 
