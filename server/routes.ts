@@ -8,6 +8,10 @@ import { z } from "zod";
 import multer from "multer";
 import path from "path";
 import fs from "fs/promises";
+import { db } from "./db";
+import { documentAnalyses } from "@shared/schema";
+import { eq, desc } from "drizzle-orm";
+import OpenAI from "openai";
 
 // Login/Register schemas
 const loginSchema = z.object({
