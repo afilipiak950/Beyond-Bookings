@@ -54,11 +54,11 @@ export default function AppLayout({ children }: AppLayoutProps) {
     },
     onSuccess: (response: any) => {
       // Format message with context if available
-      let messageContent = response.message;
+      let messageContent = response?.message || 'I apologize, but I encountered an issue processing your request. Please try again.';
       
       // Add context indicators if available
       if (response?.context) {
-        messageContent += `\n\n---\n**Analysis Context:**\n📊 ${response.context.calculationsReviewed} calculations reviewed • 🏨 ${response.context.hotelsAnalyzed} hotels analyzed • 📄 ${response.context.documentsProcessed} documents processed`;
+        messageContent += `\n\n---\n**Analysis Context:**\n📊 ${response.context.calculationsReviewed || 0} calculations reviewed • 🏨 ${response.context.hotelsAnalyzed || 0} hotels analyzed • 📄 ${response.context.documentsProcessed || 0} documents processed`;
       }
       
       setChatMessages(prev => [...prev, {
@@ -263,7 +263,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
                           }`}>
                             <div className="text-sm whitespace-pre-wrap prose prose-sm max-w-none"
                                  dangerouslySetInnerHTML={{
-                                   __html: message.content
+                                   __html: (message.content || '')
                                      .replace(/\*\*(.*?)\*\*/g, '<strong class="text-blue-700">$1</strong>')
                                      .replace(/\*(.*?)\*/g, '<em class="text-blue-600">$1</em>')
                                      .replace(/•/g, '<span class="text-green-600">•</span>')

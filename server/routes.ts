@@ -1165,10 +1165,23 @@ Please provide a comprehensive, detailed response that leverages the user's actu
     } catch (error) {
       console.error('AI Chat error:', error);
       
-      // Handle quota exceeded specifically
+      // Handle quota exceeded specifically with fallback response
       if (error.code === 'insufficient_quota') {
-        res.status(500).json({ 
-          message: "🚨 **OpenAI Quota Exceeded**\n\nYour OpenAI API key has run out of credits. To continue using the AI assistant:\n\n• **Add credits** at https://platform.openai.com/account/billing\n• **Check your usage** at https://platform.openai.com/usage\n• **Upgrade your plan** if needed\n\nThe AI assistant will work immediately after adding funds to your OpenAI account.",
+        // Provide a helpful fallback response based on the user's message
+        let fallbackMessage = "🚨 **OpenAI Quota Exceeded**\n\nYour OpenAI API key has run out of credits. To continue using the AI assistant:\n\n• **Add credits** at https://platform.openai.com/account/billing\n• **Check your usage** at https://platform.openai.com/usage\n• **Upgrade your plan** if needed\n\nThe AI assistant will work immediately after adding funds to your OpenAI account.";
+        
+        // Add contextual information based on available data
+        if (userContext) {
+          fallbackMessage += `\n\n---\n**Your Current Data Summary:**\n📊 ${userContext.calculations.total} pricing calculations in system\n🏨 ${userContext.hotels.total} hotels in portfolio\n📄 ${userContext.documents.uploads} documents uploaded`;
+        }
+        
+        res.status(200).json({ 
+          message: fallbackMessage,
+          context: {
+            hotelsAnalyzed: userContext?.hotels?.total || 0,
+            calculationsReviewed: userContext?.calculations?.total || 0,
+            documentsProcessed: userContext?.documents?.uploads || 0
+          },
           error: "OpenAI quota exceeded - please add credits to your account"
         });
       } else {
