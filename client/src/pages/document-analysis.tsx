@@ -78,7 +78,9 @@ export default function DocumentAnalysis() {
   // Mass AI Summary Generation
   const massAISummaryMutation = useMutation({
     mutationFn: async () => {
+      console.log('Starting mass AI summary...');
       const response = await apiRequest('/api/ai/mass-summary', 'POST', {});
+      console.log('Mass AI summary response:', response);
       return response;
     },
     onSuccess: (data) => {
@@ -902,18 +904,49 @@ export default function DocumentAnalysis() {
                                           })()}
                                           
                                           {(() => {
-                                            // Check AI summary status
-                                            const documentAnalysis = analysesArray.find((analysis: any) => 
-                                              analysis.fileName === fileInfo.fileName
-                                            );
+                                            // Check AI summary status - improved matching
+                                            const documentAnalysis = analysesArray.find((analysis: any) => {
+                                              return analysis.fileName === fileInfo.fileName;
+                                            });
+                                            
+                                            // Debug logging removed for performance
                                             
                                             if (documentAnalysis?.insights) {
                                               try {
-                                                const insights = typeof documentAnalysis.insights === 'string' 
-                                                  ? JSON.parse(documentAnalysis.insights) 
-                                                  : documentAnalysis.insights;
+                                                let insights;
+                                                if (typeof documentAnalysis.insights === 'string') {
+                                                  // Handle empty string or empty object cases
+                                                  if (documentAnalysis.insights.trim() === '' || documentAnalysis.insights.trim() === '{}') {
+                                                    console.log(`Empty insights string for ${fileInfo.fileName}`);
+                                                    return (
+                                                      <Badge variant="outline" className="text-xs bg-gray-100 text-gray-600">
+                                                        <Brain className="h-3 w-3 mr-1" />
+                                                        KI-Analyse ausstehend
+                                                      </Badge>
+                                                    );
+                                                  }
+                                                  insights = JSON.parse(documentAnalysis.insights);
+                                                } else {
+                                                  insights = documentAnalysis.insights;
+                                                }
                                                 
+                                                // Check if insights actually has content
                                                 if (insights && Object.keys(insights).length > 0) {
+                                                  // Check if it's just a summary wrapper with empty content
+                                                  if (insights.summary && typeof insights.summary === 'string') {
+                                                    const cleanSummary = insights.summary.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+                                                    if (cleanSummary === '' || cleanSummary === '{}') {
+                                                      console.log(`Empty summary content for ${fileInfo.fileName}`);
+                                                      return (
+                                                        <Badge variant="outline" className="text-xs bg-gray-100 text-gray-600">
+                                                          <Brain className="h-3 w-3 mr-1" />
+                                                          KI-Analyse ausstehend
+                                                        </Badge>
+                                                      );
+                                                    }
+                                                  }
+                                                  
+                                                  console.log(`Valid insights found for ${fileInfo.fileName}`);
                                                   return (
                                                     <Badge variant="default" className="text-xs bg-purple-100 text-purple-800">
                                                       <Brain className="h-3 w-3 mr-1" />
@@ -922,6 +955,7 @@ export default function DocumentAnalysis() {
                                                   );
                                                 }
                                               } catch (error) {
+                                                console.log(`Error parsing insights for ${fileInfo.fileName}:`, error);
                                                 // Invalid insights JSON
                                               }
                                             }
