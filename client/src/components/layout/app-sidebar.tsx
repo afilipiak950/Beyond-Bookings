@@ -44,7 +44,14 @@ const navigation = [
     gradient: "from-green-500 to-blue-500",
     badge: "NEW",
   },
-
+  {
+    name: "Customer Request",
+    href: "/customer-request",
+    icon: Building2,
+    description: "Hotel financing request form",
+    gradient: "from-emerald-500 to-teal-500",
+    badge: "LIVE",
+  },
   {
     name: "Analysis Results",
     href: "/calculations",

@@ -18,6 +18,7 @@ import Settings from "@/pages/settings";
 import Profile from "@/pages/profile";
 import Workflow from "@/pages/workflow";
 import DocumentAnalysis from "@/pages/document-analysis";
+import CustomerRequest from "@/pages/customer-request";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -34,6 +35,7 @@ function Router() {
           <Route path="/calculations" component={Calculations} />
           <Route path="/ocr-analyzer" component={OCRAnalyzer} />
           <Route path="/document-analysis" component={DocumentAnalysis} />
+          <Route path="/customer-request" component={CustomerRequest} />
           <Route path="/customer-management" component={CustomerManagement} />
           <Route path="/reports" component={Reports} />
           <Route path="/settings" component={Settings} />

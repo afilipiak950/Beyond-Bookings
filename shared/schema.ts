@@ -69,6 +69,16 @@ export const pricingCalculations = pgTable("pricing_calculations", {
   totalPrice: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
   discountVsMarket: decimal("discount_vs_market", { precision: 10, scale: 2 }),
   isDraft: boolean("is_draft").default(false),
+  // Customer request fields
+  contactPerson: text("contact_person"),
+  contactEmail: text("contact_email"),
+  contactPhone: text("contact_phone"),
+  financingVolume: decimal("financing_volume", { precision: 15, scale: 2 }),
+  projectDescription: text("project_description"),
+  urgency: text("urgency"), // 'low', 'medium', 'high'
+  additionalNotes: text("additional_notes"),
+  requestType: text("request_type"), // 'standard', 'customer_financing'
+  status: text("status").default("draft"), // 'draft', 'submitted', 'processing', 'completed'
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
