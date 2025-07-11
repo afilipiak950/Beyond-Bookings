@@ -50,11 +50,19 @@ export default function AppLayout({ children }: AppLayoutProps) {
   // AI Chat mutation
   const aiChatMutation = useMutation({
     mutationFn: async (message: string) => {
-      return await apiRequest("/api/ai/chat", "POST", { message });
+      const response = await apiRequest("/api/ai/chat", "POST", { message });
+      return await response.json();
     },
     onSuccess: (response: any) => {
+      console.log('AI Response received:', response);
+      
       // Format message with context if available
-      let messageContent = response?.message || 'I apologize, but I encountered an issue processing your request. Please try again.';
+      let messageContent = response?.message;
+      
+      // If no message, use fallback
+      if (!messageContent || messageContent.trim() === '') {
+        messageContent = 'I apologize, but I encountered an issue processing your request. Please try again.';
+      }
       
       // Add context indicators if available
       if (response?.context) {
