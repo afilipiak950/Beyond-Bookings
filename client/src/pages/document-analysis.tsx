@@ -922,7 +922,6 @@ export default function DocumentAnalysis() {
                                                 if (typeof documentAnalysis.insights === 'string') {
                                                   // Handle empty string or empty object cases
                                                   if (documentAnalysis.insights.trim() === '' || documentAnalysis.insights.trim() === '{}') {
-                                                    console.log(`Empty insights string for ${fileInfo.fileName}`);
                                                     return (
                                                       <Badge variant="outline" className="text-xs bg-gray-100 text-gray-600">
                                                         <Brain className="h-3 w-3 mr-1" />
@@ -935,30 +934,52 @@ export default function DocumentAnalysis() {
                                                   insights = documentAnalysis.insights;
                                                 }
                                                 
-                                                // Check if insights actually has content
+                                                // More thorough validation of insights content
                                                 if (insights && Object.keys(insights).length > 0) {
-                                                  // Check if it's just a summary wrapper with empty content
+                                                  // Check if it's a summary wrapper with actual content
                                                   if (insights.summary && typeof insights.summary === 'string') {
-                                                    const cleanSummary = insights.summary.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-                                                    if (cleanSummary === '' || cleanSummary === '{}') {
-                                                      console.log(`Empty summary content for ${fileInfo.fileName}`);
-                                                      return (
-                                                        <Badge variant="outline" className="text-xs bg-gray-100 text-gray-600">
-                                                          <Brain className="h-3 w-3 mr-1" />
-                                                          KI-Analyse ausstehend
-                                                        </Badge>
-                                                      );
+                                                    // Parse the nested summary if it's JSON
+                                                    try {
+                                                      const nestedSummary = JSON.parse(insights.summary);
+                                                      if (nestedSummary && (nestedSummary.documentType || nestedSummary.keyFindings || nestedSummary.businessInsights)) {
+                                                        return (
+                                                          <Badge variant="default" className="text-xs bg-purple-100 text-purple-800">
+                                                            <CheckCircle className="h-3 w-3 mr-1" />
+                                                            KI-Analyse ✓
+                                                          </Badge>
+                                                        );
+                                                      }
+                                                    } catch (e) {
+                                                      // If it's not JSON, check if it's a meaningful text summary
+                                                      if (insights.summary.length > 50) {
+                                                        return (
+                                                          <Badge variant="default" className="text-xs bg-purple-100 text-purple-800">
+                                                            <CheckCircle className="h-3 w-3 mr-1" />
+                                                            KI-Analyse ✓
+                                                          </Badge>
+                                                        );
+                                                      }
                                                     }
                                                   }
                                                   
-                                                  console.log(`Valid insights found for ${fileInfo.fileName}`);
-                                                  return (
-                                                    <Badge variant="default" className="text-xs bg-purple-100 text-purple-800">
-                                                      <Brain className="h-3 w-3 mr-1" />
-                                                      KI-Analyse ✓
-                                                    </Badge>
-                                                  );
+                                                  // Check for direct insight properties
+                                                  if (insights.documentType || insights.keyFindings || insights.businessInsights) {
+                                                    return (
+                                                      <Badge variant="default" className="text-xs bg-purple-100 text-purple-800">
+                                                        <CheckCircle className="h-3 w-3 mr-1" />
+                                                        KI-Analyse ✓
+                                                      </Badge>
+                                                    );
+                                                  }
                                                 }
+                                                
+                                                // If we get here, insights exist but are not valid/meaningful
+                                                return (
+                                                  <Badge variant="outline" className="text-xs bg-gray-100 text-gray-600">
+                                                    <Brain className="h-3 w-3 mr-1" />
+                                                    KI-Analyse ausstehend
+                                                  </Badge>
+                                                );
                                               } catch (error) {
                                                 console.log(`Error parsing insights for ${fileInfo.fileName}:`, error);
                                                 // Invalid insights JSON
@@ -1506,12 +1527,33 @@ export default function DocumentAnalysis() {
                         let actualInsights;
                         if (insights.summary) {
                           if (typeof insights.summary === 'string') {
-                            // Clean up markdown formatting
-                            const cleanSummary = insights.summary.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+                            // Clean up markdown formatting and extract JSON
+                            let cleanSummary = insights.summary;
+                            
+                            // Remove markdown code blocks
+                            cleanSummary = cleanSummary.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+                            
+                            // If it still contains explanatory text, try to extract just the JSON part
+                            const jsonMatch = cleanSummary.match(/\{[\s\S]*\}/);
+                            if (jsonMatch) {
+                              cleanSummary = jsonMatch[0];
+                            }
+                            
                             if (cleanSummary === '' || cleanSummary === '{}') {
                               return <div className="text-sm text-gray-500">Keine KI-Erkenntnisse verfügbar</div>;
                             }
-                            actualInsights = JSON.parse(cleanSummary);
+                            
+                            try {
+                              actualInsights = JSON.parse(cleanSummary);
+                            } catch (parseError) {
+                              // If parsing fails, try to show the raw text as a fallback
+                              console.warn('Failed to parse cleaned summary:', parseError);
+                              actualInsights = {
+                                summary: cleanSummary,
+                                documentType: 'Analysedokument',
+                                keyFindings: ['Rohe Erkenntnisse verfügbar - siehe Zusammenfassung']
+                              };
+                            }
                           } else {
                             actualInsights = insights.summary;
                           }
@@ -1606,6 +1648,30 @@ export default function DocumentAnalysis() {
                         );
                       } catch (error) {
                         console.error('Error parsing insights:', error);
+                        
+                        // Try to extract any useful text from the malformed insights
+                        let rawInsights = '';
+                        if (typeof selectedDocument.insights === 'string') {
+                          rawInsights = selectedDocument.insights;
+                        } else if (selectedDocument.insights && typeof selectedDocument.insights === 'object') {
+                          rawInsights = JSON.stringify(selectedDocument.insights, null, 2);
+                        }
+                        
+                        // If we have some raw insights text, show it
+                        if (rawInsights && rawInsights.length > 10) {
+                          return (
+                            <div className="text-sm text-gray-600">
+                              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-3">
+                                <div className="text-yellow-800 font-medium mb-1">⚠️ Erkenntnisse verfügbar (Format-Problem)</div>
+                                <div className="text-yellow-700 text-xs">Die KI-Erkenntnisse sind vorhanden, aber in einem ungewöhnlichen Format</div>
+                              </div>
+                              <div className="bg-gray-50 rounded-lg p-3 max-h-60 overflow-y-auto">
+                                <pre className="text-xs text-gray-700 whitespace-pre-wrap">{rawInsights}</pre>
+                              </div>
+                            </div>
+                          );
+                        }
+                        
                         return (
                           <div className="text-sm text-gray-500 text-center py-4">
                             <div className="text-gray-400 mb-2">⚠️</div>
