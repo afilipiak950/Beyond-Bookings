@@ -1319,70 +1319,144 @@ export default function Workflow() {
                   Echtzeitberechnungen und Analyse
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4 p-4">
-                {/* Floating Background Elements */}
+              <CardContent className="relative overflow-hidden p-6 min-h-[600px]">
+                {/* Revolutionary Particle System Background */}
                 <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                  <div className="absolute top-10 left-10 w-32 h-32 bg-blue-500/10 rounded-full blur-xl animate-float"></div>
-                  <div className="absolute bottom-20 right-20 w-24 h-24 bg-green-500/10 rounded-full blur-lg animate-float-delayed"></div>
-                  <div className="absolute top-1/2 left-1/3 w-16 h-16 bg-purple-500/10 rounded-full blur-md animate-pulse"></div>
+                  {/* Floating Orbs with Complex Animations */}
+                  <div className="absolute top-8 left-8 w-40 h-40 bg-gradient-to-r from-cyan-400/20 to-blue-500/20 rounded-full blur-2xl animate-float-complex"></div>
+                  <div className="absolute bottom-12 right-12 w-32 h-32 bg-gradient-to-r from-purple-400/20 to-pink-500/20 rounded-full blur-xl animate-float-reverse"></div>
+                  <div className="absolute top-32 right-24 w-24 h-24 bg-gradient-to-r from-green-400/20 to-emerald-500/20 rounded-full blur-lg animate-float-spiral"></div>
+                  <div className="absolute bottom-32 left-32 w-20 h-20 bg-gradient-to-r from-orange-400/20 to-red-500/20 rounded-full blur-md animate-float-bounce"></div>
+                  
+                  {/* Dynamic Light Rays */}
+                  <div className="absolute top-0 left-1/4 w-px h-full bg-gradient-to-b from-transparent via-cyan-300/30 to-transparent animate-light-ray"></div>
+                  <div className="absolute top-0 right-1/3 w-px h-full bg-gradient-to-b from-transparent via-purple-300/30 to-transparent animate-light-ray-delayed"></div>
+                  
+                  {/* Mesh Grid Pattern */}
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,_rgba(59,130,246,0.05)_1px,_transparent_0)] bg-[size:20px_20px] animate-mesh-move"></div>
+                  
+                  {/* Floating Particles */}
+                  <div className="absolute top-16 left-16 w-1 h-1 bg-cyan-400 rounded-full animate-particle-float"></div>
+                  <div className="absolute top-24 right-32 w-1 h-1 bg-purple-400 rounded-full animate-particle-float-delayed"></div>
+                  <div className="absolute bottom-24 left-24 w-1 h-1 bg-green-400 rounded-full animate-particle-float-spiral"></div>
+                  <div className="absolute bottom-16 right-16 w-1 h-1 bg-orange-400 rounded-full animate-particle-float-bounce"></div>
+                  
+                  {/* Holographic Border Effect */}
+                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-cyan-400/10 via-purple-400/10 to-pink-400/10 animate-border-flow"></div>
                 </div>
 
-                {/* Calculation Results - Ultra Modern Glassmorphism */}
-                <div className="relative space-y-3">
-                  {/* AI-Powered Realistic Price - Hero Section with Advanced Effects */}
-                  <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/40 to-blue-50/30 backdrop-blur-xl border border-white/20 shadow-xl transition-all duration-500">
-                    {/* Animated Background Layers */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-transparent to-green-500/10 animate-gradient-x"></div>
-                    <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/5 to-transparent group-hover:via-white/10 transition-all duration-500"></div>
+                {/* Revolutionary AI Price Display - Holographic Interface */}
+                <div className="relative space-y-6 z-10">
+                  {/* Quantum AI-Powered Realistic Price - Next-Gen Hero Section */}
+                  <div className="group relative overflow-hidden rounded-3xl bg-gradient-to-br from-white/10 via-cyan-50/20 to-blue-50/10 backdrop-blur-3xl border border-white/30 shadow-2xl transition-all duration-700 hover:shadow-4xl hover:scale-[1.02] transform-gpu">
+                    {/* Multi-Layered Quantum Background */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/15 via-blue-500/10 to-purple-500/15 animate-quantum-wave"></div>
+                    <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/8 to-transparent group-hover:via-white/15 transition-all duration-700"></div>
+                    <div className="absolute inset-0 bg-[conic-gradient(from_0deg,transparent,rgba(59,130,246,0.1),transparent)] animate-spin-slow"></div>
                     
-                    {/* Floating Particles */}
-                    <div className="absolute top-2 right-2 w-2 h-2 bg-blue-400 rounded-full animate-ping opacity-60"></div>
-                    <div className="absolute bottom-3 left-3 w-2 h-2 bg-green-400 rounded-full animate-ping animation-delay-1000 opacity-80"></div>
-                    <div className="absolute top-1/2 right-1/4 w-2 h-2 bg-purple-400 rounded-full animate-bounce animation-delay-500 opacity-70"></div>
+                    {/* Holographic Edge Effect */}
+                    <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-cyan-400/20 via-transparent to-purple-400/20 animate-holographic-pulse"></div>
                     
-                    <div className="relative p-4 space-y-3">
+                    {/* Advanced Particle System */}
+                    <div className="absolute top-3 right-3 w-3 h-3 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full animate-quantum-pulse shadow-lg shadow-cyan-400/50"></div>
+                    <div className="absolute bottom-4 left-4 w-2 h-2 bg-gradient-to-r from-purple-400 to-pink-500 rounded-full animate-quantum-bounce shadow-lg shadow-purple-400/50"></div>
+                    <div className="absolute top-1/3 right-1/3 w-2 h-2 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full animate-quantum-float shadow-lg shadow-green-400/50"></div>
+                    <div className="absolute bottom-1/3 left-1/3 w-1 h-1 bg-gradient-to-r from-orange-400 to-red-500 rounded-full animate-quantum-drift shadow-lg shadow-orange-400/50"></div>
+                    
+                    <div className="relative p-8 space-y-6">
+                      {/* Ultra-Modern Header with Holographic Elements */}
                       <div className="flex justify-between items-center">
-                        <div className="flex items-center space-x-3">
-                          <div className="relative">
-                            <div className="w-2 h-2 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 animate-pulse shadow-lg shadow-blue-500/50"></div>
-                            <div className="absolute inset-0 w-2 h-2 rounded-full bg-blue-400 animate-ping opacity-40"></div>
+                        <div className="flex items-center space-x-4">
+                          <div className="relative group">
+                            {/* Multi-layered Quantum Indicator */}
+                            <div className="w-4 h-4 rounded-full bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 animate-quantum-pulse shadow-xl shadow-cyan-400/60 relative z-10"></div>
+                            <div className="absolute inset-0 w-4 h-4 rounded-full bg-gradient-to-r from-cyan-300 to-blue-400 animate-ping opacity-50"></div>
+                            <div className="absolute inset-0 w-4 h-4 rounded-full bg-gradient-to-r from-blue-400 to-purple-400 animate-pulse opacity-30"></div>
+                            {/* Holographic Ring Effect */}
+                            <div className="absolute -inset-2 rounded-full border-2 border-cyan-400/30 animate-spin-slow"></div>
                           </div>
-                          <span className="font-bold text-sm bg-gradient-to-r from-blue-800 to-blue-600 bg-clip-text text-transparent">
-                            Realistischer Hotelverkaufspreis (KI)
-                          </span>
+                          <div className="relative">
+                            <h3 className="text-xl font-black bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 bg-clip-text text-transparent tracking-tight">
+                              Quantum AI Preisanalyse
+                            </h3>
+                            <div className="absolute -bottom-1 left-0 w-full h-0.5 bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 animate-quantum-wave"></div>
+                          </div>
                         </div>
-                        <div className="flex items-center space-x-3">
+                        <div className="flex items-center space-x-4">
                           {isManualEdit ? (
-                            <span className="text-sm bg-gradient-to-r from-orange-100 to-orange-50 text-orange-700 px-4 py-2 rounded-full font-semibold flex items-center space-x-2 shadow-lg shadow-orange-200/50 border border-orange-200/30 backdrop-blur-sm animate-bounce-gentle">
-                              <Edit3 className="h-4 w-4 animate-pulse" />
-                              <span>Manuell</span>
-                            </span>
+                            <div className="relative group">
+                              <div className="absolute inset-0 bg-gradient-to-r from-orange-400/20 to-red-400/20 rounded-2xl blur animate-pulse"></div>
+                              <span className="relative text-sm bg-gradient-to-r from-orange-50/80 to-red-50/80 text-orange-700 px-6 py-3 rounded-2xl font-bold flex items-center space-x-3 shadow-2xl border border-orange-300/40 backdrop-blur-xl animate-quantum-bounce">
+                                <Edit3 className="h-5 w-5 animate-spin" />
+                                <span className="bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">Manual Override</span>
+                              </span>
+                            </div>
                           ) : (
-                            <span className="text-sm bg-gradient-to-r from-green-100 to-emerald-50 text-green-700 px-4 py-2 rounded-full font-semibold shadow-lg shadow-green-200/50 border border-green-200/30 backdrop-blur-sm animate-pulse">
-                              KI: 56%
-                            </span>
+                            <div className="relative group">
+                              <div className="absolute inset-0 bg-gradient-to-r from-green-400/20 to-emerald-400/20 rounded-2xl blur animate-pulse"></div>
+                              <span className="relative text-sm bg-gradient-to-r from-green-50/80 to-emerald-50/80 text-green-700 px-6 py-3 rounded-2xl font-bold shadow-2xl border border-green-300/40 backdrop-blur-xl animate-quantum-pulse">
+                                <span className="bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">Quantum AI: 56%</span>
+                              </span>
+                            </div>
                           )}
                         </div>
                       </div>
                       
-                      <div className="flex justify-between items-center mt-4">
-                        <div className="relative">
-                          <span className="text-lg font-black bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 bg-clip-text text-transparent tracking-tight animate-text-shimmer bg-300% bg-size-200">
-                            {actualPrice ? `${actualPrice.toFixed(2)} €` : '0.00 €'}
-                          </span>
-                          <div className="absolute -inset-1 bg-gradient-to-r from-blue-500/20 to-purple-500/20 blur-sm -z-10 animate-pulse"></div>
+                      {/* Revolutionary Price Display Section */}
+                      <div className="flex justify-between items-center mt-8">
+                        <div className="relative group">
+                          {/* Holographic Price Display */}
+                          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-cyan-50/60 via-blue-50/80 to-purple-50/60 backdrop-blur-2xl border-2 border-white/40 shadow-2xl p-6 min-w-[200px] transform-gpu transition-all duration-700 group-hover:scale-[1.05] group-hover:shadow-4xl">
+                            {/* Quantum Background Effects */}
+                            <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/10 via-blue-500/10 to-purple-500/10 animate-quantum-wave"></div>
+                            <div className="absolute inset-0 bg-[conic-gradient(from_0deg,transparent,rgba(6,182,212,0.15),transparent)] animate-spin-slow"></div>
+                            
+                            {/* Holographic Border */}
+                            <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-cyan-400/30 via-transparent to-purple-400/30 animate-border-flow"></div>
+                            
+                            {/* Floating Elements */}
+                            <div className="absolute top-2 right-2 w-2 h-2 bg-cyan-400 rounded-full animate-quantum-pulse shadow-lg shadow-cyan-400/50"></div>
+                            <div className="absolute bottom-2 left-2 w-1 h-1 bg-purple-400 rounded-full animate-quantum-drift shadow-lg shadow-purple-400/50"></div>
+                            
+                            {/* Price Content */}
+                            <div className="relative z-10">
+                              <div className="text-xs font-bold bg-gradient-to-r from-cyan-600 to-purple-600 bg-clip-text text-transparent mb-2 tracking-wide">
+                                QUANTUM PREIS
+                              </div>
+                              <div className="text-3xl font-black bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 bg-clip-text text-transparent tracking-tight">
+                                {actualPrice ? `${actualPrice.toFixed(2)} €` : '0.00 €'}
+                              </div>
+                              <div className="absolute -bottom-1 left-0 w-full h-0.5 bg-gradient-to-r from-cyan-400 to-purple-400 animate-quantum-wave"></div>
+                            </div>
+                          </div>
+                          
+                          {/* Holographic Aura */}
+                          <div className="absolute -inset-4 bg-gradient-to-r from-cyan-400/20 via-blue-500/20 to-purple-500/20 rounded-3xl blur-xl animate-holographic-pulse -z-10"></div>
                         </div>
                         <Dialog open={manualEditOpen} onOpenChange={setManualEditOpen}>
                           <DialogTrigger asChild>
                             <button 
                               onClick={handleManualEdit}
-                              className="group relative overflow-hidden px-4 py-2 bg-gradient-to-r from-blue-500/10 to-purple-500/10 backdrop-blur-sm border border-blue-300/30 rounded-full text-sm font-medium text-blue-700 hover:text-white transition-all duration-500 hover:scale-105 hover:shadow-lg hover:shadow-blue-500/25"
+                              className="group relative overflow-hidden px-8 py-4 bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-purple-500/10 backdrop-blur-xl border-2 border-cyan-300/30 rounded-2xl text-sm font-bold text-cyan-700 hover:text-white transition-all duration-700 hover:scale-110 hover:shadow-2xl hover:shadow-cyan-500/40 transform-gpu"
                             >
-                              <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                              <div className="relative flex items-center space-x-2">
-                                <Edit3 className="h-4 w-4 group-hover:animate-spin transition-transform duration-300" />
-                                <span>Manuell bearbeiten</span>
+                              {/* Multi-layered Holographic Background */}
+                              <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+                              <div className="absolute inset-0 bg-[conic-gradient(from_0deg,transparent,rgba(6,182,212,0.2),transparent)] animate-spin-slow opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+                              
+                              {/* Quantum Particle Effects */}
+                              <div className="absolute top-1 right-1 w-1 h-1 bg-cyan-400 rounded-full animate-quantum-pulse opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                              <div className="absolute bottom-1 left-1 w-1 h-1 bg-purple-400 rounded-full animate-quantum-drift opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                              
+                              {/* Button Content */}
+                              <div className="relative flex items-center space-x-3">
+                                <Edit3 className="h-5 w-5 group-hover:animate-spin transition-transform duration-500 group-hover:text-white" />
+                                <span className="bg-gradient-to-r from-cyan-600 to-purple-600 bg-clip-text text-transparent group-hover:text-white transition-all duration-500">
+                                  Quantum Edit
+                                </span>
                               </div>
+                              
+                              {/* Holographic Border Effect */}
+                              <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-cyan-400/20 via-transparent to-purple-400/20 animate-border-flow opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
                             </button>
                           </DialogTrigger>
                           <DialogContent className="sm:max-w-[425px]">
