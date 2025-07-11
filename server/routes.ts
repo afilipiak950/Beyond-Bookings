@@ -1022,6 +1022,155 @@ ${analyses.filter(a => a?.insights).map(analysis =>
   });
 
   // AI Assistant Chat endpoint with deep functionality
+  app.post("/api/ai/chat", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const userId = (req as any).user.id;
+      const { message } = req.body;
+      
+      if (!message || typeof message !== 'string') {
+        return res.status(400).json({ message: "Message is required" });
+      }
+
+      // Gather comprehensive user data for AI context
+      const [
+        userProfile,
+        hotels,
+        calculations,
+        documentUploads,
+        documentAnalyses,
+        documentInsights
+      ] = await Promise.all([
+        storage.getUser(userId),
+        storage.getHotels(),
+        storage.getPricingCalculations(userId),
+        storage.getDocumentUploads(userId),
+        storage.getDocumentAnalyses(userId),
+        storage.getDocumentInsights(userId)
+      ]);
+
+      // Build comprehensive context for AI
+      const userContext = {
+        profile: {
+          name: userProfile ? `${userProfile.firstName || ''} ${userProfile.lastName || ''}`.trim() : 'User',
+          email: userProfile?.email || '',
+          role: userProfile?.role || 'user'
+        },
+        hotels: {
+          total: hotels.length,
+          list: hotels.map(h => ({
+            name: h.name,
+            location: h.location,
+            stars: h.stars,
+            rooms: h.roomCount,
+            category: h.category,
+            url: h.url
+          }))
+        },
+        calculations: {
+          total: calculations.length,
+          recent: calculations.slice(-5).map(c => ({
+            hotelName: c.hotelName,
+            roomPrice: c.roomPrice,
+            totalCost: c.totalCost,
+            profitMargin: c.profitMargin,
+            createdAt: c.createdAt
+          }))
+        },
+        documents: {
+          uploads: documentUploads.length,
+          analyses: documentAnalyses.length,
+          insights: documentInsights.length
+        },
+        platformStats: {
+          totalHotels: hotels.length,
+          totalCalculations: calculations.length,
+          totalDocuments: documentUploads.length,
+          averageRoomPrice: calculations.length > 0 ? 
+            calculations.reduce((sum, c) => sum + (c.roomPrice || 0), 0) / calculations.length : 0
+        }
+      };
+
+      // Enhanced AI prompt with comprehensive context
+      const aiPrompt = `You are an expert AI assistant for Beyond Bookings, a comprehensive hotel pricing and document intelligence platform. You have access to all user data and should provide detailed, personalized responses.
+
+USER CONTEXT:
+- User: ${userContext.profile.name} (${userContext.profile.email})
+- Role: ${userContext.profile.role}
+- Hotels in database: ${userContext.hotels.total}
+- Pricing calculations: ${userContext.calculations.total}
+- Document uploads: ${userContext.documents.uploads}
+
+HOTEL DATA:
+${userContext.hotels.list.map(h => `• ${h.name} (${h.stars}★) - ${h.location}, ${h.rooms} rooms`).join('\n')}
+
+RECENT CALCULATIONS:
+${userContext.calculations.recent.map(c => `• ${c.hotelName}: €${c.roomPrice} room price, €${c.totalCost} total cost, ${c.profitMargin}% margin`).join('\n')}
+
+PLATFORM STATISTICS:
+- Total Hotels: ${userContext.platformStats.totalHotels}
+- Total Calculations: ${userContext.platformStats.totalCalculations}
+- Total Documents: ${userContext.platformStats.totalDocuments}
+- Average Room Price: €${userContext.platformStats.averageRoomPrice.toFixed(2)}
+
+CAPABILITIES:
+1. Hotel Management: Help with hotel data, star ratings, pricing analysis
+2. Pricing Calculations: Explain VAT calculations, profit margins, competitive analysis
+3. Document Intelligence: OCR analysis, financial document processing
+4. Platform Features: Workflow guidance, export options, data visualization
+5. Business Intelligence: Market insights, pricing strategies, performance analysis
+
+PERSONALITY:
+- Professional but approachable
+- Highly knowledgeable about hotel industry and pricing
+- Provide specific, actionable advice
+- Reference user's actual data when relevant
+- Offer detailed explanations and step-by-step guidance
+
+USER QUESTION: "${message}"
+
+Please provide a comprehensive, detailed response that leverages the user's actual data and demonstrates deep understanding of their business needs. Use markdown formatting for better readability.`;
+
+      // Call OpenAI API with comprehensive context
+      const OpenAI = await import('openai');
+      const openai = new OpenAI.default({
+        apiKey: process.env.OPENAI_API_KEY,
+      });
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+        messages: [
+          {
+            role: "system",
+            content: aiPrompt
+          },
+          {
+            role: "user",
+            content: message
+          }
+        ],
+        max_tokens: 2000,
+        temperature: 0.7
+      });
+
+      const aiResponse = response.choices[0]?.message?.content || 'I apologize, but I encountered an issue processing your request. Please try again.';
+
+      res.json({ 
+        message: aiResponse,
+        context: {
+          hotelsAnalyzed: userContext.hotels.total,
+          calculationsReviewed: userContext.calculations.total,
+          documentsProcessed: userContext.documents.uploads
+        }
+      });
+    } catch (error) {
+      console.error('AI Chat error:', error);
+      res.status(500).json({ 
+        message: "I'm experiencing technical difficulties. Please ensure your OpenAI API key is configured correctly and try again.",
+        error: error.message 
+      });
+    }
+  });
+
   // PowerPoint export endpoint
   app.post("/api/export/powerpoint", requireAuth, async (req: Request, res: Response) => {
     try {

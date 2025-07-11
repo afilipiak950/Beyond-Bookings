@@ -33,7 +33,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
     {
       id: 1,
       role: 'assistant',
-      content: 'Hello! I\'m your AI assistant for DocumentIQ. I can help you with document analysis, OCR processing, financial workflow optimization, and answer any questions about your document intelligence platform. How can I assist you today?',
+      content: 'Hello! I\'m your **AI Assistant for Beyond Bookings**. I have access to all your hotel data, pricing calculations, and platform analytics. I can help you with:\n\n• **Hotel Management** - Analysis of your hotel portfolio\n• **Pricing Optimization** - VAT calculations and profit margin analysis\n• **Document Intelligence** - OCR processing and financial insights\n• **Business Intelligence** - Market trends and competitive analysis\n\nWhat would you like to know about your business today?',
       timestamp: new Date()
     }
   ]);
@@ -53,10 +53,18 @@ export default function AppLayout({ children }: AppLayoutProps) {
       return await apiRequest("/api/ai/chat", "POST", { message });
     },
     onSuccess: (response: any) => {
+      // Format message with context if available
+      let messageContent = response.message;
+      
+      // Add context indicators if available
+      if (response?.context) {
+        messageContent += `\n\n---\n**Analysis Context:**\n📊 ${response.context.calculationsReviewed} calculations reviewed • 🏨 ${response.context.hotelsAnalyzed} hotels analyzed • 📄 ${response.context.documentsProcessed} documents processed`;
+      }
+      
       setChatMessages(prev => [...prev, {
         id: Date.now(),
         role: 'assistant',
-        content: response.message,
+        content: messageContent,
         timestamp: new Date()
       }]);
     },
@@ -83,6 +91,14 @@ export default function AppLayout({ children }: AppLayoutProps) {
     setChatMessages(prev => [...prev, userMessage]);
     aiChatMutation.mutate(currentMessage);
     setCurrentMessage('');
+    
+    // Auto-scroll to bottom
+    setTimeout(() => {
+      const messagesContainer = document.getElementById('ai-chat-messages');
+      if (messagesContainer) {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }
+    }, 100);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -193,22 +209,31 @@ export default function AppLayout({ children }: AppLayoutProps) {
                   <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-green-400 to-blue-500 rounded-full animate-pulse" />
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl h-[600px] flex flex-col bg-white border border-blue-200/30 shadow-2xl">
-                <DialogHeader className="border-b border-blue-200/20 pb-4">
-                  <DialogTitle className="flex items-center gap-2">
-                    <Bot className="h-5 w-5 text-blue-500" />
-                    AI Assistant
-                    <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-200/20">
-                      Online
-                    </Badge>
+              <DialogContent className="max-w-4xl h-[700px] flex flex-col bg-white border border-blue-200/30 shadow-2xl">
+                <DialogHeader className="border-b border-blue-200/20 pb-4 bg-gradient-to-r from-blue-50 to-green-50 rounded-t-lg px-6 py-4">
+                  <DialogTitle className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-green-500 rounded-full flex items-center justify-center">
+                      <Bot className="h-4 w-4 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-bold text-gray-900">Beyond Bookings AI Assistant</h2>
+                      <p className="text-sm text-gray-600">Powered by GPT-4o • Real-time Data Analysis</p>
+                    </div>
+                    <div className="flex items-center gap-2 ml-auto">
+                      <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                      <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-200/20">
+                        Connected
+                      </Badge>
+                    </div>
                   </DialogTitle>
-                  <DialogDescription>
-                    Your intelligent assistant for Beyond Bookings platform. Ask me anything about pricing, hotels, or system features.
+                  <DialogDescription className="mt-2 text-sm text-gray-700">
+                    Your intelligent assistant with **full access** to your hotel data, pricing calculations, and platform analytics. 
+                    Ask complex questions about your business performance, pricing strategies, or platform features.
                   </DialogDescription>
                 </DialogHeader>
 
                 {/* Chat Messages */}
-                <ScrollArea className="flex-1 p-4">
+                <ScrollArea className="flex-1 p-4" id="ai-chat-messages">
                   <div className="space-y-4">
                     {chatMessages.map((message) => (
                       <div
@@ -234,14 +259,15 @@ export default function AppLayout({ children }: AppLayoutProps) {
                           <div className={`inline-block px-4 py-3 rounded-lg shadow-sm ${
                             message.role === 'user'
                               ? 'bg-blue-500 text-white rounded-br-none'
-                              : 'bg-gray-50 text-gray-900 rounded-bl-none border border-gray-200'
+                              : 'bg-gradient-to-r from-gray-50 to-blue-50 text-gray-900 rounded-bl-none border border-gray-200'
                           }`}>
                             <div className="text-sm whitespace-pre-wrap prose prose-sm max-w-none"
                                  dangerouslySetInnerHTML={{
                                    __html: message.content
-                                     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                                     .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                                     .replace(/•/g, '&bull;')
+                                     .replace(/\*\*(.*?)\*\*/g, '<strong class="text-blue-700">$1</strong>')
+                                     .replace(/\*(.*?)\*/g, '<em class="text-blue-600">$1</em>')
+                                     .replace(/•/g, '<span class="text-green-600">•</span>')
+                                     .replace(/\n\n/g, '<br/><br/>')
                                      .replace(/\n/g, '<br/>')
                                  }}
                             />
@@ -254,14 +280,20 @@ export default function AppLayout({ children }: AppLayoutProps) {
                     ))}
                     {aiChatMutation.isPending && (
                       <div className="flex gap-3">
-                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center">
+                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-r from-green-500 to-blue-500 text-white flex items-center justify-center">
                           <Bot className="h-4 w-4" />
                         </div>
                         <div className="flex-1">
-                          <div className="inline-block px-4 py-2 rounded-lg bg-slate-100 border border-slate-200 rounded-bl-none">
+                          <div className="inline-block px-4 py-3 rounded-lg bg-gradient-to-r from-slate-50 to-blue-50 border border-slate-200 rounded-bl-none">
                             <div className="flex items-center gap-2">
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                              <span className="text-sm text-slate-600">AI is thinking...</span>
+                              <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                              <span className="text-sm text-slate-700">AI is analyzing your data and generating insights...</span>
+                            </div>
+                            <div className="flex items-center gap-1 mt-2">
+                              <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />
+                              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }} />
+                              <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }} />
+                              <span className="text-xs text-slate-500 ml-2">Processing with GPT-4o</span>
                             </div>
                           </div>
                         </div>
@@ -276,34 +308,50 @@ export default function AppLayout({ children }: AppLayoutProps) {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setCurrentMessage("How do I calculate pricing with VAT?")}
+                      onClick={() => setCurrentMessage("Analyze my hotel portfolio and pricing performance")}
                       className="text-xs h-7 px-3 bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
                     >
-                      💰 Pricing Help
+                      🏨 Hotel Analysis
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setCurrentMessage("Show me my dashboard analytics")}
+                      onClick={() => setCurrentMessage("Show me pricing optimization recommendations for my calculations")}
                       className="text-xs h-7 px-3 bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
                     >
-                      📊 Analytics
+                      💰 Pricing Optimization
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setCurrentMessage("How do I export my calculations?")}
+                      onClick={() => setCurrentMessage("What are the latest market trends for luxury hotels?")}
                       className="text-xs h-7 px-3 bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100"
                     >
-                      📄 Export Guide
+                      📊 Market Trends
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setCurrentMessage("Help me upload documents for OCR analysis")}
+                      onClick={() => setCurrentMessage("Help me understand VAT calculations and profit margins")}
                       className="text-xs h-7 px-3 bg-orange-50 border-orange-200 text-orange-700 hover:bg-orange-100"
                     >
-                      🔍 OCR Help
+                      📈 Financial Analysis
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentMessage("Compare my hotels with industry benchmarks")}
+                      className="text-xs h-7 px-3 bg-red-50 border-red-200 text-red-700 hover:bg-red-100"
+                    >
+                      🎯 Competitive Analysis
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentMessage("What's the performance summary of my platform usage?")}
+                      className="text-xs h-7 px-3 bg-teal-50 border-teal-200 text-teal-700 hover:bg-teal-100"
+                    >
+                      📋 Platform Summary
                     </Button>
                   </div>
                 </div>
@@ -312,17 +360,17 @@ export default function AppLayout({ children }: AppLayoutProps) {
                 <div className="border-t border-gray-200 pt-4">
                   <div className="flex gap-2">
                     <Input
-                      placeholder="Ask me anything about your hotel pricing platform..."
+                      placeholder="Ask me about your hotels, pricing calculations, market analysis, or any business questions..."
                       value={currentMessage}
                       onChange={(e) => setCurrentMessage(e.target.value)}
                       onKeyPress={handleKeyPress}
                       disabled={aiChatMutation.isPending}
-                      className="flex-1 bg-white border-gray-200 focus:border-blue-400 focus:ring-blue-400/20"
+                      className="flex-1 bg-white border-gray-200 focus:border-blue-400 focus:ring-blue-400/20 h-12 text-sm"
                     />
                     <Button
                       onClick={handleSendMessage}
                       disabled={!currentMessage.trim() || aiChatMutation.isPending}
-                      className="px-3 bg-blue-500 hover:bg-blue-600"
+                      className="px-4 h-12 bg-gradient-to-r from-blue-500 to-green-500 hover:from-blue-600 hover:to-green-600 text-white"
                     >
                       {aiChatMutation.isPending ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -331,11 +379,14 @@ export default function AppLayout({ children }: AppLayoutProps) {
                       )}
                     </Button>
                   </div>
-                  <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
-                    <span>Press Enter to send, Shift+Enter for new line</span>
+                  <div className="flex items-center justify-between mt-3 text-xs text-gray-500">
+                    <div className="flex items-center gap-4">
+                      <span>💡 Press Enter to send • Shift+Enter for new line</span>
+                      <span className="text-blue-600">🧠 AI has access to all your data</span>
+                    </div>
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                      <span>AI Ready</span>
+                      <span className="text-green-600 font-medium">GPT-4o Ready</span>
                     </div>
                   </div>
                 </div>
