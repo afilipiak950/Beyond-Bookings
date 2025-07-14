@@ -23,7 +23,6 @@ import {
   Database,
   Zap
 } from "lucide-react";
-import beyondBookingsLogo from "@assets/bc Logo NEU Slogan_1752244229726.png";
 
 interface SidebarProps {
   className?: string;
@@ -76,14 +75,6 @@ const navigation = [
     gradient: "from-green-500 to-emerald-500",
   },
   {
-    name: "User Management",
-    href: "/user-management",
-    icon: Users,
-    description: "Manage platform users",
-    gradient: "from-red-500 to-pink-500",
-    adminOnly: true,
-  },
-  {
     name: "Intelligence Reports",
     href: "/reports",
     icon: BarChart3,
@@ -125,13 +116,13 @@ export default function AppSidebar({ className }: SidebarProps) {
       <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-green-500/5 pointer-events-none" />
       
       {/* Ultra-Modern Header */}
-      <div className="flex items-center justify-center h-16 px-2 glass-nav animate-slideInUp relative z-10">
+      <div className="flex items-center justify-between h-16 px-4 glass-nav animate-slideInUp relative z-10">
         {!isCollapsed && (
-          <div className="flex items-center justify-center w-full animate-scaleIn">
+          <div className="flex items-center space-x-3 animate-scaleIn">
             <img 
-              src={beyondBookingsLogo} 
+              src="/attached_assets/bc Logo NEU Slogan_1752244229726.png" 
               alt="Beyond Bookings Logo" 
-              className="w-full h-auto max-h-12 object-contain"
+              className="h-12 w-auto object-contain"
             />
           </div>
         )}
@@ -142,11 +133,6 @@ export default function AppSidebar({ className }: SidebarProps) {
         {navigation.map((item, index) => {
           const Icon = item.icon;
           const isActive = location === item.href;
-          
-          // Filter admin-only items for non-admin users
-          if (item.adminOnly && (!user || user.role !== 'admin')) {
-            return null;
-          }
           
           return (
             <div
