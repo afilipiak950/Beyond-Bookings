@@ -119,11 +119,12 @@ export default function AppSidebar({ className }: SidebarProps) {
       <div className="flex items-center justify-between h-16 px-4 glass-nav animate-slideInUp relative z-10">
         {!isCollapsed && (
           <div className="flex items-center space-x-3 animate-scaleIn">
-            <img 
-              src="/attached_assets/bc Logo NEU Slogan_1752244229726.png" 
-              alt="Beyond Bookings Logo" 
-              className="h-12 w-auto object-contain"
-            />
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-green-500 rounded-xl flex items-center justify-center animate-breathe shadow-lg">
+              <FileText className="h-5 w-5 text-white" />
+            </div>
+            <div className="flex flex-col">
+              <h1 className="text-base font-bold gradient-text">Beyond Bookings</h1>
+            </div>
           </div>
         )}
       </div>

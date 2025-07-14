@@ -377,55 +377,44 @@ export default function OCRAnalyzer() {
 
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-50 via-white to-blue-50 rounded-2xl opacity-60"></div>
-            <Card className="relative glass-card border-blue-200/30 rounded-2xl shadow-2xl">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Files</CardTitle>
-                <FileSpreadsheet className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{analysesData.length}</div>
-                <p className="text-xs text-muted-foreground">Files analyzed</p>
-              </CardContent>
-            </Card>
-          </div>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Files</CardTitle>
+              <FileSpreadsheet className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{analysesData.length}</div>
+              <p className="text-xs text-muted-foreground">Files analyzed</p>
+            </CardContent>
+          </Card>
 
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-green-50 via-white to-green-50 rounded-2xl opacity-60"></div>
-            <Card className="relative glass-card border-green-200/30 rounded-2xl shadow-2xl">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Completed</CardTitle>
-                <CheckCircle className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {analysesData.filter(a => a.insights).length}
-                </div>
-                <p className="text-xs text-muted-foreground">Successfully processed</p>
-              </CardContent>
-            </Card>
-          </div>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Completed</CardTitle>
+              <CheckCircle className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {analysesData.filter(a => a.insights).length}
+              </div>
+              <p className="text-xs text-muted-foreground">Successfully processed</p>
+            </CardContent>
+          </Card>
 
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-yellow-50 via-white to-yellow-50 rounded-2xl opacity-60"></div>
-            <Card className="relative glass-card border-yellow-200/30 rounded-2xl shadow-2xl">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Processing</CardTitle>
-                <Clock className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {analysesData.filter(a => !a.insights).length}
-                </div>
-                <p className="text-xs text-muted-foreground">In progress</p>
-              </CardContent>
-            </Card>
-          </div>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Processing</CardTitle>
+              <Clock className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {analysesData.filter(a => !a.insights).length}
+              </div>
+              <p className="text-xs text-muted-foreground">In progress</p>
+            </CardContent>
+          </Card>
 
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-50 via-white to-purple-50 rounded-2xl opacity-60"></div>
-            <Card className="relative glass-card border-purple-200/30 rounded-2xl shadow-2xl">
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Avg. Processing</CardTitle>
               <BarChart3 className="h-4 w-4 text-muted-foreground" />
@@ -441,22 +430,19 @@ export default function OCRAnalyzer() {
             </CardContent>
           </Card>
         </div>
-      </div>
 
         {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* File Upload and List */}
           <div className="lg:col-span-1 space-y-6">
             {/* Upload Area */}
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-indigo-50 via-white to-indigo-50 rounded-2xl opacity-60"></div>
-              <Card className="relative glass-card border-indigo-200/30 rounded-2xl shadow-2xl">
-                <CardHeader>
-                  <CardTitle>Upload Excel Files</CardTitle>
-                  <CardDescription>
-                    Drop your Excel files here for OCR analysis
-                  </CardDescription>
-                </CardHeader>
+            <Card>
+              <CardHeader>
+                <CardTitle>Upload Excel Files</CardTitle>
+                <CardDescription>
+                  Drop your Excel files here for OCR analysis
+                </CardDescription>
+              </CardHeader>
               <CardContent>
                 <div
                   {...getRootProps()}
@@ -487,12 +473,9 @@ export default function OCRAnalyzer() {
                 )}
               </CardContent>
             </Card>
-          </div>
 
             {/* Files List */}
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-teal-50 via-white to-teal-50 rounded-2xl opacity-60"></div>
-              <Card className="relative glass-card border-teal-200/30 rounded-2xl shadow-2xl">
+            <Card>
               <CardHeader>
                 <CardTitle>Recent Files</CardTitle>
                 <CardDescription>
@@ -560,13 +543,10 @@ export default function OCRAnalyzer() {
               </CardContent>
             </Card>
           </div>
-        </div>
 
           {/* Analysis Results */}
           <div className="lg:col-span-2">
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-orange-50 via-white to-orange-50 rounded-2xl opacity-60"></div>
-              <Card className="relative glass-card border-orange-200/30 rounded-2xl shadow-2xl h-full">
+            <Card className="h-full">
               <CardHeader>
                 <CardTitle>Analysis Results</CardTitle>
                 <CardDescription>
@@ -717,7 +697,6 @@ export default function OCRAnalyzer() {
           </div>
         </div>
       </div>
-    </div>
     </AppLayout>
   );
 }
