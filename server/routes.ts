@@ -2170,28 +2170,44 @@ Format your response in a clear, well-structured manner with bullet points where
         combinedContent = combinedContent.substring(0, maxCombinedLength) + '\n\n... [Additional documents truncated for context limit]';
       }
       
-      const analysisPrompt = `You are an expert business intelligence analyst. Analyze the following collection of documents and provide comprehensive insights based on the user's query.
+      const analysisPrompt = `You are an expert business intelligence analyst. Analyze the following collection of documents and provide a comprehensive, structured response to the user's query.
 
 User Query: "${query}"
 
 Document Collection (${documentsWithText} documents):
 ${combinedContent}
 
-Please provide a comprehensive analysis that:
+IMPORTANT INSTRUCTIONS:
+1. Be EXTREMELY THOROUGH and COMPLETE in your analysis
+2. If the user asks for a list (like "all hotels"), provide a COMPLETE, detailed list with ALL items found
+3. Extract and organize ALL relevant data points, not just examples
+4. Include specific details like names, numbers, dates, locations, prices, etc.
+5. Structure your response clearly with headers and bullet points
+6. Reference specific document names when citing data
 
-1. DIRECTLY ANSWERS the user's specific question
-2. Identifies patterns, trends, and key insights across all documents
-3. Highlights relevant business decisions and their impacts
-4. Provides actionable recommendations based on the data
-5. References specific documents where evidence was found
+RESPONSE STRUCTURE:
+Use this exact format for your response:
 
-Structure your response as detailed analysis with:
-- Clear findings that directly address the user's query
-- Supporting evidence from the documents
-- Strategic insights and recommendations
-- Key patterns or trends identified
+### DIRECT ANSWER TO QUERY
+[Provide a complete, detailed answer to the specific question asked]
 
-Focus on being thorough, factual, and business-oriented. Cite specific documents when referencing data points.`;
+### COMPLETE DATA EXTRACTION
+[If asking for a list, provide the COMPLETE list with all items found]
+[Include all relevant details for each item: names, locations, prices, dates, etc.]
+
+### KEY FINDINGS & PATTERNS
+[Identify important patterns, trends, and insights across documents]
+
+### DETAILED BREAKDOWN BY DOCUMENT
+[Organize findings by source documents with specific references]
+
+### STRATEGIC INSIGHTS & RECOMMENDATIONS
+[Provide actionable business insights and recommendations]
+
+### STATISTICAL SUMMARY
+[Provide relevant numbers, totals, averages, ranges where applicable]
+
+Remember: Be comprehensive, not selective. If the user asks for "all hotels" or "all X", they want EVERY single item you can find, not just examples. Extract and list everything systematically.`;
 
       console.log('Sending analytics request to OpenAI...');
       
@@ -2201,15 +2217,15 @@ Focus on being thorough, factual, and business-oriented. Cite specific documents
         messages: [
           {
             role: "system",
-            content: "You are an expert business analyst specializing in document intelligence and strategic insights. Provide thorough, fact-based analysis with actionable recommendations."
+            content: "You are an expert business intelligence analyst with exceptional data extraction capabilities. When users ask for lists or comprehensive data, you MUST extract and present ALL relevant information found in the documents, not just examples. Be systematic, thorough, and complete. Organize data clearly with proper structure and include all specific details like names, numbers, dates, locations, and metrics. Your goal is to provide the most comprehensive and useful analysis possible."
           },
           {
             role: "user",
             content: analysisPrompt
           }
         ],
-        max_tokens: 1500,
-        temperature: 0.3 // Lower temperature for more factual analysis
+        max_tokens: 3000,
+        temperature: 0.1 // Very low temperature for maximum factual accuracy
       });
 
       const analysisResult = completion.choices[0].message.content;
