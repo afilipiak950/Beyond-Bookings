@@ -2083,6 +2083,12 @@ Format your response in a clear, well-structured manner with bullet points where
       
       console.log(`AI Analytics Query from user ${userId}:`, query);
       
+      // Check if this is a city/location query
+      const isLocationQuery = query.toLowerCase().includes('city') || 
+                            query.toLowerCase().includes('stadt') || 
+                            query.toLowerCase().includes('location') || 
+                            query.toLowerCase().includes('ort');
+      
       // Get all document analyses for this user
       const analyses = await db.query.documentAnalyses.findMany({
         where: eq(documentAnalyses.userId, userId),
@@ -2157,6 +2163,173 @@ Format your response in a clear, well-structured manner with bullet points where
       const openai = new OpenAI.default({
         apiKey: process.env.OPENAI_API_KEY,
       });
+
+      // Enhanced processing for location queries
+      if (isLocationQuery) {
+        console.log('=== LOCATION QUERY DETECTED ===');
+        console.log(`Processing ${documentsWithText} documents for location analysis`);
+        
+        // Step 1: Extract ALL hotel names from both content and filenames
+        const hotelExtractionPrompt = `Extract ALL hotel names from the following documents and filenames. Look in both the document content AND the filename.
+        
+        Document Collection (${documentsWithText} documents):
+        ${allDocumentTexts.map(doc => `=== DOCUMENT: ${doc.fileName} ===\nCONTENT: ${doc.content}\n`).join('\n\n')}
+        
+        IMPORTANT: Return ONLY a clean JSON array of unique hotel names. No explanations. Format: ["Hotel Name 1", "Hotel Name 2"]`;
+
+        console.log('Step 1: Extracting hotel names from all documents...');
+        const hotelExtraction = await openai.chat.completions.create({
+          model: "gpt-4o",
+          messages: [
+            {
+              role: "system",
+              content: "You are an expert at extracting hotel names from documents. Return only a valid JSON array of hotel names. No additional text."
+            },
+            {
+              role: "user",
+              content: hotelExtractionPrompt
+            }
+          ],
+          max_tokens: 2000,
+          temperature: 0.1
+        });
+
+        let hotelNames = [];
+        try {
+          const extractedText = hotelExtraction.choices[0].message.content.trim();
+          console.log('Raw extraction response:', extractedText);
+          
+          // Clean the response to extract just the JSON array
+          const jsonMatch = extractedText.match(/\[.*\]/s);
+          if (jsonMatch) {
+            hotelNames = JSON.parse(jsonMatch[0]);
+            console.log(`Successfully extracted ${hotelNames.length} hotel names`);
+          } else {
+            console.log('No JSON array found in extraction response');
+          }
+        } catch (error) {
+          console.error('Error parsing hotel names:', error);
+        }
+
+        // Step 2: Perform AI city lookup for each hotel
+        const hotelCityMappings = [];
+        const batchSize = 8; // Process hotels in smaller batches
+        
+        console.log(`Step 2: Performing city lookup for ${hotelNames.length} hotels in batches of ${batchSize}`);
+        
+        for (let i = 0; i < hotelNames.length; i += batchSize) {
+          const batch = hotelNames.slice(i, i + batchSize);
+          console.log(`Processing batch ${Math.floor(i/batchSize) + 1}: ${batch.join(', ')}`);
+          
+          const cityLookupPrompt = `For each of the following hotels, determine the city where they are located. Use your knowledge of German hotels and locations.
+          
+          Hotels: ${batch.join(', ')}
+          
+          Return ONLY a JSON object with hotel names as keys and cities as values. Format: {"Hotel Name": "City, Germany"}`;
+
+          try {
+            const cityLookup = await openai.chat.completions.create({
+              model: "gpt-4o",
+              messages: [
+                {
+                  role: "system",
+                  content: "You are an expert on German hotels and their locations. Return only valid JSON with hotel-city mappings."
+                },
+                {
+                  role: "user",
+                  content: cityLookupPrompt
+                }
+              ],
+              max_tokens: 1000,
+              temperature: 0.1
+            });
+
+            const cityResponse = cityLookup.choices[0].message.content.trim();
+            console.log(`City lookup response for batch ${Math.floor(i/batchSize) + 1}:`, cityResponse);
+            
+            const jsonMatch = cityResponse.match(/\{.*\}/s);
+            if (jsonMatch) {
+              const cityData = JSON.parse(jsonMatch[0]);
+              Object.entries(cityData).forEach(([hotel, city]) => {
+                hotelCityMappings.push({ hotel, city });
+              });
+              console.log(`Added ${Object.keys(cityData).length} hotel-city mappings`);
+            }
+          } catch (error) {
+            console.error(`Error in city lookup for batch ${Math.floor(i/batchSize) + 1}:`, error);
+          }
+        }
+
+        console.log(`Step 3: Completed city lookup for ${hotelCityMappings.length} hotels`);
+        console.log('All hotel-city mappings:', hotelCityMappings);
+
+        // Step 3: Create comprehensive location analysis
+        const locationAnalysisPrompt = `Provide a comprehensive hotel location analysis based on the following data:
+        
+        HOTEL-CITY MAPPINGS:
+        ${hotelCityMappings.map(mapping => `• ${mapping.hotel}: ${mapping.city}`).join('\n')}
+        
+        ANALYSIS CONTEXT:
+        - Total Documents Analyzed: ${documentsWithText}
+        - Total Hotels Found: ${hotelNames.length}
+        - Successfully Located: ${hotelCityMappings.length}
+        - User Query: "${query}"
+        
+        PROVIDE DETAILED ANALYSIS INCLUDING:
+        1. **COMPLETE HOTEL LIST WITH CITIES** - Every hotel with its location
+        2. **STATISTICAL BREAKDOWN** - Hotels per city, regional distribution
+        3. **GEOGRAPHIC INSIGHTS** - Patterns in hotel locations
+        4. **DOCUMENT COVERAGE EXPLANATION** - Why ${documentsWithText} documents ≠ ${hotelNames.length} hotels
+        5. **CITY-WISE ANALYSIS** - Detailed breakdown by location
+        
+        Format with clear headers and bullet points. Be comprehensive and detailed.`;
+
+        console.log('Step 4: Generating comprehensive location analysis...');
+        const locationAnalysis = await openai.chat.completions.create({
+          model: "gpt-4o",
+          messages: [
+            {
+              role: "system",
+              content: "You are an expert business intelligence analyst specializing in hotel location analysis. Provide comprehensive, well-structured analysis."
+            },
+            {
+              role: "user",
+              content: locationAnalysisPrompt
+            }
+          ],
+          max_tokens: 3000,
+          temperature: 0.1
+        });
+
+        const analysisResult = locationAnalysis.choices[0].message.content;
+        
+        console.log('=== LOCATION ANALYSIS COMPLETED ===');
+        console.log(`Final Results: ${documentsWithText} documents → ${hotelNames.length} hotels → ${hotelCityMappings.length} located`);
+        
+        return res.json({
+          analysis: analysisResult,
+          documentsAnalyzed: documentsWithText,
+          totalDocuments: analyses.length,
+          hotelsFound: hotelNames.length,
+          hotelCityMappings: hotelCityMappings,
+          keyInsights: [
+            `${hotelNames.length} unique hotels identified across ${documentsWithText} documents`, 
+            `${hotelCityMappings.length} hotel locations successfully determined`,
+            `Documents contain pricing sheets and data for same hotels with different dates/versions`
+          ],
+          referencedDocuments: allDocumentTexts.slice(0, 10).map(doc => ({
+            fileName: doc.fileName,
+            relevance: `Contains hotel data for location analysis`
+          })),
+          queryProcessedAt: new Date().toISOString(),
+          analysisType: 'location_enhanced',
+          debugInfo: {
+            hotelExtractionSuccess: hotelNames.length > 0,
+            cityLookupSuccess: hotelCityMappings.length > 0,
+            processingSteps: ['hotel_extraction', 'city_lookup', 'comprehensive_analysis']
+          }
+        });
+      }
       
       // Create comprehensive analysis prompt with smart truncation
       let combinedContent = allDocumentTexts.map(doc => 

@@ -30,7 +30,8 @@ import {
   History,
   Lightbulb,
   TrendingDown,
-  AlertTriangle
+  AlertTriangle,
+  MapPin
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -98,6 +99,12 @@ export default function DocumentAnalysis() {
 
   // Analytics query suggestions
   const analyticsQuerySuggestions = [
+    {
+      title: "Alle Hotels mit Städten",
+      query: "Liste alle Hotels mit ihren jeweiligen Städten und Standorten auf",
+      description: "Vollständige Hotelübersicht mit Standortanalyse",
+      icon: <MapPin className="h-4 w-4 text-blue-600" />
+    },
     {
       title: "Preisänderungen analysieren",
       query: "Welche Entscheidungen wurden bezüglich Preisänderungen getroffen und wie haben sie sich auf die Profitabilität ausgewirkt?",
