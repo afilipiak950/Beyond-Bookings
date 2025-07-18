@@ -6,10 +6,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
-import { Calculator, TrendingUp, Users, FileText, DollarSign, Building2, Sparkles, BarChart3, ArrowRight, Zap, Brain } from "lucide-react";
+import { Calculator, TrendingUp, Users, FileText, DollarSign, Building2, Sparkles, BarChart3, ArrowRight, Zap, Brain, Upload } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 
 export default function Dashboard() {
   const { toast } = useToast();
@@ -302,44 +302,57 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  <a
-                    href="/pricing-agent"
+                  <Link
+                    href="/document-analysis"
                     className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                   >
-                    <Calculator className="h-5 w-5 text-primary" />
+                    <Upload className="h-5 w-5 text-primary" />
                     <div>
-                      <p className="font-medium">New Pricing Calculation</p>
+                      <p className="font-medium">Upload Documents</p>
                       <p className="text-xs text-muted-foreground">
-                        Create a new hotel pricing analysis
+                        Upload and analyze new document collections
                       </p>
                     </div>
-                  </a>
+                  </Link>
                   
-                  <a
-                    href="/customer-management"
+                  <Link
+                    href="/document-analysis"
                     className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                   >
-                    <Users className="h-5 w-5 text-blue-500" />
+                    <Brain className="h-5 w-5 text-blue-500" />
                     <div>
-                      <p className="font-medium">Manage Customers</p>
+                      <p className="font-medium">AI Analytics</p>
                       <p className="text-xs text-muted-foreground">
-                        View and manage your hotel clients
+                        Ask intelligent questions about your documents
                       </p>
                     </div>
-                  </a>
+                  </Link>
                   
-                  <a
-                    href="/reports"
+                  <Link
+                    href="/pricing-workflow"
                     className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                   >
-                    <FileText className="h-5 w-5 text-accent" />
+                    <Calculator className="h-5 w-5 text-green-500" />
                     <div>
-                      <p className="font-medium">Generate Reports</p>
+                      <p className="font-medium">Pricing Workflow</p>
                       <p className="text-xs text-muted-foreground">
-                        Export calculations to PDF or Excel
+                        Create hotel pricing calculations and presentations
                       </p>
                     </div>
-                  </a>
+                  </Link>
+                  
+                  <Link
+                    href="/customer-request"
+                    className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                  >
+                    <Users className="h-5 w-5 text-orange-500" />
+                    <div>
+                      <p className="font-medium">Customer Requests</p>
+                      <p className="text-xs text-muted-foreground">
+                        Manage hotel financing requests and inquiries
+                      </p>
+                    </div>
+                  </Link>
                 </div>
               </CardContent>
             </Card>
