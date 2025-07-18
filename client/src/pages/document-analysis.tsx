@@ -128,6 +128,18 @@ export default function DocumentAnalysis() {
       query: "Welche strategischen Entscheidungen wurden dokumentiert und wie haben sie das Geschäft beeinflusst?",
       description: "Extrahiert wichtige Geschäftsstrategien",
       icon: <Brain className="h-4 w-4 text-purple-600" />
+    },
+    {
+      title: "Alle Preise analysieren",
+      query: "Erstelle eine vollständige Preisanalyse aller Hotels mit Durchschnittspreisen und Trends",
+      description: "Comprehensive Preisanalyse mit Berechnungen",
+      icon: <DollarSign className="h-4 w-4 text-green-600" />
+    },
+    {
+      title: "Unternehmen und Kontakte",
+      query: "Liste alle Unternehmen und Kontaktinformationen aus den Dokumenten auf",
+      description: "Vollständige Kontaktdatenbank",
+      icon: <FileText className="h-4 w-4 text-orange-600" />
     }
   ];
 

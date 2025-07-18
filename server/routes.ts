@@ -2083,11 +2083,67 @@ Format your response in a clear, well-structured manner with bullet points where
       
       console.log(`AI Analytics Query from user ${userId}:`, query);
       
-      // Check if this is a city/location query
-      const isLocationQuery = query.toLowerCase().includes('city') || 
-                            query.toLowerCase().includes('stadt') || 
-                            query.toLowerCase().includes('location') || 
-                            query.toLowerCase().includes('ort');
+      // Analyze the query to determine what processing steps are needed
+      const queryAnalysisPrompt = `Analyze this user query and determine what processing steps are needed:
+
+Query: "${query}"
+
+Return a JSON object with the following structure:
+{
+  "queryType": "location|pricing|analysis|list|comparison|statistics",
+  "needsLocationLookup": true/false,
+  "needsDetailedExtraction": true/false,
+  "needsCalculations": true/false,
+  "needsComparison": true/false,
+  "extractionFocus": ["hotels", "prices", "dates", "companies", "locations", "contracts"],
+  "analysisDepth": "basic|detailed|comprehensive",
+  "expectedOutput": "Brief description of what the user expects"
+}`;
+
+      const OpenAI = await import('openai');
+      const openai = new OpenAI.default({
+        apiKey: process.env.OPENAI_API_KEY,
+      });
+
+      // Analyze the query first
+      const queryAnalysis = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          {
+            role: "system",
+            content: "You are an expert query analyzer. Return only valid JSON with the exact structure requested."
+          },
+          {
+            role: "user",
+            content: queryAnalysisPrompt
+          }
+        ],
+        max_tokens: 500,
+        temperature: 0.1
+      });
+
+      let analysisConfig = {
+        queryType: "analysis",
+        needsLocationLookup: false,
+        needsDetailedExtraction: true,
+        needsCalculations: false,
+        needsComparison: false,
+        extractionFocus: ["hotels", "prices"],
+        analysisDepth: "detailed",
+        expectedOutput: "Comprehensive analysis of documents"
+      };
+
+      try {
+        const configResponse = queryAnalysis.choices[0].message.content.trim();
+        const jsonMatch = configResponse.match(/\{.*\}/s);
+        if (jsonMatch) {
+          analysisConfig = { ...analysisConfig, ...JSON.parse(jsonMatch[0]) };
+        }
+      } catch (error) {
+        console.error('Error parsing query analysis:', error);
+      }
+
+      console.log('Query analysis configuration:', analysisConfig);
       
       // Get all document analyses for this user
       const analyses = await db.query.documentAnalyses.findMany({
@@ -2158,264 +2214,175 @@ Format your response in a clear, well-structured manner with bullet points where
         });
       }
       
-      // Initialize OpenAI for deep analysis
-      const OpenAI = await import('openai');
-      const openai = new OpenAI.default({
-        apiKey: process.env.OPENAI_API_KEY,
-      });
+      // Adaptive processing based on query analysis
+      console.log(`=== ADAPTIVE QUERY PROCESSING ===`);
+      console.log(`Query Type: ${analysisConfig.queryType}`);
+      console.log(`Analysis Depth: ${analysisConfig.analysisDepth}`);
+      console.log(`Extraction Focus: ${analysisConfig.extractionFocus.join(', ')}`);
+      console.log(`Processing ${documentsWithText} documents`);
 
-      // Enhanced processing for location queries
-      if (isLocationQuery) {
-        console.log('=== LOCATION QUERY DETECTED ===');
-        console.log(`Processing ${documentsWithText} documents for location analysis`);
+      let extractedData = [];
+      let processingSteps = [];
+      let enhancedResults = {};
+
+      // Step 1: Smart Data Extraction based on query focus
+      if (analysisConfig.needsDetailedExtraction) {
+        processingSteps.push('detailed_extraction');
         
-        // Step 1: Extract ALL hotel names from both content and filenames
-        const hotelExtractionPrompt = `Extract ALL hotel names from the following documents and filenames. Look in both the document content AND the filename.
+        const extractionFocusText = analysisConfig.extractionFocus.join(', ');
+        const dataExtractionPrompt = `Extract ALL ${extractionFocusText} from the following documents based on the user query: "${query}"
         
         Document Collection (${documentsWithText} documents):
         ${allDocumentTexts.map(doc => `=== DOCUMENT: ${doc.fileName} ===\nCONTENT: ${doc.content}\n`).join('\n\n')}
         
-        IMPORTANT: Return ONLY a clean JSON array of unique hotel names. No explanations. Format: ["Hotel Name 1", "Hotel Name 2"]`;
+        Focus Areas: ${extractionFocusText}
+        Expected Output: ${analysisConfig.expectedOutput}
+        
+        Return ONLY a clean JSON array of unique items found. Format: ["Item 1", "Item 2"]`;
 
-        console.log('Step 1: Extracting hotel names from all documents...');
-        const hotelExtraction = await openai.chat.completions.create({
+        console.log('Step 1: Performing detailed data extraction...');
+        const dataExtraction = await openai.chat.completions.create({
           model: "gpt-4o",
           messages: [
             {
               role: "system",
-              content: "You are an expert at extracting hotel names from documents. Return only a valid JSON array of hotel names. No additional text."
+              content: "You are an expert data extraction specialist. Return only valid JSON arrays with unique items."
             },
             {
               role: "user",
-              content: hotelExtractionPrompt
+              content: dataExtractionPrompt
             }
           ],
           max_tokens: 2000,
           temperature: 0.1
         });
 
-        let hotelNames = [];
         try {
-          const extractedText = hotelExtraction.choices[0].message.content.trim();
+          const extractedText = dataExtraction.choices[0].message.content.trim();
           console.log('Raw extraction response:', extractedText);
           
-          // Clean the response to extract just the JSON array
           const jsonMatch = extractedText.match(/\[.*\]/s);
           if (jsonMatch) {
-            hotelNames = JSON.parse(jsonMatch[0]);
-            console.log(`Successfully extracted ${hotelNames.length} hotel names`);
-          } else {
-            console.log('No JSON array found in extraction response');
+            extractedData = JSON.parse(jsonMatch[0]);
+            console.log(`Successfully extracted ${extractedData.length} items`);
           }
         } catch (error) {
-          console.error('Error parsing hotel names:', error);
+          console.error('Error parsing extracted data:', error);
         }
+      }
 
-        // Step 2: Perform AI city lookup for each hotel
-        const hotelCityMappings = [];
-        const batchSize = 8; // Process hotels in smaller batches
+      // Step 2: Location Lookup (if needed)
+      if (analysisConfig.needsLocationLookup && extractedData.length > 0) {
+        processingSteps.push('location_lookup');
         
-        console.log(`Step 2: Performing city lookup for ${hotelNames.length} hotels in batches of ${batchSize}`);
+        const locationMappings = [];
+        const batchSize = 8;
         
-        for (let i = 0; i < hotelNames.length; i += batchSize) {
-          const batch = hotelNames.slice(i, i + batchSize);
+        console.log(`Step 2: Performing location lookup for ${extractedData.length} items in batches of ${batchSize}`);
+        
+        for (let i = 0; i < extractedData.length; i += batchSize) {
+          const batch = extractedData.slice(i, i + batchSize);
           console.log(`Processing batch ${Math.floor(i/batchSize) + 1}: ${batch.join(', ')}`);
           
-          const cityLookupPrompt = `For each of the following hotels, determine the city where they are located. Use your knowledge of German hotels and locations.
+          const locationLookupPrompt = `For each of the following items, determine their location/city. Use your knowledge database.
           
-          Hotels: ${batch.join(', ')}
+          Items: ${batch.join(', ')}
           
-          Return ONLY a JSON object with hotel names as keys and cities as values. Format: {"Hotel Name": "City, Germany"}`;
+          Return ONLY a JSON object with item names as keys and locations as values. Format: {"Item": "Location"}`;
 
           try {
-            const cityLookup = await openai.chat.completions.create({
+            const locationLookup = await openai.chat.completions.create({
               model: "gpt-4o",
               messages: [
                 {
                   role: "system",
-                  content: "You are an expert on German hotels and their locations. Return only valid JSON with hotel-city mappings."
+                  content: "You are an expert on German locations and geography. Return only valid JSON with item-location mappings."
                 },
                 {
                   role: "user",
-                  content: cityLookupPrompt
+                  content: locationLookupPrompt
                 }
               ],
               max_tokens: 1000,
               temperature: 0.1
             });
 
-            const cityResponse = cityLookup.choices[0].message.content.trim();
-            console.log(`City lookup response for batch ${Math.floor(i/batchSize) + 1}:`, cityResponse);
+            const locationResponse = locationLookup.choices[0].message.content.trim();
+            console.log(`Location lookup response for batch ${Math.floor(i/batchSize) + 1}:`, locationResponse);
             
-            const jsonMatch = cityResponse.match(/\{.*\}/s);
+            const jsonMatch = locationResponse.match(/\{.*\}/s);
             if (jsonMatch) {
-              const cityData = JSON.parse(jsonMatch[0]);
-              Object.entries(cityData).forEach(([hotel, city]) => {
-                hotelCityMappings.push({ hotel, city });
+              const locationData = JSON.parse(jsonMatch[0]);
+              Object.entries(locationData).forEach(([item, location]) => {
+                locationMappings.push({ item, location });
               });
-              console.log(`Added ${Object.keys(cityData).length} hotel-city mappings`);
+              console.log(`Added ${Object.keys(locationData).length} location mappings`);
             }
           } catch (error) {
-            console.error(`Error in city lookup for batch ${Math.floor(i/batchSize) + 1}:`, error);
+            console.error(`Error in location lookup for batch ${Math.floor(i/batchSize) + 1}:`, error);
           }
         }
 
-        console.log(`Step 3: Completed city lookup for ${hotelCityMappings.length} hotels`);
-        console.log('All hotel-city mappings:', hotelCityMappings);
-
-        // Step 3: Create comprehensive location analysis
-        const locationAnalysisPrompt = `Provide a comprehensive hotel location analysis based on the following data:
-        
-        HOTEL-CITY MAPPINGS:
-        ${hotelCityMappings.map(mapping => `• ${mapping.hotel}: ${mapping.city}`).join('\n')}
-        
-        ANALYSIS CONTEXT:
-        - Total Documents Analyzed: ${documentsWithText}
-        - Total Hotels Found: ${hotelNames.length}
-        - Successfully Located: ${hotelCityMappings.length}
-        - User Query: "${query}"
-        
-        PROVIDE DETAILED ANALYSIS INCLUDING:
-        1. **COMPLETE HOTEL LIST WITH CITIES** - Every hotel with its location
-        2. **STATISTICAL BREAKDOWN** - Hotels per city, regional distribution
-        3. **GEOGRAPHIC INSIGHTS** - Patterns in hotel locations
-        4. **DOCUMENT COVERAGE EXPLANATION** - Why ${documentsWithText} documents ≠ ${hotelNames.length} hotels
-        5. **CITY-WISE ANALYSIS** - Detailed breakdown by location
-        
-        Format with clear headers and bullet points. Be comprehensive and detailed.`;
-
-        console.log('Step 4: Generating comprehensive location analysis...');
-        const locationAnalysis = await openai.chat.completions.create({
-          model: "gpt-4o",
-          messages: [
-            {
-              role: "system",
-              content: "You are an expert business intelligence analyst specializing in hotel location analysis. Provide comprehensive, well-structured analysis."
-            },
-            {
-              role: "user",
-              content: locationAnalysisPrompt
-            }
-          ],
-          max_tokens: 3000,
-          temperature: 0.1
-        });
-
-        const analysisResult = locationAnalysis.choices[0].message.content;
-        
-        console.log('=== LOCATION ANALYSIS COMPLETED ===');
-        console.log(`Final Results: ${documentsWithText} documents → ${hotelNames.length} hotels → ${hotelCityMappings.length} located`);
-        
-        return res.json({
-          analysis: analysisResult,
-          documentsAnalyzed: documentsWithText,
-          totalDocuments: analyses.length,
-          hotelsFound: hotelNames.length,
-          hotelCityMappings: hotelCityMappings,
-          keyInsights: [
-            `${hotelNames.length} unique hotels identified across ${documentsWithText} documents`, 
-            `${hotelCityMappings.length} hotel locations successfully determined`,
-            `Documents contain pricing sheets and data for same hotels with different dates/versions`
-          ],
-          referencedDocuments: allDocumentTexts.slice(0, 10).map(doc => ({
-            fileName: doc.fileName,
-            relevance: `Contains hotel data for location analysis`
-          })),
-          queryProcessedAt: new Date().toISOString(),
-          analysisType: 'location_enhanced',
-          debugInfo: {
-            hotelExtractionSuccess: hotelNames.length > 0,
-            cityLookupSuccess: hotelCityMappings.length > 0,
-            processingSteps: ['hotel_extraction', 'city_lookup', 'comprehensive_analysis']
-          }
-        });
+        enhancedResults.locationMappings = locationMappings;
+        console.log(`Completed location lookup for ${locationMappings.length} items`);
       }
-      
-      // Create comprehensive analysis prompt with smart truncation
-      let combinedContent = allDocumentTexts.map(doc => 
-        `\n--- Document: ${doc.fileName} (${doc.fileType}) ---\n${doc.content}`
-      ).join('\n\n');
-      
-      // Additional safety: truncate combined content if still too long
-      const maxCombinedLength = 80000; // Conservative limit for GPT-4o context
-      if (combinedContent.length > maxCombinedLength) {
-        console.log(`Combined content too long (${combinedContent.length} chars), truncating to ${maxCombinedLength}`);
-        combinedContent = combinedContent.substring(0, maxCombinedLength) + '\n\n... [Additional documents truncated for context limit]';
+
+      // Step 3: Calculations (if needed)
+      if (analysisConfig.needsCalculations) {
+        processingSteps.push('calculations');
+        console.log('Step 3: Performing calculations...');
+        
+        // Add calculation logic here based on extracted data
+        enhancedResults.calculations = {
+          totalItems: extractedData.length,
+          averagePerDocument: (extractedData.length / documentsWithText).toFixed(2),
+          itemTypes: analysisConfig.extractionFocus
+        };
       }
+
+      // Step 4: Comprehensive Analysis
+      processingSteps.push('comprehensive_analysis');
       
-      const analysisPrompt = `You are an expert business intelligence analyst. Analyze the following collection of documents and provide a comprehensive, structured response to the user's query.
+      const analysisPrompt = `Provide a comprehensive analysis based on the following data and user query:
 
-User Query: "${query}"
-
-Document Collection (${documentsWithText} documents):
-${combinedContent}
-
-IMPORTANT INSTRUCTIONS:
-1. Be EXTREMELY THOROUGH and COMPLETE in your analysis
-2. If the user asks for a list (like "all hotels"), provide a COMPLETE, detailed list with ALL UNIQUE items found
-3. Extract and organize ALL relevant data points, not just examples
-4. Include specific details like names, numbers, dates, locations, prices, etc.
-5. Structure your response clearly with headers and bullet points
-6. Reference specific document names when citing data
-7. CRITICAL: Explain the difference between total documents analyzed vs. unique items found
-8. Show how many documents reference each hotel (many documents may contain the same hotel with different data)
-9. Clarify that ${documentsWithText} documents were analyzed, but many may contain duplicate hotel references
-10. Count and report BOTH: (a) Total unique hotels found, and (b) Total hotel-document relationships
-11. Provide statistics: Average documents per hotel, which hotels appear most frequently
-
-RESPONSE STRUCTURE:
-Use this exact format for your response:
-
-### DIRECT ANSWER TO QUERY
-[Provide a complete, detailed answer to the specific question asked]
-
-### COMPLETE DATA EXTRACTION
-[If asking for a list, provide the COMPLETE list with all items found]
-[Include all relevant details for each item: names, locations, prices, dates, etc.]
-[For hotels: Show how many different documents reference each hotel]
-
-### DOCUMENT COVERAGE ANALYSIS
-**IMPORTANT CLARIFICATION:**
-- Total Documents Processed: ${documentsWithText}
-- Unique Items Found: [State the actual number of unique hotels/items]
-- Document-to-Item Ratio: [Explain why these numbers differ]
-
-**WHY FEWER UNIQUE ITEMS THAN DOCUMENTS:**
-Many documents are different versions, dates, or pricing sheets for the same hotels. For example:
-- Multiple pricing sheets for the same hotel from different dates
-- Different file versions (copies, updates) containing the same hotel
-- Template files with similar structure but different hotel data
-
-**DOCUMENT REFERENCE COUNT FOR EACH ITEM:**
-[For each hotel, show how many different documents mention it]
-
-### KEY FINDINGS & PATTERNS
-[Identify important patterns, trends, and insights across documents]
-
-### DETAILED BREAKDOWN BY DOCUMENT
-[Organize findings by source documents with specific references]
-
-### STRATEGIC INSIGHTS & RECOMMENDATIONS
-[Provide actionable business insights and recommendations]
-
-### STATISTICAL SUMMARY
-[Provide relevant numbers, totals, averages, ranges where applicable]
-[Show: Total documents analyzed vs. unique items found vs. total references]
-
-Remember: Be comprehensive, not selective. If the user asks for "all hotels" or "all X", they want EVERY single item you can find, not just examples. Extract and list everything systematically.
-
-**SPECIAL ANALYSIS FOR HOTEL QUERIES:**
-Look at the document filenames - many contain hotel names in the filename format like "240607_Hotel Name_Pricing_FinanzierungDritter.xlsm". Use both content AND filenames to identify unique hotels and count how many documents reference each hotel. This will help explain why ${documentsWithText} documents contain fewer unique hotels.`;
-
-      console.log('Sending analytics request to OpenAI...');
+      User Query: "${query}"
+      Query Type: ${analysisConfig.queryType}
+      Analysis Depth: ${analysisConfig.analysisDepth}
       
-      // Use GPT-4o for comprehensive analysis
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+      EXTRACTED DATA:
+      ${extractedData.map(item => `• ${item}`).join('\n')}
+      
+      ${enhancedResults.locationMappings ? 
+        `LOCATION MAPPINGS:
+        ${enhancedResults.locationMappings.map(mapping => `• ${mapping.item}: ${mapping.location}`).join('\n')}` : ''}
+      
+      ${enhancedResults.calculations ? 
+        `CALCULATIONS:
+        - Total Items: ${enhancedResults.calculations.totalItems}
+        - Average Per Document: ${enhancedResults.calculations.averagePerDocument}
+        - Item Types: ${enhancedResults.calculations.itemTypes.join(', ')}` : ''}
+      
+      CONTEXT:
+      - Total Documents Analyzed: ${documentsWithText}
+      - Processing Steps: ${processingSteps.join(' → ')}
+      - Expected Output: ${analysisConfig.expectedOutput}
+      
+      PROVIDE DETAILED ANALYSIS INCLUDING:
+      1. **DIRECT ANSWER** - Complete response to user query
+      2. **COMPREHENSIVE DATA** - All extracted information
+      3. **STATISTICAL ANALYSIS** - Patterns and insights
+      4. **DOCUMENT COVERAGE** - How data is distributed across documents
+      5. **RECOMMENDATIONS** - Actionable insights
+      
+      Format with clear headers and bullet points. Be comprehensive and detailed.`;
+
+      console.log('Step 4: Generating comprehensive analysis...');
+      const finalAnalysis = await openai.chat.completions.create({
+        model: "gpt-4o",
         messages: [
           {
             role: "system",
-            content: "You are an expert business intelligence analyst with exceptional data extraction capabilities. When users ask for lists or comprehensive data, you MUST extract and present ALL relevant information found in the documents, not just examples. Be systematic, thorough, and complete. Organize data clearly with proper structure and include all specific details like names, numbers, dates, locations, and metrics. Your goal is to provide the most comprehensive and useful analysis possible."
+            content: "You are an expert business intelligence analyst. Provide comprehensive, well-structured analysis with actionable insights."
           },
           {
             role: "user",
@@ -2423,48 +2390,44 @@ Look at the document filenames - many contain hotel names in the filename format
           }
         ],
         max_tokens: 3000,
-        temperature: 0.1 // Very low temperature for maximum factual accuracy
+        temperature: 0.1
       });
 
-      const analysisResult = completion.choices[0].message.content;
+      const analysisResult = finalAnalysis.choices[0].message.content;
       
-      // Extract key insights and referenced documents from the analysis
-      const keyInsights = [];
-      const referencedDocuments = [];
+      console.log('=== ADAPTIVE ANALYSIS COMPLETED ===');
+      console.log(`Final Results: ${documentsWithText} documents → ${extractedData.length} items extracted`);
+      console.log('Processing steps:', processingSteps);
       
-      // Simple extraction of insights (look for bullet points or numbered lists)
-      const insightMatches = analysisResult.match(/[•\-\*]\s+(.+?)(?=\n|$)/g);
-      if (insightMatches) {
-        keyInsights.push(...insightMatches.slice(0, 5).map(insight => 
-          insight.replace(/^[•\-\*]\s+/, '').trim()
-        ));
-      }
-      
-      // Find referenced documents
-      allDocumentTexts.forEach(doc => {
-        if (analysisResult.includes(doc.fileName)) {
-          referencedDocuments.push({
-            fileName: doc.fileName,
-            relevance: `Referenced in analysis for insights related to the query`
-          });
-        }
-      });
-      
-      console.log(`Analytics completed: ${documentsWithText} documents analyzed`);
-      console.log(`Document breakdown:`, allDocumentTexts.map(d => ({ fileName: d.fileName, contentLength: d.content.length })));
-      
-      res.json({
+      return res.json({
         analysis: analysisResult,
         documentsAnalyzed: documentsWithText,
         totalDocuments: analyses.length,
-        keyInsights: keyInsights,
-        referencedDocuments: referencedDocuments.slice(0, 10), // Limit to 10 references
+        itemsFound: extractedData.length,
+        extractedData: extractedData,
+        enhancedResults: enhancedResults,
+        analysisConfig: analysisConfig,
+        keyInsights: [
+          `${extractedData.length} unique items identified across ${documentsWithText} documents`, 
+          `Query type: ${analysisConfig.queryType} with ${analysisConfig.analysisDepth} analysis`,
+          `Processing steps: ${processingSteps.join(' → ')}`
+        ],
+        referencedDocuments: allDocumentTexts.slice(0, 10).map(doc => ({
+          fileName: doc.fileName,
+          relevance: `Contains ${analysisConfig.extractionFocus.join(', ')} data for analysis`
+        })),
         queryProcessedAt: new Date().toISOString(),
-        contentAnalyzed: allDocumentTexts.length
+        analysisType: 'adaptive_enhanced',
+        debugInfo: {
+          queryAnalysisSuccess: true,
+          dataExtractionSuccess: extractedData.length > 0,
+          processingSteps: processingSteps,
+          analysisDepth: analysisConfig.analysisDepth
+        }
       });
-      
+
     } catch (error) {
-      console.error("AI Analytics Query error:", error);
+      console.error("Analytics query error:", error);
       res.status(500).json({ 
         message: "Failed to process analytics query. Please try again.",
         error: error.message 
