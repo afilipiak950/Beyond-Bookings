@@ -767,7 +767,7 @@ export default function DocumentAnalysis() {
         query,
         includeAllDocuments: true 
       });
-      return response.json();
+      return response;
     },
     onSuccess: (data) => {
       setAnalyticsResults(data);
@@ -1922,9 +1922,9 @@ export default function DocumentAnalysis() {
                       <span className="bg-gradient-to-r from-cyan-700 to-teal-600 bg-clip-text text-transparent">
                         KI-Analytics Dashboard
                       </span>
-                      <p className="text-sm text-gray-600 font-normal mt-1">
+                      <div className="text-sm text-gray-600 font-normal mt-1">
                         Durchsuchen Sie alle OCR-extrahierten Texte mit intelligenten Abfragen
-                      </p>
+                      </div>
                     </div>
                   </CardTitle>
                 </CardHeader>

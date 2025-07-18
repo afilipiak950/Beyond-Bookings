@@ -2129,9 +2129,9 @@ Format your response in a clear, well-structured manner with bullet points where
         }
         
         if (documentText && documentText.trim().length > 10) {
-          // Truncate very long documents
-          if (documentText.length > 3000) {
-            documentText = documentText.substring(0, 3000) + '... [truncated]';
+          // Truncate very long documents - more aggressive truncation for context limit
+          if (documentText.length > 1500) {
+            documentText = documentText.substring(0, 1500) + '... [truncated]';
           }
           
           allDocumentTexts.push({
@@ -2158,10 +2158,17 @@ Format your response in a clear, well-structured manner with bullet points where
         apiKey: process.env.OPENAI_API_KEY,
       });
       
-      // Create comprehensive analysis prompt
-      const combinedContent = allDocumentTexts.map(doc => 
+      // Create comprehensive analysis prompt with smart truncation
+      let combinedContent = allDocumentTexts.map(doc => 
         `\n--- Document: ${doc.fileName} (${doc.fileType}) ---\n${doc.content}`
       ).join('\n\n');
+      
+      // Additional safety: truncate combined content if still too long
+      const maxCombinedLength = 80000; // Conservative limit for GPT-4o context
+      if (combinedContent.length > maxCombinedLength) {
+        console.log(`Combined content too long (${combinedContent.length} chars), truncating to ${maxCombinedLength}`);
+        combinedContent = combinedContent.substring(0, maxCombinedLength) + '\n\n... [Additional documents truncated for context limit]';
+      }
       
       const analysisPrompt = `You are an expert business intelligence analyst. Analyze the following collection of documents and provide comprehensive insights based on the user's query.
 
@@ -2201,7 +2208,7 @@ Focus on being thorough, factual, and business-oriented. Cite specific documents
             content: analysisPrompt
           }
         ],
-        max_tokens: 2000,
+        max_tokens: 1500,
         temperature: 0.3 // Lower temperature for more factual analysis
       });
 
