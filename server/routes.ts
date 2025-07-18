@@ -2071,6 +2071,185 @@ Format your response in a clear, well-structured manner with bullet points where
     }
   });
 
+  // AI Analytics Query endpoint - Analyzes all OCR extracted texts
+  app.post("/api/ai/analytics-query", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const userId = (req as any).user?.id;
+      const { query, includeAllDocuments } = req.body;
+      
+      if (!query) {
+        return res.status(400).json({ message: "Query is required" });
+      }
+      
+      console.log(`AI Analytics Query from user ${userId}:`, query);
+      
+      // Get all document analyses for this user
+      const analyses = await db.query.documentAnalyses.findMany({
+        where: eq(documentAnalyses.userId, userId),
+        with: {
+          upload: true
+        }
+      });
+      
+      if (analyses.length === 0) {
+        return res.json({ 
+          analysis: "No documents found for analysis. Please upload and process documents first.",
+          documentsAnalyzed: 0,
+          keyInsights: [],
+          referencedDocuments: []
+        });
+      }
+      
+      // Extract all OCR text content from documents
+      let allDocumentTexts = [];
+      let documentsWithText = 0;
+      
+      for (const analysis of analyses) {
+        let documentText = '';
+        let documentInfo = {
+          fileName: analysis.fileName,
+          fileType: analysis.analysisType,
+          uploadDate: analysis.createdAt
+        };
+        
+        // Extract text from different formats
+        if (analysis.extractedData) {
+          if (typeof analysis.extractedData === 'string') {
+            documentText = analysis.extractedData;
+          } else if (analysis.extractedData.text) {
+            documentText = analysis.extractedData.text;
+          } else if (analysis.extractedData.worksheets) {
+            // For Excel files, combine all worksheet data
+            documentText = analysis.extractedData.worksheets.map((ws: any) => {
+              return `=== ${ws.worksheetName || 'Sheet'} ===\n${ws.data?.map((row: any) => row.join('\t')).join('\n') || 'No data'}`;
+            }).join('\n\n');
+          } else if (typeof analysis.extractedData === 'object') {
+            documentText = JSON.stringify(analysis.extractedData, null, 2);
+          }
+        }
+        
+        if (documentText && documentText.trim().length > 10) {
+          // Truncate very long documents
+          if (documentText.length > 3000) {
+            documentText = documentText.substring(0, 3000) + '... [truncated]';
+          }
+          
+          allDocumentTexts.push({
+            ...documentInfo,
+            content: documentText,
+            contentLength: documentText.length
+          });
+          documentsWithText++;
+        }
+      }
+      
+      if (documentsWithText === 0) {
+        return res.json({ 
+          analysis: "No extractable text content found in your documents. Please ensure your documents contain readable text or data.",
+          documentsAnalyzed: analyses.length,
+          keyInsights: [],
+          referencedDocuments: []
+        });
+      }
+      
+      // Initialize OpenAI for deep analysis
+      const OpenAI = await import('openai');
+      const openai = new OpenAI.default({
+        apiKey: process.env.OPENAI_API_KEY,
+      });
+      
+      // Create comprehensive analysis prompt
+      const combinedContent = allDocumentTexts.map(doc => 
+        `\n--- Document: ${doc.fileName} (${doc.fileType}) ---\n${doc.content}`
+      ).join('\n\n');
+      
+      const analysisPrompt = `You are an expert business intelligence analyst. Analyze the following collection of documents and provide comprehensive insights based on the user's query.
+
+User Query: "${query}"
+
+Document Collection (${documentsWithText} documents):
+${combinedContent}
+
+Please provide a comprehensive analysis that:
+
+1. DIRECTLY ANSWERS the user's specific question
+2. Identifies patterns, trends, and key insights across all documents
+3. Highlights relevant business decisions and their impacts
+4. Provides actionable recommendations based on the data
+5. References specific documents where evidence was found
+
+Structure your response as detailed analysis with:
+- Clear findings that directly address the user's query
+- Supporting evidence from the documents
+- Strategic insights and recommendations
+- Key patterns or trends identified
+
+Focus on being thorough, factual, and business-oriented. Cite specific documents when referencing data points.`;
+
+      console.log('Sending analytics request to OpenAI...');
+      
+      // Use GPT-4o for comprehensive analysis
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+        messages: [
+          {
+            role: "system",
+            content: "You are an expert business analyst specializing in document intelligence and strategic insights. Provide thorough, fact-based analysis with actionable recommendations."
+          },
+          {
+            role: "user",
+            content: analysisPrompt
+          }
+        ],
+        max_tokens: 2000,
+        temperature: 0.3 // Lower temperature for more factual analysis
+      });
+
+      const analysisResult = completion.choices[0].message.content;
+      
+      // Extract key insights and referenced documents from the analysis
+      const keyInsights = [];
+      const referencedDocuments = [];
+      
+      // Simple extraction of insights (look for bullet points or numbered lists)
+      const insightMatches = analysisResult.match(/[•\-\*]\s+(.+?)(?=\n|$)/g);
+      if (insightMatches) {
+        keyInsights.push(...insightMatches.slice(0, 5).map(insight => 
+          insight.replace(/^[•\-\*]\s+/, '').trim()
+        ));
+      }
+      
+      // Find referenced documents
+      allDocumentTexts.forEach(doc => {
+        if (analysisResult.includes(doc.fileName)) {
+          referencedDocuments.push({
+            fileName: doc.fileName,
+            relevance: `Referenced in analysis for insights related to the query`
+          });
+        }
+      });
+      
+      console.log(`Analytics completed: ${documentsWithText} documents analyzed`);
+      
+      res.json({
+        analysis: analysisResult,
+        documentsAnalyzed: documentsWithText,
+        totalDocuments: analyses.length,
+        keyInsights: keyInsights,
+        referencedDocuments: referencedDocuments.slice(0, 10), // Limit to 10 references
+        queryProcessedAt: new Date().toISOString(),
+        contentAnalyzed: allDocumentTexts.length
+      });
+      
+    } catch (error) {
+      console.error("AI Analytics Query error:", error);
+      res.status(500).json({ 
+        message: "Failed to process analytics query. Please try again.",
+        error: error.message 
+      });
+    }
+  });
+
   // Document Analysis routes - Configure multer for ZIP files
   const documentUpload = multer({
     dest: 'uploads/',

@@ -23,7 +23,14 @@ import {
   RefreshCw,
   CheckCircle,
   Clock,
-  X
+  X,
+  Search,
+  Send,
+  MessageSquare,
+  History,
+  Lightbulb,
+  TrendingDown,
+  AlertTriangle
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -83,6 +90,39 @@ export default function DocumentAnalysis() {
   const [currentlyProcessing, setCurrentlyProcessing] = useState<string | null>(null);
   const [processedCount, setProcessedCount] = useState(0);
   const [totalDocuments, setTotalDocuments] = useState(0);
+  
+  // Analytics state
+  const [analyticsQuery, setAnalyticsQuery] = useState('');
+  const [analyticsResults, setAnalyticsResults] = useState<any>(null);
+  const [analyticsHistory, setAnalyticsHistory] = useState<any[]>([]);
+
+  // Analytics query suggestions
+  const analyticsQuerySuggestions = [
+    {
+      title: "Preisänderungen analysieren",
+      query: "Welche Entscheidungen wurden bezüglich Preisänderungen getroffen und wie haben sie sich auf die Profitabilität ausgewirkt?",
+      description: "Identifiziert Muster in Preisentscheidungen",
+      icon: <TrendingUp className="h-4 w-4 text-green-600" />
+    },
+    {
+      title: "Kostenoptimierungen finden",
+      query: "Welche Kostenoptimierungsmaßnahmen wurden in den Dokumenten erwähnt und welche Einsparungen wurden erzielt?",
+      description: "Sucht nach Kosteneinsparungsstrategien",
+      icon: <TrendingDown className="h-4 w-4 text-blue-600" />
+    },
+    {
+      title: "Risiko-Assessment",
+      query: "Welche Risiken und Herausforderungen wurden in den geschäftlichen Entscheidungen identifiziert?",
+      description: "Analysiert dokumentierte Risikofaktoren",
+      icon: <AlertTriangle className="h-4 w-4 text-red-600" />
+    },
+    {
+      title: "Strategische Erkenntnisse",
+      query: "Welche strategischen Entscheidungen wurden dokumentiert und wie haben sie das Geschäft beeinflusst?",
+      description: "Extrahiert wichtige Geschäftsstrategien",
+      icon: <Brain className="h-4 w-4 text-purple-600" />
+    }
+  ];
 
   // Mass AI Summary Generation
   const massAISummaryMutation = useMutation({
@@ -720,6 +760,44 @@ export default function DocumentAnalysis() {
     ? (uploadsArray.filter((u: DocumentUpload) => u.uploadStatus === 'completed').length / uploadsArray.length) * 100
     : 0;
 
+  // Analytics query mutation
+  const analyticsQueryMutation = useMutation({
+    mutationFn: async (query: string) => {
+      const response = await apiRequest('/api/ai/analytics-query', 'POST', { 
+        query,
+        includeAllDocuments: true 
+      });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setAnalyticsResults(data);
+      // Add to history
+      const historyItem = {
+        query: analyticsQuery,
+        timestamp: new Date().toISOString(),
+        results: data
+      };
+      setAnalyticsHistory(prev => [historyItem, ...prev.slice(0, 9)]); // Keep last 10
+      toast({
+        title: "Analyse abgeschlossen",
+        description: `${data.documentsAnalyzed || 0} Dokumente durchsucht`,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Analyse Fehler",
+        description: error.message || "Die KI-Analyse konnte nicht durchgeführt werden",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Handle analytics query
+  const handleAnalyticsQuery = () => {
+    if (!analyticsQuery.trim()) return;
+    analyticsQueryMutation.mutate(analyticsQuery);
+  };
+
   return (
     <AppLayout>
       <div className="p-8 space-y-8 max-w-7xl mx-auto">
@@ -1005,7 +1083,7 @@ export default function DocumentAnalysis() {
         {/* Results Tabs */}
         <Tabs defaultValue="uploads" className="space-y-6">
           <div className="flex items-center justify-between mb-6">
-            <TabsList className="grid w-full grid-cols-4 bg-white/50 backdrop-blur-sm">
+            <TabsList className="grid w-full grid-cols-5 bg-white/50 backdrop-blur-sm">
               <TabsTrigger value="uploads" className="flex items-center gap-2">
                 <FileText className="h-4 w-4" />
                 Uploads ({uploadsArray.length})
@@ -1021,6 +1099,10 @@ export default function DocumentAnalysis() {
               <TabsTrigger value="insights" className="flex items-center gap-2">
                 <Brain className="h-4 w-4" />
                 KI-Erkenntnisse ({insightsArray.length})
+              </TabsTrigger>
+              <TabsTrigger value="analytics" className="flex items-center gap-2">
+                <Search className="h-4 w-4" />
+                KI-Analytics
               </TabsTrigger>
             </TabsList>
             
@@ -1821,6 +1903,196 @@ export default function DocumentAnalysis() {
                 ))}
               </div>
             )}
+          </TabsContent>
+
+          {/* AI Analytics Tab */}
+          <TabsContent value="analytics" className="space-y-6">
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-cyan-50 via-white to-teal-50 rounded-2xl opacity-60"></div>
+              <Card className="relative glass-card border-cyan-200/30 rounded-2xl shadow-2xl">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-3">
+                    <div className="relative">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-teal-600 flex items-center justify-center shadow-xl shadow-cyan-500/30">
+                        <Search className="h-6 w-6 text-white" />
+                      </div>
+                      <div className="absolute inset-0 w-12 h-12 rounded-xl bg-cyan-400 animate-ping opacity-20"></div>
+                    </div>
+                    <div>
+                      <span className="bg-gradient-to-r from-cyan-700 to-teal-600 bg-clip-text text-transparent">
+                        KI-Analytics Dashboard
+                      </span>
+                      <p className="text-sm text-gray-600 font-normal mt-1">
+                        Durchsuchen Sie alle OCR-extrahierten Texte mit intelligenten Abfragen
+                      </p>
+                    </div>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Analytics Query Interface */}
+                  <div className="space-y-4">
+                    <div className="relative">
+                      <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-cyan-50/80 to-teal-50/80 rounded-xl border border-cyan-200/50">
+                        <div className="flex-1">
+                          <input
+                            type="text"
+                            placeholder="Fragen Sie die KI über Ihre Dokumente... z.B. 'Welche Entscheidungen wurden bezüglich Preisänderungen getroffen?'"
+                            value={analyticsQuery}
+                            onChange={(e) => setAnalyticsQuery(e.target.value)}
+                            onKeyPress={(e) => e.key === 'Enter' && handleAnalyticsQuery()}
+                            className="w-full bg-white/70 border border-cyan-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent placeholder-gray-500"
+                          />
+                        </div>
+                        <Button
+                          onClick={handleAnalyticsQuery}
+                          disabled={!analyticsQuery.trim() || analyticsQueryMutation.isPending}
+                          className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-teal-600 hover:from-cyan-600 hover:to-teal-700 text-white rounded-lg"
+                        >
+                          {analyticsQueryMutation.isPending ? (
+                            <RefreshCw className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Send className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Quick Query Suggestions */}
+                    <div className="space-y-3">
+                      <h4 className="text-sm font-medium text-gray-700">Beispielabfragen:</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {analyticsQuerySuggestions.map((suggestion, index) => (
+                          <button
+                            key={index}
+                            onClick={() => setAnalyticsQuery(suggestion.query)}
+                            className="text-left p-3 bg-white/70 hover:bg-cyan-50/70 border border-gray-200 hover:border-cyan-300 rounded-lg transition-all duration-200 group"
+                          >
+                            <div className="flex items-center gap-2 mb-1">
+                              {suggestion.icon}
+                              <span className="text-sm font-medium text-gray-800 group-hover:text-cyan-700">
+                                {suggestion.title}
+                              </span>
+                            </div>
+                            <p className="text-xs text-gray-600 group-hover:text-gray-700">
+                              {suggestion.description}
+                            </p>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Analytics Results */}
+                  {analyticsResults && (
+                    <div className="space-y-4 border-t border-gray-200 pt-6">
+                      <div className="flex items-center gap-2">
+                        <Lightbulb className="h-5 w-5 text-cyan-600" />
+                        <h4 className="font-semibold text-gray-800">KI-Analyse Ergebnisse</h4>
+                        <Badge variant="outline" className="text-xs">
+                          {analyticsResults.documentsAnalyzed} Dokumente durchsucht
+                        </Badge>
+                      </div>
+                      
+                      <Card className="bg-gradient-to-br from-cyan-50/50 to-teal-50/50 border-cyan-200/50">
+                        <CardContent className="p-6">
+                          <div className="prose prose-sm max-w-none">
+                            <div className="whitespace-pre-wrap text-gray-800 leading-relaxed">
+                              {analyticsResults.analysis}
+                            </div>
+                          </div>
+                          
+                          {/* Key Insights */}
+                          {analyticsResults.keyInsights && analyticsResults.keyInsights.length > 0 && (
+                            <div className="mt-6 space-y-3">
+                              <h5 className="font-medium text-gray-800 flex items-center gap-2">
+                                <Brain className="h-4 w-4 text-cyan-600" />
+                                Wichtige Erkenntnisse
+                              </h5>
+                              <div className="space-y-2">
+                                {analyticsResults.keyInsights.map((insight: string, index: number) => (
+                                  <div key={index} className="flex items-start gap-3 p-3 bg-white/70 rounded-lg border border-cyan-200/50">
+                                    <div className="w-2 h-2 bg-cyan-500 rounded-full mt-2 flex-shrink-0" />
+                                    <span className="text-sm text-gray-700">{insight}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Referenced Documents */}
+                          {analyticsResults.referencedDocuments && analyticsResults.referencedDocuments.length > 0 && (
+                            <div className="mt-6 space-y-3">
+                              <h5 className="font-medium text-gray-800 flex items-center gap-2">
+                                <FileText className="h-4 w-4 text-teal-600" />
+                                Referenzierte Dokumente
+                              </h5>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                {analyticsResults.referencedDocuments.map((doc: any, index: number) => (
+                                  <div key={index} className="p-3 bg-white/70 rounded-lg border border-teal-200/50">
+                                    <div className="font-medium text-sm text-gray-800">{doc.fileName}</div>
+                                    <div className="text-xs text-gray-600 mt-1">{doc.relevance}</div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </div>
+                  )}
+
+                  {/* Analytics History */}
+                  {analyticsHistory.length > 0 && (
+                    <div className="space-y-4 border-t border-gray-200 pt-6">
+                      <div className="flex items-center gap-2">
+                        <History className="h-5 w-5 text-gray-600" />
+                        <h4 className="font-semibold text-gray-800">Abfrage-Verlauf</h4>
+                      </div>
+                      <div className="space-y-3 max-h-60 overflow-y-auto">
+                        {analyticsHistory.slice(0, 5).map((item, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center justify-between p-3 bg-gray-50/70 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-100/70 transition-colors"
+                            onClick={() => setAnalyticsQuery(item.query)}
+                          >
+                            <div className="flex-1">
+                              <div className="text-sm text-gray-800 font-medium">{item.query}</div>
+                              <div className="text-xs text-gray-600 mt-1">
+                                {new Date(item.timestamp).toLocaleString('de-DE')}
+                              </div>
+                            </div>
+                            <MessageSquare className="h-4 w-4 text-gray-400" />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Data Summary */}
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6 pt-6 border-t border-gray-200">
+                    <div className="text-center p-4 bg-gradient-to-br from-cyan-50 to-cyan-100 rounded-lg">
+                      <div className="text-2xl font-bold text-cyan-600">{analysesArray.length}</div>
+                      <div className="text-xs text-gray-600">Dokumente verfügbar</div>
+                    </div>
+                    <div className="text-center p-4 bg-gradient-to-br from-teal-50 to-teal-100 rounded-lg">
+                      <div className="text-2xl font-bold text-teal-600">
+                        {analysesArray.reduce((total, analysis) => 
+                          total + (analysis.extractedText?.length || 0), 0).toLocaleString()}
+                      </div>
+                      <div className="text-xs text-gray-600">OCR-Zeichen</div>
+                    </div>
+                    <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg">
+                      <div className="text-2xl font-bold text-blue-600">{insightsArray.length}</div>
+                      <div className="text-xs text-gray-600">KI-Erkenntnisse</div>
+                    </div>
+                    <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg">
+                      <div className="text-2xl font-bold text-purple-600">{analyticsHistory.length}</div>
+                      <div className="text-xs text-gray-600">Anfragen gestellt</div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
       </div>
