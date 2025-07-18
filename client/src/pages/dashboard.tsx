@@ -270,7 +270,7 @@ export default function Dashboard() {
                     {recentCalculations.map((calc: any) => (
                       <Link 
                         key={calc.id} 
-                        href={`/workflow?calculation=${calc.id}`}
+                        href={`/workflow?id=${calc.id}`}
                         className="flex items-center space-x-4 p-3 rounded-lg border hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                       >
                         <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
