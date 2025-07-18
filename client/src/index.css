@@ -146,7 +146,8 @@
 }
 
 .animate-fadeInUp {
-  animation: fadeInUp 0.8s var(--bounce-in);
+  /* Disabled for instant page transitions */
+  animation: none;
 }
 
 .animate-slideInUp {
@@ -154,7 +155,8 @@
 }
 
 .animate-slideInRight {
-  animation: slideInRight 0.6s var(--smooth-out);
+  /* Disabled for instant page transitions */
+  animation: none;
 }
 
 .animate-slideInLeft {
@@ -162,7 +164,8 @@
 }
 
 .animate-scaleIn {
-  animation: scaleIn 0.5s var(--bounce-in);
+  /* Disabled for instant page transitions */
+  animation: none;
 }
 
 .animate-cardHover {

@@ -405,8 +405,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
         {/* Ultra-Modern Main Content Area */}
         <main className="flex-1 overflow-auto relative">
-          <div className="w-full h-full animate-fadeInUp">
-            <div className="w-full h-full neo-card rounded-none relative overflow-hidden animate-scaleIn">
+          <div className="w-full h-full">
+            <div className="w-full h-full neo-card rounded-none relative overflow-hidden">
               {/* Content Glow Effect */}
               <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-transparent to-green-500/5 pointer-events-none" />
               
@@ -417,7 +417,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
           </div>
 
           {/* Floating Status Indicators */}
-          <div className="fixed bottom-6 right-6 flex flex-col space-y-3 animate-slideInRight">
+          <div className="fixed bottom-6 right-6 flex flex-col space-y-3">
             <div className="w-3 h-3 bg-green-400 rounded-full animate-glowPulse shadow-lg" />
             <div className="w-2 h-2 bg-blue-400 rounded-full animate-twinkle animation-delay-1000" />
             <div className="w-2 h-2 bg-green-300 rounded-full animate-twinkle animation-delay-2000" />
