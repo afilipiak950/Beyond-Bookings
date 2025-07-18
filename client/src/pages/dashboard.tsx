@@ -268,22 +268,31 @@ export default function Dashboard() {
                 ) : (
                   <div className="space-y-4">
                     {recentCalculations.map((calc: any) => (
-                      <div key={calc.id} className="flex items-center space-x-4 p-3 rounded-lg border">
+                      <Link 
+                        key={calc.id} 
+                        href={`/workflow?calculation=${calc.id}`}
+                        className="flex items-center space-x-4 p-3 rounded-lg border hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                      >
                         <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
                           <Building2 className="h-5 w-5 text-primary" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-slate-900 dark:text-white truncate">
+                          <div className="text-sm font-medium text-slate-900 dark:text-white truncate">
                             {calc.hotelName}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            €{parseFloat(calc.voucherPrice).toFixed(2)} • {parseFloat(calc.profitMargin).toFixed(1)}% margin
-                          </p>
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            €{parseFloat(calc.voucherPrice || 0).toFixed(2)} • €{parseFloat(calc.totalPrice || 0).toFixed(2)} total
+                          </div>
                         </div>
-                        <div className="text-xs text-muted-foreground">
-                          {new Date(calc.createdAt).toLocaleDateString()}
+                        <div className="flex flex-col items-end">
+                          <div className="text-xs text-muted-foreground">
+                            {new Date(calc.createdAt).toLocaleDateString()}
+                          </div>
+                          <div className="text-xs font-medium text-green-600">
+                            {calc.status === 'draft' ? 'Draft' : 'Complete'}
+                          </div>
                         </div>
-                      </div>
+                      </Link>
                     ))}
                   </div>
                 )}
