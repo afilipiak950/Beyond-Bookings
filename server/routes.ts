@@ -2179,11 +2179,14 @@ ${combinedContent}
 
 IMPORTANT INSTRUCTIONS:
 1. Be EXTREMELY THOROUGH and COMPLETE in your analysis
-2. If the user asks for a list (like "all hotels"), provide a COMPLETE, detailed list with ALL items found
+2. If the user asks for a list (like "all hotels"), provide a COMPLETE, detailed list with ALL UNIQUE items found
 3. Extract and organize ALL relevant data points, not just examples
 4. Include specific details like names, numbers, dates, locations, prices, etc.
 5. Structure your response clearly with headers and bullet points
 6. Reference specific document names when citing data
+7. CRITICAL: Explain the difference between total documents analyzed vs. unique items found
+8. Show how many documents reference each hotel (many documents may contain the same hotel with different data)
+9. Clarify that ${documentsWithText} documents were analyzed, but many may contain duplicate hotel references
 
 RESPONSE STRUCTURE:
 Use this exact format for your response:
@@ -2194,6 +2197,11 @@ Use this exact format for your response:
 ### COMPLETE DATA EXTRACTION
 [If asking for a list, provide the COMPLETE list with all items found]
 [Include all relevant details for each item: names, locations, prices, dates, etc.]
+[For hotels: Show how many different documents reference each hotel]
+
+### DOCUMENT COVERAGE ANALYSIS
+[Explain the relationship between total documents (${documentsWithText}) and unique items found]
+[Show how many documents contain each hotel/item and why some documents may have duplicate hotels]
 
 ### KEY FINDINGS & PATTERNS
 [Identify important patterns, trends, and insights across documents]
@@ -2206,6 +2214,7 @@ Use this exact format for your response:
 
 ### STATISTICAL SUMMARY
 [Provide relevant numbers, totals, averages, ranges where applicable]
+[Show: Total documents analyzed vs. unique items found vs. total references]
 
 Remember: Be comprehensive, not selective. If the user asks for "all hotels" or "all X", they want EVERY single item you can find, not just examples. Extract and list everything systematically.`;
 
@@ -2253,6 +2262,7 @@ Remember: Be comprehensive, not selective. If the user asks for "all hotels" or 
       });
       
       console.log(`Analytics completed: ${documentsWithText} documents analyzed`);
+      console.log(`Document breakdown:`, allDocumentTexts.map(d => ({ fileName: d.fileName, contentLength: d.content.length })));
       
       res.json({
         analysis: analysisResult,
