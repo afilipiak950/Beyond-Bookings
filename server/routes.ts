@@ -2187,6 +2187,8 @@ IMPORTANT INSTRUCTIONS:
 7. CRITICAL: Explain the difference between total documents analyzed vs. unique items found
 8. Show how many documents reference each hotel (many documents may contain the same hotel with different data)
 9. Clarify that ${documentsWithText} documents were analyzed, but many may contain duplicate hotel references
+10. Count and report BOTH: (a) Total unique hotels found, and (b) Total hotel-document relationships
+11. Provide statistics: Average documents per hotel, which hotels appear most frequently
 
 RESPONSE STRUCTURE:
 Use this exact format for your response:
@@ -2200,8 +2202,19 @@ Use this exact format for your response:
 [For hotels: Show how many different documents reference each hotel]
 
 ### DOCUMENT COVERAGE ANALYSIS
-[Explain the relationship between total documents (${documentsWithText}) and unique items found]
-[Show how many documents contain each hotel/item and why some documents may have duplicate hotels]
+**IMPORTANT CLARIFICATION:**
+- Total Documents Processed: ${documentsWithText}
+- Unique Items Found: [State the actual number of unique hotels/items]
+- Document-to-Item Ratio: [Explain why these numbers differ]
+
+**WHY FEWER UNIQUE ITEMS THAN DOCUMENTS:**
+Many documents are different versions, dates, or pricing sheets for the same hotels. For example:
+- Multiple pricing sheets for the same hotel from different dates
+- Different file versions (copies, updates) containing the same hotel
+- Template files with similar structure but different hotel data
+
+**DOCUMENT REFERENCE COUNT FOR EACH ITEM:**
+[For each hotel, show how many different documents mention it]
 
 ### KEY FINDINGS & PATTERNS
 [Identify important patterns, trends, and insights across documents]
@@ -2216,7 +2229,10 @@ Use this exact format for your response:
 [Provide relevant numbers, totals, averages, ranges where applicable]
 [Show: Total documents analyzed vs. unique items found vs. total references]
 
-Remember: Be comprehensive, not selective. If the user asks for "all hotels" or "all X", they want EVERY single item you can find, not just examples. Extract and list everything systematically.`;
+Remember: Be comprehensive, not selective. If the user asks for "all hotels" or "all X", they want EVERY single item you can find, not just examples. Extract and list everything systematically.
+
+**SPECIAL ANALYSIS FOR HOTEL QUERIES:**
+Look at the document filenames - many contain hotel names in the filename format like "240607_Hotel Name_Pricing_FinanzierungDritter.xlsm". Use both content AND filenames to identify unique hotels and count how many documents reference each hotel. This will help explain why ${documentsWithText} documents contain fewer unique hotels.`;
 
       console.log('Sending analytics request to OpenAI...');
       
