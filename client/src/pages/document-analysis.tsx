@@ -767,7 +767,7 @@ export default function DocumentAnalysis() {
         query,
         includeAllDocuments: true 
       });
-      return response;
+      return await response.json();
     },
     onSuccess: (data) => {
       console.log('Analytics response received:', data);
