@@ -772,6 +772,8 @@ export default function DocumentAnalysis() {
     onSuccess: (data) => {
       console.log('Analytics response received:', data);
       console.log('Documents analyzed count:', data.documentsAnalyzed);
+      console.log('Total documents count:', data.totalDocuments);
+      console.log('Full response structure:', JSON.stringify(data, null, 2));
       setAnalyticsResults(data);
       // Add to history
       const historyItem = {
@@ -1991,7 +1993,7 @@ export default function DocumentAnalysis() {
                         <Lightbulb className="h-5 w-5 text-cyan-600" />
                         <h4 className="font-semibold text-gray-800">KI-Analyse Ergebnisse</h4>
                         <Badge variant="outline" className="text-xs">
-                          {analyticsResults.documentsAnalyzed || analyticsResults.totalDocuments || 0} Dokumente durchsucht
+                          {analyticsResults.documentsAnalyzed} Dokumente durchsucht
                         </Badge>
                       </div>
                       
