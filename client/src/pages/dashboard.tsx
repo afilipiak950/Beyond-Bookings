@@ -329,7 +329,7 @@ export default function Dashboard() {
                   </Link>
                   
                   <Link
-                    href="/pricing-workflow"
+                    href="/workflow"
                     className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                   >
                     <Calculator className="h-5 w-5 text-green-500" />
@@ -342,14 +342,14 @@ export default function Dashboard() {
                   </Link>
                   
                   <Link
-                    href="/customer-request"
+                    href="/calculations"
                     className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                   >
-                    <Users className="h-5 w-5 text-orange-500" />
+                    <FileText className="h-5 w-5 text-orange-500" />
                     <div>
-                      <p className="font-medium">Customer Requests</p>
+                      <p className="font-medium">View Calculations</p>
                       <p className="text-xs text-muted-foreground">
-                        Manage hotel financing requests and inquiries
+                        Browse and manage saved pricing calculations
                       </p>
                     </div>
                   </Link>
