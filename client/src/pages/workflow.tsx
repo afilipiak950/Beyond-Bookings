@@ -601,7 +601,7 @@ export default function Workflow() {
   ) || [];
   
   // Handle hotel selection from dropdown
-  const selectHotel = (hotel: any) => {
+  const selectHotel = async (hotel: any) => {
     setSelectedHotelId(hotel.id);
     setWorkflowData(prev => ({
       ...prev,
@@ -613,10 +613,62 @@ export default function Workflow() {
     }));
     setHotelSearchOpen(false);
     
-    toast({
-      title: "Hotel selected",
-      description: `Selected ${hotel.name} from database`,
-    });
+    // If hotel doesn't have averagePrice, trigger automatic price research
+    if (!hotel.averagePrice || hotel.averagePrice === 0) {
+      console.log(`🔍 No averagePrice found for ${hotel.name}, triggering automatic research...`);
+      
+      setExtractionLoading(true);
+      try {
+        const response = await fetch('/api/scrape-hotel', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            name: hotel.name,
+            url: hotel.url || undefined
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          
+          // Update workflow data with researched price
+          if (data.averagePrice && data.averagePrice > 0) {
+            setWorkflowData(prev => ({
+              ...prev,
+              averagePrice: data.averagePrice
+            }));
+            
+            // Store the extracted data for UI display
+            setExtractedData(data);
+            
+            toast({
+              title: "Price research completed!",
+              description: `Automated research found: ${data.averagePrice}€ (${data.priceResearch?.confidence || 'medium'} confidence)`,
+            });
+          } else {
+            toast({
+              title: "Hotel selected",
+              description: `Selected ${hotel.name} - manual price input needed`,
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error during automatic price research:', error);
+        toast({
+          title: "Hotel selected",
+          description: `Selected ${hotel.name} - price research failed, manual input needed`,
+        });
+      } finally {
+        setExtractionLoading(false);
+      }
+    } else {
+      toast({
+        title: "Hotel selected",
+        description: `Selected ${hotel.name} from database`,
+      });
+    }
   };
   
   // Hotel extraction functions
