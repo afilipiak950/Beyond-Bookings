@@ -121,10 +121,21 @@ export default function AppSidebar({ className }: SidebarProps) {
           <div className="flex items-center space-x-3 animate-scaleIn">
             <div className="flex items-center justify-center animate-breathe">
               <img 
-                src="/attached_assets/bc Logo NEU Slogan_1753891356220.png" 
+                src="/bebo-convert-logo.png" 
                 alt="bebo convert" 
                 className="h-8 w-auto object-contain"
+                onError={(e) => {
+                  console.error('Logo failed to load:', e);
+                  // Fallback to text logo if image fails
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                }}
               />
+              <div className="hidden">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-green-500 rounded-xl flex items-center justify-center shadow-lg">
+                  <span className="text-white font-bold text-sm">BC</span>
+                </div>
+              </div>
             </div>
           </div>
         )}
