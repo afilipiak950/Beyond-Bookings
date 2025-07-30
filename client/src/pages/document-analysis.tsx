@@ -2281,15 +2281,15 @@ export default function DocumentAnalysis() {
                                       <div>
                                         {typeof insight === 'string' ? (
                                           <span>{insight}</span>
-                                        ) : (
+                                        ) : insight && typeof insight === 'object' ? (
                                           <div>
-                                            {insight.category && <div className="font-medium text-blue-600 mb-1">{insight.category}</div>}
-                                            {insight.insight && <div>{insight.insight}</div>}
+                                            {insight.category && <div className="font-medium text-blue-600 mb-1">{String(insight.category)}</div>}
+                                            {insight.insight && <div>{String(insight.insight)}</div>}
                                             {insight.insights && insight.insights.map((subInsight: string, subIdx: number) => (
                                               <div key={subIdx} className="ml-3 text-xs text-gray-600">→ {subInsight}</div>
                                             ))}
                                           </div>
-                                        )}
+                                        ) : null}
                                       </div>
                                     </li>
                                   ))}
