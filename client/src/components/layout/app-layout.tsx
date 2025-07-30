@@ -171,15 +171,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
               </SheetTrigger>
             </Sheet>
             
-            {/* Modern Brand */}
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-green-500 rounded-lg flex items-center justify-center animate-breathe">
-                <Zap className="h-4 w-4 text-white" />
-              </div>
-              <h2 className="text-xl font-bold gradient-text animate-scaleIn">
-                Beyond Bookings
-              </h2>
-            </div>
+            {/* Modern Brand - Removed */}
           </div>
           
           <div className="flex items-center space-x-3">
