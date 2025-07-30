@@ -218,6 +218,8 @@ export class DatabaseStorage implements IStorage {
           stars: mockData.stars,
           roomCount: mockData.roomCount,
           location: mockData.location,
+          city: mockData.city,
+          country: mockData.country,
         });
       }
 

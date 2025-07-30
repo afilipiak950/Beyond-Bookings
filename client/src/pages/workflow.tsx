@@ -743,6 +743,8 @@ export default function Workflow() {
         body: JSON.stringify({
           name: extractedData.name,
           location: extractedData.location || null,
+          city: extractedData.city || null,
+          country: extractedData.country || null,
           stars: extractedData.stars || null,
           roomCount: extractedData.roomCount || null,
           url: extractedData.url || null,

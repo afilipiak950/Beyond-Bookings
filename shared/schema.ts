@@ -46,6 +46,8 @@ export const hotels = pgTable("hotels", {
   stars: integer("stars"),
   roomCount: integer("room_count"),
   location: text("location"),
+  city: text("city"),
+  country: text("country"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

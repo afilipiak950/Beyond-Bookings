@@ -225,6 +225,8 @@ Return ONLY this JSON format with AUTHENTIC data:
 {
   "name": "Exact hotel name",
   "location": "Complete address with city, country", 
+  "city": "Primary city name only (e.g. Berlin, Munich, Hamburg)",
+  "country": "Country name (e.g. Germany, Austria, Switzerland)",
   "stars": number,
   "roomCount": exact_verified_number,
   "url": "official website URL",
@@ -277,6 +279,8 @@ If you cannot find exact room count data, set roomCount to null and explain in d
           cleanedData = {
             name: hotelData.name || name,
             location: hotelData.location || null,
+            city: hotelData.city || null,
+            country: hotelData.country || null,
             stars: hotelData.stars ? parseInt(hotelData.stars.toString()) : null,
             roomCount: hotelData.roomCount ? parseInt(hotelData.roomCount.toString()) : null,
             url: hotelData.url || url || null,
@@ -727,6 +731,8 @@ If exact pricing cannot be determined, set averagePrice to null and explain in m
       const hotel = await storage.createHotel({
         name: hotelData.name,
         location: hotelData.location || null,
+        city: hotelData.city || null,
+        country: hotelData.country || null,
         stars: hotelData.stars || null,
         roomCount: hotelData.roomCount || null,
         url: hotelData.url || null,
