@@ -1754,7 +1754,7 @@ export default function Workflow() {
                             <div className="w-2 h-2 rounded-full bg-gradient-to-r from-rose-500 to-red-600 animate-pulse shadow-xl shadow-rose-500/60"></div>
                             <div className="absolute inset-0 w-2 h-2 rounded-full bg-rose-400 animate-ping opacity-30"></div>
                           </div>
-                          <span className="text-sm font-black bg-gradient-to-r from-rose-800 to-red-700 bg-clip-text text-transparent">
+                          <span className="text-xs font-bold bg-gradient-to-r from-rose-800 to-red-700 bg-clip-text text-transparent">
                             Finanzierung: Projektkosten brutto
                           </span>
                         </div>
