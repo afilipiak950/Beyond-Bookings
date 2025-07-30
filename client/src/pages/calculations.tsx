@@ -5,7 +5,13 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { useState } from "react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Separator } from "@/components/ui/separator";
+import { useState, useMemo } from "react";
 import { useLocation } from "wouter";
 import AppLayout from "@/components/layout/app-layout";
 import { 
@@ -40,6 +46,56 @@ export default function Calculations() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Advanced Filter State
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [filters, setFilters] = useState({
+    // Date Range Filter
+    dateRange: {
+      enabled: false,
+      startDate: "",
+      endDate: ""
+    },
+    // Price Range Filter
+    priceRange: {
+      enabled: false,
+      min: 0,
+      max: 10000
+    },
+    // Profit Margin Filter
+    profitRange: {
+      enabled: false,
+      min: 0,
+      max: 5000
+    },
+    // Hotel Stars Filter
+    stars: {
+      enabled: false,
+      values: [] as number[]
+    },
+    // VAT Rate Filter
+    vatRate: {
+      enabled: false,
+      values: [] as number[]
+    },
+    // Room Count Filter
+    roomCount: {
+      enabled: false,
+      min: 1,
+      max: 500
+    },
+    // Occupancy Rate Filter
+    occupancyRate: {
+      enabled: false,
+      min: 0,
+      max: 100
+    },
+    // Status Filter
+    status: {
+      enabled: false,
+      values: [] as string[]
+    }
+  });
 
   const { data: calculations, isLoading } = useQuery({
     queryKey: ["/api/pricing-calculations"],
@@ -83,37 +139,114 @@ export default function Calculations() {
     deleteMutation.mutate(id);
   };
 
-  // Filter and sort calculations
-  const filteredCalculations = calculationsData
-    .filter(calc => 
-      calc.hotelName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      calc.hotelUrl?.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-    .sort((a, b) => {
-      let aValue, bValue;
-      switch (sortBy) {
-        case "hotel":
-          aValue = a.hotelName || "";
-          bValue = b.hotelName || "";
-          break;
-        case "revenue":
-          aValue = a.totalPrice || 0;
-          bValue = b.totalPrice || 0;
-          break;
-        case "profit":
-          aValue = a.profitMargin || 0;
-          bValue = b.profitMargin || 0;
-          break;
-        default:
-          aValue = new Date(a.createdAt || 0).getTime();
-          bValue = new Date(b.createdAt || 0).getTime();
-      }
-      
-      if (sortOrder === "asc") {
-        return aValue > bValue ? 1 : -1;
-      }
-      return aValue < bValue ? 1 : -1;
+  // Helper functions for filters
+  const resetFilters = () => {
+    setFilters({
+      dateRange: { enabled: false, startDate: "", endDate: "" },
+      priceRange: { enabled: false, min: 0, max: 10000 },
+      profitRange: { enabled: false, min: 0, max: 5000 },
+      stars: { enabled: false, values: [] },
+      vatRate: { enabled: false, values: [] },
+      roomCount: { enabled: false, min: 1, max: 500 },
+      occupancyRate: { enabled: false, min: 0, max: 100 },
+      status: { enabled: false, values: [] }
     });
+  };
+
+  const getActiveFilterCount = () => {
+    return Object.values(filters).filter(filter => filter.enabled).length;
+  };
+
+  // Comprehensive filter and sort calculations
+  const filteredCalculations = useMemo(() => {
+    return calculationsData
+      .filter(calc => {
+        // Search filter
+        const searchMatch = calc.hotelName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           calc.hotelUrl?.toLowerCase().includes(searchTerm.toLowerCase());
+        if (!searchMatch) return false;
+
+        // Date range filter
+        if (filters.dateRange.enabled) {
+          const calcDate = new Date(calc.createdAt || 0);
+          const startDate = filters.dateRange.startDate ? new Date(filters.dateRange.startDate) : null;
+          const endDate = filters.dateRange.endDate ? new Date(filters.dateRange.endDate) : null;
+          
+          if (startDate && calcDate < startDate) return false;
+          if (endDate && calcDate > endDate) return false;
+        }
+
+        // Price range filter
+        if (filters.priceRange.enabled) {
+          const price = calc.totalPrice || 0;
+          if (price < filters.priceRange.min || price > filters.priceRange.max) return false;
+        }
+
+        // Profit range filter
+        if (filters.profitRange.enabled) {
+          const profit = calc.profitMargin || 0;
+          if (profit < filters.profitRange.min || profit > filters.profitRange.max) return false;
+        }
+
+        // Hotel stars filter
+        if (filters.stars.enabled && filters.stars.values.length > 0) {
+          const stars = calc.stars || 0;
+          if (!filters.stars.values.includes(stars)) return false;
+        }
+
+        // VAT rate filter
+        if (filters.vatRate.enabled && filters.vatRate.values.length > 0) {
+          const vatRate = calc.vatRate || 0;
+          if (!filters.vatRate.values.includes(vatRate)) return false;
+        }
+
+        // Room count filter
+        if (filters.roomCount.enabled) {
+          const roomCount = calc.roomCount || 0;
+          if (roomCount < filters.roomCount.min || roomCount > filters.roomCount.max) return false;
+        }
+
+        // Occupancy rate filter
+        if (filters.occupancyRate.enabled) {
+          const occupancyRate = parseFloat(calc.occupancyRate || "0");
+          if (occupancyRate < filters.occupancyRate.min || occupancyRate > filters.occupancyRate.max) return false;
+        }
+
+        // Status filter
+        if (filters.status.enabled && filters.status.values.length > 0) {
+          const profitMargin = calc.profitMargin || 0;
+          const status = getStatusBadge(profitMargin).text;
+          if (!filters.status.values.includes(status)) return false;
+        }
+
+        return true;
+      })
+      .sort((a, b) => {
+        let aValue, bValue;
+        switch (sortBy) {
+          case "hotel":
+            aValue = a.hotelName || "";
+            bValue = b.hotelName || "";
+            break;
+          case "revenue":
+            aValue = a.totalPrice || 0;
+            bValue = b.totalPrice || 0;
+            break;
+          case "profit":
+            aValue = a.profitMargin || 0;
+            bValue = b.profitMargin || 0;
+            break;
+          default:
+            aValue = new Date(a.createdAt || 0).getTime();
+            bValue = new Date(b.createdAt || 0).getTime();
+        }
+        
+        if (sortOrder === "asc") {
+          return aValue > bValue ? 1 : -1;
+        }
+        return aValue < bValue ? 1 : -1;
+      });
+  }, [calculationsData, searchTerm, filters, sortBy, sortOrder]);
 
   // Calculate statistics
   const totalCalculations = calculationsData.length;
@@ -232,10 +365,361 @@ export default function Calculations() {
                       className="pl-10 w-64"
                     />
                   </div>
-                  <Button variant="outline" size="sm">
-                    <Filter className="h-4 w-4 mr-2" />
-                    Filter
-                  </Button>
+                  <Popover open={filterOpen} onOpenChange={setFilterOpen}>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" size="sm" className="relative">
+                        <Filter className="h-4 w-4 mr-2" />
+                        Filter
+                        {getActiveFilterCount() > 0 && (
+                          <Badge 
+                            variant="secondary" 
+                            className="ml-2 h-5 w-5 p-0 text-xs bg-blue-500 text-white rounded-full flex items-center justify-center"
+                          >
+                            {getActiveFilterCount()}
+                          </Badge>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-96 p-0" align="end">
+                      <div className="bg-gradient-to-br from-white to-blue-50 dark:from-slate-900 dark:to-blue-950 rounded-lg border border-blue-200/30 shadow-xl backdrop-blur-lg">
+                        {/* Filter Header */}
+                        <div className="p-4 border-b border-blue-200/30 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20">
+                          <div className="flex items-center justify-between">
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Advanced Filters</h3>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={resetFilters}
+                              className="text-sm text-blue-600 hover:text-blue-700"
+                            >
+                              Reset All
+                            </Button>
+                          </div>
+                          {getActiveFilterCount() > 0 && (
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                              {getActiveFilterCount()} filter{getActiveFilterCount() > 1 ? 's' : ''} active
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Filter Content */}
+                        <div className="p-4 space-y-6 max-h-96 overflow-y-auto">
+                          {/* Date Range Filter */}
+                          <div className="space-y-2">
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id="dateRange"
+                                checked={filters.dateRange.enabled}
+                                onCheckedChange={(checked) =>
+                                  setFilters(prev => ({
+                                    ...prev,
+                                    dateRange: { ...prev.dateRange, enabled: !!checked }
+                                  }))
+                                }
+                              />
+                              <Label htmlFor="dateRange" className="font-medium">Date Range</Label>
+                            </div>
+                            {filters.dateRange.enabled && (
+                              <div className="grid grid-cols-2 gap-2 ml-6">
+                                <div>
+                                  <Label className="text-xs">From</Label>
+                                  <Input
+                                    type="date"
+                                    value={filters.dateRange.startDate}
+                                    onChange={(e) =>
+                                      setFilters(prev => ({
+                                        ...prev,
+                                        dateRange: { ...prev.dateRange, startDate: e.target.value }
+                                      }))
+                                    }
+                                    className="text-xs"
+                                  />
+                                </div>
+                                <div>
+                                  <Label className="text-xs">To</Label>
+                                  <Input
+                                    type="date"
+                                    value={filters.dateRange.endDate}
+                                    onChange={(e) =>
+                                      setFilters(prev => ({
+                                        ...prev,
+                                        dateRange: { ...prev.dateRange, endDate: e.target.value }
+                                      }))
+                                    }
+                                    className="text-xs"
+                                  />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          <Separator />
+
+                          {/* Price Range Filter */}
+                          <div className="space-y-2">
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id="priceRange"
+                                checked={filters.priceRange.enabled}
+                                onCheckedChange={(checked) =>
+                                  setFilters(prev => ({
+                                    ...prev,
+                                    priceRange: { ...prev.priceRange, enabled: !!checked }
+                                  }))
+                                }
+                              />
+                              <Label htmlFor="priceRange" className="font-medium">Price Range</Label>
+                            </div>
+                            {filters.priceRange.enabled && (
+                              <div className="ml-6 space-y-2">
+                                <div className="flex items-center justify-between text-xs">
+                                  <span>{formatCurrency(filters.priceRange.min)}</span>
+                                  <span>{formatCurrency(filters.priceRange.max)}</span>
+                                </div>
+                                <Slider
+                                  min={0}
+                                  max={10000}
+                                  step={100}
+                                  value={[filters.priceRange.min, filters.priceRange.max]}
+                                  onValueChange={([min, max]) =>
+                                    setFilters(prev => ({
+                                      ...prev,
+                                      priceRange: { ...prev.priceRange, min, max }
+                                    }))
+                                  }
+                                  className="w-full"
+                                />
+                              </div>
+                            )}
+                          </div>
+
+                          <Separator />
+
+                          {/* Profit Range Filter */}
+                          <div className="space-y-2">
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id="profitRange"
+                                checked={filters.profitRange.enabled}
+                                onCheckedChange={(checked) =>
+                                  setFilters(prev => ({
+                                    ...prev,
+                                    profitRange: { ...prev.profitRange, enabled: !!checked }
+                                  }))
+                                }
+                              />
+                              <Label htmlFor="profitRange" className="font-medium">Profit Range</Label>
+                            </div>
+                            {filters.profitRange.enabled && (
+                              <div className="ml-6 space-y-2">
+                                <div className="flex items-center justify-between text-xs">
+                                  <span>{formatCurrency(filters.profitRange.min)}</span>
+                                  <span>{formatCurrency(filters.profitRange.max)}</span>
+                                </div>
+                                <Slider
+                                  min={0}
+                                  max={5000}
+                                  step={50}
+                                  value={[filters.profitRange.min, filters.profitRange.max]}
+                                  onValueChange={([min, max]) =>
+                                    setFilters(prev => ({
+                                      ...prev,
+                                      profitRange: { ...prev.profitRange, min, max }
+                                    }))
+                                  }
+                                  className="w-full"
+                                />
+                              </div>
+                            )}
+                          </div>
+
+                          <Separator />
+
+                          {/* Hotel Stars Filter */}
+                          <div className="space-y-2">
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id="stars"
+                                checked={filters.stars.enabled}
+                                onCheckedChange={(checked) =>
+                                  setFilters(prev => ({
+                                    ...prev,
+                                    stars: { ...prev.stars, enabled: !!checked }
+                                  }))
+                                }
+                              />
+                              <Label htmlFor="stars" className="font-medium">Hotel Stars</Label>
+                            </div>
+                            {filters.stars.enabled && (
+                              <div className="ml-6 flex flex-wrap gap-2">
+                                {[1, 2, 3, 4, 5].map(star => (
+                                  <Button
+                                    key={star}
+                                    variant={filters.stars.values.includes(star) ? "default" : "outline"}
+                                    size="sm"
+                                    className="h-8 w-8 p-0"
+                                    onClick={() =>
+                                      setFilters(prev => ({
+                                        ...prev,
+                                        stars: {
+                                          ...prev.stars,
+                                          values: prev.stars.values.includes(star)
+                                            ? prev.stars.values.filter(s => s !== star)
+                                            : [...prev.stars.values, star]
+                                        }
+                                      }))
+                                    }
+                                  >
+                                    {star}★
+                                  </Button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
+                          <Separator />
+
+                          {/* VAT Rate Filter */}
+                          <div className="space-y-2">
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id="vatRate"
+                                checked={filters.vatRate.enabled}
+                                onCheckedChange={(checked) =>
+                                  setFilters(prev => ({
+                                    ...prev,
+                                    vatRate: { ...prev.vatRate, enabled: !!checked }
+                                  }))
+                                }
+                              />
+                              <Label htmlFor="vatRate" className="font-medium">VAT Rate</Label>
+                            </div>
+                            {filters.vatRate.enabled && (
+                              <div className="ml-6 flex flex-wrap gap-2">
+                                {[7, 19].map(rate => (
+                                  <Button
+                                    key={rate}
+                                    variant={filters.vatRate.values.includes(rate) ? "default" : "outline"}
+                                    size="sm"
+                                    className="h-8 px-3"
+                                    onClick={() =>
+                                      setFilters(prev => ({
+                                        ...prev,
+                                        vatRate: {
+                                          ...prev.vatRate,
+                                          values: prev.vatRate.values.includes(rate)
+                                            ? prev.vatRate.values.filter(r => r !== rate)
+                                            : [...prev.vatRate.values, rate]
+                                        }
+                                      }))
+                                    }
+                                  >
+                                    {rate}%
+                                  </Button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
+                          <Separator />
+
+                          {/* Room Count Filter */}
+                          <div className="space-y-2">
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id="roomCount"
+                                checked={filters.roomCount.enabled}
+                                onCheckedChange={(checked) =>
+                                  setFilters(prev => ({
+                                    ...prev,
+                                    roomCount: { ...prev.roomCount, enabled: !!checked }
+                                  }))
+                                }
+                              />
+                              <Label htmlFor="roomCount" className="font-medium">Room Count</Label>
+                            </div>
+                            {filters.roomCount.enabled && (
+                              <div className="ml-6 space-y-2">
+                                <div className="flex items-center justify-between text-xs">
+                                  <span>{filters.roomCount.min} rooms</span>
+                                  <span>{filters.roomCount.max} rooms</span>
+                                </div>
+                                <Slider
+                                  min={1}
+                                  max={500}
+                                  step={10}
+                                  value={[filters.roomCount.min, filters.roomCount.max]}
+                                  onValueChange={([min, max]) =>
+                                    setFilters(prev => ({
+                                      ...prev,
+                                      roomCount: { ...prev.roomCount, min, max }
+                                    }))
+                                  }
+                                  className="w-full"
+                                />
+                              </div>
+                            )}
+                          </div>
+
+                          <Separator />
+
+                          {/* Status Filter */}
+                          <div className="space-y-2">
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id="status"
+                                checked={filters.status.enabled}
+                                onCheckedChange={(checked) =>
+                                  setFilters(prev => ({
+                                    ...prev,
+                                    status: { ...prev.status, enabled: !!checked }
+                                  }))
+                                }
+                              />
+                              <Label htmlFor="status" className="font-medium">Status</Label>
+                            </div>
+                            {filters.status.enabled && (
+                              <div className="ml-6 flex flex-wrap gap-2">
+                                {["Excellent", "Good", "Average", "Poor"].map(status => (
+                                  <Button
+                                    key={status}
+                                    variant={filters.status.values.includes(status) ? "default" : "outline"}
+                                    size="sm"
+                                    className="h-8 px-3"
+                                    onClick={() =>
+                                      setFilters(prev => ({
+                                        ...prev,
+                                        status: {
+                                          ...prev.status,
+                                          values: prev.status.values.includes(status)
+                                            ? prev.status.values.filter(s => s !== status)
+                                            : [...prev.status.values, status]
+                                        }
+                                      }))
+                                    }
+                                  >
+                                    {status}
+                                  </Button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Filter Footer */}
+                        <div className="p-4 border-t border-blue-200/30 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-gray-600 dark:text-gray-400">
+                              {filteredCalculations.length} of {calculationsData.length} calculations
+                            </span>
+                            <Button size="sm" onClick={() => setFilterOpen(false)}>
+                              Apply Filters
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                 </div>
               </div>
             </CardHeader>
