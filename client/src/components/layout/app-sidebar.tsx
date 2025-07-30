@@ -115,15 +115,15 @@ export default function AppSidebar({ className }: SidebarProps) {
       {/* Ambient Background Effect */}
       <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-green-500/5 pointer-events-none" />
       
-      {/* Ultra-Modern Header */}
-      <div className="flex items-center justify-between h-16 px-4 glass-nav animate-slideInUp relative z-10">
+      {/* Ultra-Modern Header - Enlarged for Logo */}
+      <div className="flex items-center justify-between h-20 px-4 glass-nav animate-slideInUp relative z-10">
         {!isCollapsed && (
-          <div className="flex items-center space-x-3 animate-scaleIn">
+          <div className="flex items-center justify-center w-full animate-scaleIn">
             <div className="flex items-center justify-center animate-breathe">
               <img 
                 src="/bebo-convert-logo.png" 
                 alt="bebo convert" 
-                className="h-8 w-auto object-contain"
+                className="h-16 w-auto object-contain max-w-full"
                 onError={(e) => {
                   console.error('Logo failed to load:', e);
                   // Fallback to text logo if image fails
@@ -132,8 +132,8 @@ export default function AppSidebar({ className }: SidebarProps) {
                 }}
               />
               <div className="hidden">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-green-500 rounded-xl flex items-center justify-center shadow-lg">
-                  <span className="text-white font-bold text-sm">BC</span>
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-green-500 rounded-xl flex items-center justify-center shadow-lg">
+                  <span className="text-white font-bold text-lg">BC</span>
                 </div>
               </div>
             </div>
