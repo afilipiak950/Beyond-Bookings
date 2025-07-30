@@ -24,7 +24,8 @@ import {
   TrendingUp,
   Gift,
   Star,
-  BarChart3
+  BarChart3,
+  Globe
 } from "lucide-react";
 import { formatCurrency, formatPercentage } from "@/lib/pricing";
 import { apiRequest } from "@/lib/queryClient";
@@ -275,89 +276,156 @@ export default function Calculations() {
                 {filteredCalculations.map((calculation) => {
                   const status = getStatusBadge(calculation.profitMargin || 0);
                   return (
-                    <div key={calculation.id} className="grid grid-cols-12 gap-4 py-4 px-4 border rounded-lg hover:bg-muted/50 transition-colors">
-                      <div className="col-span-3">
-                        <div className="font-medium">{calculation.hotelName || "Unnamed Hotel"}</div>
-                        <div className="text-sm text-muted-foreground truncate">
-                          {calculation.hotelUrl || "No URL provided"}
-                        </div>
-                        <Badge variant={status.variant} className="mt-1">
-                          {status.text}
-                        </Badge>
-                      </div>
-                      <div className="col-span-2">
-                        <div className="font-medium">{formatCurrency(calculation.totalPrice || 0)}</div>
-                        <div className="text-sm text-muted-foreground">
-                          Base: {formatCurrency(calculation.voucherPrice || 0)}
-                        </div>
-                      </div>
-                      <div className="col-span-2">
-                        <div className="font-medium">{formatCurrency(calculation.profitMargin || 0)}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {formatPercentage((calculation.profitMargin || 0) / (calculation.totalPrice || 1) * 100)}
-                        </div>
-                      </div>
-                      <div className="col-span-2">
-                        <div className="font-medium">{formatCurrency(calculation.vatAmount || 0)}</div>
-                        <div className="text-sm text-muted-foreground">
-                          Rate: {calculation.vatRate || 0}%
-                        </div>
-                      </div>
-                      <div className="col-span-2">
-                        <div className="font-medium">
-                          {new Date(calculation.createdAt || 0).toLocaleDateString()}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {new Date(calculation.createdAt || 0).toLocaleTimeString()}
-                        </div>
-                      </div>
-                      <div className="col-span-1">
-                        <div className="flex items-center gap-1">
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => handleView(calculation)}
-                            title="View Details"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => handleEdit(calculation)}
-                            title="Edit Calculation"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                className="text-red-600 hover:text-red-700"
-                                title="Delete Calculation"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Delete Calculation</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Are you sure you want to delete this calculation? This action cannot be undone.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction 
-                                  onClick={() => handleDelete(calculation.id)}
-                                  className="bg-red-600 hover:bg-red-700"
+                    <div key={calculation.id} className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/80 via-blue-50/60 to-purple-50/40 dark:from-slate-800/80 dark:via-blue-900/20 dark:to-purple-900/20 backdrop-blur-lg border border-white/40 dark:border-slate-700/40 hover:shadow-xl hover:shadow-blue-500/10 transition-all duration-300 group">
+                      {/* Animated background gradient */}
+                      <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-teal-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                      
+                      {/* Main content */}
+                      <div className="relative z-10 p-6">
+                        {/* Header Section */}
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <div className="p-2 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 shadow-lg">
+                                <Building2 className="h-5 w-5 text-white" />
+                              </div>
+                              <div>
+                                <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                                  {calculation.hotelName || "Unnamed Hotel"}
+                                </h3>
+                                <div className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2">
+                                  <Globe className="h-3 w-3" />
+                                  {calculation.hotelUrl ? new URL(calculation.hotelUrl).hostname : "No website"}
+                                </div>
+                              </div>
+                            </div>
+                            <Badge variant={status.variant} className="shadow-sm">
+                              {status.text}
+                            </Badge>
+                          </div>
+                          
+                          {/* Action buttons */}
+                          <div className="flex items-center gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => handleView(calculation)}
+                              title="View Details"
+                              className="h-8 w-8 p-0 hover:bg-blue-100 dark:hover:bg-blue-900/20"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => handleEdit(calculation)}
+                              title="Edit Calculation"
+                              className="h-8 w-8 p-0 hover:bg-green-100 dark:hover:bg-green-900/20"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-100 dark:hover:bg-red-900/20"
+                                  title="Delete Calculation"
                                 >
-                                  Delete
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete Calculation</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to delete this calculation? This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction 
+                                    onClick={() => handleDelete(calculation.id)}
+                                    className="bg-red-600 hover:bg-red-700"
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        </div>
+
+                        {/* Metrics Grid */}
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                          {/* Total Price */}
+                          <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-400/10 to-teal-500/10 border border-emerald-200/30 dark:border-emerald-700/30">
+                            <div className="flex items-center gap-2 mb-1">
+                              <DollarSign className="h-4 w-4 text-emerald-600" />
+                              <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Total Price</span>
+                            </div>
+                            <div className="text-lg font-bold text-emerald-700 dark:text-emerald-400">
+                              {formatCurrency(calculation.totalPrice || 0)}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              Base: {formatCurrency(calculation.voucherPrice || 0)}
+                            </div>
+                          </div>
+
+                          {/* Profit Margin */}
+                          <div className="p-3 rounded-xl bg-gradient-to-br from-blue-400/10 to-indigo-500/10 border border-blue-200/30 dark:border-blue-700/30">
+                            <div className="flex items-center gap-2 mb-1">
+                              <TrendingUp className="h-4 w-4 text-blue-600" />
+                              <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Profit</span>
+                            </div>
+                            <div className="text-lg font-bold text-blue-700 dark:text-blue-400">
+                              {formatCurrency(calculation.profitMargin || 0)}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {formatPercentage((calculation.profitMargin || 0) / (calculation.totalPrice || 1) * 100)}
+                            </div>
+                          </div>
+
+                          {/* VAT Amount */}
+                          <div className="p-3 rounded-xl bg-gradient-to-br from-orange-400/10 to-red-500/10 border border-orange-200/30 dark:border-orange-700/30">
+                            <div className="flex items-center gap-2 mb-1">
+                              <Calculator className="h-4 w-4 text-orange-600" />
+                              <span className="text-xs font-medium text-gray-600 dark:text-gray-400">VAT</span>
+                            </div>
+                            <div className="text-lg font-bold text-orange-700 dark:text-orange-400">
+                              {formatCurrency(calculation.vatAmount || 0)}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              Rate: {calculation.vatRate || 0}%
+                            </div>
+                          </div>
+
+                          {/* Date Created */}
+                          <div className="p-3 rounded-xl bg-gradient-to-br from-purple-400/10 to-pink-500/10 border border-purple-200/30 dark:border-purple-700/30">
+                            <div className="flex items-center gap-2 mb-1">
+                              <Calendar className="h-4 w-4 text-purple-600" />
+                              <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Created</span>
+                            </div>
+                            <div className="text-sm font-bold text-purple-700 dark:text-purple-400">
+                              {new Date(calculation.createdAt || 0).toLocaleDateString()}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {new Date(calculation.createdAt || 0).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Performance indicator */}
+                        <div className="flex items-center justify-between pt-3 border-t border-gray-200/50 dark:border-gray-700/50">
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 animate-pulse" />
+                            <span className="text-xs text-gray-600 dark:text-gray-400">
+                              Calculation ID: #{calculation.id}
+                            </span>
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            Last updated: {new Date(calculation.updatedAt || calculation.createdAt || 0).toLocaleDateString()}
+                          </div>
                         </div>
                       </div>
                     </div>
