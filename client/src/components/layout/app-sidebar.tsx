@@ -119,11 +119,12 @@ export default function AppSidebar({ className }: SidebarProps) {
       <div className="flex items-center justify-between h-16 px-4 glass-nav animate-slideInUp relative z-10">
         {!isCollapsed && (
           <div className="flex items-center space-x-3 animate-scaleIn">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-green-500 rounded-xl flex items-center justify-center animate-breathe shadow-lg">
-              <FileText className="h-5 w-5 text-white" />
-            </div>
-            <div className="flex flex-col">
-              <h1 className="text-base font-bold gradient-text">Beyond Bookings</h1>
+            <div className="flex items-center justify-center animate-breathe">
+              <img 
+                src="/attached_assets/bc Logo NEU Slogan_1753891356220.png" 
+                alt="bebo convert" 
+                className="h-8 w-auto object-contain"
+              />
             </div>
           </div>
         )}
@@ -218,12 +219,12 @@ export default function AppSidebar({ className }: SidebarProps) {
               <Avatar className="w-10 h-10 ring-2 ring-blue-500/30 animate-breathe">
                 <AvatarImage src="" alt="User" />
                 <AvatarFallback className="text-sm bg-gradient-to-br from-blue-500 to-green-500 text-white font-semibold">
-                  BB
+                  BC
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-semibold text-foreground truncate">
-                  Beyond Bookings User
+                  bebo convert User
                 </p>
                 <div className="flex items-center space-x-1.5">
                   <Badge className="text-xs bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0 px-1 py-0.5">

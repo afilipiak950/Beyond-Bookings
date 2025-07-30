@@ -250,6 +250,11 @@ Changelog:
   - Added detailed price research metadata display including methodology, data sources, and price ranges
   - Implemented automatic field population when hotel data is extracted or selected
   - Enhanced card-based calculation row design with ultra-modern glassmorphism effects and responsive metrics grid
+- January 11, 2025. Complete rebranding from Beyond Bookings to bebo convert
+  - Replaced sidebar logo with official bebo convert logo featuring blue gradient design
+  - Updated application title to "bebo convert - Die exklusive Währung für Hotels"
+  - Changed user avatar fallback from "BB" to "BC" and updated user display text
+  - Maintained existing ultra-modern glassmorphism design while implementing new brand identity
 ```
 
 ## User Preferences
