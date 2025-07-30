@@ -271,29 +271,45 @@ export default function Settings() {
                       description: "Generating comprehensive XLS files and hotel folders. This may take a moment...",
                     });
 
+                    // Use fetch with proper blob handling for reliable download
                     const response = await fetch('/api/export/all-data', {
                       method: 'GET',
-                      credentials: 'include'
+                      credentials: 'include',
+                      headers: {
+                        'Accept': 'application/zip'
+                      }
                     });
 
                     if (!response.ok) {
-                      throw new Error('Export failed');
+                      const errorText = await response.text();
+                      console.error('Export failed:', response.status, errorText);
+                      throw new Error(`Export failed: ${response.status} ${errorText}`);
                     }
 
-                    // Create blob from response and trigger download
+                    // Get the blob and create download
                     const blob = await response.blob();
+                    console.log('Received blob:', blob.size, 'bytes, type:', blob.type);
+                    
+                    if (blob.size === 0) {
+                      throw new Error('Received empty file');
+                    }
+                    
                     const url = window.URL.createObjectURL(blob);
-                    const link = document.createElement('a');
-                    link.href = url;
-                    
-                    // Generate filename with current date
                     const today = new Date().toISOString().split('T')[0];
-                    link.download = `DocumentIQ_Complete_Export_${today}.zip`;
                     
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    window.URL.revokeObjectURL(url);
+                    const downloadLink = document.createElement('a');
+                    downloadLink.href = url;
+                    downloadLink.download = `DocumentIQ_Complete_Export_${today}.zip`;
+                    downloadLink.style.display = 'none';
+                    
+                    document.body.appendChild(downloadLink);
+                    downloadLink.click();
+                    document.body.removeChild(downloadLink);
+                    
+                    // Clean up the URL
+                    setTimeout(() => {
+                      window.URL.revokeObjectURL(url);
+                    }, 1000);
 
                     toast({
                       title: "Export Complete",

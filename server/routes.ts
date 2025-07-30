@@ -787,6 +787,21 @@ Return only JSON, no markdown.`;
     }
   });
 
+  // Test export endpoint to verify basic functionality
+  app.get('/api/export/test', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      console.log(`Test export for user ${userId}`);
+      
+      res.setHeader('Content-Type', 'application/zip');
+      res.setHeader('Content-Disposition', 'attachment; filename="test.zip"');
+      res.send(Buffer.from('test zip content'));
+    } catch (error) {
+      console.error("Test export error:", error);
+      res.status(500).json({ message: "Test export failed" });
+    }
+  });
+
   // Comprehensive XLS export for all calculations and hotels
   app.get('/api/export/all-data', requireAuth, async (req: any, res) => {
     try {
@@ -1009,17 +1024,35 @@ Return only JSON, no markdown.`;
         
         // Set response headers for ZIP download
         const timestamp = new Date().toISOString().split('T')[0];
+        const filename = `DocumentIQ_Complete_Export_${timestamp}.zip`;
+        
         res.setHeader('Content-Type', 'application/zip');
-        res.setHeader('Content-Disposition', `attachment; filename="DocumentIQ_Complete_Export_${timestamp}.zip"`);
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+        
+        // Handle archive events
+        archive.on('error', (err) => {
+          console.error('Archive error:', err);
+          throw err;
+        });
+        
+        archive.on('warning', (err) => {
+          console.warn('Archive warning:', err);
+        });
         
         // Pipe archive to response
         archive.pipe(res);
         
         // Add all files to archive
+        console.log(`Adding directory ${tempDir} to archive...`);
         archive.directory(tempDir, false);
         
         // Finalize archive
+        console.log('Finalizing archive...');
         await archive.finalize();
+        console.log('Archive finalized and sent to client');
         
         console.log(`Comprehensive export completed: ${calculations.length} calculations, ${hotels.length} hotels, ${ocrAnalyses.length} documents`);
         
