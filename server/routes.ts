@@ -787,6 +787,272 @@ Return only JSON, no markdown.`;
     }
   });
 
+  // Comprehensive XLS export for all calculations and hotels
+  app.get('/api/export/all-data', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      console.log(`Starting comprehensive data export for user ${userId}`);
+      
+      // Import required libraries
+      const XLSX = await import('xlsx');
+      const archiver = await import('archiver');
+      const fs = await import('fs/promises');
+      const path = await import('path');
+      
+      // Get all user data
+      const calculations = await storage.getPricingCalculations(userId.toString());
+      const hotels = await storage.getHotels();
+      const ocrAnalyses = await storage.getOcrAnalyses(userId.toString());
+      
+      console.log(`Exporting: ${calculations.length} calculations, ${hotels.length} hotels, ${ocrAnalyses.length} OCR analyses`);
+      
+      // Create temporary directory for files
+      const tempDir = path.join(process.cwd(), 'temp_export_' + Date.now());
+      await fs.mkdir(tempDir, { recursive: true });
+      
+      try {
+        // 1. Create comprehensive calculations workbook
+        const calculationsWorkbook = XLSX.utils.book_new();
+        
+        // Main calculations sheet
+        const calculationsData = calculations.map(calc => ({
+          'ID': calc.id,
+          'Hotel Name': calc.hotelName || '',
+          'Stars': calc.stars || '',
+          'Room Count': calc.roomCount || '',
+          'Occupancy Rate (%)': calc.occupancyRate || '',
+          'Average Price (€)': calc.averagePrice || '',
+          'Voucher Price (€)': calc.voucherPrice || '',
+          'Operational Costs (€)': calc.operationalCosts || '',
+          'VAT Rate (%)': calc.vatRate || '',
+          'VAT Amount (€)': calc.vatAmount || '',
+          'Profit Margin (€)': calc.profitMargin || '',
+          'Total Price (€)': calc.totalPrice || '',
+          'Discount vs Market (€)': calc.discountVsMarket || '',
+          'Created Date': calc.createdAt ? new Date(calc.createdAt).toLocaleDateString() : '',
+          'Updated Date': calc.updatedAt ? new Date(calc.updatedAt).toLocaleDateString() : ''
+        }));
+        
+        const calculationsSheet = XLSX.utils.json_to_sheet(calculationsData);
+        XLSX.utils.book_append_sheet(calculationsWorkbook, calculationsSheet, 'All Calculations');
+        
+        // Summary sheet
+        const summaryData = [
+          { 'Metric': 'Total Calculations', 'Value': calculations.length },
+          { 'Metric': 'Total Hotels', 'Value': hotels.length },
+          { 'Metric': 'Total Documents Analyzed', 'Value': ocrAnalyses.length },
+          { 'Metric': 'Export Date', 'Value': new Date().toLocaleDateString() },
+          { 'Metric': 'Export Time', 'Value': new Date().toLocaleTimeString() },
+          { 'Metric': '', 'Value': '' },
+          { 'Metric': 'Average Voucher Price', 'Value': calculations.length > 0 ? (calculations.reduce((sum, calc) => sum + parseFloat(calc.voucherPrice || '0'), 0) / calculations.length).toFixed(2) + ' €' : '0 €' },
+          { 'Metric': 'Average Total Price', 'Value': calculations.length > 0 ? (calculations.reduce((sum, calc) => sum + parseFloat(calc.totalPrice || '0'), 0) / calculations.length).toFixed(2) + ' €' : '0 €' },
+          { 'Metric': 'Total Profit Margin', 'Value': calculations.reduce((sum, calc) => sum + parseFloat(calc.profitMargin || '0'), 0).toFixed(2) + ' €' },
+          { 'Metric': 'Total VAT Amount', 'Value': calculations.reduce((sum, calc) => sum + parseFloat(calc.vatAmount || '0'), 0).toFixed(2) + ' €' }
+        ];
+        
+        const summarySheet = XLSX.utils.json_to_sheet(summaryData);
+        XLSX.utils.book_append_sheet(calculationsWorkbook, summarySheet, 'Summary');
+        
+        // Hotel analysis sheet
+        const hotelStats = {};
+        calculations.forEach(calc => {
+          const hotelName = calc.hotelName || 'Unknown Hotel';
+          if (!hotelStats[hotelName]) {
+            hotelStats[hotelName] = {
+              'Hotel Name': hotelName,
+              'Calculation Count': 0,
+              'Total Revenue': 0,
+              'Total Profit': 0,
+              'Average Price': 0,
+              'Stars': calc.stars || '',
+              'Room Count': calc.roomCount || ''
+            };
+          }
+          hotelStats[hotelName]['Calculation Count']++;
+          hotelStats[hotelName]['Total Revenue'] += parseFloat(calc.totalPrice || '0');
+          hotelStats[hotelName]['Total Profit'] += parseFloat(calc.profitMargin || '0');
+        });
+        
+        Object.values(hotelStats).forEach((hotel: any) => {
+          hotel['Average Price'] = (hotel['Total Revenue'] / hotel['Calculation Count']).toFixed(2);
+          hotel['Total Revenue'] = hotel['Total Revenue'].toFixed(2) + ' €';
+          hotel['Total Profit'] = hotel['Total Profit'].toFixed(2) + ' €';
+          hotel['Average Price'] = hotel['Average Price'] + ' €';
+        });
+        
+        const hotelSheet = XLSX.utils.json_to_sheet(Object.values(hotelStats));
+        XLSX.utils.book_append_sheet(calculationsWorkbook, hotelSheet, 'Hotel Analysis');
+        
+        // Save calculations workbook
+        const calculationsPath = path.join(tempDir, 'All_Calculations_Export.xlsx');
+        XLSX.writeFile(calculationsWorkbook, calculationsPath);
+        
+        // 2. Create individual hotel folders and files
+        const hotelsDir = path.join(tempDir, 'Hotels_by_Property');
+        await fs.mkdir(hotelsDir, { recursive: true });
+        
+        // Group calculations by hotel
+        const calculationsByHotel = {};
+        calculations.forEach(calc => {
+          const hotelName = (calc.hotelName || 'Unknown_Hotel').replace(/[^a-zA-Z0-9]/g, '_');
+          if (!calculationsByHotel[hotelName]) {
+            calculationsByHotel[hotelName] = [];
+          }
+          calculationsByHotel[hotelName].push(calc);
+        });
+        
+        // Create folder and Excel file for each hotel
+        for (const [hotelName, hotelCalcs] of Object.entries(calculationsByHotel)) {
+          const hotelDir = path.join(hotelsDir, hotelName);
+          await fs.mkdir(hotelDir, { recursive: true });
+          
+          // Create detailed workbook for this hotel
+          const hotelWorkbook = XLSX.utils.book_new();
+          
+          // Calculations sheet for this hotel
+          const hotelCalcsData = (hotelCalcs as any[]).map((calc, index) => ({
+            'Calculation #': index + 1,
+            'ID': calc.id,
+            'Hotel Name': calc.hotelName || '',
+            'Stars': calc.stars || '',
+            'Room Count': calc.roomCount || '',
+            'Occupancy Rate (%)': calc.occupancyRate || '',
+            'Average Price (€)': calc.averagePrice || '',
+            'Voucher Price (€)': calc.voucherPrice || '',
+            'Operational Costs (€)': calc.operationalCosts || '',
+            'VAT Rate (%)': calc.vatRate || '',
+            'VAT Amount (€)': calc.vatAmount || '',
+            'Profit Margin (€)': calc.profitMargin || '',
+            'Total Price (€)': calc.totalPrice || '',
+            'Discount vs Market (€)': calc.discountVsMarket || '',
+            'Created Date': calc.createdAt ? new Date(calc.createdAt).toLocaleDateString() : '',
+            'Updated Date': calc.updatedAt ? new Date(calc.updatedAt).toLocaleDateString() : ''
+          }));
+          
+          const hotelCalcsSheet = XLSX.utils.json_to_sheet(hotelCalcsData);
+          XLSX.utils.book_append_sheet(hotelWorkbook, hotelCalcsSheet, 'Calculations');
+          
+          // Hotel summary sheet
+          const totalRevenue = (hotelCalcs as any[]).reduce((sum, calc) => sum + parseFloat(calc.totalPrice || '0'), 0);
+          const totalProfit = (hotelCalcs as any[]).reduce((sum, calc) => sum + parseFloat(calc.profitMargin || '0'), 0);
+          const avgPrice = totalRevenue / (hotelCalcs as any[]).length;
+          
+          const hotelSummaryData = [
+            { 'Property Information': 'Hotel Name', 'Value': (hotelCalcs as any[])[0]?.hotelName || hotelName },
+            { 'Property Information': 'Star Rating', 'Value': (hotelCalcs as any[])[0]?.stars || 'Not specified' },
+            { 'Property Information': 'Total Rooms', 'Value': (hotelCalcs as any[])[0]?.roomCount || 'Not specified' },
+            { 'Property Information': '', 'Value': '' },
+            { 'Property Information': 'Financial Summary', 'Value': '' },
+            { 'Property Information': 'Total Calculations', 'Value': (hotelCalcs as any[]).length },
+            { 'Property Information': 'Total Revenue', 'Value': totalRevenue.toFixed(2) + ' €' },
+            { 'Property Information': 'Total Profit Margin', 'Value': totalProfit.toFixed(2) + ' €' },
+            { 'Property Information': 'Average Price per Calculation', 'Value': avgPrice.toFixed(2) + ' €' },
+            { 'Property Information': 'Profit Margin %', 'Value': totalRevenue > 0 ? ((totalProfit / totalRevenue) * 100).toFixed(2) + '%' : '0%' }
+          ];
+          
+          const hotelSummarySheet = XLSX.utils.json_to_sheet(hotelSummaryData);
+          XLSX.utils.book_append_sheet(hotelWorkbook, hotelSummarySheet, 'Summary');
+          
+          // Save hotel workbook
+          const hotelPath = path.join(hotelDir, `${hotelName}_Detailed_Report.xlsx`);
+          XLSX.writeFile(hotelWorkbook, hotelPath);
+          
+          console.log(`Created detailed report for ${hotelName}: ${(hotelCalcs as any[]).length} calculations`);
+        }
+        
+        // 3. Create master hotels database
+        const hotelsWorkbook = XLSX.utils.book_new();
+        const hotelsData = hotels.map(hotel => ({
+          'ID': hotel.id,
+          'Hotel Name': hotel.name || '',
+          'Website URL': hotel.url || '',
+          'Stars': hotel.stars || '',
+          'Room Count': hotel.roomCount || '',
+          'Category': hotel.category || '',
+          'Location': hotel.location || '',
+          'Status': hotel.status || '',
+          'Created Date': hotel.createdAt ? new Date(hotel.createdAt).toLocaleDateString() : '',
+          'Updated Date': hotel.updatedAt ? new Date(hotel.updatedAt).toLocaleDateString() : ''
+        }));
+        
+        const hotelsSheet = XLSX.utils.json_to_sheet(hotelsData);
+        XLSX.utils.book_append_sheet(hotelsWorkbook, hotelsSheet, 'All Hotels Database');
+        
+        const hotelsPath = path.join(tempDir, 'Hotels_Master_Database.xlsx');
+        XLSX.writeFile(hotelsWorkbook, hotelsPath);
+        
+        // 4. Create OCR analyses workbook if data exists
+        if (ocrAnalyses.length > 0) {
+          const ocrWorkbook = XLSX.utils.book_new();
+          const ocrData = ocrAnalyses.map(analysis => ({
+            'ID': analysis.id,
+            'File Name': analysis.fileName || '',
+            'File Type': analysis.analysisType || '',
+            'File Size (bytes)': analysis.fileSize || '',
+            'Status': analysis.status || '',
+            'Processing Time (ms)': analysis.processingTime || '',
+            'Characters Extracted': analysis.extractedText ? analysis.extractedText.length : 0,
+            'Has Insights': analysis.insights ? 'Yes' : 'No',
+            'Created Date': analysis.createdAt ? new Date(analysis.createdAt).toLocaleDateString() : ''
+          }));
+          
+          const ocrSheet = XLSX.utils.json_to_sheet(ocrData);
+          XLSX.utils.book_append_sheet(ocrWorkbook, ocrSheet, 'Document Analyses');
+          
+          const ocrPath = path.join(tempDir, 'Document_Analyses_Report.xlsx');
+          XLSX.writeFile(ocrWorkbook, ocrPath);
+        }
+        
+        // 5. Create ZIP archive
+        console.log('Creating ZIP archive with all export files...');
+        const archive = archiver.default('zip', { zlib: { level: 9 } });
+        
+        // Set response headers for ZIP download
+        const timestamp = new Date().toISOString().split('T')[0];
+        res.setHeader('Content-Type', 'application/zip');
+        res.setHeader('Content-Disposition', `attachment; filename="DocumentIQ_Complete_Export_${timestamp}.zip"`);
+        
+        // Pipe archive to response
+        archive.pipe(res);
+        
+        // Add all files to archive
+        archive.directory(tempDir, false);
+        
+        // Finalize archive
+        await archive.finalize();
+        
+        console.log(`Comprehensive export completed: ${calculations.length} calculations, ${hotels.length} hotels, ${ocrAnalyses.length} documents`);
+        
+        // Cleanup temp directory after sending
+        res.on('finish', async () => {
+          try {
+            await fs.rm(tempDir, { recursive: true, force: true });
+            console.log('Cleaned up temporary export directory');
+          } catch (cleanupError) {
+            console.error('Error cleaning up temp directory:', cleanupError);
+          }
+        });
+        
+      } catch (error) {
+        // Cleanup on error
+        try {
+          await fs.rm(tempDir, { recursive: true, force: true });
+        } catch (cleanupError) {
+          console.error('Error cleaning up temp directory after error:', cleanupError);
+        }
+        throw error;
+      }
+      
+    } catch (error) {
+      console.error("Error in comprehensive export:", error);
+      res.status(500).json({ 
+        message: "Failed to export all data", 
+        error: error.message,
+        details: "Please try again or contact support if the issue persists."
+      });
+    }
+  });
+
   // Admin routes
   app.get('/api/admin/users', requireAuth, async (req: any, res) => {
     try {

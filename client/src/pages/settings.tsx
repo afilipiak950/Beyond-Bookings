@@ -257,21 +257,59 @@ export default function Settings() {
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <h4 className="font-medium">Export Account Data</h4>
+                <h4 className="font-medium">Export All Data</h4>
                 <p className="text-sm text-muted-foreground">
-                  Download all your pricing calculations and data
+                  Complete XLS export with calculations, hotel folders, and detailed reports
                 </p>
               </div>
               <Button 
                 variant="outline"
-                onClick={() => {
-                  toast({
-                    title: "Export Started",
-                    description: "Your account data export has been initiated. You'll receive a download link shortly.",
-                  });
+                onClick={async () => {
+                  try {
+                    toast({
+                      title: "Export Started",
+                      description: "Generating comprehensive XLS files and hotel folders. This may take a moment...",
+                    });
+
+                    const response = await fetch('/api/export/all-data', {
+                      method: 'GET',
+                      credentials: 'include'
+                    });
+
+                    if (!response.ok) {
+                      throw new Error('Export failed');
+                    }
+
+                    // Create blob from response and trigger download
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    
+                    // Generate filename with current date
+                    const today = new Date().toISOString().split('T')[0];
+                    link.download = `DocumentIQ_Complete_Export_${today}.zip`;
+                    
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    window.URL.revokeObjectURL(url);
+
+                    toast({
+                      title: "Export Complete",
+                      description: "All calculations exported as XLS files with organized hotel folders. Check your downloads!",
+                    });
+                  } catch (error) {
+                    console.error('Export error:', error);
+                    toast({
+                      title: "Export Failed",
+                      description: "Failed to export data. Please try again.",
+                      variant: "destructive"
+                    });
+                  }
                 }}
               >
-                Export Data
+                Export All Data
               </Button>
             </div>
           </CardContent>
