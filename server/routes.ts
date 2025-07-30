@@ -321,7 +321,81 @@ If you cannot find exact room count data, set roomCount to null and explain in d
         cleanedData = fallbackData;
       }
       
-      // Return the researched hotel data
+      // Research average room price automatically
+      console.log(`Researching average room price for: ${cleanedData.name}`);
+      
+      try {
+        const avgPriceCompletion = await openai.chat.completions.create({
+          model: "gpt-4o",
+          messages: [
+            {
+              role: "system",
+              content: "You are a hotel pricing research expert. Provide accurate average room price data from reliable sources."
+            },
+            {
+              role: "user", 
+              content: `Research the average room price (durchschnittszimmerpreis) for "${cleanedData.name}" hotel${cleanedData.location ? ` in ${cleanedData.location}` : ''}. 
+
+IMPORTANT RESEARCH REQUIREMENTS:
+1. Search for actual booking rates, not rack rates
+2. Calculate median price across 12-month period (seasonal variations included)
+3. Use reliable sources: Booking.com, Hotels.com, HRS, Hotel.de, TripAdvisor, hotel's official website
+4. Consider ${cleanedData.stars}-star hotel standards
+5. Factor in location and market positioning
+
+Return ONLY this JSON format with authentic pricing data:
+{
+  "averagePrice": median_price_number,
+  "priceRange": {
+    "low": lowest_seasonal_price,
+    "high": highest_seasonal_price
+  },
+  "methodology": "Brief explanation of how price was calculated",
+  "dataSource": "Sources used for pricing research",
+  "confidence": "high/medium/low based on data availability"
+}
+
+If exact pricing cannot be determined, set averagePrice to null and explain in methodology.`
+            }
+          ],
+          max_tokens: 500,
+          temperature: 0.1
+        });
+
+        const priceResponse = avgPriceCompletion.choices[0].message.content;
+        console.log('OpenAI price research response:', priceResponse);
+        
+        if (priceResponse) {
+          try {
+            let priceContent = priceResponse.trim();
+            priceContent = priceContent.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+            
+            const priceData = JSON.parse(priceContent);
+            
+            if (priceData.averagePrice && typeof priceData.averagePrice === 'number') {
+              cleanedData.averagePrice = priceData.averagePrice;
+              cleanedData.priceResearch = {
+                priceRange: priceData.priceRange,
+                methodology: priceData.methodology,
+                dataSource: priceData.dataSource,
+                confidence: priceData.confidence,
+                researchDate: new Date().toISOString()
+              };
+              
+              console.log(`✅ Automated price research successful: ${priceData.averagePrice}€ (${priceData.confidence} confidence)`);
+            } else {
+              console.log(`⚠️ Could not determine reliable pricing: ${priceData.methodology}`);
+            }
+          } catch (priceParseError) {
+            console.error('Failed to parse price research JSON:', priceParseError);
+          }
+        }
+      } catch (priceError: any) {
+        console.error('Automated price research failed:', priceError.message);
+        // Continue without price data - don't fail the entire request
+      }
+      
+      // Return the researched hotel data with pricing
       res.json(cleanedData);
       
     } catch (error) {

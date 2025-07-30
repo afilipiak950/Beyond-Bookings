@@ -242,6 +242,14 @@ Changelog:
   - Created automatic pricing calculation generation from customer request data
   - Added financing volume tracking, urgency levels, and project descriptions
   - Implemented responsive design with floating animations and gradient backgrounds
+- January 11, 2025. Automated average room price research system implementation
+  - Integrated OpenAI GPT-4o for automated durchschnittszimmerpreis research when hotels are extracted
+  - Added comprehensive 12-month median price calculation with seasonal variation analysis
+  - Enhanced hotel data extraction to include authentic pricing research with confidence ratings
+  - Created visual indicators for AI-researched prices with green styling and auto badges
+  - Added detailed price research metadata display including methodology, data sources, and price ranges
+  - Implemented automatic field population when hotel data is extracted or selected
+  - Enhanced card-based calculation row design with ultra-modern glassmorphism effects and responsive metrics grid
 ```
 
 ## User Preferences

@@ -646,10 +646,24 @@ export default function Workflow() {
       if (response.ok) {
         const data = await response.json();
         setExtractedData(data);
-        toast({
-          title: "Data extracted successfully",
-          description: `Found information for ${data.name}`,
-        });
+        
+        // Display different messages based on data availability
+        if (data.averagePrice && data.priceResearch) {
+          toast({
+            title: "Complete data extracted!",
+            description: `Hotel data + automated price research completed: ${data.averagePrice}€ (${data.priceResearch.confidence} confidence)`,
+          });
+        } else if (data.stars || data.roomCount || data.location) {
+          toast({
+            title: "Hotel data extracted",
+            description: `Basic hotel information found for ${data.name}`,
+          });
+        } else {
+          toast({
+            title: "Basic extraction complete",
+            description: "Hotel name processed. Additional details may need manual input.",
+          });
+        }
       } else {
         throw new Error('Failed to extract hotel data');
       }
@@ -689,13 +703,14 @@ export default function Workflow() {
         // Update the selected hotel ID
         setSelectedHotelId(newHotel.id);
         
-        // Update workflow data with the new hotel info
+        // Update workflow data with the new hotel info including automated price research
         setWorkflowData(prev => ({
           ...prev,
           hotelName: newHotel.name,
           stars: newHotel.stars || 0,
           roomCount: newHotel.roomCount || 0,
-          hotelUrl: newHotel.url || ''
+          hotelUrl: newHotel.url || '',
+          averagePrice: extractedData.averagePrice || 0
         }));
         
         // Close dialogs
@@ -1260,20 +1275,72 @@ export default function Workflow() {
                 </div>
                 
                 <div>
-                  <label className="text-sm font-medium text-gray-700">Durchschnittlicher Zimmerpreis (Google-Recherche)</label>
-                  <input 
-                    type="number"
-                    step="0.01"
-                    placeholder="z.B. 120,00"
-                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    value={workflowData.averagePrice === 0 ? '' : workflowData.averagePrice}
-                    onFocus={(e) => {
-                      if (workflowData.averagePrice === 0) {
-                        e.target.value = '';
-                      }
-                    }}
-                    onChange={(e) => updateWorkflowData({ averagePrice: parseFloat(e.target.value) || 0 })}
-                  />
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      Durchschnittlicher Zimmerpreis
+                    </label>
+                    {extractedData?.priceResearch && (
+                      <div className="flex items-center gap-2">
+                        <Badge 
+                          variant="secondary" 
+                          className={`text-xs ${
+                            extractedData.priceResearch.confidence === 'high' ? 'bg-green-100 text-green-800' :
+                            extractedData.priceResearch.confidence === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-orange-100 text-orange-800'
+                          }`}
+                        >
+                          🤖 AI-Recherche: {extractedData.priceResearch.confidence}
+                        </Badge>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="relative">
+                    <input 
+                      type="number"
+                      step="0.01"
+                      placeholder="Automatisch recherchiert oder manuell eingeben"
+                      className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                        extractedData?.averagePrice ? 'bg-green-50 border-green-300' : ''
+                      }`}
+                      value={workflowData.averagePrice === 0 ? '' : workflowData.averagePrice}
+                      onFocus={(e) => {
+                        if (workflowData.averagePrice === 0) {
+                          e.target.value = '';
+                        }
+                      }}
+                      onChange={(e) => updateWorkflowData({ averagePrice: parseFloat(e.target.value) || 0 })}
+                    />
+                    {extractedData?.averagePrice && (
+                      <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                        <div className="flex items-center gap-1 text-green-600">
+                          <Check className="h-4 w-4" />
+                          <span className="text-xs font-medium">Auto</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {extractedData?.priceResearch && (
+                    <div className="mt-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <div className="flex items-start gap-2">
+                        <Brain className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                        <div className="flex-1 text-xs">
+                          <p className="font-medium text-blue-800 mb-1">
+                            Automatische Preisrecherche
+                          </p>
+                          <p className="text-blue-700 mb-2">
+                            {extractedData.priceResearch.methodology}
+                          </p>
+                          <div className="flex flex-wrap gap-2 text-blue-600">
+                            <span>Spanne: {extractedData.priceResearch.priceRange?.low}€ - {extractedData.priceResearch.priceRange?.high}€</span>
+                            <span>•</span>
+                            <span>Quellen: {extractedData.priceResearch.dataSource}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex justify-between mt-6">
