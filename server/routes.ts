@@ -877,6 +877,187 @@ If exact pricing cannot be determined, set averagePrice to null and explain in m
     }
   });
 
+  // Comprehensive Excel export for multiple calculations
+  app.post('/api/export/calculations-excel', requireAuth, async (req: any, res) => {
+    try {
+      const { calculations } = req.body;
+      const userId = req.user.id;
+      
+      if (!calculations || !Array.isArray(calculations)) {
+        return res.status(400).json({ message: "Invalid calculations data" });
+      }
+
+      console.log(`Exporting ${calculations.length} calculations to Excel for user ${userId}`);
+      
+      const XLSX = await import('xlsx');
+      
+      // Create workbook
+      const workbook = XLSX.utils.book_new();
+      
+      // Main calculations summary sheet
+      const summaryData = calculations.map((calc: any, index: number) => {
+        const averagePrice = parseFloat(calc.averagePrice?.toString() || "0");
+        const voucherPrice = parseFloat(calc.voucherPrice?.toString() || "0");
+        const operationalCosts = parseFloat(calc.operationalCosts?.toString() || "0");
+        const vatAmount = parseFloat(calc.vatAmount?.toString() || "0");
+        const profitMargin = parseFloat(calc.profitMargin?.toString() || "0");
+        const totalPrice = parseFloat(calc.totalPrice?.toString() || "0");
+        const roomCount = parseInt(calc.roomCount?.toString() || "0");
+        const occupancyRate = parseFloat(calc.occupancyRate?.toString() || "0");
+        
+        // Calculate derived metrics
+        const totalRevenue = totalPrice * roomCount * (occupancyRate / 100);
+        const totalCosts = operationalCosts + vatAmount;
+        const netProfit = totalRevenue - totalCosts;
+        const profitMarginPercentage = totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0;
+        const discountPercentage = averagePrice > 0 ? ((averagePrice - voucherPrice) / averagePrice) * 100 : 0;
+        const discountAmount = averagePrice - voucherPrice;
+        
+        return {
+          'Nr.': index + 1,
+          'Hotel Name': calc.hotelName || 'Unknown Hotel',
+          'Hotel Website': calc.hotelUrl || '',
+          'Stars': calc.stars || 0,
+          'Room Count': roomCount,
+          'Occupancy Rate (%)': occupancyRate,
+          'Average Market Price (€)': averagePrice.toFixed(2),
+          'Voucher Price (€)': voucherPrice.toFixed(2),
+          'Discount (%)': discountPercentage.toFixed(1),
+          'Discount Amount (€)': discountAmount.toFixed(2),
+          'Operational Costs (€)': operationalCosts.toFixed(2),
+          'VAT Rate (%)': calc.vatRate || 0,
+          'VAT Amount (€)': vatAmount.toFixed(2),
+          'Total Price (€)': totalPrice.toFixed(2),
+          'Profit Margin (€)': profitMargin.toFixed(2),
+          'Total Revenue (€)': totalRevenue.toFixed(2),
+          'Total Costs (€)': totalCosts.toFixed(2),
+          'Net Profit (€)': netProfit.toFixed(2),
+          'Profit Margin (%)': profitMarginPercentage.toFixed(1),
+          'Cost per Room (€)': roomCount > 0 ? (totalCosts / roomCount).toFixed(2) : '0.00',
+          'Revenue per Room (€)': roomCount > 0 ? (totalRevenue / roomCount).toFixed(2) : '0.00',
+          'Created Date': calc.createdAt ? new Date(calc.createdAt).toLocaleDateString('de-DE') : '',
+          'Created Time': calc.createdAt ? new Date(calc.createdAt).toLocaleTimeString('de-DE') : '',
+          'Last Updated': calc.updatedAt ? new Date(calc.updatedAt).toLocaleDateString('de-DE') : '',
+          'Status': profitMargin > 30 ? 'High Profit' : profitMargin > 20 ? 'Good Profit' : 'Low Profit',
+          'Calculation ID': calc.id
+        };
+      });
+      
+      // Create summary worksheet
+      const summaryWS = XLSX.utils.json_to_sheet(summaryData);
+      
+      // Set column widths for better readability
+      const colWidths = [
+        { wch: 5 },   // Nr.
+        { wch: 25 },  // Hotel Name
+        { wch: 30 },  // Website
+        { wch: 6 },   // Stars
+        { wch: 12 },  // Room Count
+        { wch: 15 },  // Occupancy Rate
+        { wch: 18 },  // Average Market Price
+        { wch: 15 },  // Voucher Price
+        { wch: 12 },  // Discount %
+        { wch: 15 },  // Discount Amount
+        { wch: 18 },  // Operational Costs
+        { wch: 12 },  // VAT Rate
+        { wch: 12 },  // VAT Amount
+        { wch: 15 },  // Total Price
+        { wch: 15 },  // Profit Margin
+        { wch: 15 },  // Total Revenue
+        { wch: 15 },  // Total Costs
+        { wch: 15 },  // Net Profit
+        { wch: 15 },  // Profit Margin %
+        { wch: 15 },  // Cost per Room
+        { wch: 18 },  // Revenue per Room
+        { wch: 12 },  // Created Date
+        { wch: 12 },  // Created Time
+        { wch: 12 },  // Last Updated
+        { wch: 12 },  // Status
+        { wch: 12 }   // ID
+      ];
+      summaryWS['!cols'] = colWidths;
+      
+      XLSX.utils.book_append_sheet(workbook, summaryWS, 'Calculations Summary');
+      
+      // Financial overview sheet
+      const totalCalculations = calculations.length;
+      const totalRevenue = summaryData.reduce((sum: number, row: any) => sum + parseFloat(row['Total Revenue (€)'] || 0), 0);
+      const totalProfit = summaryData.reduce((sum: number, row: any) => sum + parseFloat(row['Net Profit (€)'] || 0), 0);
+      const averageProfit = totalCalculations > 0 ? totalProfit / totalCalculations : 0;
+      const totalHotels = new Set(calculations.map((calc: any) => calc.hotelName)).size;
+      const averageOccupancy = summaryData.reduce((sum: number, row: any) => sum + parseFloat(row['Occupancy Rate (%)'] || 0), 0) / totalCalculations;
+      
+      const overviewData = [
+        { 'Metric': 'Total Calculations', 'Value': totalCalculations, 'Unit': 'count' },
+        { 'Metric': 'Unique Hotels', 'Value': totalHotels, 'Unit': 'count' },
+        { 'Metric': 'Total Revenue', 'Value': totalRevenue.toFixed(2), 'Unit': '€' },
+        { 'Metric': 'Total Profit', 'Value': totalProfit.toFixed(2), 'Unit': '€' },
+        { 'Metric': 'Average Profit per Calculation', 'Value': averageProfit.toFixed(2), 'Unit': '€' },
+        { 'Metric': 'Average Occupancy Rate', 'Value': averageOccupancy.toFixed(1), 'Unit': '%' },
+        { 'Metric': 'Profit Margin', 'Value': totalRevenue > 0 ? ((totalProfit / totalRevenue) * 100).toFixed(1) : '0.0', 'Unit': '%' },
+        { 'Metric': 'Export Date', 'Value': new Date().toLocaleDateString('de-DE'), 'Unit': '' },
+        { 'Metric': 'Export Time', 'Value': new Date().toLocaleTimeString('de-DE'), 'Unit': '' }
+      ];
+      
+      const overviewWS = XLSX.utils.json_to_sheet(overviewData);
+      overviewWS['!cols'] = [{ wch: 30 }, { wch: 20 }, { wch: 10 }];
+      XLSX.utils.book_append_sheet(workbook, overviewWS, 'Financial Overview');
+      
+      // Hotels analysis sheet
+      const hotelAnalysis = Array.from(new Set(calculations.map((calc: any) => calc.hotelName)))
+        .filter(Boolean)
+        .map(hotelName => {
+          const hotelCalcs = calculations.filter((calc: any) => calc.hotelName === hotelName);
+          const avgRevenue = hotelCalcs.reduce((sum: number, calc: any) => {
+            const totalPrice = parseFloat(calc.totalPrice?.toString() || "0");
+            const roomCount = parseInt(calc.roomCount?.toString() || "0");
+            const occupancyRate = parseFloat(calc.occupancyRate?.toString() || "0");
+            return sum + (totalPrice * roomCount * (occupancyRate / 100));
+          }, 0) / hotelCalcs.length;
+          
+          const avgProfit = hotelCalcs.reduce((sum: number, calc: any) => {
+            return sum + parseFloat(calc.profitMargin?.toString() || "0");
+          }, 0) / hotelCalcs.length;
+          
+          return {
+            'Hotel Name': hotelName,
+            'Calculations Count': hotelCalcs.length,
+            'Average Stars': hotelCalcs.reduce((sum: number, calc: any) => sum + (calc.stars || 0), 0) / hotelCalcs.length,
+            'Average Revenue (€)': avgRevenue.toFixed(2),
+            'Average Profit (€)': avgProfit.toFixed(2),
+            'Total Room Count': hotelCalcs.reduce((sum: number, calc: any) => sum + parseInt(calc.roomCount?.toString() || "0"), 0),
+            'Website': hotelCalcs[0]?.hotelUrl || '',
+            'First Calculation': hotelCalcs[0]?.createdAt ? new Date(hotelCalcs[0].createdAt).toLocaleDateString('de-DE') : '',
+            'Last Calculation': hotelCalcs[hotelCalcs.length - 1]?.createdAt ? new Date(hotelCalcs[hotelCalcs.length - 1].createdAt).toLocaleDateString('de-DE') : ''
+          };
+        });
+      
+      const hotelWS = XLSX.utils.json_to_sheet(hotelAnalysis);
+      hotelWS['!cols'] = [
+        { wch: 25 }, { wch: 15 }, { wch: 12 }, { wch: 18 }, 
+        { wch: 15 }, { wch: 15 }, { wch: 30 }, { wch: 15 }, { wch: 15 }
+      ];
+      XLSX.utils.book_append_sheet(workbook, hotelWS, 'Hotels Analysis');
+      
+      // Generate Excel buffer
+      const excelBuffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+      
+      // Set headers and send file
+      const filename = `bebo-convert-calculations-${new Date().toISOString().split('T')[0]}.xlsx`;
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.setHeader('Content-Length', excelBuffer.length);
+      
+      res.send(excelBuffer);
+      
+      console.log(`Excel export completed: ${filename} (${excelBuffer.length} bytes)`);
+      
+    } catch (error) {
+      console.error("Error exporting calculations to Excel:", error);
+      res.status(500).json({ message: "Failed to export calculations to Excel" });
+    }
+  });
+
   // Test export endpoint to verify basic functionality
   app.get('/api/export/test', requireAuth, async (req: any, res) => {
     try {

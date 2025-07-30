@@ -125,6 +125,52 @@ export default function Calculations() {
     },
   });
 
+  // Excel export mutation
+  const exportMutation = useMutation({
+    mutationFn: async () => {
+      const dataToExport = filteredCalculations.length > 0 ? filteredCalculations : calculationsData;
+      
+      const response = await fetch("/api/export/calculations-excel", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ calculations: dataToExport })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Export failed: ${response.statusText}`);
+      }
+      
+      return response.blob();
+    },
+    onSuccess: (blob) => {
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `bebo-convert-calculations-${new Date().toISOString().split('T')[0]}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Export Successful",
+        description: `Exported ${filteredCalculations.length > 0 ? filteredCalculations.length : calculationsData.length} calculations to Excel`,
+      });
+    },
+    onError: (error) => {
+      console.error("Export error:", error);
+      toast({
+        title: "Export Failed",
+        description: "Failed to export calculations to Excel",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Action handlers
   const handleView = (calculation: PricingCalculation) => {
     setSelectedCalculation(calculation);
@@ -178,43 +224,43 @@ export default function Calculations() {
 
         // Price range filter
         if (filters.priceRange.enabled) {
-          const price = calc.totalPrice || 0;
+          const price = parseFloat(calc.totalPrice?.toString() || "0");
           if (price < filters.priceRange.min || price > filters.priceRange.max) return false;
         }
 
         // Profit range filter
         if (filters.profitRange.enabled) {
-          const profit = calc.profitMargin || 0;
+          const profit = parseFloat(calc.profitMargin?.toString() || "0");
           if (profit < filters.profitRange.min || profit > filters.profitRange.max) return false;
         }
 
         // Hotel stars filter
         if (filters.stars.enabled && filters.stars.values.length > 0) {
-          const stars = calc.stars || 0;
+          const stars = parseInt(calc.stars?.toString() || "0");
           if (!filters.stars.values.includes(stars)) return false;
         }
 
         // VAT rate filter
         if (filters.vatRate.enabled && filters.vatRate.values.length > 0) {
-          const vatRate = calc.vatRate || 0;
+          const vatRate = parseFloat(calc.vatRate?.toString() || "0");
           if (!filters.vatRate.values.includes(vatRate)) return false;
         }
 
         // Room count filter
         if (filters.roomCount.enabled) {
-          const roomCount = calc.roomCount || 0;
+          const roomCount = parseInt(calc.roomCount?.toString() || "0");
           if (roomCount < filters.roomCount.min || roomCount > filters.roomCount.max) return false;
         }
 
         // Occupancy rate filter
         if (filters.occupancyRate.enabled) {
-          const occupancyRate = parseFloat(calc.occupancyRate || "0");
+          const occupancyRate = parseFloat(calc.occupancyRate?.toString() || "0");
           if (occupancyRate < filters.occupancyRate.min || occupancyRate > filters.occupancyRate.max) return false;
         }
 
         // Status filter
         if (filters.status.enabled && filters.status.values.length > 0) {
-          const profitMargin = calc.profitMargin || 0;
+          const profitMargin = parseFloat(calc.profitMargin?.toString() || "0");
           const status = getStatusBadge(profitMargin).text;
           if (!filters.status.values.includes(status)) return false;
         }
@@ -229,12 +275,12 @@ export default function Calculations() {
             bValue = b.hotelName || "";
             break;
           case "revenue":
-            aValue = a.totalPrice || 0;
-            bValue = b.totalPrice || 0;
+            aValue = parseFloat(a.totalPrice?.toString() || "0");
+            bValue = parseFloat(b.totalPrice?.toString() || "0");
             break;
           case "profit":
-            aValue = a.profitMargin || 0;
-            bValue = b.profitMargin || 0;
+            aValue = parseFloat(a.profitMargin?.toString() || "0");
+            bValue = parseFloat(b.profitMargin?.toString() || "0");
             break;
           default:
             aValue = new Date(a.createdAt || 0).getTime();
@@ -250,8 +296,8 @@ export default function Calculations() {
 
   // Calculate statistics
   const totalCalculations = calculationsData.length;
-  const totalRevenue = calculationsData.reduce((sum, calc) => sum + (calc.totalPrice || 0), 0);
-  const totalProfit = calculationsData.reduce((sum, calc) => sum + (calc.profitMargin || 0), 0);
+  const totalRevenue = calculationsData.reduce((sum, calc) => sum + parseFloat(calc.totalPrice?.toString() || "0"), 0);
+  const totalProfit = calculationsData.reduce((sum, calc) => sum + parseFloat(calc.profitMargin?.toString() || "0"), 0);
   const uniqueHotels = new Set(calculationsData.map(calc => calc.hotelName)).size;
 
   const getStatusBadge = (profitMargin: number) => {
@@ -276,11 +322,21 @@ export default function Calculations() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline">
-              <Download className="h-4 w-4 mr-2" />
-              Export All
+            <Button 
+              variant="outline" 
+              onClick={() => exportMutation.mutate()}
+              disabled={exportMutation.isPending}
+              className="relative overflow-hidden bg-gradient-to-r from-emerald-50 to-green-50 hover:from-emerald-100 hover:to-green-100 border-emerald-200 text-emerald-700 hover:text-emerald-800"
+            >
+              <Download className={`h-4 w-4 mr-2 ${exportMutation.isPending ? 'animate-bounce' : ''}`} />
+              {exportMutation.isPending ? 'Exporting...' : 'Export to Excel'}
+              {filteredCalculations.length !== calculationsData.length && (
+                <Badge className="ml-2 bg-blue-500 text-white">
+                  {filteredCalculations.length}
+                </Badge>
+              )}
             </Button>
-            <Button>
+            <Button onClick={() => setLocation("/workflow")}>
               <Plus className="h-4 w-4 mr-2" />
               New Calculation
             </Button>
