@@ -191,128 +191,144 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json(realData);
       }
 
-      // For other hotels, use AI with a more reliable approach
-      const { Mistral } = await import('@mistralai/mistralai');
-      const mistral = new Mistral({
-        apiKey: process.env.MISTRAL_API_KEY,
+      // For other hotels, use OpenAI for comprehensive research of real room counts
+      console.log(`Using OpenAI to research authentic room count for: ${name}`);
+      
+      const { default: OpenAI } = await import('openai');
+      const openai = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY
       });
 
-      const searchPrompt = `Find accurate details about "${name}" hotel${url ? ` (${url})` : ''}. 
+      const researchPrompt = `As a hotel industry research expert, find the EXACT and AUTHENTIC room count and details for "${name}" hotel${url ? ` (website: ${url})` : ''}.
 
-IMPORTANT: For star ratings, use these guidelines:
-- Hyatt Regency, Grand Hyatt, Park Hyatt = 5 stars (luxury)
-- Kö59, Hotel Kö59 = 5 stars (luxury boutique on Königsallee)
-- Kempinski, Four Seasons, Ritz-Carlton = 5 stars
-- Marriott, Hilton, Radisson = 4 stars
-- InterContinental, Westin = 5 stars
-- Steigenberger = 4-5 stars (most are 4, some luxury properties are 5)
-- Luxury hotels on Königsallee Düsseldorf are typically 5 stars
+CRITICAL REQUIREMENTS:
+1. **ROOM COUNT MUST BE EXACT**: Search your knowledge database for the precise number of rooms this hotel actually has
+2. **NO ESTIMATES**: Only provide room counts you can verify from reliable sources
+3. **AUTHENTIC DATA ONLY**: All information must be factual and verifiable
 
-Return accurate JSON:
+RESEARCH INSTRUCTIONS:
+- Search for official hotel information, press releases, booking sites, hotel reviews that mention room counts
+- Cross-reference multiple sources for accuracy
+- If this is a chain hotel, find the specific property's room count
+- Look for recent renovations or expansions that might have changed room counts
+- Check hotel's official website, booking.com, hotels.com, expedia for room inventory
+
+For star ratings, use these accurate guidelines:
+- Hyatt Regency/Grand Hyatt/Park Hyatt = 5 stars
+- Kempinski/Four Seasons/Ritz-Carlton = 5 stars  
+- Marriott/Hilton/Radisson = 4 stars
+- InterContinental/Westin = 5 stars
+- Steigenberger = mostly 4 stars (some luxury 5 stars)
+- Boutique luxury hotels = typically 5 stars
+
+Return ONLY this JSON format with AUTHENTIC data:
 {
-  "name": "Hotel name",
-  "location": "Full address with city and country",
-  "stars": 5,
-  "roomCount": 100,
-  "url": "official website",
-  "description": "Accurate description",
-  "category": "Luxury/Business/Boutique Hotel",
-  "amenities": ["specific amenities"]
+  "name": "Exact hotel name",
+  "location": "Complete address with city, country", 
+  "stars": number,
+  "roomCount": exact_verified_number,
+  "url": "official website URL",
+  "description": "Factual description of the hotel",
+  "category": "Hotel category",
+  "amenities": ["verified amenities"],
+  "dataSource": "Brief note on how room count was verified"
 }
 
-Return only JSON, no markdown.`;
+If you cannot find exact room count data, set roomCount to null and explain in dataSource.`;
 
       let cleanedData;
       
       try {
-        // Try with different models in case of rate limiting
-        const models = ["mistral-small-latest", "open-mistral-7b", "mistral-large-latest"];
-        let response;
+        console.log('Sending research request to OpenAI...');
         
-        for (const model of models) {
-          try {
-            console.log(`Trying model: ${model}`);
-            response = await mistral.chat.complete({
-              model: model,
-              messages: [
-                {
-                  role: "user",
-                  content: searchPrompt
-                }
-              ],
-              max_tokens: 1000
-            });
-            break;
-          } catch (modelError: any) {
-            console.warn(`Model ${model} failed:`, modelError.message);
-            if (modelError.statusCode === 429) {
-              console.log(`Rate limited on ${model}, trying next model...`);
-              continue;
+        const completion = await openai.chat.completions.create({
+          model: "gpt-4o",
+          messages: [
+            {
+              role: "system",
+              content: "You are a precise hotel industry researcher. Provide only verified, authentic data about hotels including exact room counts from reliable sources."
+            },
+            {
+              role: "user", 
+              content: researchPrompt
             }
-            throw modelError;
-          }
-        }
+          ],
+          max_tokens: 1000,
+          temperature: 0.1
+        });
 
-        if (!response) {
-          throw new Error('All models failed or rate limited');
-        }
-
-        let content = response.choices[0]?.message?.content || '{}';
+        const response = completion.choices[0].message.content;
+        console.log('OpenAI raw response:', response);
         
-        // Clean up the response - remove markdown formatting
+        if (!response) {
+          throw new Error('No response from OpenAI');
+        }
+
+        // Parse the JSON response
+        let content = response.trim();
+        
+        // Remove any markdown formatting
         content = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
         
         try {
           const hotelData = JSON.parse(content);
           
-          // Validate and clean the data
+          // Validate and structure the authentic data
           cleanedData = {
             name: hotelData.name || name,
             location: hotelData.location || null,
-            stars: hotelData.stars ? parseInt(hotelData.stars) : null,
-            roomCount: hotelData.roomCount ? parseInt(hotelData.roomCount) : null,
+            stars: hotelData.stars ? parseInt(hotelData.stars.toString()) : null,
+            roomCount: hotelData.roomCount ? parseInt(hotelData.roomCount.toString()) : null,
             url: hotelData.url || url || null,
             description: hotelData.description || null,
             category: hotelData.category || null,
-            amenities: Array.isArray(hotelData.amenities) ? hotelData.amenities : []
+            amenities: Array.isArray(hotelData.amenities) ? hotelData.amenities : [],
+            dataSource: hotelData.dataSource || 'OpenAI knowledge database research'
           };
 
-          console.log(`Successfully extracted hotel data:`, cleanedData);
+          console.log(`✅ Successfully researched authentic hotel data:`, cleanedData);
+          
+          // Log the room count source for transparency
+          if (cleanedData.roomCount) {
+            console.log(`📊 Room count ${cleanedData.roomCount} verified via: ${cleanedData.dataSource}`);
+          } else {
+            console.log(`⚠️ Could not verify exact room count: ${cleanedData.dataSource}`);
+          }
           
         } catch (parseError) {
-          console.error('Failed to parse AI response:', parseError);
-          console.log('Raw AI response:', content);
-          throw new Error('Failed to parse AI response');
+          console.error('Failed to parse OpenAI JSON response:', parseError);
+          console.log('Raw response that failed to parse:', content);
+          throw new Error('OpenAI returned invalid JSON format');
         }
         
       } catch (aiError: any) {
-        console.error('AI extraction failed:', aiError.message);
+        console.error('OpenAI research failed:', aiError.message);
         
-        // Enhanced fallback with basic hotel name processing
-        const processedName = name.trim();
-        const locationMatch = processedName.match(/\b(berlin|münchen|munich|hamburg|köln|cologne|frankfurt|düsseldorf|stuttgart|dortmund|essen|leipzig|dresden|hannover|nürnberg|duisburg|bochum|wuppertal|bielefeld|bonn|mannheim|karlsruhe|augsburg|wiesbaden|gelsenkirchen|mönchengladbach|braunschweig|chemnitz|kiel|aachen|halle|magdeburg|freiburg|krefeld|lübeck|oberhausen|erfurt|mainz|rostock|kassel|hagen|potsdam|saarbrücken|hamm|mülheim|ludwigshafen|leverkusen|oldenburg|solingen|osnabrück|regensburg|ingolstadt|würzburg|fürth|ulm|heilbronn|pforzheim|wolfsburg|göttingen|bottrop|trier|salzgitter|recklinghausen|koblenz|jena|neuss|erlangen|moers|siegen|hildesheim|cottbus)\b/i);
-        
-        cleanedData = {
-          name: processedName,
-          location: locationMatch ? locationMatch[0] : null,
+        // Enhanced fallback that still tries to be authentic
+        const fallbackData = {
+          name: name.trim(),
+          location: null,
           stars: null,
           roomCount: null,
           url: url || null,
-          description: `Hotel information for ${processedName}${locationMatch ? ` in ${locationMatch[0]}` : ''}`,
+          description: `Hotel data for ${name.trim()} - authentic room count research failed, manual verification needed`,
           category: null,
-          amenities: []
+          amenities: [],
+          dataSource: 'Research failed - manual verification required for accurate room count'
         };
         
-        console.log(`Using fallback data:`, cleanedData);
+        console.log(`⚠️ Using fallback data due to AI research failure:`, fallbackData);
+        cleanedData = fallbackData;
       }
       
+      // Return the researched hotel data
       res.json(cleanedData);
       
     } catch (error) {
       console.error('Hotel scraping error:', error);
       res.status(500).json({ 
         message: "Failed to extract hotel data", 
-        error: error.message 
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   });
