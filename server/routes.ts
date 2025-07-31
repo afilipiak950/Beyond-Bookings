@@ -873,12 +873,12 @@ CRITICAL: You must always return a specific price number in EUR. If exact data u
           testResponse = await mistral.chat.complete({
             model: model,
             messages: [{ role: "user", content: "Hello, respond with 'API working'" }],
-            maxTokens: 50
+            max_tokens: 50
           });
           console.log(`Test successful with model: ${model}`);
           break;
-        } catch (modelError: any) {
-          console.warn(`Model ${model} test failed:`, modelError?.message || 'Unknown error');
+        } catch (modelError) {
+          console.warn(`Model ${model} test failed:`, modelError.message);
           if (model === models[models.length - 1]) {
             console.log('All Mistral models failed, but API key is valid');
             testResponse = { choices: [{ message: { content: 'API key valid, rate limited' } }] };
@@ -904,11 +904,11 @@ CRITICAL: You must always return a specific price number in EUR. If exact data u
         originalPath: "test.png"
       };
       
-      const result = await documentProcessor['processFileWithOCR'](fakeExtractedFile, 999, req.user?.id.toString() || '999');
+      const result = await documentProcessor['processFileWithOCR'](fakeExtractedFile, 999, req.user.id.toString());
       
       res.json({
         success: true,
-        mistralTest: testResponse?.choices?.[0]?.message?.content,
+        mistralTest: testResponse.choices[0]?.message?.content,
         apiKeyExists: !!process.env.MISTRAL_API_KEY,
         ocrResult: result,
         message: "OCR debug test completed"
@@ -917,38 +917,6 @@ CRITICAL: You must always return a specific price number in EUR. If exact data u
     } catch (error) {
       console.error("OCR debug error:", error);
       res.status(500).json({ error: error.message, stack: error.stack });
-    }
-  });
-
-  // Basic hotel extraction endpoint
-  app.post('/api/hotels/extract', requireAuth, async (req: Request, res: Response) => {
-    try {
-      const { hotelName, hotelUrl } = req.body;
-      
-      if (!hotelName?.trim()) {
-        return res.status(400).json({ error: 'Hotel name is required' });
-      }
-
-      // Generate realistic hotel data based on the name
-      const extractedData = {
-        name: hotelName.trim(),
-        url: hotelUrl?.trim() || null,
-        city: 'Vienna', // Default city
-        country: 'Austria', // Default country
-        stars: Math.floor(Math.random() * 3) + 3, // Random 3-5 stars
-        roomCount: Math.floor(Math.random() * 200) + 50, // Random 50-250 rooms
-        averagePrice: Math.floor(Math.random() * 300) + 100, // Random 100-400€
-        description: `A beautiful hotel in the heart of the city offering excellent service and comfortable accommodations.`,
-        contact: {
-          email: 'info@' + hotelName.toLowerCase().replace(/\s+/g, '') + '.com',
-          phone: '+43 1 ' + Math.floor(Math.random() * 9000000) + 1000000
-        }
-      };
-
-      res.json(extractedData);
-    } catch (error) {
-      console.error('Hotel extraction error:', error);
-      res.status(500).json({ error: 'Failed to extract hotel data' });
     }
   });
 
@@ -2827,7 +2795,7 @@ Provide an ultra-detailed, comprehensive response that demonstrates deep analysi
               content: message
             }
           ],
-          maxTokens: 2000,
+          max_tokens: 2000,
           temperature: 0.7
         });
 
@@ -2852,7 +2820,7 @@ Provide an ultra-detailed, comprehensive response that demonstrates deep analysi
         
         // Add contextual information based on available data
         if (userContext) {
-          fallbackMessage += `\n\n---\n**Your Current Data Summary:**\n📊 ${userContext?.calculations?.total || 0} pricing calculations in system\n🏨 ${userContext?.hotels?.total || 0} hotels in portfolio\n📄 ${userContext?.documents?.uploads || 0} documents uploaded`;
+          fallbackMessage += `\n\n---\n**Your Current Data Summary:**\n📊 ${userContext.calculations.total} pricing calculations in system\n🏨 ${userContext.hotels.total} hotels in portfolio\n📄 ${userContext.documents.uploads} documents uploaded`;
         }
         
         res.status(200).json({ 
@@ -2867,7 +2835,7 @@ Provide an ultra-detailed, comprehensive response that demonstrates deep analysi
       } else {
         res.status(500).json({ 
           message: "I'm experiencing technical difficulties. Please ensure your OpenAI API key is configured correctly and try again.",
-          error: (error as any)?.message || 'Unknown error'
+          error: error.message 
         });
       }
     }
