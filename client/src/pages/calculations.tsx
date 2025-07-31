@@ -1003,27 +1003,38 @@ export default function Calculations() {
           </DialogHeader>
           
           {selectedCalculation && (() => {
-            // Calculate real business metrics from saved data
-            const averagePrice = parseFloat(selectedCalculation.averagePrice || "0");
-            const voucherPrice = parseFloat(selectedCalculation.voucherPrice || "0");
-            const operationalCosts = parseFloat(selectedCalculation.operationalCosts || "0");
-            const vatAmount = parseFloat(selectedCalculation.vatAmount || "0");
-            const profitMargin = parseFloat(selectedCalculation.profitMargin || "0");
-            const totalPrice = parseFloat(selectedCalculation.totalPrice || "0");
-            const discountVsMarket = parseFloat(selectedCalculation.discountVsMarket || "0");
+            // Extract real data from calculation using exact workflow formulas
+            const projectCosts = parseFloat(selectedCalculation.projectCosts || "0");
+            const stars = selectedCalculation.stars || 0;
+            const actualPrice = parseFloat(selectedCalculation.averagePrice || "0");
             const roomCount = selectedCalculation.roomCount || 0;
             const occupancyRate = parseFloat(selectedCalculation.occupancyRate || "0");
             
-            // Real business calculations
-            const totalRevenue = totalPrice * roomCount * (occupancyRate / 100);
-            const totalCosts = operationalCosts + vatAmount;
-            const netProfit = totalRevenue - totalCosts;
-            const profitMarginPercentage = totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0;
-            const costPerRoom = totalCosts / roomCount;
-            const revenuePerRoom = totalRevenue / roomCount;
-            const discountPercentage = averagePrice > 0 ? ((averagePrice - voucherPrice) / averagePrice) * 100 : 0;
-            const vatPercentage = parseFloat(selectedCalculation.vatRate || "0");
-            const preTaxAmount = totalPrice - vatAmount;
+            // Calculate hotel voucher value based on stars (exact workflow logic)
+            const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30;
+            
+            // Core Excel business formulas from workflow
+            const vertragsvolumenEstimate = (projectCosts / voucherValue) * (actualPrice * 0.75) * 1.1;
+            const profit = vertragsvolumenEstimate - projectCosts;
+            const marge = vertragsvolumenEstimate - projectCosts;
+            const vorsteuerProdukt = (projectCosts * 1.19) - projectCosts;
+            const vorsteuerTripz = (vertragsvolumenEstimate * 0.19) * 0.23;
+            const nettoSteuerzahlung = vorsteuerProdukt - vorsteuerTripz;
+            const profitMarginPercentage = vertragsvolumenEstimate > 0 ? (profit / vertragsvolumenEstimate) * 100 : 0;
+            
+            // Additional metrics for display
+            const totalRevenue = vertragsvolumenEstimate;
+            const totalCosts = projectCosts;
+            const netProfit = profit;
+            const costPerRoom = roomCount > 0 ? totalCosts / roomCount : 0;
+            const revenuePerRoom = roomCount > 0 ? totalRevenue / roomCount : 0;
+            const discountPercentage = 0; // Not applicable in current business model
+            const vatAmount = vorsteuerProdukt;
+            const vatPercentage = 19;
+            const averagePrice = actualPrice;
+            const voucherPrice = voucherValue;
+            const operationalCosts = projectCosts;
+            const discountVsMarket = 0;
             
             return (
               <div className="space-y-8 p-6">
@@ -1050,8 +1061,8 @@ export default function Calculations() {
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="text-6xl font-bold">{formatCurrency(totalPrice)}</div>
-                        <div className="text-xl opacity-80">Total Price</div>
+                        <div className="text-6xl font-bold">{formatCurrency(vertragsvolumenEstimate)}</div>
+                        <div className="text-xl opacity-80">Vertragsvolumen Estimate</div>
                       </div>
                     </div>
                   </div>
@@ -1124,25 +1135,25 @@ export default function Calculations() {
                     </h3>
                     <div className="space-y-3">
                       <div className="flex justify-between items-center p-3 rounded-xl bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20">
-                        <span className="font-medium text-sm">Average Market Price</span>
-                        <span className="text-lg font-bold text-blue-600">{formatCurrency(averagePrice)}</span>
+                        <span className="font-medium text-sm">Projektkosten (brutto)</span>
+                        <span className="text-lg font-bold text-blue-600">{formatCurrency(projectCosts)}</span>
                       </div>
                       <div className="flex justify-between items-center p-3 rounded-xl bg-gradient-to-r from-green-50 to-teal-50 dark:from-green-900/20 dark:to-teal-900/20">
-                        <span className="font-medium text-sm">Voucher Price</span>
-                        <span className="text-lg font-bold text-green-600">{formatCurrency(voucherPrice)}</span>
+                        <span className="font-medium text-sm">Hotel Voucher Value ({stars}★)</span>
+                        <span className="text-lg font-bold text-green-600">{formatCurrency(voucherValue)}</span>
                       </div>
                       <div className="flex justify-between items-center p-3 rounded-xl bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20">
-                        <span className="font-medium text-sm">Operational Costs</span>
-                        <span className="text-lg font-bold text-orange-600">{formatCurrency(operationalCosts)}</span>
+                        <span className="font-medium text-sm">Durchschnittlicher Zimmerpreis</span>
+                        <span className="text-lg font-bold text-orange-600">{formatCurrency(actualPrice)}</span>
                       </div>
                       <div className="flex justify-between items-center p-3 rounded-xl bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20">
-                        <span className="font-medium text-sm">VAT ({vatPercentage}%)</span>
-                        <span className="text-lg font-bold text-purple-600">{formatCurrency(vatAmount)}</span>
+                        <span className="font-medium text-sm">Vorsteuer Produktkauf ({vatPercentage}%)</span>
+                        <span className="text-lg font-bold text-purple-600">{formatCurrency(vorsteuerProdukt)}</span>
                       </div>
                       <div className="border-t border-gray-200 dark:border-gray-700 pt-3">
                         <div className="flex justify-between items-center p-3 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20">
-                          <span className="font-bold">Total Price</span>
-                          <span className="text-xl font-bold text-emerald-600">{formatCurrency(totalPrice)}</span>
+                          <span className="font-bold">Vertragsvolumen Estimate</span>
+                          <span className="text-xl font-bold text-emerald-600">{formatCurrency(vertragsvolumenEstimate)}</span>
                         </div>
                       </div>
                     </div>
@@ -1159,17 +1170,17 @@ export default function Calculations() {
                     <div className="space-y-3">
                       <div className="p-3 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20">
                         <div className="flex justify-between items-center">
-                          <span className="font-medium text-sm">Total Revenue</span>
-                          <span className="text-lg font-bold text-blue-600">{formatCurrency(totalRevenue)}</span>
+                          <span className="font-medium text-sm">Profit inkl. Mehrverkauf</span>
+                          <span className="text-lg font-bold text-blue-600">{formatCurrency(profit)}</span>
                         </div>
                         <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                          {roomCount} rooms × {occupancyRate}% occupancy
+                          Vertragsvolumen Estimate - Projektkosten
                         </div>
                       </div>
                       <div className="p-3 rounded-xl bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20">
                         <div className="flex justify-between items-center">
-                          <span className="font-medium text-sm">Net Profit</span>
-                          <span className="text-lg font-bold text-green-600">{formatCurrency(netProfit)}</span>
+                          <span className="font-medium text-sm">Marge</span>
+                          <span className="text-lg font-bold text-green-600">{formatCurrency(marge)}</span>
                         </div>
                         <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                           Profit Margin: {formatPercentage(profitMarginPercentage)}
@@ -1177,20 +1188,20 @@ export default function Calculations() {
                       </div>
                       <div className="p-3 rounded-xl bg-gradient-to-r from-orange-50 to-yellow-50 dark:from-orange-900/20 dark:to-yellow-900/20">
                         <div className="flex justify-between items-center">
-                          <span className="font-medium text-sm">Cost Per Room</span>
-                          <span className="text-lg font-bold text-orange-600">{formatCurrency(costPerRoom)}</span>
+                          <span className="font-medium text-sm">Vorsteuer Tripz Provision</span>
+                          <span className="text-lg font-bold text-orange-600">{formatCurrency(vorsteuerTripz)}</span>
                         </div>
                         <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                          Revenue Per Room: {formatCurrency(revenuePerRoom)}
+                          (Vertragsvolumen × 0.19) × 0.23
                         </div>
                       </div>
                       <div className="p-3 rounded-xl bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20">
                         <div className="flex justify-between items-center">
-                          <span className="font-medium text-sm">Customer Savings</span>
-                          <span className="text-lg font-bold text-purple-600">{formatCurrency(discountVsMarket)}</span>
+                          <span className="font-medium text-sm">Netto Steuerzahlung</span>
+                          <span className="text-lg font-bold text-purple-600">{formatCurrency(nettoSteuerzahlung)}</span>
                         </div>
                         <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                          Discount: {formatPercentage(discountPercentage)}
+                          Vorsteuer Produktkauf - Vorsteuer Tripz
                         </div>
                       </div>
                     </div>
