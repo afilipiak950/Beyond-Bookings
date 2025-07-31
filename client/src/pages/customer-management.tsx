@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Users, Building2, Search, Plus, Globe, MapPin, Star, Loader2 } from "lucide-react";
+import { Users, Building2, Search, Plus, Globe, MapPin, Star, Loader2, Grid3X3, List, Eye } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
 export default function CustomerManagement() {
@@ -23,6 +23,7 @@ export default function CustomerManagement() {
   const [hotelUrl, setHotelUrl] = useState("");
   const [extractedData, setExtractedData] = useState<any>(null);
   const [extractionLoading, setExtractionLoading] = useState(false);
+  const [viewMode, setViewMode] = useState<'cards' | 'list'>('cards');
 
   // Fetch hotels data
   const { data: hotels, isLoading: hotelsLoading } = useQuery({
@@ -282,10 +283,37 @@ export default function CustomerManagement() {
         {/* Customers List */}
         <Card>
           <CardHeader>
-            <CardTitle>Hotel Clients</CardTitle>
-            <CardDescription>
-              {Array.isArray(hotels) ? hotels.length : 0} hotels in your database
-            </CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Building2 className="h-5 w-5" />
+                  Hotel Portfolio
+                </CardTitle>
+                <CardDescription>
+                  {Array.isArray(hotels) ? hotels.length : 0} hotels in your database
+                </CardDescription>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 border rounded-lg p-1">
+                  <Button
+                    variant={viewMode === 'cards' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setViewMode('cards')}
+                    className="h-8 px-2"
+                  >
+                    <Grid3X3 className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant={viewMode === 'list' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setViewMode('list')}
+                    className="h-8 px-2"
+                  >
+                    <List className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             {hotelsLoading ? (
@@ -293,35 +321,99 @@ export default function CustomerManagement() {
                 <Loader2 className="h-8 w-8 animate-spin" />
               </div>
             ) : Array.isArray(hotels) && hotels.length > 0 ? (
-              <div className="grid gap-4">
-                {hotels.map((hotel: any) => (
-                  <div key={hotel.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center space-x-4">
-                      <Building2 className="h-8 w-8 text-gray-400" />
-                      <div>
-                        <h3 className="font-medium">{hotel.name}</h3>
-                        <p className="text-sm text-gray-500 flex items-center">
-                          <MapPin className="h-4 w-4 mr-1" />
-                          {hotel.city}, {hotel.country}
-                        </p>
-                        {hotel.stars && (
-                          <div className="flex items-center mt-1">
-                            {Array.from({ length: hotel.stars }).map((_, i) => (
-                              <Star key={i} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                            ))}
+              viewMode === 'cards' ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {hotels.map((hotel: any) => (
+                    <Card key={hotel.id} className="group hover:shadow-lg transition-all duration-300 border-slate-200 hover:border-blue-300">
+                      <CardHeader className="pb-3">
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                              <Building2 className="h-6 w-6 text-white" />
+                            </div>
+                            <div>
+                              <CardTitle className="text-lg group-hover:text-blue-600 transition-colors">
+                                {hotel.name}
+                              </CardTitle>
+                              <p className="text-sm text-gray-500 flex items-center mt-1">
+                                <MapPin className="h-3 w-3 mr-1" />
+                                {hotel.city}, {hotel.country}
+                              </p>
+                            </div>
                           </div>
+                          {hotel.url && (
+                            <Button size="sm" variant="ghost" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      </CardHeader>
+                      <CardContent className="pt-0">
+                        <div className="space-y-3">
+                          {hotel.stars && (
+                            <div className="flex items-center gap-1">
+                              {Array.from({ length: hotel.stars }).map((_, i) => (
+                                <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                              ))}
+                              <span className="text-sm text-gray-500 ml-2">{hotel.stars} Star Hotel</span>
+                            </div>
+                          )}
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-gray-500">Rooms:</span>
+                            <span className="font-medium">{hotel.roomCount || 'N/A'}</span>
+                          </div>
+                          {hotel.averagePrice && (
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-gray-500">Avg. Price:</span>
+                              <span className="font-semibold text-green-600">€{hotel.averagePrice}</span>
+                            </div>
+                          )}
+                          {hotel.description && (
+                            <p className="text-sm text-gray-600 line-clamp-2">{hotel.description}</p>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {hotels.map((hotel: any) => (
+                    <div key={hotel.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                      <div className="flex items-center space-x-4">
+                        <Building2 className="h-8 w-8 text-gray-400" />
+                        <div>
+                          <h3 className="font-medium">{hotel.name}</h3>
+                          <p className="text-sm text-gray-500 flex items-center">
+                            <MapPin className="h-4 w-4 mr-1" />
+                            {hotel.city}, {hotel.country}
+                          </p>
+                          {hotel.stars && (
+                            <div className="flex items-center mt-1">
+                              {Array.from({ length: hotel.stars }).map((_, i) => (
+                                <Star key={i} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-6">
+                        <div className="text-right">
+                          <p className="text-sm text-gray-500">{hotel.roomCount || 'N/A'} rooms</p>
+                          {hotel.averagePrice && (
+                            <p className="font-medium text-green-600">€{hotel.averagePrice}</p>
+                          )}
+                        </div>
+                        {hotel.url && (
+                          <Button size="sm" variant="ghost">
+                            <Eye className="h-4 w-4" />
+                          </Button>
                         )}
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-sm text-gray-500">{hotel.roomCount} rooms</p>
-                      {hotel.averagePrice && (
-                        <p className="font-medium">€{hotel.averagePrice}</p>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )
             ) : (
               <div className="text-center py-8">
                 <Building2 className="h-12 w-12 text-gray-300 mx-auto mb-4" />
