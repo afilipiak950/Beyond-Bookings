@@ -2568,30 +2568,31 @@ export default function Workflow() {
                     </div>
                   </div>
 
-                  {/* Main Advantage Display */}
-                  <div className="bg-gradient-to-br from-blue-800 to-blue-700 rounded-lg p-6 text-center shadow-lg">
-                    <div className="text-blue-100 text-sm mb-2">Kostenvorteil gesamt</div>
-                    <div className="text-2xl font-bold text-white mb-2">
-                      {(() => {
-                        const projectCosts = workflowData.projectCosts || 20000;
-                        const stars = workflowData.stars || 3;
-                        const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : 30;
-                        const roomnights = Math.round(projectCosts / voucherValue);
-                        
-                        // Beyond Bookings real costs calculation
-                        const beyondBookingsCosts = roomnights * editableCosts.realCostPerVoucher;
-                        const steuerbelastung = editableCosts.taxBurden;
-                        const nettoKosten = projectCosts / (1 + editableCosts.vatRate19/100);
-                        const steuervorteil = nettoKosten * (editableCosts.vatRate19/100);
-                        const gesamtkosten = beyondBookingsCosts + steuerbelastung - steuervorteil;
-                        
-                        const advantage = projectCosts - gesamtkosten;
-                        return advantage.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' ' + getCurrencySymbol(workflowData.currency);
-                      })()}
-                    </div>
-                    <div className="text-blue-200 text-sm">
-                      Ersparnis gegenüber Selbstbeschaffung
-                    </div>
+                </div>
+                
+                {/* Main Advantage Display */}
+                <div className="bg-gradient-to-br from-blue-800 to-blue-700 rounded-lg p-6 text-center shadow-lg">
+                  <div className="text-blue-100 text-sm mb-2">Kostenvorteil gesamt</div>
+                  <div className="text-2xl font-bold text-white mb-2">
+                    {(() => {
+                      const projectCosts = workflowData.projectCosts || 20000;
+                      const stars = workflowData.stars || 3;
+                      const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : 30;
+                      const roomnights = Math.round(projectCosts / voucherValue);
+                      
+                      // Beyond Bookings real costs calculation
+                      const beyondBookingsCosts = roomnights * editableCosts.realCostPerVoucher;
+                      const steuerbelastung = editableCosts.taxBurden;
+                      const nettoKosten = projectCosts / (1 + editableCosts.vatRate19/100);
+                      const steuervorteil = nettoKosten * (editableCosts.vatRate19/100);
+                      const gesamtkosten = beyondBookingsCosts + steuerbelastung - steuervorteil;
+                      
+                      const advantage = projectCosts - gesamtkosten;
+                      return advantage.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' ' + getCurrencySymbol(workflowData.currency);
+                    })()}
+                  </div>
+                  <div className="text-blue-200 text-sm">
+                    Ersparnis gegenüber Selbstbeschaffung
                   </div>
                 </div>
               </div>
