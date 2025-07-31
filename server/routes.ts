@@ -873,12 +873,12 @@ CRITICAL: You must always return a specific price number in EUR. If exact data u
           testResponse = await mistral.chat.complete({
             model: model,
             messages: [{ role: "user", content: "Hello, respond with 'API working'" }],
-            max_tokens: 50
+            maxTokens: 50
           });
           console.log(`Test successful with model: ${model}`);
           break;
-        } catch (modelError) {
-          console.warn(`Model ${model} test failed:`, modelError.message);
+        } catch (modelError: any) {
+          console.warn(`Model ${model} test failed:`, modelError?.message || 'Unknown error');
           if (model === models[models.length - 1]) {
             console.log('All Mistral models failed, but API key is valid');
             testResponse = { choices: [{ message: { content: 'API key valid, rate limited' } }] };
@@ -904,11 +904,11 @@ CRITICAL: You must always return a specific price number in EUR. If exact data u
         originalPath: "test.png"
       };
       
-      const result = await documentProcessor['processFileWithOCR'](fakeExtractedFile, 999, req.user.id.toString());
+      const result = await documentProcessor['processFileWithOCR'](fakeExtractedFile, 999, req.user?.id.toString() || '999');
       
       res.json({
         success: true,
-        mistralTest: testResponse.choices[0]?.message?.content,
+        mistralTest: testResponse?.choices?.[0]?.message?.content,
         apiKeyExists: !!process.env.MISTRAL_API_KEY,
         ocrResult: result,
         message: "OCR debug test completed"
@@ -2795,7 +2795,7 @@ Provide an ultra-detailed, comprehensive response that demonstrates deep analysi
               content: message
             }
           ],
-          max_tokens: 2000,
+          maxTokens: 2000,
           temperature: 0.7
         });
 
@@ -2820,7 +2820,7 @@ Provide an ultra-detailed, comprehensive response that demonstrates deep analysi
         
         // Add contextual information based on available data
         if (userContext) {
-          fallbackMessage += `\n\n---\n**Your Current Data Summary:**\n📊 ${userContext.calculations.total} pricing calculations in system\n🏨 ${userContext.hotels.total} hotels in portfolio\n📄 ${userContext.documents.uploads} documents uploaded`;
+          fallbackMessage += `\n\n---\n**Your Current Data Summary:**\n📊 ${userContext?.calculations?.total || 0} pricing calculations in system\n🏨 ${userContext?.hotels?.total || 0} hotels in portfolio\n📄 ${userContext?.documents?.uploads || 0} documents uploaded`;
         }
         
         res.status(200).json({ 
@@ -2835,7 +2835,7 @@ Provide an ultra-detailed, comprehensive response that demonstrates deep analysi
       } else {
         res.status(500).json({ 
           message: "I'm experiencing technical difficulties. Please ensure your OpenAI API key is configured correctly and try again.",
-          error: error.message 
+          error: (error as any)?.message || 'Unknown error'
         });
       }
     }
