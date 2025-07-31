@@ -2162,8 +2162,8 @@ export default function Workflow() {
                       </div>
                       <div className="text-2xl font-black text-orange-900">
                         {workflowData.projectCosts > 0 ? 
-                          Number(workflowData.projectCosts).toLocaleString('de-DE', {minimumFractionDigits: 0, maximumFractionDigits: 0}) :
-                          (workflowData.projectCosts === 0 ? '0' : '3,741')
+                          Number(workflowData.projectCosts).toLocaleString('de-DE', {minimumFractionDigits: 0, maximumFractionDigits: 0}) + ' ' + getCurrencySymbol(workflowData.currency) :
+                          (workflowData.projectCosts === 0 ? '0 ' + getCurrencySymbol(workflowData.currency) : '3,741 ' + getCurrencySymbol(workflowData.currency))
                         }
                       </div>
                     </div>
@@ -2199,7 +2199,7 @@ export default function Workflow() {
                             return '0';
                           }
                           
-                          return Math.round(result).toLocaleString('de-DE');
+                          return Math.round(result).toLocaleString('de-DE') + ' ' + getCurrencySymbol(workflowData.currency);
                         })()}
                       </div>
                     </div>
@@ -2232,7 +2232,7 @@ export default function Workflow() {
                             return '0';
                           }
                           
-                          return Math.round(vertragsvolumenEstimate).toLocaleString('de-DE');
+                          return Math.round(vertragsvolumenEstimate).toLocaleString('de-DE') + ' ' + getCurrencySymbol(workflowData.currency);
                         })()}
                       </div>
                     </div>
@@ -2277,7 +2277,7 @@ export default function Workflow() {
                             return '-';
                           }
                           
-                          return Math.round(marge).toLocaleString('de-DE');
+                          return Math.round(marge).toLocaleString('de-DE') + ' ' + getCurrencySymbol(workflowData.currency);
                         })()}
                       </div>
                     </div>
@@ -2306,7 +2306,7 @@ export default function Workflow() {
                             return '-';
                           }
                           
-                          return Math.round(vorsteuerProdukt).toLocaleString('de-DE');
+                          return Math.round(vorsteuerProdukt).toLocaleString('de-DE') + ' ' + getCurrencySymbol(workflowData.currency);
                         })()}
                       </div>
                     </div>
@@ -2342,7 +2342,7 @@ export default function Workflow() {
                             return '-';
                           }
                           
-                          return Math.round(vorsteuerTripz).toLocaleString('de-DE');
+                          return Math.round(vorsteuerTripz).toLocaleString('de-DE') + ' ' + getCurrencySymbol(workflowData.currency);
                         })()}
                       </div>
                     </div>
@@ -2384,7 +2384,7 @@ export default function Workflow() {
                             return '-';
                           }
                           
-                          return Math.round(nettoSteuerzahlung).toLocaleString('de-DE');
+                          return Math.round(nettoSteuerzahlung).toLocaleString('de-DE') + ' ' + getCurrencySymbol(workflowData.currency);
                         })()}
                       </div>
                     </div>
@@ -2634,7 +2634,7 @@ export default function Workflow() {
                         />
                         <span className="text-xs text-gray-600">%</span>
                       </div>
-                      <div className="text-lg font-semibold text-gray-900">0 €</div>
+                      <div className="text-lg font-semibold text-gray-900">0 {getCurrencySymbol(workflowData.currency)}</div>
                     </div>
                     <div className="bg-gray-50 rounded-lg p-3">
                       <div className="flex items-center space-x-2 mb-2">
@@ -2722,7 +2722,7 @@ export default function Workflow() {
                         />
                         <span className="text-xs text-gray-600">%</span>
                       </div>
-                      <div className="text-lg font-semibold text-gray-900">0 €</div>
+                      <div className="text-lg font-semibold text-gray-900">0 {getCurrencySymbol(workflowData.currency)}</div>
                     </div>
                     <div className="bg-gray-50 rounded-lg p-3">
                       <div className="flex items-center space-x-2 mb-2">
@@ -2744,7 +2744,7 @@ export default function Workflow() {
                           const roomnights = Math.round(projectCosts / voucherValue);
                           const totalVoucherValue = roomnights * voucherValue;
                           const mwst19 = totalVoucherValue * (editableCosts.vatRate19/100) / (1 + editableCosts.vatRate19/100);
-                          return mwst19.toLocaleString('de-DE', {minimumFractionDigits: 0, maximumFractionDigits: 0}) + ' €';
+                          return mwst19.toLocaleString('de-DE', {minimumFractionDigits: 0, maximumFractionDigits: 0}) + ' {getCurrencySymbol(workflowData.currency)}';
                         })()}
                       </div>
                     </div>
@@ -2785,7 +2785,7 @@ export default function Workflow() {
                           const projectCosts = workflowData.projectCosts || 20000;
                           const nettoKosten = projectCosts / (1 + editableCosts.vatRate19/100);
                           const mwst19 = nettoKosten * (editableCosts.vatRate19/100);
-                          return '- ' + mwst19.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €';
+                          return '- ' + mwst19.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' {getCurrencySymbol(workflowData.currency)}';
                         })()}
                       </span>
                     </div>
@@ -3339,7 +3339,7 @@ export default function Workflow() {
                   </div>
                   <div>
                     <Label htmlFor="editAveragePrice" className="flex items-center gap-2">
-                      Durchschnittlicher Zimmerpreis (€)
+                      Durchschnittlicher Zimmerpreis ({getCurrencySymbol(workflowData.currency)})
                       {extractedData.averagePrice && (
                         <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">
                           Auto-recherchiert
@@ -3381,7 +3381,7 @@ export default function Workflow() {
                           </p>
                           {extractedData.priceResearch.priceRange && (
                             <div className="flex flex-wrap gap-2 text-blue-600">
-                              <span>Spanne: {extractedData.priceResearch.priceRange.low}€ - {extractedData.priceResearch.priceRange.high}€</span>
+                              <span>Spanne: {extractedData.priceResearch.priceRange.low} {getCurrencySymbol(workflowData.currency)} - {extractedData.priceResearch.priceRange.high} {getCurrencySymbol(workflowData.currency)}</span>
                               <span>•</span>
                               <span>Quellen: {extractedData.priceResearch.dataSource}</span>
                             </div>
