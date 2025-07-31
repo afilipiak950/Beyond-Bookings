@@ -1747,15 +1747,7 @@ export default function Workflow() {
                           </div>
                         </div>
                         
-                        {workflowData.stars > 0 && (
-                          <div className="mt-2 text-xs text-red-600">
-                            {isVoucherManualEdit ? (
-                              `Manuell angepasst für ${workflowData.stars}-Sterne Hotel`
-                            ) : (
-                              `Basierend auf ${workflowData.stars}-Sterne Hotel Annahmen`
-                            )}
-                          </div>
-                        )}
+
                       </div>
                     </div>
                     
