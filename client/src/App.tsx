@@ -20,7 +20,7 @@ import Profile from "@/pages/profile";
 import Workflow from "@/pages/workflow";
 import DocumentAnalysis from "@/pages/document-analysis";
 import CustomerRequest from "@/pages/customer-request";
-import UserManagement from "@/pages/user-management";
+
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -39,7 +39,7 @@ function Router() {
           <Route path="/document-analysis" component={DocumentAnalysis} />
           <Route path="/customer-request" component={CustomerRequest} />
           <Route path="/customer-management" component={CustomerManagement} />
-          <Route path="/user-management" component={UserManagement} />
+
           <Route path="/reports" component={Reports} />
           <Route path="/settings" component={Settings} />
           <Route path="/profile" component={Profile} />
