@@ -712,6 +712,17 @@ export default function Workflow() {
         const data = await response.json();
         setExtractedData(data);
         
+        // CRITICAL: Automatically populate workflow data with extracted information
+        setWorkflowData(prev => ({
+          ...prev,
+          hotelName: data.name || prev.hotelName,
+          stars: data.stars || prev.stars,
+          roomCount: data.roomCount || prev.roomCount,
+          hotelUrl: data.url || prev.hotelUrl,
+          // AUTOMATICALLY POPULATE AVERAGE PRICE FROM EXTRACTION
+          averagePrice: data.averagePrice || prev.averagePrice
+        }));
+        
         // Display different messages based on data availability
         if (data.averagePrice && data.priceResearch) {
           toast({
