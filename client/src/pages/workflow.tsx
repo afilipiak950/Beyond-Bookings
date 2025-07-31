@@ -2408,7 +2408,7 @@ export default function Workflow() {
                   {/* Main Advantage Display */}
                   <div className="bg-blue-500 rounded-lg p-6 text-center">
                     <div className="text-blue-100 text-sm mb-2">Kostenvorteil gesamt</div>
-                    <div className="text-3xl font-bold text-white mb-2">
+                    <div className="text-2xl font-bold text-white mb-2">
                       {(() => {
                         const projectCosts = workflowData.projectCosts || 20000;
                         const stars = workflowData.stars || 3;
