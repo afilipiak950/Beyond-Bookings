@@ -42,7 +42,6 @@ const navigation = [
     icon: Sparkles,
     description: "3-step analysis process",
     gradient: "from-green-500 to-blue-500",
-    badge: "NEW",
   },
   {
     name: "Customer Request",
@@ -50,7 +49,6 @@ const navigation = [
     icon: Building2,
     description: "Hotel financing request form",
     gradient: "from-emerald-500 to-teal-500",
-    badge: "LIVE",
   },
   {
     name: "Analysis Results",
@@ -65,7 +63,6 @@ const navigation = [
     icon: Brain,
     description: "Advanced ZIP & document processing",
     gradient: "from-purple-500 to-indigo-500",
-    badge: "AI",
   },
   {
     name: "Data Management",
