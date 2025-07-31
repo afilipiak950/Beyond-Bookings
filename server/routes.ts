@@ -1004,7 +1004,7 @@ Research authentic review data from actual platforms. If exact review counts una
         messages: [
           {
             role: "system",
-            content: "You are a comprehensive hotel data extraction specialist with access to review platforms. Extract authentic hotel data and review information from Booking.com, Google Reviews, HolidayCheck, and other platforms."
+            content: "You are a comprehensive hotel data extraction specialist with access to review platforms. Extract authentic hotel data and review information from Booking.com, Google Reviews, HolidayCheck, and other platforms. Return your response as valid JSON format."
           },
           {
             role: "user", 
@@ -1012,8 +1012,7 @@ Research authentic review data from actual platforms. If exact review counts una
           }
         ],
         max_tokens: 1500,
-        temperature: 0.1,
-        response_format: { type: "json_object" }
+        temperature: 0.1
       });
 
       const response = completion.choices[0].message.content;
@@ -1086,7 +1085,7 @@ Research authentic review data from actual platforms. If exact review counts una
       // Extract basic hotel data only (no fake URLs)
       const basicDataPrompt = `Extract verifiable information for "${name}" hotel${url ? ` (website: ${url})` : ''}.
 
-Provide ONLY factual data you can verify:
+Provide ONLY factual data you can verify in JSON format:
 {
   "name": "Exact hotel name",
   "location": "Full address if available",
@@ -1105,7 +1104,7 @@ Provide ONLY factual data you can verify:
         messages: [
           {
             role: "system",
-            content: "Extract only verifiable hotel information. Do not generate fake URLs or data."
+            content: "Extract only verifiable hotel information. Do not generate fake URLs or data. Return response as valid JSON only."
           },
           {
             role: "user", 
@@ -1113,8 +1112,7 @@ Provide ONLY factual data you can verify:
           }
         ],
         max_tokens: 600,
-        temperature: 0.1,
-        response_format: { type: "json_object" }
+        temperature: 0.1
       });
 
       const response = completion.choices[0].message.content;
@@ -1122,7 +1120,17 @@ Provide ONLY factual data you can verify:
         throw new Error('No response from OpenAI');
       }
 
-      const basicData = JSON.parse(response);
+      // Clean JSON response (remove markdown code blocks if present)
+      console.log('🔍 Raw OpenAI response:', response);
+      let cleanResponse = response.trim();
+      if (cleanResponse.startsWith('```json')) {
+        cleanResponse = cleanResponse.replace(/```json\n?/, '').replace(/\n?```$/, '');
+      } else if (cleanResponse.startsWith('```')) {
+        cleanResponse = cleanResponse.replace(/```\n?/, '').replace(/\n?```$/, '');
+      }
+      console.log('🧹 Cleaned response:', cleanResponse);
+
+      const basicData = JSON.parse(cleanResponse);
       console.log('✅ Basic hotel data extracted:', basicData);
 
       // Generate REAL search URLs (not fake hotel pages)
@@ -3100,8 +3108,7 @@ CRITICAL: Extract ALL actual numbers from the document. Be exhaustive in your an
               }
             ],
             max_tokens: 4000,
-            temperature: 0.2,
-            response_format: { type: "json_object" }
+            temperature: 0.2
           });
           
           const aiAnalysis = JSON.parse(aiResponse.choices[0]?.message?.content || '{}');
@@ -3183,8 +3190,7 @@ Format as JSON with fields: overallSummary, keyPatterns, strategicRecommendation
           }
         ],
         max_tokens: 2000,
-        temperature: 0.3,
-        response_format: { type: "json_object" }
+        temperature: 0.3
       });
       
       const strategicSummary = JSON.parse(summaryResponse.choices[0]?.message?.content || '{}');
@@ -4995,7 +5001,6 @@ Focus on:
                 content: prompt
               }
             ],
-            response_format: { type: 'json_object' },
             max_tokens: 2000,
             temperature: 0.1,
           });
@@ -5162,8 +5167,7 @@ Focus on:
               }
             ],
             max_tokens: 2000,
-            temperature: 0.3,
-            response_format: { type: "json_object" }
+            temperature: 0.3
           });
 
           const aiInsights = JSON.parse(response.choices[0]?.message?.content || '{}');
