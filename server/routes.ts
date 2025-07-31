@@ -404,9 +404,11 @@ If you cannot find exact room count data, set roomCount to null and explain in d
       
       // Research average room price automatically with enhanced methodology
       console.log(`🔍 Starting comprehensive price research for: ${cleanedData.name}`);
+      console.log(`📍 Hotel details: stars=${cleanedData.stars}, location=${cleanedData.location}, url=${cleanedData.url}`);
       
       try {
         // Step 1: Use OpenAI with web search capabilities for authentic pricing data
+        console.log('🤖 Calling OpenAI API for price research...');
         const avgPriceCompletion = await openai.chat.completions.create({
           model: "gpt-4o",
           messages: [
@@ -553,7 +555,16 @@ CRITICAL: You must always return a specific price number in EUR. If exact data u
         console.log(`🎯 Emergency pricing calculated: ${finalPrice}€ (${starRating}-star, location: ${cleanedData.location || 'general'})`);
       }
       
+      // Final validation that price research was completed
+      if (!cleanedData.averagePrice) {
+        console.log('⚠️ CRITICAL: No average price found after all research attempts!');
+        console.log('📋 Final data before return:', JSON.stringify(cleanedData, null, 2));
+      } else {
+        console.log(`💰 Price research completed successfully: ${cleanedData.averagePrice}€`);
+      }
+      
       // Return the researched hotel data with pricing
+      console.log('🏁 Final scraped hotel data:', cleanedData);
       res.json(cleanedData);
       
     } catch (error) {
