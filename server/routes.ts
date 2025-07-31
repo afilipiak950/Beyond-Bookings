@@ -1083,11 +1083,13 @@ Research authentic review data from actual platforms. If exact review counts una
       });
 
       // Extract basic hotel data only (no fake URLs)
-      const basicDataPrompt = `Extract verifiable information for "${name}" hotel${url ? ` (website: ${url})` : ''}.
+      const basicDataPrompt = `Find and extract verifiable information for the hotel "${name}"${url ? ` (website: ${url})` : ''}.
 
-Provide ONLY factual data you can verify in JSON format:
+If you cannot find this specific hotel, return exactly: {"error": "Hotel not found", "suggestion": "Try a more specific name with location"}
+
+Otherwise, provide only factual data you can verify about this real hotel in JSON format:
 {
-  "name": "Exact hotel name",
+  "name": "Exact hotel name as found",
   "location": "Full address if available",
   "city": "City name", 
   "country": "Country",
@@ -1097,7 +1099,9 @@ Provide ONLY factual data you can verify in JSON format:
   "category": "Hotel type",
   "amenities": ["verified amenities"],
   "averagePrice": number_in_EUR_or_null
-}`;
+}
+
+Only return hotel data if you can verify this is a real, existing hotel. Do not make up information.`;
 
       const completion = await openai.chat.completions.create({
         model: "gpt-4o",
@@ -1132,6 +1136,16 @@ Provide ONLY factual data you can verify in JSON format:
 
       const basicData = JSON.parse(cleanResponse);
       console.log('✅ Basic hotel data extracted:', basicData);
+
+      // Check if hotel was not found
+      if (basicData.error) {
+        throw new Error(`Could not find hotel information for "${name}". ${basicData.suggestion || 'Please try a more specific hotel name with location (e.g., "Hotel Adlon Berlin" or "Marriott Frankfurt").'}`);
+      }
+
+      // Validate that we got actual hotel data
+      if (!basicData.name || Object.keys(basicData).length === 0) {
+        throw new Error(`Could not find hotel information for "${name}". Please try a more specific hotel name with location (e.g., "Hotel Adlon Berlin" or "Marriott Frankfurt").`);
+      }
 
       // Generate REAL search URLs (not fake hotel pages)
       const hotelSearchTerm = `${basicData.name} ${basicData.city || ''}`.trim();
