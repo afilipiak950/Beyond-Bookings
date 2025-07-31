@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Users, Building2, Search, Plus, Globe, MapPin, Star, Loader2, Grid3X3, List, Eye, Phone, Mail } from "lucide-react";
+import { Users, Building2, Search, Plus, Globe, MapPin, Star, Loader2, Grid3X3, List, Eye, Phone, Mail, Trash2 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
 export default function CustomerManagement() {
@@ -322,55 +322,82 @@ export default function CustomerManagement() {
               </div>
             ) : Array.isArray(hotels) && hotels.length > 0 ? (
               viewMode === 'cards' ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
                   {hotels.map((hotel: any) => (
-                    <Card key={hotel.id} className="group hover:shadow-lg transition-all duration-300 border-slate-200 hover:border-blue-300">
+                    <Card key={hotel.id} className="hover:shadow-md transition-shadow">
                       <CardHeader className="pb-3">
                         <div className="flex items-start justify-between">
                           <div className="flex items-center space-x-3">
-                            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
-                              <Building2 className="h-6 w-6 text-white" />
+                            <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                              <Building2 className="h-5 w-5 text-primary" />
                             </div>
                             <div>
-                              <CardTitle className="text-lg group-hover:text-blue-600 transition-colors">
-                                {hotel.name}
-                              </CardTitle>
-                              <p className="text-sm text-gray-500 flex items-center mt-1">
-                                <MapPin className="h-3 w-3 mr-1" />
-                                {hotel.city}, {hotel.country}
-                              </p>
+                              <CardTitle className="text-lg">{hotel.name}</CardTitle>
+                              {(hotel.city && hotel.country) ? (
+                                <p className="text-sm text-muted-foreground">{hotel.city}, {hotel.country}</p>
+                              ) : hotel.location && (
+                                <p className="text-sm text-muted-foreground">{hotel.location}</p>
+                              )}
                             </div>
                           </div>
-                          {hotel.url && (
-                            <Button size="sm" variant="ghost" className="opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Eye className="h-4 w-4" />
-                            </Button>
+                          {hotel.stars && (
+                            <div className="flex items-center">
+                              <span className="text-amber-400">
+                                {"★".repeat(hotel.stars)}
+                              </span>
+                              <span className="text-slate-300 dark:text-slate-600">
+                                {"★".repeat(5 - hotel.stars)}
+                              </span>
+                            </div>
                           )}
                         </div>
                       </CardHeader>
-                      <CardContent className="pt-0">
-                        <div className="space-y-3">
-                          {hotel.stars && (
-                            <div className="flex items-center gap-1">
-                              {Array.from({ length: hotel.stars }).map((_, i) => (
-                                <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                              ))}
-                              <span className="text-sm text-gray-500 ml-2">{hotel.stars} Star Hotel</span>
+                      <CardContent>
+                        <div className="space-y-2 text-sm">
+                          {hotel.roomCount && (
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Rooms:</span>
+                              <span>{hotel.roomCount}</span>
                             </div>
                           )}
-                          <div className="flex items-center justify-between text-sm">
-                            <span className="text-gray-500">Rooms:</span>
-                            <span className="font-medium">{hotel.roomCount || 'N/A'}</span>
-                          </div>
                           {hotel.averagePrice && (
-                            <div className="flex items-center justify-between text-sm">
-                              <span className="text-gray-500">Avg. Price:</span>
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Avg. Price:</span>
                               <span className="font-semibold text-green-600">€{hotel.averagePrice}</span>
                             </div>
                           )}
-                          {hotel.description && (
-                            <p className="text-sm text-gray-600 line-clamp-2">{hotel.description}</p>
+                          {hotel.url && (
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Website:</span>
+                              <a 
+                                href={hotel.url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-primary hover:underline truncate max-w-32"
+                              >
+                                {new URL(hotel.url).hostname}
+                              </a>
+                            </div>
                           )}
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Added:</span>
+                            <span>{new Date(hotel.createdAt).toLocaleDateString()}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2 mt-4">
+                          <Button size="sm" variant="outline" className="flex-1">
+                            View Details
+                          </Button>
+                          <Button size="sm" className="flex-1">
+                            New Calculation
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="destructive"
+                            className="px-3"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
                       </CardContent>
                     </Card>
