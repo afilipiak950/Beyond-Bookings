@@ -673,6 +673,13 @@ export default function Workflow() {
 
   // Hotel Voucher Value State
   const [hotelVoucherValue, setHotelVoucherValue] = useState(0);
+  
+  // Synchronize hotelVoucherValue with workflowData.hotelVoucherValue
+  useEffect(() => {
+    if (workflowData.hotelVoucherValue !== hotelVoucherValue && workflowData.hotelVoucherValue > 0) {
+      setHotelVoucherValue(workflowData.hotelVoucherValue);
+    }
+  }, [workflowData.hotelVoucherValue]);
   const [isVoucherManualEdit, setIsVoucherManualEdit] = useState(false);
   const [voucherEditOpen, setVoucherEditOpen] = useState(false);
   const [tempVoucherValue, setTempVoucherValue] = useState("");
@@ -1053,6 +1060,10 @@ export default function Workflow() {
       
       if (!isVoucherManualEdit) {
         setHotelVoucherValue(voucherValue);
+        setWorkflowData(prev => ({
+          ...prev,
+          hotelVoucherValue: voucherValue
+        }));
       }
     }
   }, [workflowData.averagePrice, workflowData.stars, isVoucherManualEdit]);
@@ -1110,7 +1121,12 @@ export default function Workflow() {
       return;
     }
 
+    // Update both local state and workflow data to keep them synchronized
     setHotelVoucherValue(newVoucherValue);
+    setWorkflowData(prev => ({
+      ...prev,
+      hotelVoucherValue: newVoucherValue
+    }));
     setIsVoucherManualEdit(true);
     setVoucherEditOpen(false);
 
