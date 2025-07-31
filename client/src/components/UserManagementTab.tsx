@@ -87,14 +87,14 @@ export default function UserManagementTab() {
 
   // Fetch all users
   const { data: users = [], isLoading } = useQuery<User[]>({
-    queryKey: ['/api/users'],
+    queryKey: ['/api/admin/users'],
     retry: false,
   });
 
   // Create user mutation
   const createUserMutation = useMutation({
     mutationFn: async (userData: CreateUserForm) => {
-      return await apiRequest('/api/users', {
+      return await apiRequest('/api/admin/users', {
         method: 'POST',
         body: JSON.stringify(userData),
       });
@@ -106,7 +106,7 @@ export default function UserManagementTab() {
       });
       setCreateDialogOpen(false);
       setCreateForm({ email: "", password: "", firstName: "", lastName: "" });
-      queryClient.invalidateQueries({ queryKey: ['/api/users'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
     },
     onError: (error: Error) => {
       toast({
@@ -120,8 +120,8 @@ export default function UserManagementTab() {
   // Update user mutation
   const updateUserMutation = useMutation({
     mutationFn: async ({ id, userData }: { id: number; userData: EditUserForm }) => {
-      return await apiRequest(`/api/users/${id}`, {
-        method: 'PATCH',
+      return await apiRequest(`/api/admin/users/${id}`, {
+        method: 'PUT',
         body: JSON.stringify(userData),
       });
     },
@@ -133,7 +133,7 @@ export default function UserManagementTab() {
       setEditDialogOpen(false);
       setSelectedUser(null);
       setEditForm({ email: "", firstName: "", lastName: "", newPassword: "" });
-      queryClient.invalidateQueries({ queryKey: ['/api/users'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
     },
     onError: (error: Error) => {
       toast({
@@ -147,7 +147,7 @@ export default function UserManagementTab() {
   // Delete user mutation
   const deleteUserMutation = useMutation({
     mutationFn: async (id: number) => {
-      return await apiRequest(`/api/users/${id}`, {
+      return await apiRequest(`/api/admin/users/${id}`, {
         method: 'DELETE',
       });
     },
@@ -158,7 +158,7 @@ export default function UserManagementTab() {
       });
       setDeleteDialogOpen(false);
       setSelectedUser(null);
-      queryClient.invalidateQueries({ queryKey: ['/api/users'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
     },
     onError: (error: Error) => {
       toast({
