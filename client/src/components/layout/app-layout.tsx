@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import AppSidebar from "./app-sidebar";
-import { Menu, Moon, Sun, Sparkles, Activity, Zap, Send, Bot, User, Loader2, MessageCircle } from "lucide-react";
+import { Menu, Moon, Sun, Sparkles, Activity, Zap, Send, Bot, User, Loader2, MessageCircle, Cpu } from "lucide-react";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -33,7 +33,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
     {
       id: 1,
       role: 'assistant',
-      content: 'Hello! I\'m your **AI Assistant for Beyond Bookings**. I have access to all your hotel data, pricing calculations, and platform analytics. I can help you with:\n\n• **Hotel Management** - Analysis of your hotel portfolio\n• **Pricing Optimization** - VAT calculations and profit margin analysis\n• **Document Intelligence** - OCR processing and financial insights\n• **Business Intelligence** - Market trends and competitive analysis\n\nWhat would you like to know about your business today?',
+      content: 'Hello! I\'m your **AI Assistant for bebo convert**. I have access to all your hotel data, pricing calculations, and platform analytics. I can help you with:\n\n• **Hotel Management** - Analysis of your hotel portfolio\n• **Pricing Optimization** - VAT calculations and profit margin analysis\n• **Document Intelligence** - OCR processing and financial insights\n• **Business Intelligence** - Market trends and competitive analysis\n\nWhat would you like to know about your business today?',
       timestamp: new Date()
     }
   ]);
@@ -76,21 +76,23 @@ export default function AppLayout({ children }: AppLayoutProps) {
         timestamp: new Date()
       }]);
     },
-    onError: (error: any) => {
-      toast({
-        title: "AI Assistant Error",
-        description: error.message || "Failed to get response from AI assistant.",
-        variant: "destructive",
-      });
-    },
+    onError: (error) => {
+      console.error('AI Chat error:', error);
+      setChatMessages(prev => [...prev, {
+        id: Date.now(),
+        role: 'assistant',
+        content: 'I apologize, but I encountered an error processing your request. Please try again.',
+        timestamp: new Date()
+      }]);
+    }
   });
 
-  const handleSendMessage = () => {
-    if (!currentMessage.trim()) return;
-
+  const sendMessage = () => {
+    if (!currentMessage.trim() || aiChatMutation.isPending) return;
+    
     // Add user message
     const userMessage: ChatMessage = {
-      id: Date.now() - 1,
+      id: Date.now(),
       role: 'user',
       content: currentMessage,
       timestamp: new Date()
@@ -109,310 +111,266 @@ export default function AppLayout({ children }: AppLayoutProps) {
     }, 100);
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
-
   if (!mounted) return null;
 
   return (
-    <div className="min-h-screen flex bg-gradient-to-br from-background via-background to-muted/20 mesh-bg relative overflow-hidden">
-      {/* Ultra-Modern Ambient Effects */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-400/20 to-green-400/20 rounded-full blur-3xl animate-morphGradient" />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-green-400/20 to-blue-400/20 rounded-full blur-3xl animate-morphGradient animation-delay-2000" />
-        <div className="absolute top-1/3 left-1/3 w-96 h-96 bg-gradient-radial from-blue-400/5 via-green-400/5 to-transparent rounded-full animate-breathe" />
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 dark:from-gray-950 dark:via-slate-900 dark:to-gray-900 relative overflow-hidden">
+      {/* Ultra-Modern Background Layers */}
+      <div className="fixed inset-0 pointer-events-none">
+        {/* Primary gradient mesh */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(59,130,246,0.08),transparent_50%),radial-gradient(circle_at_80%_20%,rgba(99,102,241,0.06),transparent_50%),radial-gradient(circle_at_20%_80%,rgba(168,85,247,0.04),transparent_50%)]" />
         
-        {/* Floating Particles */}
-        {[...Array(6)].map((_, i) => (
-          <div
-            key={i}
-            className={`absolute w-2 h-2 bg-gradient-to-r from-blue-400 to-green-400 rounded-full animate-float`}
-            style={{
-              left: `${20 + i * 15}%`,
-              top: `${30 + i * 10}%`,
-              animationDelay: `${i * 0.8}s`
-            }}
-          />
-        ))}
+        {/* Floating geometric shapes */}
+        <div className="absolute top-0 left-0 w-full h-full opacity-40">
+          <div className="absolute top-20 left-20 w-72 h-72 bg-gradient-to-br from-blue-400/20 via-indigo-400/15 to-purple-400/10 rounded-full blur-3xl animate-blob" />
+          <div className="absolute top-60 right-32 w-96 h-96 bg-gradient-to-br from-violet-400/15 via-blue-400/10 to-cyan-400/20 rounded-full blur-3xl animate-blob animation-delay-2000" />
+          <div className="absolute bottom-40 left-60 w-80 h-80 bg-gradient-to-br from-emerald-400/15 via-teal-400/10 to-blue-400/15 rounded-full blur-3xl animate-blob animation-delay-4000" />
+        </div>
+        
+        {/* Subtle grid pattern */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.03)_1px,transparent_1px)] bg-[size:72px_72px]" />
       </div>
 
-      {/* Desktop Sidebar */}
-      <div className="hidden lg:flex lg:flex-shrink-0 relative z-10 animate-slideInLeft">
-        <AppSidebar />
-      </div>
-
-      {/* Mobile Sidebar */}
-      <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-        <SheetContent side="left" className="p-0 w-64 glass-card border-0">
-          <AppSidebar />
-        </SheetContent>
-      </Sheet>
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0 relative z-10">
-        {/* Ultra-Modern Header */}
-        <header className="glass-nav h-16 flex items-center justify-between px-6 animate-slideInUp backdrop-blur-lg border-0 shadow-lg">
-          <div className="flex items-center space-x-4">
-            <Sheet>
+      {/* Futuristic Header */}
+      <header className="sticky top-0 z-50 w-full border-b border-white/20 bg-white/70 backdrop-blur-2xl supports-[backdrop-filter]:bg-white/50 dark:bg-gray-950/70 dark:border-gray-800/50 dark:supports-[backdrop-filter]:bg-gray-950/50">
+        <div className="container flex h-20 items-center justify-between px-8">
+          <div className="flex items-center space-x-6">
+            <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
               <SheetTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  data-sidebar="true"
-                  className="lg:hidden mr-2 interactive-hover glass-card border-0"
-                  onClick={() => setSidebarOpen(true)}
-                >
-                  <Menu className="h-4 w-4" />
+                <Button variant="ghost" size="icon" className="md:hidden rounded-2xl h-12 w-12 bg-white/80 hover:bg-white border border-gray-200/50 shadow-lg hover:shadow-xl transition-all duration-300">
+                  <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
+              <SheetContent side="left" className="p-0 w-80 bg-white/95 backdrop-blur-2xl border-0">
+                <AppSidebar />
+              </SheetContent>
             </Sheet>
             
-            {/* Modern Brand - Removed */}
+            <div className="flex items-center space-x-4">
+              <div className="relative">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl">
+                  <Sparkles className="h-6 w-6 text-white animate-pulse" />
+                </div>
+                <div className="absolute -inset-1 bg-gradient-to-br from-blue-500 to-purple-500 rounded-2xl blur opacity-30 animate-pulse" />
+              </div>
+              <div className="hidden sm:block">
+                <h1 className="text-2xl font-black bg-gradient-to-r from-blue-700 via-indigo-600 to-purple-600 bg-clip-text text-transparent tracking-tight">
+                  bebo convert
+                </h1>
+                <p className="text-sm text-gray-600 dark:text-gray-300 font-medium tracking-wide">
+                  Die exklusive Währung für Hotels
+                </p>
+              </div>
+            </div>
           </div>
-          
-          <div className="flex items-center space-x-3">
-            {/* AI Status Indicator */}
-            <div className="hidden md:flex items-center space-x-2 px-3 py-1.5 rounded-full glass-card animate-slideInRight">
-              <Activity className="h-4 w-4 text-green-500 animate-pulse" />
-              <span className="text-sm font-medium text-foreground">Live AI</span>
+
+          <div className="flex items-center space-x-4">
+            {/* Enhanced Live Status */}
+            <div className="hidden sm:flex items-center space-x-3 px-5 py-2.5 bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 rounded-2xl border border-emerald-200/50 dark:border-emerald-800/50 shadow-lg backdrop-blur-sm">
+              <div className="relative">
+                <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse" />
+                <div className="absolute inset-0 w-3 h-3 bg-emerald-400 rounded-full animate-ping opacity-40" />
+              </div>
+              <span className="text-sm font-bold text-emerald-700 dark:text-emerald-400 tracking-wide">LIVE</span>
+              <Activity className="h-4 w-4 text-emerald-600 dark:text-emerald-400 animate-bounce" />
             </div>
 
-            {/* Modern Theme Toggle */}
-            <Button
-              variant="ghost"
-              size="sm"
-              data-sidebar="true"
-              onClick={toggleTheme}
-              className="interactive-hover glass-card border-0 p-2.5"
-            >
-              {theme === "dark" ? (
-                <Sun className="h-4 w-4 text-amber-500 animate-twinkle" />
-              ) : (
-                <Moon className="h-4 w-4 text-slate-600" />
-              )}
-            </Button>
-            
-            {/* AI Assistant Dialog */}
+            {/* Ultra-Modern AI Assistant */}
             <Dialog open={aiDialogOpen} onOpenChange={setAiDialogOpen}>
               <DialogTrigger asChild>
                 <Button
-                  variant="ghost"
-                  size="sm"
-                  data-sidebar="true"
-                  className="interactive-hover glass-card border-0 p-2.5 relative animate-glowPulse"
+                  variant="outline"
+                  size="lg"
+                  className="relative overflow-hidden bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-purple-500/10 border-blue-300/50 hover:border-blue-400/70 transition-all duration-500 rounded-2xl px-6 py-3 h-12 shadow-lg hover:shadow-xl"
                 >
-                  <Sparkles className="h-4 w-4 text-blue-500" />
-                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-green-400 to-blue-500 rounded-full animate-pulse" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 via-indigo-500/20 to-purple-500/20 opacity-0 hover:opacity-100 transition-opacity duration-500" />
+                  <div className="relative flex items-center space-x-3">
+                    <div className="relative">
+                      <Bot className="h-5 w-5 text-blue-600" />
+                      <div className="absolute -inset-1 bg-blue-500/30 rounded-full blur animate-pulse" />
+                    </div>
+                    <span className="hidden sm:inline font-semibold text-blue-700 tracking-wide">AI Assistant</span>
+                    <MessageCircle className="h-4 w-4 text-blue-500 animate-bounce" />
+                  </div>
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-4xl h-[700px] flex flex-col bg-white border border-blue-200/30 shadow-2xl">
-                <DialogHeader className="border-b border-blue-200/20 pb-4 bg-gradient-to-r from-blue-50 to-green-50 rounded-t-lg px-6 py-4">
-                  <DialogTitle className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-green-500 rounded-full flex items-center justify-center">
-                      <Bot className="h-4 w-4 text-white" />
+              <DialogContent className="sm:max-w-3xl max-h-[85vh] bg-white/95 backdrop-blur-2xl border-0 shadow-2xl rounded-3xl">
+                <DialogHeader className="border-b border-gray-100/50 pb-6 rounded-t-3xl bg-gradient-to-r from-blue-50/50 to-indigo-50/30">
+                  <DialogTitle className="flex items-center space-x-4">
+                    <div className="relative">
+                      <div className="w-10 h-10 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-xl">
+                        <Bot className="h-5 w-5 text-white" />
+                      </div>
+                      <div className="absolute -inset-1 bg-gradient-to-br from-blue-500 to-purple-500 rounded-2xl blur opacity-30 animate-pulse" />
                     </div>
                     <div>
-                      <h2 className="text-lg font-bold text-gray-900">Beyond Bookings AI Assistant</h2>
-                      <p className="text-sm text-gray-600">Powered by GPT-4o + Perplexity • Real-time Data + Web Search</p>
-                    </div>
-                    <div className="flex items-center gap-2 ml-auto">
-                      <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                      <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-200/20">
-                        Connected
-                      </Badge>
+                      <span className="text-xl font-bold bg-gradient-to-r from-blue-700 to-indigo-600 bg-clip-text text-transparent">AI Assistant for bebo convert</span>
                     </div>
                   </DialogTitle>
-                  <DialogDescription className="mt-2 text-sm text-gray-700">
-                    Your intelligent assistant with **full access** to your hotel data, pricing calculations, platform analytics, and **real-time web search**. 
-                    Ask complex questions about market trends, competitive analysis, or current industry insights.
+                  <DialogDescription className="text-base text-gray-600 mt-2 font-medium">
+                    Intelligent insights and analysis for your hotel business data
                   </DialogDescription>
                 </DialogHeader>
-
-                {/* Chat Messages */}
-                <ScrollArea className="flex-1 p-4" id="ai-chat-messages">
-                  <div className="space-y-4">
+                
+                <ScrollArea className="h-96 pr-4" id="ai-chat-messages">
+                  <div className="space-y-6 py-2">
                     {chatMessages.map((message) => (
-                      <div
-                        key={message.id}
-                        className={`flex gap-3 ${
-                          message.role === 'user' ? 'flex-row-reverse' : 'flex-row'
-                        }`}
-                      >
-                        <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+                      <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                        <div className={`max-w-[85%] rounded-3xl p-5 shadow-lg ${
                           message.role === 'user' 
-                            ? 'bg-blue-500 text-white' 
-                            : 'bg-green-500 text-white'
+                            ? 'bg-gradient-to-br from-blue-600 to-indigo-600 text-white ml-auto shadow-blue-200' 
+                            : 'bg-white border border-gray-100 text-gray-900 shadow-gray-100'
                         }`}>
-                          {message.role === 'user' ? (
-                            <User className="h-4 w-4" />
-                          ) : (
-                            <Bot className="h-4 w-4" />
-                          )}
-                        </div>
-                        <div className={`flex-1 max-w-[80%] ${
-                          message.role === 'user' ? 'text-right' : 'text-left'
-                        }`}>
-                          <div className={`inline-block px-4 py-3 rounded-lg shadow-sm ${
-                            message.role === 'user'
-                              ? 'bg-blue-500 text-white rounded-br-none'
-                              : 'bg-gradient-to-r from-gray-50 to-blue-50 text-gray-900 rounded-bl-none border border-gray-200'
-                          }`}>
-                            <div className="text-sm whitespace-pre-wrap prose prose-sm max-w-none"
-                                 dangerouslySetInnerHTML={{
-                                   __html: (message.content || '')
-                                     .replace(/\*\*(.*?)\*\*/g, '<strong class="text-blue-700">$1</strong>')
-                                     .replace(/\*(.*?)\*/g, '<em class="text-blue-600">$1</em>')
-                                     .replace(/•/g, '<span class="text-green-600">•</span>')
-                                     .replace(/\n\n/g, '<br/><br/>')
-                                     .replace(/\n/g, '<br/>')
-                                 }}
-                            />
+                          <div className="flex items-start space-x-3">
+                            {message.role === 'assistant' && (
+                              <div className="relative mt-1">
+                                <Bot className="h-5 w-5 text-blue-600 flex-shrink-0" />
+                                <div className="absolute -inset-1 bg-blue-500/20 rounded-full blur animate-pulse" />
+                              </div>
+                            )}
+                            {message.role === 'user' && (
+                              <User className="h-5 w-5 text-white mt-1 flex-shrink-0" />
+                            )}
+                            <div className="flex-1">
+                              <div 
+                                className="text-sm leading-relaxed font-medium"
+                                dangerouslySetInnerHTML={{
+                                  __html: message.content
+                                    .replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold">$1</strong>')
+                                    .replace(/\*(.*?)\*/g, '<em class="italic">$1</em>')
+                                    .replace(/\n/g, '<br>')
+                                }}
+                              />
+                              <div className={`text-xs mt-3 ${message.role === 'user' ? 'text-blue-100' : 'text-gray-500'}`}>
+                                {message.timestamp.toLocaleTimeString()}
+                              </div>
+                            </div>
                           </div>
-                          <p className="text-xs text-slate-500 mt-1">
-                            {message.timestamp.toLocaleTimeString()}
-                          </p>
                         </div>
                       </div>
                     ))}
                     {aiChatMutation.isPending && (
-                      <div className="flex gap-3">
-                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-r from-green-500 to-blue-500 text-white flex items-center justify-center">
-                          <Bot className="h-4 w-4" />
-                        </div>
-                        <div className="flex-1">
-                          <div className="inline-block px-4 py-3 rounded-lg bg-gradient-to-r from-slate-50 to-blue-50 border border-slate-200 rounded-bl-none">
-                            <div className="flex items-center gap-2">
-                              <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
-                              <span className="text-sm text-slate-700">AI is analyzing your data and searching for market insights...</span>
-                            </div>
-                            <div className="flex items-center gap-1 mt-2">
-                              <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />
-                              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }} />
-                              <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }} />
-                              <span className="text-xs text-slate-500 ml-2">GPT-4o + Web Search</span>
-                            </div>
+                      <div className="flex justify-start">
+                        <div className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-3xl p-5 max-w-[85%] shadow-lg border border-gray-100">
+                          <div className="flex items-center space-x-3">
+                            <Loader2 className="h-5 w-5 text-blue-600 animate-spin" />
+                            <span className="text-sm text-gray-700 font-medium">AI is analyzing your data...</span>
                           </div>
                         </div>
                       </div>
                     )}
                   </div>
                 </ScrollArea>
-
-                {/* Quick Action Buttons */}
-                <div className="border-t border-gray-200 pt-3 pb-2">
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentMessage("Analyze my hotel portfolio and pricing performance")}
-                      className="text-xs h-7 px-3 bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
-                    >
-                      🏨 Hotel Analysis
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentMessage("Show me pricing optimization recommendations for my calculations")}
-                      className="text-xs h-7 px-3 bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
-                    >
-                      💰 Pricing Optimization
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentMessage("What are the latest market trends for luxury hotels?")}
-                      className="text-xs h-7 px-3 bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100"
-                    >
-                      📊 Market Trends
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentMessage("Help me understand VAT calculations and profit margins")}
-                      className="text-xs h-7 px-3 bg-orange-50 border-orange-200 text-orange-700 hover:bg-orange-100"
-                    >
-                      📈 Financial Analysis
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentMessage("Compare my hotels with industry benchmarks")}
-                      className="text-xs h-7 px-3 bg-red-50 border-red-200 text-red-700 hover:bg-red-100"
-                    >
-                      🎯 Competitive Analysis
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentMessage("What's the performance summary of my platform usage?")}
-                      className="text-xs h-7 px-3 bg-teal-50 border-teal-200 text-teal-700 hover:bg-teal-100"
-                    >
-                      📋 Platform Summary
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Message Input */}
-                <div className="border-t border-gray-200 pt-4">
-                  <div className="flex gap-2">
+                
+                <div className="border-t border-gray-100/50 pt-6 bg-gradient-to-r from-gray-50/50 to-blue-50/30 rounded-b-3xl">
+                  <div className="flex space-x-3">
                     <Input
-                      placeholder="Ask me about your hotels, pricing calculations, market analysis, or any business questions..."
+                      placeholder="Ask me anything about your hotels, calculations, or business analytics..."
                       value={currentMessage}
                       onChange={(e) => setCurrentMessage(e.target.value)}
-                      onKeyPress={handleKeyPress}
-                      disabled={aiChatMutation.isPending}
-                      className="flex-1 bg-white border-gray-200 focus:border-blue-400 focus:ring-blue-400/20 h-12 text-sm"
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter' && currentMessage.trim() && !aiChatMutation.isPending) {
+                          sendMessage();
+                        }
+                      }}
+                      className="flex-1 h-12 rounded-2xl border-gray-200/50 bg-white/80 backdrop-blur-sm text-base font-medium"
                     />
                     <Button
-                      onClick={handleSendMessage}
+                      onClick={sendMessage}
                       disabled={!currentMessage.trim() || aiChatMutation.isPending}
-                      className="px-4 h-12 bg-gradient-to-r from-blue-500 to-green-500 hover:from-blue-600 hover:to-green-600 text-white"
+                      className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white h-12 px-6 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300"
                     >
-                      {aiChatMutation.isPending ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Send className="h-4 w-4" />
-                      )}
+                      <Send className="h-5 w-5" />
                     </Button>
                   </div>
-                  <div className="flex items-center justify-between mt-3 text-xs text-gray-500">
-                    <div className="flex items-center gap-4">
-                      <span>💡 Press Enter to send • Shift+Enter for new line</span>
-                      <span className="text-blue-600">🧠 AI has access to all your data</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                      <span className="text-green-600 font-medium">GPT-4o Ready</span>
-                    </div>
+                  
+                  {/* Enhanced Quick Actions */}
+                  <div className="flex flex-wrap gap-3 mt-4">
+                    <Badge 
+                      variant="outline" 
+                      className="cursor-pointer hover:bg-gradient-to-r hover:from-yellow-50 hover:to-orange-50 transition-all duration-300 rounded-2xl px-4 py-2 text-sm font-semibold border-yellow-200/50 shadow-sm"
+                      onClick={() => setCurrentMessage("Show me my pricing analytics")}
+                    >
+                      💰 Pricing Analytics
+                    </Badge>
+                    <Badge 
+                      variant="outline" 
+                      className="cursor-pointer hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50 transition-all duration-300 rounded-2xl px-4 py-2 text-sm font-semibold border-green-200/50 shadow-sm"
+                      onClick={() => setCurrentMessage("Analyze my hotel portfolio performance")}
+                    >
+                      📊 Portfolio Analysis
+                    </Badge>
+                    <Badge 
+                      variant="outline" 
+                      className="cursor-pointer hover:bg-gradient-to-r hover:from-purple-50 hover:to-indigo-50 transition-all duration-300 rounded-2xl px-4 py-2 text-sm font-semibold border-purple-200/50 shadow-sm"
+                      onClick={() => setCurrentMessage("Help me export my data")}
+                    >
+                      📤 Data Export
+                    </Badge>
+                    <Badge 
+                      variant="outline" 
+                      className="cursor-pointer hover:bg-gradient-to-r hover:from-orange-50 hover:to-red-50 transition-all duration-300 rounded-2xl px-4 py-2 text-sm font-semibold border-orange-200/50 shadow-sm"
+                      onClick={() => setCurrentMessage("Analyze my uploaded documents")}
+                    >
+                      🔍 Document OCR
+                    </Badge>
                   </div>
                 </div>
               </DialogContent>
             </Dialog>
-          </div>
-        </header>
 
-        {/* Ultra-Modern Main Content Area */}
-        <main className="flex-1 overflow-auto relative">
-          <div className="w-full h-full">
-            <div className="w-full h-full neo-card rounded-none relative overflow-hidden">
-              {/* Content Glow Effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-transparent to-green-500/5 pointer-events-none" />
+            {/* Premium Theme Toggle */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleTheme}
+              className="relative h-12 w-12 rounded-2xl bg-white/80 hover:bg-white border border-gray-200/50 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm"
+            >
+              <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0 text-amber-600" />
+              <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100 text-slate-600" />
+              <span className="sr-only">Toggle theme</span>
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      <div className="flex">
+        {/* Premium Desktop Sidebar */}
+        <aside className="hidden md:flex md:w-80 md:flex-col">
+          <AppSidebar />
+        </aside>
+
+        {/* Ultra-Modern Main Content */}
+        <main className="flex-1 relative">
+          <div className="w-full min-h-[calc(100vh-5rem)]">
+            <div className="w-full h-full relative overflow-hidden">
+              {/* Advanced Content Effects */}
+              <div className="absolute inset-0 bg-gradient-to-br from-white/60 via-blue-50/30 to-indigo-50/20 dark:from-gray-950/80 dark:via-slate-900/60 dark:to-gray-900/80 pointer-events-none" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(59,130,246,0.05),transparent_50%),radial-gradient(circle_at_70%_80%,rgba(99,102,241,0.03),transparent_50%)] pointer-events-none" />
               
-              <div className="p-6 w-full h-full bg-transparent">
-                {children}
+              <div className="relative p-8 w-full min-h-full bg-transparent">
+                <div className="max-w-7xl mx-auto">
+                  {children}
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Floating Status Indicators */}
-          <div className="fixed bottom-6 right-6 flex flex-col space-y-3">
-            <div className="w-3 h-3 bg-green-400 rounded-full animate-glowPulse shadow-lg" />
-            <div className="w-2 h-2 bg-blue-400 rounded-full animate-twinkle animation-delay-1000" />
-            <div className="w-2 h-2 bg-green-300 rounded-full animate-twinkle animation-delay-2000" />
+          {/* Futuristic Status Indicators */}
+          <div className="fixed bottom-8 right-8 flex flex-col space-y-4 z-40">
+            <div className="relative">
+              <div className="w-4 h-4 bg-gradient-to-r from-emerald-400 to-green-500 rounded-full shadow-lg animate-pulse" />
+              <div className="absolute inset-0 w-4 h-4 bg-emerald-400 rounded-full animate-ping opacity-40" />
+              <div className="absolute -inset-2 bg-emerald-500/20 rounded-full blur animate-pulse" />
+            </div>
+            <div className="relative">
+              <div className="w-3 h-3 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-full shadow-lg animate-bounce animation-delay-1000" />
+              <div className="absolute -inset-1 bg-blue-500/30 rounded-full blur animate-pulse animation-delay-1000" />
+            </div>
+            <div className="relative">
+              <div className="w-3 h-3 bg-gradient-to-r from-violet-400 to-purple-500 rounded-full shadow-lg animate-bounce animation-delay-2000" />
+              <div className="absolute -inset-1 bg-purple-500/30 rounded-full blur animate-pulse animation-delay-2000" />
+            </div>
           </div>
         </main>
       </div>
