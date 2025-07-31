@@ -11,7 +11,7 @@ import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useLocation } from "wouter";
 import AppLayout from "@/components/layout/app-layout";
 import { 
@@ -31,7 +31,9 @@ import {
   Gift,
   Star,
   BarChart3,
-  Globe
+  Globe,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { formatCurrency, formatPercentage } from "@/lib/pricing";
 import { apiRequest } from "@/lib/queryClient";
@@ -46,6 +48,10 @@ export default function Calculations() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   // Advanced Filter State
   const [filterOpen, setFilterOpen] = useState(false);
@@ -197,14 +203,15 @@ export default function Calculations() {
       occupancyRate: { enabled: false, min: 0, max: 100 },
       status: { enabled: false, values: [] }
     });
+    resetToFirstPage();
   };
 
   const getActiveFilterCount = () => {
     return Object.values(filters).filter(filter => filter.enabled).length;
   };
 
-  // Comprehensive filter and sort calculations
-  const filteredCalculations = useMemo(() => {
+  // Comprehensive filter and sort calculations (without pagination)
+  const allFilteredCalculations = useMemo(() => {
     return calculationsData
       .filter(calc => {
         // Search filter
@@ -294,11 +301,31 @@ export default function Calculations() {
       });
   }, [calculationsData, searchTerm, filters, sortBy, sortOrder]);
 
+  // Calculate pagination
+  const totalPages = Math.ceil(allFilteredCalculations.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+
+  // Get current page calculations
+  const filteredCalculations = useMemo(() => {
+    return allFilteredCalculations.slice(startIndex, endIndex);
+  }, [allFilteredCalculations, startIndex, endIndex]);
+
+  // Reset to first page when filters change
+  const resetToFirstPage = () => {
+    setCurrentPage(1);
+  };
+
+  // Reset pagination when search term changes
+  useEffect(() => {
+    resetToFirstPage();
+  }, [searchTerm]);
+
   // Calculate statistics
-  const totalCalculations = calculationsData.length;
-  const totalRevenue = calculationsData.reduce((sum, calc) => sum + parseFloat(calc.totalPrice?.toString() || "0"), 0);
-  const totalProfit = calculationsData.reduce((sum, calc) => sum + parseFloat(calc.profitMargin?.toString() || "0"), 0);
-  const uniqueHotels = new Set(calculationsData.map(calc => calc.hotelName)).size;
+  const totalCalculations = allFilteredCalculations.length;
+  const totalRevenue = allFilteredCalculations.reduce((sum, calc) => sum + parseFloat(calc.totalPrice?.toString() || "0"), 0);
+  const totalProfit = allFilteredCalculations.reduce((sum, calc) => sum + parseFloat(calc.profitMargin?.toString() || "0"), 0);
+  const uniqueHotels = new Set(allFilteredCalculations.map(calc => calc.hotelName)).size;
 
   const getStatusBadge = (profitMargin: number) => {
     const margin = profitMargin || 0;
@@ -986,6 +1013,63 @@ export default function Calculations() {
               </div>
             )}
           </CardContent>
+          
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="px-6 pb-6">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-muted-foreground">
+                  Showing {startIndex + 1} to {Math.min(endIndex, allFilteredCalculations.length)} of {allFilteredCalculations.length} calculations
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                    className="h-8 w-8 p-0"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1)
+                      .filter(page => {
+                        // Show first page, last page, current page, and pages around current
+                        return page === 1 || 
+                               page === totalPages || 
+                               Math.abs(page - currentPage) <= 1;
+                      })
+                      .map((page, index, filteredPages) => (
+                        <div key={page}>
+                          {index > 0 && filteredPages[index - 1] < page - 1 && (
+                            <span className="px-2 text-muted-foreground">...</span>
+                          )}
+                          <Button
+                            variant={currentPage === page ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setCurrentPage(page)}
+                            className="h-8 w-8 p-0"
+                          >
+                            {page}
+                          </Button>
+                        </div>
+                      ))}
+                  </div>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    disabled={currentPage === totalPages}
+                    className="h-8 w-8 p-0"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
         </Card>
       </div>
       </div>
