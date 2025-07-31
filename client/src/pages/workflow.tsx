@@ -1923,13 +1923,19 @@ export default function Workflow() {
                             // Marge = Vertragsvolumen Estimate - Projektkosten brutto
                             const marge = vertragsvolumenEstimate - projectCosts;
                             
-                            // Calculate margin percentage: (Marge / Vertragsvolumen Estimate) × 100
+                            // Calculate tax components
+                            const vorsteuerProdukt = (projectCosts * 1.19) - projectCosts; // 19% VAT on project costs
+                            const vorsteuerTripz = (vertragsvolumenEstimate * 0.19) * 0.23; // VAT on Tripz provision
+                            const nettoSteuerzahlung = vorsteuerProdukt - vorsteuerTripz; // Net tax payment
+                            
+                            // Marge nach Steuern = Marge - Netto Steuerzahlung
+                            const margeNachSteuern = marge - nettoSteuerzahlung;
+                            
                             if (vertragsvolumenEstimate === 0 || projectCosts === 0 || currentActualPrice === 0) {
-                              return '0%';
+                              return '0.00 ' + getCurrencySymbol(workflowData.currency);
                             }
                             
-                            const marginPercentage = (marge / vertragsvolumenEstimate) * 100;
-                            return `${marginPercentage.toFixed(1)}%`;
+                            return margeNachSteuern.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' ' + getCurrencySymbol(workflowData.currency);
                           })()}
                         </span>
                       </div>
