@@ -2323,22 +2323,21 @@ export default function Workflow() {
               </div>
             </div>
 
-            {/* Main Comparison Grid - Equal Height Cards */}
+            {/* Main Comparison Grid */}
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
               
               {/* Left Card - Kostenvorteil */}
-              <div className="bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden h-[800px] flex flex-col">
-                <div className="bg-gradient-to-r from-bebo-blue/10 to-bebo-blue/20 px-6 py-4 border-b border-bebo-blue/20">
+              <div className="bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden">
+                <div className="bg-gradient-to-r from-blue-50 to-blue-100 px-6 py-4 border-b border-blue-200">
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-bebo-blue to-bebo-blue/80 rounded-lg flex items-center justify-center shadow-md">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-800 to-blue-700 rounded-lg flex items-center justify-center shadow-md">
                       <TrendingDown className="h-5 w-5 text-white" />
                     </div>
-                    <h3 className="text-xl font-bold text-bebo-blue">Kostenvorteil</h3>
+                    <h3 className="text-xl font-bold text-blue-900">Kostenvorteil</h3>
                   </div>
                 </div>
                 
-                <div className="p-6 space-y-4 flex-1 flex flex-col justify-between">
-                  <div className="space-y-4">
+                <div className="p-6 space-y-4">
                   {/* Editable Cost Fields */}
                   <div className="space-y-3">
                     <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
@@ -2406,10 +2405,8 @@ export default function Workflow() {
                     </div>
                   </div>
 
-                  </div>
-                  
                   {/* Main Advantage Display */}
-                  <div className="bg-gradient-to-br from-bebo-blue to-bebo-blue/80 rounded-lg p-6 text-center shadow-lg">
+                  <div className="bg-gradient-to-br from-blue-800 to-blue-700 rounded-lg p-6 text-center shadow-lg">
                     <div className="text-blue-100 text-sm mb-2">Kostenvorteil gesamt</div>
                     <div className="text-2xl font-bold text-white mb-2">
                       {(() => {
@@ -2433,29 +2430,21 @@ export default function Workflow() {
                       Ersparnis gegenüber Selbstbeschaffung
                     </div>
                   </div>
-                  
-                  {/* Bottom Button */}
-                  <div className="mt-4 pt-4 border-t border-gray-100">
-                    <Button className="w-full bg-gradient-to-r from-bebo-blue to-bebo-blue/80 hover:from-bebo-blue/90 hover:to-bebo-blue/70 text-white">
-                      Zurück zum Kalkulator
-                    </Button>
-                  </div>
                 </div>
               </div>
 
               {/* Middle Card - Selbstbeschaffung */}
-              <div className="bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden h-[800px] flex flex-col">
-                <div className="bg-gradient-to-r from-orange-50 to-orange-100 px-6 py-4 border-b border-orange-200">
+              <div className="bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden">
+                <div className="bg-gradient-to-r from-blue-50 to-slate-100 px-6 py-4 border-b border-slate-200">
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-orange-600 to-orange-700 rounded-lg flex items-center justify-center shadow-md">
+                    <div className="w-10 h-10 bg-gradient-to-br from-slate-600 to-slate-700 rounded-lg flex items-center justify-center shadow-md">
                       <Calculator className="h-5 w-5 text-white" />
                     </div>
-                    <h3 className="text-xl font-bold text-orange-900">Selbstbeschaffung</h3>
+                    <h3 className="text-xl font-bold text-slate-800">Selbstbeschaffung</h3>
                   </div>
                 </div>
 
-                <div className="p-6 space-y-4 flex-1 flex flex-col justify-between">
-                  <div className="space-y-4">
+                <div className="p-6 space-y-4">
                   {/* Kosten Netto */}
                   <div className="bg-gray-50 rounded-lg p-4">
                     <div className="text-sm text-gray-600 mb-1">Kosten Netto</div>
@@ -2508,8 +2497,8 @@ export default function Workflow() {
                   </div>
 
                   {/* Total Costs */}
-                  <div className="bg-gradient-to-br from-orange-600 to-orange-700 rounded-lg p-4 text-center shadow-lg">
-                    <div className="text-orange-100 text-sm mb-1">Kosten brutto</div>
+                  <div className="bg-gradient-to-br from-slate-600 to-slate-700 rounded-lg p-4 text-center shadow-lg">
+                    <div className="text-slate-100 text-sm mb-1">Kosten brutto</div>
                     <div className="text-2xl font-bold text-white">
                       {(() => {
                         const projectCosts = workflowData.projectCosts || 20000;
@@ -2517,30 +2506,21 @@ export default function Workflow() {
                       })()}
                     </div>
                   </div>
-                  </div>
-                  
-                  {/* Bottom Button */}
-                  <div className="mt-4 pt-4 border-t border-gray-100">
-                    <Button className="w-full bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-500 hover:to-orange-600 text-white">
-                      Save Progress
-                    </Button>
-                  </div>
                 </div>
               </div>
 
               {/* Right Card - bebo convert */}
-              <div className="bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden h-[800px] flex flex-col">
-                <div className="bg-gradient-to-r from-bebo-green/10 to-bebo-green/20 px-6 py-4 border-b border-bebo-green/20">
+              <div className="bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden">
+                <div className="bg-gradient-to-r from-teal-50 to-emerald-100 px-6 py-4 border-b border-teal-200">
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-bebo-green to-bebo-green/80 rounded-lg flex items-center justify-center shadow-md">
+                    <div className="w-10 h-10 bg-gradient-to-br from-teal-600 to-emerald-600 rounded-lg flex items-center justify-center shadow-md">
                       <Star className="h-5 w-5 text-white" />
                     </div>
-                    <h3 className="text-xl font-bold text-bebo-green">bebo convert</h3>
+                    <h3 className="text-xl font-bold text-teal-800">bebo convert</h3>
                   </div>
                 </div>
                 
-                <div className="p-6 space-y-4 flex-1 flex flex-col justify-between">
-                  <div className="space-y-4">
+                <div className="p-6 space-y-4">
                   {/* Voucher Information */}
                   <div className="bg-emerald-50 rounded-lg p-4">
                     <div className="text-sm text-emerald-700 mb-2">Gutschein-Verkauf</div>
@@ -2649,8 +2629,8 @@ export default function Workflow() {
                   </div>
 
                   {/* Total Costs */}
-                  <div className="bg-gradient-to-br from-bebo-green to-bebo-green/80 rounded-lg p-4 text-center shadow-lg">
-                    <div className="text-green-100 text-sm mb-1">Gesamtkosten</div>
+                  <div className="bg-emerald-500 rounded-lg p-4 text-center">
+                    <div className="text-emerald-100 text-sm mb-1">Gesamtkosten</div>
                     <div className="text-2xl font-bold text-white">
                       {(() => {
                         const projectCosts = workflowData.projectCosts || 20000;
@@ -2665,14 +2645,6 @@ export default function Workflow() {
                         return gesamtkosten.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €';
                       })()}
                     </div>
-                  </div>
-                  </div>
-                  
-                  {/* Bottom Button */}
-                  <div className="mt-4 pt-4 border-t border-gray-100">
-                    <Button className="w-full bg-gradient-to-r from-bebo-green to-bebo-green/80 hover:from-bebo-green/90 hover:to-bebo-green/70 text-white">
-                      PDF-Bericht erstellen
-                    </Button>
                   </div>
                 </div>
               </div>
