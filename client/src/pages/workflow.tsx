@@ -3112,9 +3112,6 @@ export default function Workflow() {
               AI Pricing Agent
             </h1>
             <p className="text-gray-600 mt-2 mb-4">Complete hotel pricing analysis in three steps</p>
-            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-              Step {currentStep} of {steps.length}
-            </Badge>
           </div>
         </div>
 
