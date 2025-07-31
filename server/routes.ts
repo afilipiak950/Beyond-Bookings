@@ -920,6 +920,141 @@ CRITICAL: You must always return a specific price number in EUR. If exact data u
     }
   });
 
+  // Hotel data extraction with comprehensive reviews from multiple platforms
+  app.post('/api/hotels/extract-with-reviews', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const { name, url } = req.body;
+      
+      if (!name?.trim()) {
+        return res.status(400).json({ message: "Hotel name is required" });
+      }
+
+      console.log(`🏨 Starting comprehensive hotel extraction with reviews for: ${name}`);
+      console.log(`🌐 Optional URL provided: ${url || 'none'}`);
+
+      const { default: OpenAI } = await import('openai');
+      const openai = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY
+      });
+
+      // Step 1: Extract basic hotel data and review links
+      const extractionPrompt = `Research and extract comprehensive data for "${name}" hotel${url ? ` (website: ${url})` : ''}.
+
+EXTRACT THE FOLLOWING DATA:
+1. Basic hotel information (name, location, stars, room count, amenities)
+2. Review platform links and ratings:
+   - Booking.com profile and review URL
+   - Google Reviews/Google Maps URL
+   - HolidayCheck profile URL
+   - TripAdvisor URL if available
+3. Average ratings from each platform
+4. Recent review summaries from each platform
+
+MANDATORY OUTPUT FORMAT (valid JSON only):
+{
+  "name": "Exact hotel name",
+  "location": "Full address",
+  "city": "City name",
+  "country": "Country",
+  "stars": number,
+  "roomCount": number,
+  "url": "Official website",
+  "category": "Hotel category/type",
+  "amenities": ["amenity1", "amenity2"],
+  "averagePrice": number_in_EUR,
+  "reviewPlatforms": {
+    "booking": {
+      "url": "Booking.com hotel page URL",
+      "rating": number,
+      "reviewCount": number,
+      "summary": "Brief summary of recent reviews"
+    },
+    "google": {
+      "url": "Google Maps/Reviews URL",
+      "rating": number,
+      "reviewCount": number,
+      "summary": "Brief summary of recent reviews"
+    },
+    "holidayCheck": {
+      "url": "HolidayCheck profile URL",
+      "rating": number,
+      "reviewCount": number,
+      "summary": "Brief summary of recent reviews"
+    },
+    "tripadvisor": {
+      "url": "TripAdvisor URL if available",
+      "rating": number,
+      "reviewCount": number,
+      "summary": "Brief summary if available"
+    }
+  },
+  "overallReviewSummary": "AI-generated summary combining insights from all platforms"
+}
+
+Research authentic review data from actual platforms. If exact review counts unavailable, provide reasonable estimates based on hotel size and popularity.`;
+
+      console.log('🤖 Sending extraction request to OpenAI...');
+      
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+        messages: [
+          {
+            role: "system",
+            content: "You are a comprehensive hotel data extraction specialist with access to review platforms. Extract authentic hotel data and review information from Booking.com, Google Reviews, HolidayCheck, and other platforms."
+          },
+          {
+            role: "user", 
+            content: extractionPrompt
+          }
+        ],
+        max_tokens: 1500,
+        temperature: 0.1,
+        response_format: { type: "json_object" }
+      });
+
+      const response = completion.choices[0].message.content;
+      console.log('🔍 Raw extraction response:', response);
+      
+      if (!response) {
+        throw new Error('No response from OpenAI');
+      }
+
+      const hotelData = JSON.parse(response);
+      console.log('✅ Extracted hotel data with reviews:', hotelData);
+
+      // Structure the final response with review data
+      const extractedData = {
+        name: hotelData.name || name,
+        location: hotelData.location || null,
+        city: hotelData.city || null,
+        country: hotelData.country || null,
+        stars: hotelData.stars ? parseInt(hotelData.stars.toString()) : null,
+        roomCount: hotelData.roomCount ? parseInt(hotelData.roomCount.toString()) : null,
+        url: hotelData.url || url || null,
+        category: hotelData.category || null,
+        amenities: Array.isArray(hotelData.amenities) ? hotelData.amenities : [],
+        averagePrice: hotelData.averagePrice || null,
+        // Review data from multiple platforms
+        bookingReviews: hotelData.reviewPlatforms?.booking || null,
+        googleReviews: hotelData.reviewPlatforms?.google || null,
+        holidayCheckReviews: hotelData.reviewPlatforms?.holidayCheck || null,
+        tripadvisorReviews: hotelData.reviewPlatforms?.tripadvisor || null,
+        reviewSummary: hotelData.overallReviewSummary || null,
+        lastReviewUpdate: new Date().toISOString()
+      };
+
+      console.log('🏁 Final hotel data with comprehensive reviews:', extractedData);
+      res.json(extractedData);
+      
+    } catch (error) {
+      console.error('Hotel extraction with reviews error:', error);
+      res.status(500).json({ 
+        message: "Failed to extract hotel data with reviews", 
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   // Session refresh endpoint to keep sessions alive
   app.post('/api/auth/refresh', requireAuth, async (req: any, res) => {
     try {

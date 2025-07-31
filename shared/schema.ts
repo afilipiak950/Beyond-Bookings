@@ -38,7 +38,7 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Hotels table
+// Hotels table with comprehensive review data
 export const hotels = pgTable("hotels", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
@@ -48,6 +48,15 @@ export const hotels = pgTable("hotels", {
   location: text("location"),
   city: text("city"),
   country: text("country"),
+  category: text("category"),
+  amenities: text("amenities").array(),
+  averagePrice: decimal("average_price", { precision: 10, scale: 2 }),
+  // Review data from multiple platforms
+  bookingReviews: jsonb("booking_reviews"), // {rating, count, summary, url}
+  googleReviews: jsonb("google_reviews"), // {rating, count, summary, url}
+  holidayCheckReviews: jsonb("holiday_check_reviews"), // {rating, count, summary, url}
+  reviewSummary: text("review_summary"), // AI-generated summary of all reviews
+  lastReviewUpdate: timestamp("last_review_update"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

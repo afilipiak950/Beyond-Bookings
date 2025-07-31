@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Users, Building2, Search, Plus, Globe, MapPin, Star, Loader2, Trash2, MoreHorizontal, Send, Bot, User, Clock, Brain } from "lucide-react";
+import { Users, Building2, Search, Plus, Globe, MapPin, Star, Loader2, Trash2, MoreHorizontal, Send, Bot, User, Clock, Brain, MessageSquare } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
 export default function CustomerManagement() {
@@ -106,30 +106,43 @@ export default function CustomerManagement() {
     retry: false,
   });
 
-  // Mutation for scraping hotel data
+  // Mutation for comprehensive hotel data extraction with reviews
   const scrapeHotelMutation = useMutation({
     mutationFn: async (data: { name: string; url?: string }) => {
-      const response = await apiRequest('/api/scrape-hotel', 'POST', data);
+      const response = await apiRequest('/api/hotels/extract-with-reviews', 'POST', data);
       return await response.json();
     },
     onSuccess: (data) => {
       setExtractedData(data);
       
-      // Display different messages based on AI price research availability
-      if (data.averagePrice && data.priceResearch) {
+      // Count review platforms found
+      const reviewPlatforms = [
+        data.bookingReviews && 'Booking.com',
+        data.googleReviews && 'Google Reviews', 
+        data.holidayCheckReviews && 'HolidayCheck',
+        data.tripadvisorReviews && 'TripAdvisor'
+      ].filter(Boolean);
+      
+      // Display comprehensive success message
+      if (reviewPlatforms.length > 0) {
         toast({
-          title: "Complete hotel intelligence extracted!",
+          title: "Complete hotel data with reviews extracted!",
+          description: `Found ${data.name} with reviews from ${reviewPlatforms.join(', ')}${data.averagePrice ? ` and average price: ${data.averagePrice}€` : ''}`,
+        });
+      } else if (data.averagePrice && data.priceResearch) {
+        toast({
+          title: "Hotel data with pricing extracted!",
           description: `Found ${data.name} with AI-researched average price: ${data.averagePrice}€ (${data.priceResearch.confidence} confidence)`,
         });
       } else if (data.stars || data.roomCount || data.location) {
         toast({
           title: "Hotel data found!",
-          description: "Successfully extracted detailed hotel information - automatic price research may still be processing",
+          description: "Successfully extracted detailed hotel information",
         });
       } else {
         toast({
           title: "Basic hotel data created",
-          description: "Hotel name saved. AI price research will be included when available.",
+          description: "Hotel name saved for further enhancement",
         });
       }
     },
@@ -533,6 +546,174 @@ export default function CustomerManagement() {
                               )}
                             </div>
                           </div>
+                        </div>
+                      )}
+
+                      {/* Comprehensive Review Data Section */}
+                      {(extractedData.bookingReviews || extractedData.googleReviews || extractedData.holidayCheckReviews || extractedData.tripadvisorReviews) && (
+                        <div className="md:col-span-2 mt-6">
+                          <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
+                            <MessageSquare className="h-4 w-4 mr-2 text-blue-600" />
+                            Hotel Reviews & Ratings
+                          </h4>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* Booking.com Reviews */}
+                            {extractedData.bookingReviews && (
+                              <div className="p-3 border border-blue-200 rounded-lg bg-gradient-to-r from-blue-50 to-blue-100">
+                                <div className="flex items-center justify-between mb-2">
+                                  <h5 className="font-medium text-blue-800 flex items-center">
+                                    <Globe className="h-3 w-3 mr-1" />
+                                    Booking.com
+                                  </h5>
+                                  {extractedData.bookingReviews.url && (
+                                    <a 
+                                      href={extractedData.bookingReviews.url} 
+                                      target="_blank" 
+                                      rel="noopener noreferrer"
+                                      className="text-xs text-blue-600 hover:text-blue-800 underline"
+                                    >
+                                      View Reviews →
+                                    </a>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="text-sm font-medium">{extractedData.bookingReviews.rating}/10</span>
+                                  <div className="flex">
+                                    {Array.from({length: 5}, (_, i) => (
+                                      <Star 
+                                        key={i} 
+                                        className={`h-3 w-3 ${i < Math.round(extractedData.bookingReviews.rating / 2) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
+                                      />
+                                    ))}
+                                  </div>
+                                  <span className="text-xs text-gray-600">({extractedData.bookingReviews.reviewCount} reviews)</span>
+                                </div>
+                                <p className="text-xs text-gray-700">{extractedData.bookingReviews.summary}</p>
+                              </div>
+                            )}
+
+                            {/* Google Reviews */}
+                            {extractedData.googleReviews && (
+                              <div className="p-3 border border-green-200 rounded-lg bg-gradient-to-r from-green-50 to-green-100">
+                                <div className="flex items-center justify-between mb-2">
+                                  <h5 className="font-medium text-green-800 flex items-center">
+                                    <Globe className="h-3 w-3 mr-1" />
+                                    Google Reviews
+                                  </h5>
+                                  {extractedData.googleReviews.url && (
+                                    <a 
+                                      href={extractedData.googleReviews.url} 
+                                      target="_blank" 
+                                      rel="noopener noreferrer"
+                                      className="text-xs text-green-600 hover:text-green-800 underline"
+                                    >
+                                      View Reviews →
+                                    </a>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="text-sm font-medium">{extractedData.googleReviews.rating}/5</span>
+                                  <div className="flex">
+                                    {Array.from({length: 5}, (_, i) => (
+                                      <Star 
+                                        key={i} 
+                                        className={`h-3 w-3 ${i < Math.round(extractedData.googleReviews.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
+                                      />
+                                    ))}
+                                  </div>
+                                  <span className="text-xs text-gray-600">({extractedData.googleReviews.reviewCount} reviews)</span>
+                                </div>
+                                <p className="text-xs text-gray-700">{extractedData.googleReviews.summary}</p>
+                              </div>
+                            )}
+
+                            {/* HolidayCheck Reviews */}
+                            {extractedData.holidayCheckReviews && (
+                              <div className="p-3 border border-orange-200 rounded-lg bg-gradient-to-r from-orange-50 to-orange-100">
+                                <div className="flex items-center justify-between mb-2">
+                                  <h5 className="font-medium text-orange-800 flex items-center">
+                                    <Globe className="h-3 w-3 mr-1" />
+                                    HolidayCheck
+                                  </h5>
+                                  {extractedData.holidayCheckReviews.url && (
+                                    <a 
+                                      href={extractedData.holidayCheckReviews.url} 
+                                      target="_blank" 
+                                      rel="noopener noreferrer"
+                                      className="text-xs text-orange-600 hover:text-orange-800 underline"
+                                    >
+                                      View Reviews →
+                                    </a>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="text-sm font-medium">{extractedData.holidayCheckReviews.rating}/6</span>
+                                  <div className="flex">
+                                    {Array.from({length: 6}, (_, i) => (
+                                      <Star 
+                                        key={i} 
+                                        className={`h-3 w-3 ${i < Math.round(extractedData.holidayCheckReviews.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
+                                      />
+                                    ))}
+                                  </div>
+                                  <span className="text-xs text-gray-600">({extractedData.holidayCheckReviews.reviewCount} reviews)</span>
+                                </div>
+                                <p className="text-xs text-gray-700">{extractedData.holidayCheckReviews.summary}</p>
+                              </div>
+                            )}
+
+                            {/* TripAdvisor Reviews */}
+                            {extractedData.tripadvisorReviews && (
+                              <div className="p-3 border border-red-200 rounded-lg bg-gradient-to-r from-red-50 to-red-100">
+                                <div className="flex items-center justify-between mb-2">
+                                  <h5 className="font-medium text-red-800 flex items-center">
+                                    <Globe className="h-3 w-3 mr-1" />
+                                    TripAdvisor
+                                  </h5>
+                                  {extractedData.tripadvisorReviews.url && (
+                                    <a 
+                                      href={extractedData.tripadvisorReviews.url} 
+                                      target="_blank" 
+                                      rel="noopener noreferrer"
+                                      className="text-xs text-red-600 hover:text-red-800 underline"
+                                    >
+                                      View Reviews →
+                                    </a>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="text-sm font-medium">{extractedData.tripadvisorReviews.rating}/5</span>
+                                  <div className="flex">
+                                    {Array.from({length: 5}, (_, i) => (
+                                      <Star 
+                                        key={i} 
+                                        className={`h-3 w-3 ${i < Math.round(extractedData.tripadvisorReviews.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
+                                      />
+                                    ))}
+                                  </div>
+                                  <span className="text-xs text-gray-600">({extractedData.tripadvisorReviews.reviewCount} reviews)</span>
+                                </div>
+                                <p className="text-xs text-gray-700">{extractedData.tripadvisorReviews.summary}</p>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Overall Review Summary */}
+                          {extractedData.reviewSummary && (
+                            <div className="mt-4 p-3 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg border border-purple-200">
+                              <h5 className="font-medium text-purple-800 mb-2 flex items-center">
+                                <Brain className="h-4 w-4 mr-2" />
+                                AI Review Summary
+                              </h5>
+                              <p className="text-sm text-purple-700">{extractedData.reviewSummary}</p>
+                              {extractedData.lastReviewUpdate && (
+                                <p className="text-xs text-purple-600 mt-2">
+                                  Last updated: {new Date(extractedData.lastReviewUpdate).toLocaleDateString()}
+                                </p>
+                              )}
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
