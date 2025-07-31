@@ -1764,7 +1764,29 @@ export default function Workflow() {
                           </span>
                         </div>
                         <span className="text-xl font-black bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
-                          {workflowData.averagePrice ? `${((workflowData.averagePrice - (workflowData.averagePrice * 0.65)) / workflowData.averagePrice * 100).toFixed(0)}%` : '0%'}
+                          {(() => {
+                            // Get actual input values from form
+                            const projectCosts = workflowData.projectCosts || 0;
+                            const stars = workflowData.stars || 0;
+                            const actualPrice = workflowData.averagePrice || 0;
+                            
+                            // Calculate hotel voucher value based on stars
+                            const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30;
+                            
+                            // Formula: Vertragsvolumen Estimate = (Project Costs / Hotel Voucher Value) × (Actual Price × 0.75) × 1.1
+                            const vertragsvolumenEstimate = (projectCosts / voucherValue) * (actualPrice * 0.75) * 1.1;
+                            
+                            // Marge = Vertragsvolumen Estimate - Projektkosten brutto
+                            const marge = vertragsvolumenEstimate - projectCosts;
+                            
+                            // Calculate margin percentage: (Marge / Vertragsvolumen Estimate) × 100
+                            if (vertragsvolumenEstimate === 0 || projectCosts === 0 || actualPrice === 0) {
+                              return '0%';
+                            }
+                            
+                            const marginPercentage = (marge / vertragsvolumenEstimate) * 100;
+                            return `${marginPercentage.toFixed(1)}%`;
+                          })()}
                         </span>
                       </div>
                     </div>
