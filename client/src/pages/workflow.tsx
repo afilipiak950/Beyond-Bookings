@@ -2230,7 +2230,7 @@ export default function Workflow() {
                     <div className="flex flex-col space-y-2 h-full justify-between">
                       <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 bg-yellow-500 rounded-full animate-bounce flex-shrink-0"></div>
-                        <span className="text-xs font-bold text-yellow-800 break-words">Profit Margin %</span>
+                        <span className="text-xs font-bold text-yellow-800 break-words">Marge nach Steuern</span>
                       </div>
                       <div className="text-2xl font-black text-yellow-900">
                         {(() => {
@@ -2245,16 +2245,16 @@ export default function Workflow() {
                           // Formula: Vertragsvolumen Estimate = (Project Costs / Hotel Voucher Value) × (Actual Price × 0.75) × 1.1
                           const vertragsvolumenEstimate = (projectCosts / voucherValue) * (actualPrice * 0.75) * 1.1;
                           
-                          // Profit Margin = (Profit / Revenue) × 100
-                          const profit = vertragsvolumenEstimate - projectCosts;
-                          const profitMargin = vertragsvolumenEstimate > 0 ? (profit / vertragsvolumenEstimate) * 100 : 0;
+                          // Marge = Vertragsvolumen Estimate - Projektkosten brutto
+                          const marge = vertragsvolumenEstimate - projectCosts;
                           
-                          // Show 0 when no meaningful input data
-                          if (projectCosts === 0 && actualPrice === 0) {
+                          // Calculate margin percentage: (Marge / Vertragsvolumen Estimate) × 100
+                          if (vertragsvolumenEstimate === 0 || projectCosts === 0 || actualPrice === 0) {
                             return '-';
                           }
                           
-                          return Math.round(profitMargin).toLocaleString('de-DE') + '%';
+                          const marginPercentage = (marge / vertragsvolumenEstimate) * 100;
+                          return `${marginPercentage.toFixed(1)}%`;
                         })()}
                       </div>
                     </div>
