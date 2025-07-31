@@ -2493,10 +2493,10 @@ export default function Workflow() {
               <div className="bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden">
                 <div className="bg-gradient-to-r from-blue-50 to-blue-100 px-6 py-4 border-b border-blue-200">
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-blue-800 to-blue-700 rounded-lg flex items-center justify-center shadow-md">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center shadow-md">
                       <TrendingDown className="h-5 w-5 text-white" />
                     </div>
-                    <h3 className="text-xl font-bold text-blue-900">Kostenvorteil</h3>
+                    <h3 className="text-xl font-bold text-blue-800">Kostenvorteil</h3>
                   </div>
                 </div>
                 
@@ -2511,7 +2511,7 @@ export default function Workflow() {
                           step="0.01"
                           value={editableCosts.emptyRoomCost}
                           onChange={(e) => setEditableCosts(prev => ({...prev, emptyRoomCost: parseFloat(e.target.value) || 0}))}
-                          className="w-20 h-8 text-right text-sm border-gray-300"
+                          className="w-24 h-8 text-right text-sm border-gray-300"
                         />
                         <span className="text-sm font-medium text-gray-700">{getCurrencySymbol(workflowData.currency)}</span>
                       </div>
@@ -2525,7 +2525,7 @@ export default function Workflow() {
                           step="0.01"
                           value={editableCosts.occupiedRoomCost}
                           onChange={(e) => setEditableCosts(prev => ({...prev, occupiedRoomCost: parseFloat(e.target.value) || 0}))}
-                          className="w-20 h-8 text-right text-sm border-gray-300"
+                          className="w-24 h-8 text-right text-sm border-gray-300"
                         />
                         <span className="text-sm font-medium text-gray-700">{getCurrencySymbol(workflowData.currency)}</span>
                       </div>
@@ -2539,7 +2539,7 @@ export default function Workflow() {
                           step="0.01"
                           value={editableCosts.realCosts}
                           onChange={(e) => setEditableCosts(prev => ({...prev, realCosts: parseFloat(e.target.value) || 0}))}
-                          className="w-20 h-8 text-right text-sm border-gray-300"
+                          className="w-24 h-8 text-right text-sm border-gray-300"
                         />
                         <span className="text-sm font-medium text-gray-700">{getCurrencySymbol(workflowData.currency)}</span>
                       </div>
@@ -2568,43 +2568,42 @@ export default function Workflow() {
                     </div>
                   </div>
 
-                </div>
-                
-                {/* Main Advantage Display */}
-                <div className="bg-gradient-to-br from-blue-800 to-blue-700 rounded-lg p-6 text-center shadow-lg">
-                  <div className="text-blue-100 text-sm mb-2">Kostenvorteil gesamt</div>
-                  <div className="text-2xl font-bold text-white mb-2">
-                    {(() => {
-                      const projectCosts = workflowData.projectCosts || 20000;
-                      const stars = workflowData.stars || 3;
-                      const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : 30;
-                      const roomnights = Math.round(projectCosts / voucherValue);
-                      
-                      // Beyond Bookings real costs calculation
-                      const beyondBookingsCosts = roomnights * editableCosts.realCostPerVoucher;
-                      const steuerbelastung = editableCosts.taxBurden;
-                      const nettoKosten = projectCosts / (1 + editableCosts.vatRate19/100);
-                      const steuervorteil = nettoKosten * (editableCosts.vatRate19/100);
-                      const gesamtkosten = beyondBookingsCosts + steuerbelastung - steuervorteil;
-                      
-                      const advantage = projectCosts - gesamtkosten;
-                      return advantage.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' ' + getCurrencySymbol(workflowData.currency);
-                    })()}
-                  </div>
-                  <div className="text-blue-200 text-sm">
-                    Ersparnis gegenüber Selbstbeschaffung
+                  {/* Main Advantage Display */}
+                  <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg p-6 text-center shadow-lg">
+                    <div className="text-blue-100 text-sm mb-2">Kostenvorteil gesamt</div>
+                    <div className="text-2xl font-bold text-white mb-2">
+                      {(() => {
+                        const projectCosts = workflowData.projectCosts || 20000;
+                        const stars = workflowData.stars || 3;
+                        const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : 30;
+                        const roomnights = Math.round(projectCosts / voucherValue);
+                        
+                        // Beyond Bookings real costs calculation
+                        const beyondBookingsCosts = roomnights * editableCosts.realCostPerVoucher;
+                        const steuerbelastung = editableCosts.taxBurden;
+                        const nettoKosten = projectCosts / (1 + editableCosts.vatRate19/100);
+                        const steuervorteil = nettoKosten * (editableCosts.vatRate19/100);
+                        const gesamtkosten = beyondBookingsCosts + steuerbelastung - steuervorteil;
+                        
+                        const advantage = projectCosts - gesamtkosten;
+                        return advantage.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' ' + getCurrencySymbol(workflowData.currency);
+                      })()}
+                    </div>
+                    <div className="text-blue-200 text-sm">
+                      Ersparnis gegenüber Selbstbeschaffung
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Middle Card - Selbstbeschaffung */}
               <div className="bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden">
-                <div className="bg-gradient-to-r from-blue-50 to-slate-100 px-6 py-4 border-b border-slate-200">
+                <div className="bg-gradient-to-r from-blue-50 to-blue-100 px-6 py-4 border-b border-blue-200">
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-slate-600 to-slate-700 rounded-lg flex items-center justify-center shadow-md">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center shadow-md">
                       <Calculator className="h-5 w-5 text-white" />
                     </div>
-                    <h3 className="text-xl font-bold text-slate-800">Selbstbeschaffung</h3>
+                    <h3 className="text-xl font-bold text-blue-800">Selbstbeschaffung</h3>
                   </div>
                 </div>
 
@@ -2661,9 +2660,9 @@ export default function Workflow() {
                   </div>
 
                   {/* Total Costs */}
-                  <div className="bg-gradient-to-br from-slate-600 to-slate-700 rounded-lg p-4 text-center shadow-lg">
-                    <div className="text-slate-100 text-sm mb-1">Kosten brutto</div>
-                    <div className="text-2xl font-bold text-white">
+                  <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg p-6 text-center shadow-lg">
+                    <div className="text-blue-100 text-sm mb-2">Kosten brutto</div>
+                    <div className="text-2xl font-bold text-white mb-2">
                       {(() => {
                         const projectCosts = workflowData.projectCosts || 20000;
                         return projectCosts.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' ' + getCurrencySymbol(workflowData.currency);
@@ -2675,20 +2674,20 @@ export default function Workflow() {
 
               {/* Right Card - bebo convert */}
               <div className="bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden">
-                <div className="bg-gradient-to-r from-teal-50 to-emerald-100 px-6 py-4 border-b border-teal-200">
+                <div className="bg-gradient-to-r from-blue-50 to-blue-100 px-6 py-4 border-b border-blue-200">
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-teal-600 to-emerald-600 rounded-lg flex items-center justify-center shadow-md">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center shadow-md">
                       <Star className="h-5 w-5 text-white" />
                     </div>
-                    <h3 className="text-xl font-bold text-teal-800">bebo convert</h3>
+                    <h3 className="text-xl font-bold text-blue-800">bebo convert</h3>
                   </div>
                 </div>
                 
                 <div className="p-6 space-y-4">
                   {/* Voucher Information */}
-                  <div className="bg-emerald-50 rounded-lg p-4">
-                    <div className="text-sm text-emerald-700 mb-2">Gutschein-Verkauf</div>
-                    <div className="text-lg font-semibold text-emerald-900">
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <div className="text-sm text-gray-600 mb-1">Gutschein-Verkauf</div>
+                    <div className="text-2xl font-bold text-gray-900">
                       {(() => {
                         const projectCosts = workflowData.projectCosts || 20000;
                         const stars = workflowData.stars || 3;
@@ -2697,7 +2696,7 @@ export default function Workflow() {
                         return `${roomnights} Gutscheine × ${convertFromEUR(voucherValue, workflowData.currency).toFixed(2)} ${getCurrencySymbol(workflowData.currency)}`;
                       })()}
                     </div>
-                    <div className="text-xl font-bold text-emerald-900 mt-1">
+                    <div className="text-lg font-semibold text-gray-900 mt-1">
                       {(() => {
                         const projectCosts = workflowData.projectCosts || 20000;
                         const stars = workflowData.stars || 3;
@@ -2793,9 +2792,9 @@ export default function Workflow() {
                   </div>
 
                   {/* Total Costs */}
-                  <div className="bg-emerald-500 rounded-lg p-4 text-center">
-                    <div className="text-emerald-100 text-sm mb-1">Gesamtkosten</div>
-                    <div className="text-2xl font-bold text-white">
+                  <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg p-6 text-center shadow-lg">
+                    <div className="text-blue-100 text-sm mb-2">Gesamtkosten</div>
+                    <div className="text-2xl font-bold text-white mb-2">
                       {(() => {
                         const projectCosts = workflowData.projectCosts || 20000;
                         const stars = workflowData.stars || 3;
