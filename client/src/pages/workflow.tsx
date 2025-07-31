@@ -1882,7 +1882,7 @@ export default function Workflow() {
                               const numValue = value === '' ? 0 : parseFloat(value) || 0;
                               setWorkflowData({...workflowData, projectCosts: numValue});
                             }}
-                            className="bg-white/60 backdrop-blur-sm border-rose-300/50 focus:border-rose-500 focus:ring-rose-500/20 text-right font-bold"
+                            className="bg-white/60 backdrop-blur-sm border-rose-300/50 focus:border-rose-500 focus:ring-rose-500/20 text-right font-bold placeholder:text-xs"
                           />
                           <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-rose-600 font-bold">€</div>
                         </div>
