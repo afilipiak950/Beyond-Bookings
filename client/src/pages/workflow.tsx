@@ -1912,19 +1912,19 @@ export default function Workflow() {
                             // Get actual input values from form
                             const projectCosts = workflowData.projectCosts || 0;
                             const stars = workflowData.stars || 0;
-                            const actualPrice = workflowData.averagePrice || 0;
+                            const currentActualPrice = actualPrice || 0;
                             
                             // Calculate hotel voucher value based on stars
                             const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30;
                             
                             // Formula: Vertragsvolumen Estimate = (Project Costs / Hotel Voucher Value) × (Actual Price × 0.75) × 1.1
-                            const vertragsvolumenEstimate = (projectCosts / voucherValue) * (actualPrice * 0.75) * 1.1;
+                            const vertragsvolumenEstimate = (projectCosts / voucherValue) * (currentActualPrice * 0.75) * 1.1;
                             
                             // Marge = Vertragsvolumen Estimate - Projektkosten brutto
                             const marge = vertragsvolumenEstimate - projectCosts;
                             
                             // Calculate margin percentage: (Marge / Vertragsvolumen Estimate) × 100
-                            if (vertragsvolumenEstimate === 0 || projectCosts === 0 || actualPrice === 0) {
+                            if (vertragsvolumenEstimate === 0 || projectCosts === 0 || currentActualPrice === 0) {
                               return '0%';
                             }
                             
@@ -2159,19 +2159,19 @@ export default function Workflow() {
                           // Get actual input values from form
                           const projectCosts = workflowData.projectCosts || 0;
                           const stars = workflowData.stars || 0;
-                          const actualPrice = workflowData.averagePrice || 0;
+                          const currentActualPrice = actualPrice || 0;
                           
                           // Calculate hotel voucher value based on stars
                           const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30;
                           
                           // Formula: Vertragsvolumen Estimate = (Project Costs / Hotel Voucher Value) × (Actual Price × 0.75) × 1.1
-                          const vertragsvolumenEstimate = (projectCosts / voucherValue) * (actualPrice * 0.75) * 1.1;
+                          const vertragsvolumenEstimate = (projectCosts / voucherValue) * (currentActualPrice * 0.75) * 1.1;
                           
                           // Result = Vertragsvolumen Estimate - Finanzierung: Projektkosten brutto
                           const result = vertragsvolumenEstimate - projectCosts;
                           
                           // Show 0 when no meaningful input data
-                          if (projectCosts === 0 && actualPrice === 0) {
+                          if (projectCosts === 0 && currentActualPrice === 0) {
                             return '0';
                           }
                           
@@ -2195,16 +2195,16 @@ export default function Workflow() {
                           // Get actual input values from form
                           const projectCosts = workflowData.projectCosts || 0;
                           const stars = workflowData.stars || 0;
-                          const actualPrice = workflowData.averagePrice || 0;
+                          const currentActualPrice = actualPrice || 0;
                           
                           // Calculate hotel voucher value based on stars
                           const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30;
                           
                           // Formula: Vertragsvolumen Estimate = (Project Costs / Hotel Voucher Value) × (Actual Price × 0.75) × 1.1
-                          const vertragsvolumenEstimate = (projectCosts / voucherValue) * (actualPrice * 0.75) * 1.1;
+                          const vertragsvolumenEstimate = (projectCosts / voucherValue) * (currentActualPrice * 0.75) * 1.1;
                           
                           // Show 0 when no meaningful input data
-                          if (projectCosts === 0 && actualPrice === 0) {
+                          if (projectCosts === 0 && currentActualPrice === 0) {
                             return '0';
                           }
                           
@@ -2237,19 +2237,19 @@ export default function Workflow() {
                           // Get actual input values from form
                           const projectCosts = workflowData.projectCosts || 0;
                           const stars = workflowData.stars || 0;
-                          const actualPrice = workflowData.averagePrice || 0;
+                          const currentActualPrice = actualPrice || 0;
                           
                           // Calculate hotel voucher value based on stars
                           const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30;
                           
                           // Formula: Vertragsvolumen Estimate = (Project Costs / Hotel Voucher Value) × (Actual Price × 0.75) × 1.1
-                          const vertragsvolumenEstimate = (projectCosts / voucherValue) * (actualPrice * 0.75) * 1.1;
+                          const vertragsvolumenEstimate = (projectCosts / voucherValue) * (currentActualPrice * 0.75) * 1.1;
                           
                           // Marge = Vertragsvolumen Estimate - Projektkosten brutto (absolute difference)
                           const marge = vertragsvolumenEstimate - projectCosts;
                           
                           // Show 0 when no meaningful input data
-                          if (projectCosts === 0 && actualPrice === 0) {
+                          if (projectCosts === 0 && currentActualPrice === 0) {
                             return '-';
                           }
                           
@@ -2302,19 +2302,19 @@ export default function Workflow() {
                           // Get actual input values from form
                           const projectCosts = workflowData.projectCosts || 0;
                           const stars = workflowData.stars || 0;
-                          const actualPrice = workflowData.averagePrice || 0;
+                          const currentActualPrice = actualPrice || 0;
                           
                           // Calculate hotel voucher value based on stars
                           const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30;
                           
                           // Formula: Vertragsvolumen Estimate = (Project Costs / Hotel Voucher Value) × (Actual Price × 0.75) × 1.1
-                          const vertragsvolumenEstimate = (projectCosts / voucherValue) * (actualPrice * 0.75) * 1.1;
+                          const vertragsvolumenEstimate = (projectCosts / voucherValue) * (currentActualPrice * 0.75) * 1.1;
                           
                           // Vorsteuer Tripz Provision = (Vertragsvolumen Estimate × 0.19) × 0.23
                           const vorsteuerTripz = (vertragsvolumenEstimate * 0.19) * 0.23;
                           
                           // Show 0 when no meaningful input data
-                          if (projectCosts === 0 && actualPrice === 0) {
+                          if (projectCosts === 0 && currentActualPrice === 0) {
                             return '-';
                           }
                           
@@ -2338,13 +2338,13 @@ export default function Workflow() {
                           // Get actual input values from form
                           const projectCosts = workflowData.projectCosts || 0;
                           const stars = workflowData.stars || 0;
-                          const actualPrice = workflowData.averagePrice || 0;
+                          const currentActualPrice = actualPrice || 0;
                           
                           // Calculate hotel voucher value based on stars
                           const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30;
                           
                           // Formula: Vertragsvolumen Estimate = (Project Costs / Hotel Voucher Value) × (Actual Price × 0.75) × 1.1
-                          const vertragsvolumenEstimate = (projectCosts / voucherValue) * (actualPrice * 0.75) * 1.1;
+                          const vertragsvolumenEstimate = (projectCosts / voucherValue) * (currentActualPrice * 0.75) * 1.1;
                           
                           // Vorsteuer Produktkauf = (Projektkosten × 1.19) - Projektkosten
                           const vorsteuerProdukt = (projectCosts * 1.19) - projectCosts;
@@ -2356,7 +2356,7 @@ export default function Workflow() {
                           const nettoSteuerzahlung = vorsteuerProdukt - vorsteuerTripz;
                           
                           // Show 0 when no meaningful input data
-                          if (projectCosts === 0 && actualPrice === 0) {
+                          if (projectCosts === 0 && currentActualPrice === 0) {
                             return '-';
                           }
                           
@@ -2380,19 +2380,19 @@ export default function Workflow() {
                           // Get actual input values from form
                           const projectCosts = workflowData.projectCosts || 0;
                           const stars = workflowData.stars || 0;
-                          const actualPrice = workflowData.averagePrice || 0;
+                          const currentActualPrice = actualPrice || 0;
                           
                           // Calculate hotel voucher value based on stars
                           const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30;
                           
                           // Formula: Vertragsvolumen Estimate = (Project Costs / Hotel Voucher Value) × (Actual Price × 0.75) × 1.1
-                          const vertragsvolumenEstimate = (projectCosts / voucherValue) * (actualPrice * 0.75) * 1.1;
+                          const vertragsvolumenEstimate = (projectCosts / voucherValue) * (currentActualPrice * 0.75) * 1.1;
                           
                           // Marge = Vertragsvolumen Estimate - Projektkosten brutto
                           const marge = vertragsvolumenEstimate - projectCosts;
                           
                           // Calculate margin percentage: (Marge / Vertragsvolumen Estimate) × 100
-                          if (vertragsvolumenEstimate === 0 || projectCosts === 0 || actualPrice === 0) {
+                          if (vertragsvolumenEstimate === 0 || projectCosts === 0 || currentActualPrice === 0) {
                             return '-';
                           }
                           
