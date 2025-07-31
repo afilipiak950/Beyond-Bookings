@@ -86,7 +86,7 @@ export default function UserManagementTab() {
   const queryClient = useQueryClient();
 
   // Fetch all users
-  const { data: users, isLoading } = useQuery({
+  const { data: users = [], isLoading } = useQuery<User[]>({
     queryKey: ['/api/users'],
     retry: false,
   });
