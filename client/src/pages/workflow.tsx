@@ -635,6 +635,7 @@ export default function Workflow() {
           
           // Update workflow data with researched price
           if (data.averagePrice && data.averagePrice > 0) {
+            // Update workflow data first
             setWorkflowData(prev => ({
               ...prev,
               averagePrice: data.averagePrice
