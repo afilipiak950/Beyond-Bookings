@@ -2285,39 +2285,39 @@ export default function Workflow() {
       case 2:
         return (
           <div className="relative space-y-8">
-            {/* Ultra-Modern Floating Header */}
-            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-white/80 via-emerald-50/60 to-cyan-50/40 backdrop-blur-3xl border border-white/50 shadow-2xl">
-              <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 via-cyan-500/5 to-blue-500/10 animate-gradient-x"></div>
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-400 animate-shimmer"></div>
+            {/* BeBo Corporate Header */}
+            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-white/80 via-blue-50/60 to-teal-50/40 backdrop-blur-3xl border border-white/50 shadow-2xl">
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-900/10 via-teal-600/5 to-blue-800/10 animate-gradient-x"></div>
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-800 via-teal-600 to-blue-700 animate-shimmer"></div>
               
               {/* Floating Particles */}
               <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-4 left-8 w-16 h-16 bg-emerald-500/20 rounded-full blur-xl animate-float"></div>
-                <div className="absolute top-12 right-16 w-12 h-12 bg-cyan-500/20 rounded-full blur-lg animate-float-delayed"></div>
-                <div className="absolute bottom-8 left-1/3 w-8 h-8 bg-blue-500/20 rounded-full blur-md animate-float animation-delay-1000"></div>
+                <div className="absolute top-4 left-8 w-16 h-16 bg-blue-900/20 rounded-full blur-xl animate-float"></div>
+                <div className="absolute top-12 right-16 w-12 h-12 bg-teal-600/20 rounded-full blur-lg animate-float-delayed"></div>
+                <div className="absolute bottom-8 left-1/3 w-8 h-8 bg-blue-700/20 rounded-full blur-md animate-float animation-delay-1000"></div>
               </div>
               
               <div className="relative p-8">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
                     <div className="relative">
-                      <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg animate-pulse">
+                      <div className="w-16 h-16 bg-gradient-to-br from-blue-800 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg animate-pulse">
                         <BarChart3 className="h-8 w-8 text-white" />
                       </div>
-                      <div className="absolute inset-0 bg-emerald-400 rounded-2xl animate-ping opacity-20"></div>
+                      <div className="absolute inset-0 bg-blue-700 rounded-2xl animate-ping opacity-20"></div>
                     </div>
                     <div>
-                      <h2 className="text-3xl font-black bg-gradient-to-r from-emerald-700 via-cyan-600 to-blue-600 bg-clip-text text-transparent">
+                      <h2 className="text-3xl font-black bg-gradient-to-r from-blue-800 via-teal-600 to-blue-700 bg-clip-text text-transparent">
                         Kostenvorteil Analyse
                       </h2>
-                      <p className="text-gray-600 font-medium text-lg mt-1">Beyond Bookings vs. Direktbuchung</p>
+                      <p className="text-gray-600 font-medium text-lg mt-1">bebo convert vs. Direktbuchung</p>
                     </div>
                   </div>
                   
                   <div className="flex items-center space-x-3">
-                    <div className="w-3 h-3 bg-emerald-400 rounded-full animate-pulse"></div>
-                    <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse animation-delay-500"></div>
-                    <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse animation-delay-1000"></div>
+                    <div className="w-3 h-3 bg-blue-700 rounded-full animate-pulse"></div>
+                    <div className="w-2 h-2 bg-teal-600 rounded-full animate-pulse animation-delay-500"></div>
+                    <div className="w-2 h-2 bg-blue-800 rounded-full animate-pulse animation-delay-1000"></div>
                   </div>
                 </div>
               </div>
@@ -2328,9 +2328,9 @@ export default function Workflow() {
               
               {/* Left Card - Kostenvorteil */}
               <div className="bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden">
-                <div className="bg-blue-50 px-6 py-4 border-b border-blue-100">
+                <div className="bg-gradient-to-r from-blue-50 to-blue-100 px-6 py-4 border-b border-blue-200">
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-800 to-blue-700 rounded-lg flex items-center justify-center shadow-md">
                       <TrendingDown className="h-5 w-5 text-white" />
                     </div>
                     <h3 className="text-xl font-bold text-blue-900">Kostenvorteil</h3>
@@ -2406,7 +2406,7 @@ export default function Workflow() {
                   </div>
 
                   {/* Main Advantage Display */}
-                  <div className="bg-blue-500 rounded-lg p-6 text-center">
+                  <div className="bg-gradient-to-br from-blue-800 to-blue-700 rounded-lg p-6 text-center shadow-lg">
                     <div className="text-blue-100 text-sm mb-2">Kostenvorteil gesamt</div>
                     <div className="text-2xl font-bold text-white mb-2">
                       {(() => {
@@ -2435,12 +2435,12 @@ export default function Workflow() {
 
               {/* Middle Card - Selbstbeschaffung */}
               <div className="bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden">
-                <div className="bg-orange-50 px-6 py-4 border-b border-orange-100">
+                <div className="bg-gradient-to-r from-blue-50 to-slate-100 px-6 py-4 border-b border-slate-200">
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center">
+                    <div className="w-10 h-10 bg-gradient-to-br from-slate-600 to-slate-700 rounded-lg flex items-center justify-center shadow-md">
                       <Calculator className="h-5 w-5 text-white" />
                     </div>
-                    <h3 className="text-xl font-bold text-orange-900">Selbstbeschaffung</h3>
+                    <h3 className="text-xl font-bold text-slate-800">Selbstbeschaffung</h3>
                   </div>
                 </div>
 
@@ -2497,8 +2497,8 @@ export default function Workflow() {
                   </div>
 
                   {/* Total Costs */}
-                  <div className="bg-orange-500 rounded-lg p-4 text-center">
-                    <div className="text-orange-100 text-sm mb-1">Kosten brutto</div>
+                  <div className="bg-gradient-to-br from-slate-600 to-slate-700 rounded-lg p-4 text-center shadow-lg">
+                    <div className="text-slate-100 text-sm mb-1">Kosten brutto</div>
                     <div className="text-2xl font-bold text-white">
                       {(() => {
                         const projectCosts = workflowData.projectCosts || 20000;
@@ -2509,14 +2509,14 @@ export default function Workflow() {
                 </div>
               </div>
 
-              {/* Right Card - Beyond Bookings */}
+              {/* Right Card - bebo convert */}
               <div className="bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden">
-                <div className="bg-emerald-50 px-6 py-4 border-b border-emerald-100">
+                <div className="bg-gradient-to-r from-teal-50 to-emerald-100 px-6 py-4 border-b border-teal-200">
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center">
+                    <div className="w-10 h-10 bg-gradient-to-br from-teal-600 to-emerald-600 rounded-lg flex items-center justify-center shadow-md">
                       <Star className="h-5 w-5 text-white" />
                     </div>
-                    <h3 className="text-xl font-bold text-emerald-900">Beyond Bookings</h3>
+                    <h3 className="text-xl font-bold text-teal-800">bebo convert</h3>
                   </div>
                 </div>
                 
