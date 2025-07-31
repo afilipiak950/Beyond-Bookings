@@ -761,7 +761,7 @@ export default function Workflow() {
             
             toast({
               title: "Price research completed!",
-              description: `Automated research found: ${data.averagePrice}€ (${data.priceResearch?.confidence || 'medium'} confidence)`,
+              description: `Automated research found: ${convertFromEUR(data.averagePrice, workflowData.currency)}${getCurrencySymbol(workflowData.currency)} (${data.priceResearch?.confidence || 'medium'} confidence)`,
             });
           } else {
             // Even if no price found, ensure the field can be used for manual input
@@ -836,7 +836,7 @@ export default function Workflow() {
         if (data.averagePrice && data.priceResearch) {
           toast({
             title: "Complete data extracted!",
-            description: `Hotel data + automated price research completed: ${data.averagePrice}€ (${data.priceResearch.confidence} confidence)`,
+            description: `Hotel data + automated price research completed: ${convertFromEUR(data.averagePrice, workflowData.currency)}${getCurrencySymbol(workflowData.currency)} (${data.priceResearch.confidence} confidence)`,
           });
         } else if (data.stars || data.roomCount || data.location) {
           toast({
@@ -1382,7 +1382,7 @@ export default function Workflow() {
                                   </div>
                                   <div className="text-right">
                                     <div className="text-sm font-medium text-blue-600">
-                                      {hotel.averagePrice ? `${hotel.averagePrice.toFixed(2)} €` : 'Kein Preis'}
+                                      {hotel.averagePrice ? `${hotel.averagePrice.toFixed(2)} ${getCurrencySymbol(workflowData.currency)}` : 'Kein Preis'}
                                     </div>
                                     <div className="text-xs text-gray-400">
                                       {hotel.location || 'Keine Lage'}
@@ -1559,7 +1559,7 @@ export default function Workflow() {
                             {extractedData.priceResearch.methodology}
                           </p>
                           <div className="flex flex-wrap gap-2 text-blue-600">
-                            <span>Spanne: {extractedData.priceResearch.priceRange?.low}€ - {extractedData.priceResearch.priceRange?.high}€</span>
+                            <span>Spanne: {convertFromEUR(extractedData.priceResearch.priceRange?.low || 0, workflowData.currency)}{getCurrencySymbol(workflowData.currency)} - {convertFromEUR(extractedData.priceResearch.priceRange?.high || 0, workflowData.currency)}{getCurrencySymbol(workflowData.currency)}</span>
                             <span>•</span>
                             <span>Quellen: {extractedData.priceResearch.dataSource}</span>
                           </div>
@@ -1661,7 +1661,7 @@ export default function Workflow() {
                       <div className="flex justify-between items-center mt-4">
                         <div className="relative">
                           <span className="text-lg font-black bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 bg-clip-text text-transparent tracking-tight animate-text-shimmer bg-300% bg-size-200">
-                            {actualPrice ? `${actualPrice.toFixed(2)} €` : '0.00 €'}
+                            {actualPrice ? `${actualPrice.toFixed(2)} ${getCurrencySymbol(workflowData.currency)}` : `0.00 ${getCurrencySymbol(workflowData.currency)}`}
                           </span>
                           <div className="absolute -inset-1 bg-gradient-to-r from-blue-500/20 to-purple-500/20 blur-sm -z-10 animate-pulse"></div>
                         </div>
@@ -1688,7 +1688,7 @@ export default function Workflow() {
                             <div className="space-y-4 pt-4">
                               <div className="bg-blue-50 p-3 rounded border-l-4 border-blue-400">
                                 <p className="text-sm text-blue-800">
-                                  <strong>KI-Vorschlag:</strong> {aiSuggestedPrice.toFixed(2)} € (56% von {workflowData.averagePrice.toFixed(2)} €)
+                                  <strong>KI-Vorschlag:</strong> {aiSuggestedPrice.toFixed(2)} {getCurrencySymbol(workflowData.currency)} (56% von {workflowData.averagePrice.toFixed(2)} {getCurrencySymbol(workflowData.currency)})
                                 </p>
                                 <p className="text-xs text-blue-600 mt-1">
                                   Ihre Anpassung hilft der KI beim Lernen und verbessert zukünftige Vorschläge.
@@ -1755,7 +1755,7 @@ export default function Workflow() {
                               <span className="font-semibold text-blue-800 text-sm">KI-Begründung:</span>
                               <p className="text-sm text-blue-700 mt-1 leading-relaxed">
                                 {isManualEdit ? (
-                                  <>Manuell angepasst von <span className="font-bold text-blue-800">{aiSuggestedPrice.toFixed(2)} €</span> auf <span className="font-bold text-green-600">{actualPrice.toFixed(2)} €</span>. Die KI lernt aus Ihrer Korrektur für ähnliche {workflowData.stars}-Sterne Hotels.</>
+                                  <>Manuell angepasst von <span className="font-bold text-blue-800">{aiSuggestedPrice.toFixed(2)} {getCurrencySymbol(workflowData.currency)}</span> auf <span className="font-bold text-green-600">{actualPrice.toFixed(2)} {getCurrencySymbol(workflowData.currency)}</span>. Die KI lernt aus Ihrer Korrektur für ähnliche {workflowData.stars}-Sterne Hotels.</>
                                 ) : (
                                   <>Basierend auf <span className="font-bold text-blue-800">56%</span> des Durchschnittspreises für <span className="font-semibold">{workflowData.stars}-Sterne Hotels</span> mit <span className="font-semibold">{workflowData.roomCount} Zimmern</span> und <span className="font-semibold">{workflowData.occupancyRate}% Auslastung</span>. Selbstlernende KI passt sich an Ihre Korrekturen an.</>
                                 )}
@@ -1781,7 +1781,7 @@ export default function Workflow() {
                           </span>
                         </div>
                         <span className="text-xl font-black bg-gradient-to-r from-gray-700 to-gray-800 bg-clip-text text-transparent">
-                          {workflowData.averagePrice ? (workflowData.averagePrice * 0.65).toFixed(2) : '0.00'} €
+                          {workflowData.averagePrice ? (workflowData.averagePrice * 0.65).toFixed(2) : '0.00'} {getCurrencySymbol(workflowData.currency)}
                         </span>
                       </div>
                     </div>
@@ -1806,7 +1806,7 @@ export default function Workflow() {
                           </div>
                           <div className="flex items-center space-x-2">
                             <span className="text-xl font-black bg-gradient-to-r from-red-600 to-rose-600 bg-clip-text text-transparent">
-                              {hotelVoucherValue ? hotelVoucherValue.toFixed(2) : '0.00'} €
+                              {hotelVoucherValue ? hotelVoucherValue.toFixed(2) : '0.00'} {getCurrencySymbol(workflowData.currency)}
                             </span>
                             <Dialog open={voucherEditOpen} onOpenChange={setVoucherEditOpen}>
                               <DialogTrigger asChild>
@@ -2777,7 +2777,7 @@ export default function Workflow() {
                         const nettoKosten = projectCosts / (1 + editableCosts.vatRate19/100);
                         const steuervorteil = nettoKosten * (editableCosts.vatRate19/100);
                         const gesamtkosten = costs + steuerbelastung - steuervorteil;
-                        return gesamtkosten.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €';
+                        return gesamtkosten.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' ' + getCurrencySymbol(workflowData.currency);
                       })()}
                     </div>
                   </div>
@@ -2855,7 +2855,7 @@ export default function Workflow() {
                       <div className="w-full h-0.5 bg-gradient-to-r from-slate-300 to-slate-400 rounded-full mb-4"></div>
                       <h3 className="text-lg font-semibold text-slate-600 mb-4">Lieferantenrechnung</h3>
                       <div className="text-3xl font-bold text-slate-800 bg-white/70 rounded-xl p-4 shadow-inner">
-                        {workflowData.projectCosts?.toLocaleString('de-DE') || '30.000,00'} €
+                        {workflowData.projectCosts?.toLocaleString('de-DE') || '30.000,00'} {getCurrencySymbol(workflowData.currency)}
                       </div>
                     </div>
                   </div>
@@ -2866,16 +2866,16 @@ export default function Workflow() {
                     <div className="space-y-3">
                       <div className="flex justify-between items-center p-3 bg-slate-50/70 rounded-xl">
                         <span className="text-slate-600">Lieferanten Rechnung Brutto</span>
-                        <span className="font-bold text-slate-800">{workflowData.projectCosts?.toLocaleString('de-DE') || '30.000,00'} €</span>
+                        <span className="font-bold text-slate-800">{workflowData.projectCosts?.toLocaleString('de-DE') || '30.000,00'} {getCurrencySymbol(workflowData.currency)}</span>
                       </div>
                       <div className="flex justify-between items-center p-3 bg-slate-50/70 rounded-xl">
                         <span className="text-slate-600">MwSt. 19%</span>
-                        <span className="font-bold text-slate-800">{((workflowData.projectCosts || 30000) * 0.19).toLocaleString('de-DE')} €</span>
+                        <span className="font-bold text-slate-800">{((workflowData.projectCosts || 30000) * 0.19).toLocaleString('de-DE')} {getCurrencySymbol(workflowData.currency)}</span>
                       </div>
                       <div className="w-full h-0.5 bg-gradient-to-r from-slate-300 to-slate-400 rounded-full"></div>
                       <div className="flex justify-between items-center p-3 bg-gradient-to-r from-blue-50 to-teal-50 rounded-xl border border-blue-200/40">
                         <span className="font-bold text-slate-700">Kosten netto</span>
-                        <span className="font-bold text-blue-600 text-xl">{((workflowData.projectCosts || 30000) * 1.19).toLocaleString('de-DE')} €</span>
+                        <span className="font-bold text-blue-600 text-xl">{((workflowData.projectCosts || 30000) * 1.19).toLocaleString('de-DE')} {getCurrencySymbol(workflowData.currency)}</span>
                       </div>
                     </div>
                   </div>
@@ -2899,11 +2899,11 @@ export default function Workflow() {
                             <span className="text-white text-sm font-bold">1</span>
                           </div>
                           <span className="font-semibold text-blue-700">Du erhältst Deine Lieferantenrechnung in Höhe von</span>
-                          <span className="font-bold text-blue-800 ml-2">{workflowData.projectCosts?.toLocaleString('de-DE') || '30.000,00'} €</span>
+                          <span className="font-bold text-blue-800 ml-2">{workflowData.projectCosts?.toLocaleString('de-DE') || '30.000,00'} {getCurrencySymbol(workflowData.currency)}</span>
                         </div>
                         <ul className="text-sm text-slate-600 ml-8 space-y-1">
                           <li>• Du bist weiterhin vertragsberechtigt 19%</li>
-                          <li className="text-blue-600 font-semibold">{((workflowData.projectCosts || 30000) * 0.19).toLocaleString('de-DE')} € (R)</li>
+                          <li className="text-blue-600 font-semibold">{((workflowData.projectCosts || 30000) * 0.19).toLocaleString('de-DE')} {getCurrencySymbol(workflowData.currency)} (R)</li>
                         </ul>
                       </div>
 
@@ -2919,11 +2919,11 @@ export default function Workflow() {
                         </div>
                         <ul className="text-sm text-slate-600 ml-8 space-y-1">
                           <li>• <span className="font-semibold">{workflowData.roomCount || 857}</span> Gutscheine (ca. 5% Deiner jährlichen Leistung)</li>
-                          <li className="text-green-600 font-semibold">{workflowData.hotelVoucherValue || 35} €</li>
+                          <li className="text-green-600 font-semibold">{convertFromEUR(workflowData.hotelVoucherValue || 35, workflowData.currency)} {getCurrencySymbol(workflowData.currency)}</li>
                           <li>• davon MwSt. 7% bei Erteilung vor Ort</li>
-                          <li className="text-blue-600 font-semibold">{((workflowData.hotelVoucherValue || 35) * 0.07).toFixed(2)} € (R)</li>
-                          <li>• Erm. 19% für Frühstück (ca nach Setting /or 3€)</li>
-                          <li className="text-red-600 font-semibold">{((workflowData.hotelVoucherValue || 35) * 0.19).toFixed(2)} € (R)</li>
+                          <li className="text-blue-600 font-semibold">{(convertFromEUR(workflowData.hotelVoucherValue || 35, workflowData.currency) * 0.07).toFixed(2)} {getCurrencySymbol(workflowData.currency)} (R)</li>
+                          <li>• Erm. 19% für Frühstück (ca nach Setting /or {convertFromEUR(3, workflowData.currency)}{getCurrencySymbol(workflowData.currency)})</li>
+                          <li className="text-red-600 font-semibold">{(convertFromEUR(workflowData.hotelVoucherValue || 35, workflowData.currency) * 0.19).toFixed(2)} {getCurrencySymbol(workflowData.currency)} (R)</li>
                         </ul>
                       </div>
 
