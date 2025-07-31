@@ -14,6 +14,29 @@ import { useToast } from "@/hooks/use-toast";
 import AppLayout from "@/components/layout/app-layout";
 import type { PricingCalculation } from "@shared/schema";
 
+// Currency conversion utilities
+const getCurrencySymbol = (currency: string): string => {
+  const symbols: { [key: string]: string } = {
+    EUR: "€",
+    USD: "$",
+    GBP: "£",
+    CHF: "CHF",
+    CZK: "Kč",
+    DKK: "kr",
+    HUF: "Ft",
+    NOK: "kr",
+    PLN: "zł",
+    SEK: "kr"
+  };
+  return symbols[currency] || currency;
+};
+
+const convertFromEUR = (eurAmount: number, targetCurrency: string, exchangeRates: { [key: string]: number }): number => {
+  if (targetCurrency === "EUR") return eurAmount;
+  const rate = exchangeRates[targetCurrency];
+  return rate ? eurAmount * rate : eurAmount;
+};
+
 // Import step components - temporarily creating inline to fix imports
 // import PricingCalculatorStep from "@/components/workflow/pricing-calculator-step";
 // import PriceComparisonStep from "@/components/workflow/price-comparison-step";
@@ -24,6 +47,7 @@ export interface WorkflowData {
   date?: string;
   currency: string;
   hotelName: string;
+  hotelUrl?: string;
   stars: number;
   roomCount: number;
   occupancyRate: number;
@@ -721,9 +745,9 @@ export default function Workflow() {
   });
   
   // Filter hotels based on search input
-  const filteredHotels = hotels?.filter((hotel: any) => 
+  const filteredHotels = (hotels || []).filter((hotel: any) => 
     hotel.name.toLowerCase().includes(workflowData.hotelName.toLowerCase())
-  ) || [];
+  );
   
   // Handle hotel selection from dropdown
   const selectHotel = async (hotel: any) => {
@@ -3134,8 +3158,8 @@ export default function Workflow() {
         {/* Progress Steps */}
         <div className="space-y-6">
           {/* Step Progress Indicator */}
-          <div className="flex justify-center">
-            <div className="flex items-center max-w-2xl">
+          <div className="flex justify-center items-center w-full">
+            <div className="flex items-center justify-center max-w-4xl w-full">
               {steps.map((step, index) => (
                 <div key={step.id} className="flex items-center">
                   {/* Step Circle */}
