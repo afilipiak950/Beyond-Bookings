@@ -22,6 +22,7 @@ import type { PricingCalculation } from "@shared/schema";
 export interface WorkflowData {
   // Step 1: Hotel Pricing Calculator
   date?: string;
+  currency: string;
   hotelName: string;
   stars: number;
   roomCount: number;
@@ -236,11 +237,11 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Average Price:</span>
-                    <span className="font-medium text-blue-900">€{workflowData.averagePrice}</span>
+                    <span className="font-medium text-blue-900">{getCurrencySymbol(workflowData.currency)}{workflowData.averagePrice}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Project Costs:</span>
-                    <span className="font-medium text-blue-900">€{workflowData.projectCosts?.toLocaleString('de-DE')}</span>
+                    <span className="font-medium text-blue-900">{getCurrencySymbol(workflowData.currency)}{workflowData.projectCosts?.toLocaleString('de-DE')}</span>
                   </div>
                 </div>
               </div>
@@ -254,7 +255,7 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
                   <div className="flex justify-between">
                     <span className="text-gray-600">Voucher Value:</span>
                     <span className="font-medium text-emerald-900">
-                      €{workflowData.stars === 5 ? 50 : workflowData.stars === 4 ? 40 : workflowData.stars === 3 ? 30 : 30}
+                      {getCurrencySymbol(workflowData.currency)}{convertFromEUR(workflowData.stars === 5 ? 50 : workflowData.stars === 4 ? 40 : workflowData.stars === 3 ? 30 : 30, workflowData.currency)}
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -266,12 +267,12 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
                   <div className="flex justify-between">
                     <span className="text-gray-600">Cost Advantage:</span>
                     <span className="font-medium text-emerald-900">
-                      €{(() => {
+                      {getCurrencySymbol(workflowData.currency)}{(() => {
                         const projectCosts = workflowData.projectCosts || 0;
-                        const voucherValue = workflowData.stars === 5 ? 50 : workflowData.stars === 4 ? 40 : workflowData.stars === 3 ? 30 : 30;
+                        const voucherValue = convertFromEUR(workflowData.stars === 5 ? 50 : workflowData.stars === 4 ? 40 : workflowData.stars === 3 ? 30 : 30, workflowData.currency);
                         const roomnights = Math.round(projectCosts / voucherValue);
-                        const beyondBookingsCosts = roomnights * 17;
-                        const steuerbelastung = 1800.90;
+                        const beyondBookingsCosts = roomnights * convertFromEUR(17, workflowData.currency);
+                        const steuerbelastung = convertFromEUR(1800.90, workflowData.currency);
                         const nettoKosten = projectCosts / 1.19;
                         const steuervorteil = nettoKosten * 0.19;
                         const gesamtkosten = beyondBookingsCosts + steuerbelastung - steuervorteil;
@@ -290,14 +291,14 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
                     { label: "Hotel Name", value: workflowData.hotelName },
                     { label: "Star Rating", value: workflowData.stars + " Stars" },
                     { label: "Room Count", value: workflowData.roomCount },
-                    { label: "Average Price", value: "€" + workflowData.averagePrice },
-                    { label: "Project Costs", value: "€" + workflowData.projectCosts?.toLocaleString('de-DE') },
-                    { label: "Cost Advantage", value: "€" + (() => {
+                    { label: "Average Price", value: getCurrencySymbol(workflowData.currency) + workflowData.averagePrice },
+                    { label: "Project Costs", value: getCurrencySymbol(workflowData.currency) + workflowData.projectCosts?.toLocaleString('de-DE') },
+                    { label: "Cost Advantage", value: getCurrencySymbol(workflowData.currency) + (() => {
                       const projectCosts = workflowData.projectCosts || 0;
-                      const voucherValue = workflowData.stars === 5 ? 50 : workflowData.stars === 4 ? 40 : workflowData.stars === 3 ? 30 : 30;
+                      const voucherValue = convertFromEUR(workflowData.stars === 5 ? 50 : workflowData.stars === 4 ? 40 : workflowData.stars === 3 ? 30 : 30, workflowData.currency);
                       const roomnights = Math.round(projectCosts / voucherValue);
-                      const beyondBookingsCosts = roomnights * 17;
-                      const steuerbelastung = 1800.90;
+                      const beyondBookingsCosts = roomnights * convertFromEUR(17, workflowData.currency);
+                      const steuerbelastung = convertFromEUR(1800.90, workflowData.currency);
                       const nettoKosten = projectCosts / 1.19;
                       const steuervorteil = nettoKosten * 0.19;
                       const gesamtkosten = beyondBookingsCosts + steuerbelastung - steuervorteil;
@@ -459,11 +460,28 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
   );
 };
 
+// Currency options with major European and US currencies
+const CURRENCY_OPTIONS = [
+  { code: "EUR", name: "Euro", symbol: "€" },
+  { code: "USD", name: "US Dollar", symbol: "$" },
+  { code: "GBP", name: "British Pound", symbol: "£" },
+  { code: "CHF", name: "Swiss Franc", symbol: "CHF" },
+  { code: "SEK", name: "Swedish Krona", symbol: "kr" },
+  { code: "NOK", name: "Norwegian Krone", symbol: "kr" },
+  { code: "DKK", name: "Danish Krone", symbol: "kr" },
+  { code: "PLN", name: "Polish Zloty", symbol: "zł" },
+  { code: "CZK", name: "Czech Koruna", symbol: "Kč" },
+  { code: "HUF", name: "Hungarian Forint", symbol: "Ft" }
+];
+
 export default function Workflow() {
   const [, navigate] = useLocation();
   const [currentStep, setCurrentStep] = useState(1);
+  const [exchangeRates, setExchangeRates] = useState<Record<string, number>>({});
+  const [isLoadingRates, setIsLoadingRates] = useState(false);
   const [workflowData, setWorkflowData] = useState<WorkflowData>({
     date: new Date().toISOString().split('T')[0], // Default to today's date
+    currency: "EUR", // Default to Euro
     hotelName: "",
     stars: 0,
     roomCount: 0,
@@ -475,6 +493,51 @@ export default function Workflow() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
+  // Fetch exchange rates from Frankfurter API (free, no API key needed)
+  const fetchExchangeRates = async (baseCurrency: string = "EUR") => {
+    setIsLoadingRates(true);
+    try {
+      const currencies = CURRENCY_OPTIONS.map(c => c.code).filter(c => c !== baseCurrency).join(',');
+      const response = await fetch(`https://api.frankfurter.dev/v1/latest?base=${baseCurrency}&to=${currencies}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        const rates = { [baseCurrency]: 1, ...data.rates };
+        setExchangeRates(rates);
+        console.log(`Exchange rates loaded for ${baseCurrency}:`, rates);
+      } else {
+        throw new Error('Failed to fetch exchange rates');
+      }
+    } catch (error) {
+      console.error('Error fetching exchange rates:', error);
+      toast({
+        title: "Exchange Rate Error",
+        description: "Could not load current exchange rates. Values shown in selected currency.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingRates(false);
+    }
+  };
+  
+  // Convert amount from EUR to selected currency
+  const convertFromEUR = (amount: number, targetCurrency: string): number => {
+    if (targetCurrency === "EUR" || !exchangeRates[targetCurrency]) return amount;
+    return Math.round((amount * exchangeRates[targetCurrency]) * 100) / 100;
+  };
+  
+  // Convert amount from selected currency to EUR
+  const convertToEUR = (amount: number, fromCurrency: string): number => {
+    if (fromCurrency === "EUR" || !exchangeRates[fromCurrency]) return amount;
+    return Math.round((amount / exchangeRates[fromCurrency]) * 100) / 100;
+  };
+  
+  // Get currency symbol
+  const getCurrencySymbol = (currencyCode: string): string => {
+    const currency = CURRENCY_OPTIONS.find(c => c.code === currencyCode);
+    return currency?.symbol || currencyCode;
+  };
+  
   // Get calculation ID from URL parameters
   const calculationId = new URLSearchParams(window.location.search).get('id');
   
@@ -482,6 +545,40 @@ export default function Workflow() {
   useEffect(() => {
     console.log("Calculation ID from URL:", calculationId);
   }, [calculationId]);
+  
+  // Load exchange rates when currency changes or component mounts
+  useEffect(() => {
+    fetchExchangeRates("EUR"); // Always fetch rates with EUR as base for conversion logic
+  }, []);
+  
+  // Handle currency change and convert existing values
+  const handleCurrencyChange = async (newCurrency: string) => {
+    const prevCurrency = workflowData.currency;
+    
+    // Update currency immediately
+    setWorkflowData(prev => ({ ...prev, currency: newCurrency }));
+    
+    // Convert existing monetary values if exchange rates are available
+    if (exchangeRates[prevCurrency] && exchangeRates[newCurrency]) {
+      const convertCurrency = (amount: number) => {
+        // Convert to EUR first, then to new currency
+        const eurAmount = prevCurrency === "EUR" ? amount : amount / exchangeRates[prevCurrency];
+        return newCurrency === "EUR" ? eurAmount : eurAmount * exchangeRates[newCurrency];
+      };
+      
+      setWorkflowData(prev => ({
+        ...prev,
+        averagePrice: prev.averagePrice ? Math.round(convertCurrency(prev.averagePrice) * 100) / 100 : 0,
+        projectCosts: prev.projectCosts ? Math.round(convertCurrency(prev.projectCosts) * 100) / 100 : 0,
+        hotelVoucherValue: prev.hotelVoucherValue ? Math.round(convertCurrency(prev.hotelVoucherValue) * 100) / 100 : 0
+      }));
+      
+      toast({
+        title: "Currency Changed",
+        description: `Converted to ${newCurrency} using today's exchange rate`,
+      });
+    }
+  };
   
   // Load existing calculation if ID is provided
   const { data: existingCalculation, isLoading: isLoadingCalculation } = useQuery({
@@ -1208,6 +1305,39 @@ export default function Workflow() {
                 </div>
                 
                 <div>
+                  <label className="text-sm font-medium text-gray-700">Währung</label>
+                  <div className="relative">
+                    <select
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
+                      value={workflowData.currency}
+                      onChange={(e) => handleCurrencyChange(e.target.value)}
+                      disabled={isLoadingRates}
+                    >
+                      {CURRENCY_OPTIONS.map((currency) => (
+                        <option key={currency.code} value={currency.code}>
+                          {currency.code} - {currency.name} ({currency.symbol})
+                        </option>
+                      ))}
+                    </select>
+                    {isLoadingRates && (
+                      <div className="absolute right-8 top-1/2 transform -translate-y-1/2">
+                        <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+                      </div>
+                    )}
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                  </div>
+                  {exchangeRates[workflowData.currency] && workflowData.currency !== "EUR" && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Wechselkurs: 1 EUR = {exchangeRates[workflowData.currency].toFixed(4)} {workflowData.currency}
+                    </p>
+                  )}
+                </div>
+                
+                <div>
                   <label className="text-sm font-medium text-gray-700">Hotelname</label>
                   <div className="relative hotel-dropdown-container">
                     <input 
@@ -1386,11 +1516,14 @@ export default function Workflow() {
                   </div>
                   
                   <div className="relative">
+                    <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none z-10">
+                      {getCurrencySymbol(workflowData.currency)}
+                    </div>
                     <input 
                       type="number"
                       step="0.01"
                       placeholder="Automatisch recherchiert oder manuell eingeben"
-                      className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                      className={`w-full p-3 pl-8 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                         extractedData?.averagePrice ? 'bg-green-50 border-green-300' : ''
                       }`}
                       value={workflowData.averagePrice === 0 || !workflowData.averagePrice ? '' : workflowData.averagePrice}
@@ -1866,11 +1999,15 @@ export default function Workflow() {
                           </span>
                         </div>
                         <div className="relative w-48">
+                          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none z-10">
+                            {getCurrencySymbol(workflowData.currency)}
+                          </div>
                           <Input
                             type="number"
                             step="0.01"
                             min="0"
                             placeholder="Projektkosten eingeben..."
+                            className="pl-8 bg-white/60 backdrop-blur-sm border-rose-300/50 focus:border-rose-500 focus:ring-rose-500/20 text-right font-bold placeholder:text-xs"
                             value={workflowData.projectCosts === 0 ? '' : workflowData.projectCosts}
                             onFocus={(e) => {
                               if (workflowData.projectCosts === 0) {
@@ -1882,9 +2019,7 @@ export default function Workflow() {
                               const numValue = value === '' ? 0 : parseFloat(value) || 0;
                               setWorkflowData({...workflowData, projectCosts: numValue});
                             }}
-                            className="bg-white/60 backdrop-blur-sm border-rose-300/50 focus:border-rose-500 focus:ring-rose-500/20 text-right font-bold placeholder:text-xs"
                           />
-                          <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-rose-600 font-bold">€</div>
                         </div>
                       </div>
                     </div>
