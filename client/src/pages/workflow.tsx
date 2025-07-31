@@ -1323,7 +1323,7 @@ export default function Workflow() {
       case 1:
         return (
           <>
-            <div className="grid grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
               {/* Left Side - Input Form */}
               <Card className="glass-card">
                 <CardHeader>
@@ -2511,7 +2511,7 @@ export default function Workflow() {
             </div>
 
             {/* Main Comparison Grid */}
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
               
               {/* Left Card - Kostenvorteil - Primary Blue (#1C5D97) */}
               <div className="bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden">
@@ -2898,7 +2898,7 @@ export default function Workflow() {
               </div>
 
               {/* Main Content Grid */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
                 {/* Left Column - Selbstfinanziert */}
                 <div className="space-y-6">
                   <div className="bg-gradient-to-br from-slate-100 to-slate-200 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-slate-300/20 transform hover:scale-105 transition-all duration-300">
@@ -3132,8 +3132,8 @@ export default function Workflow() {
 
   return (
     <AppLayout>
-      <div className="min-h-screen flex flex-col items-center w-full">
-        <div className="w-full max-w-7xl mx-auto px-4 space-y-8">
+      <div className="min-h-screen w-full">
+        <div className="w-full px-2 sm:px-4 md:px-6 lg:px-8 space-y-6">
           {/* Workflow Header */}
           <div className="relative w-full">
             {/* Back Button - Positioned Absolutely */}
@@ -3157,10 +3157,10 @@ export default function Workflow() {
           </div>
 
           {/* Progress Steps */}
-          <div className="space-y-8 w-full">
+          <div className="space-y-6 w-full">
             {/* Step Progress Indicator */}
-            <div className="flex justify-center items-center w-full">
-              <div className="flex items-center justify-center w-full max-w-5xl">
+            <div className="flex justify-center items-center w-full px-4">
+              <div className="flex items-center justify-center w-full max-w-4xl">
               {steps.map((step, index) => (
                 <div key={step.id} className="flex items-center">
                   {/* Step Circle */}
@@ -3226,7 +3226,7 @@ export default function Workflow() {
           </div>
 
             {/* Progress Bar */}
-            <div className="w-full max-w-4xl mx-auto bg-gray-200 rounded-full h-2">
+            <div className="w-full max-w-3xl mx-auto bg-gray-200 rounded-full h-2">
               <div
                 className="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full transition-all duration-500 ease-out"
                 style={{ width: `${progress}%` }}
@@ -3235,10 +3235,8 @@ export default function Workflow() {
           </div>
 
           {/* Step Content */}
-          <div className="w-full flex justify-center">
-            <div className="w-full max-w-7xl">
-              {renderStepContent()}
-            </div>
+          <div className="w-full">
+            {renderStepContent()}
           </div>
         </div>
       </div>
