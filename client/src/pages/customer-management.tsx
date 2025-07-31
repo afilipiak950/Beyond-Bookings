@@ -322,117 +322,55 @@ export default function CustomerManagement() {
               </div>
             ) : Array.isArray(hotels) && hotels.length > 0 ? (
               viewMode === 'cards' ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {hotels.map((hotel: any) => (
-                    <Card key={hotel.id} className="group relative overflow-hidden bg-gradient-to-br from-white via-slate-50 to-blue-50/30 border-0 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2">
-                      {/* Gradient Background Overlay */}
-                      <div className="absolute inset-0 bg-gradient-to-br from-[#1C5D97]/5 via-[#5E98BD]/5 to-[#36B197]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                      
-                      {/* Header with Corporate Colors */}
-                      <div className="relative bg-gradient-to-r from-[#1C5D97] via-[#5E98BD] to-[#36B197] p-6 text-white">
+                    <Card key={hotel.id} className="group hover:shadow-lg transition-all duration-300 border-slate-200 hover:border-blue-300">
+                      <CardHeader className="pb-3">
                         <div className="flex items-start justify-between">
-                          <div className="flex items-center space-x-4">
-                            <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30">
-                              <Building2 className="h-8 w-8 text-white" />
+                          <div className="flex items-center space-x-3">
+                            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                              <Building2 className="h-6 w-6 text-white" />
                             </div>
-                            <div className="flex-1">
-                              <h3 className="text-xl font-bold text-white mb-1 group-hover:text-[#88E7D3] transition-colors">
+                            <div>
+                              <CardTitle className="text-lg group-hover:text-blue-600 transition-colors">
                                 {hotel.name}
-                              </h3>
-                              <div className="flex items-center text-white/90 text-sm">
-                                <MapPin className="h-4 w-4 mr-1.5" />
+                              </CardTitle>
+                              <p className="text-sm text-gray-500 flex items-center mt-1">
+                                <MapPin className="h-3 w-3 mr-1" />
                                 {hotel.city}, {hotel.country}
-                              </div>
-                              {hotel.stars && (
-                                <div className="flex items-center gap-1 mt-2">
-                                  {Array.from({ length: hotel.stars }).map((_, i) => (
-                                    <Star key={i} className="h-4 w-4 fill-[#88E7D3] text-[#88E7D3]" />
-                                  ))}
-                                  <span className="text-xs text-white/80 ml-2">{hotel.stars} Star Hotel</span>
-                                </div>
-                              )}
+                              </p>
                             </div>
                           </div>
                           {hotel.url && (
-                            <Button 
-                              size="sm" 
-                              variant="ghost" 
-                              className="text-white hover:bg-white/20 hover:text-[#88E7D3] transition-all duration-300"
-                            >
+                            <Button size="sm" variant="ghost" className="opacity-0 group-hover:opacity-100 transition-opacity">
                               <Eye className="h-4 w-4" />
                             </Button>
                           )}
                         </div>
-                      </div>
-
-                      <CardContent className="relative p-6 space-y-4">
-                        {/* Price Section */}
-                        {hotel.averagePrice && (
-                          <div className="bg-gradient-to-r from-[#36B197]/10 to-[#88E7D3]/10 rounded-lg p-4 border border-[#36B197]/20">
-                            <div className="flex items-center justify-between">
-                              <span className="text-gray-600 font-medium">Average Rate</span>
-                              <div className="text-right">
-                                <div className="text-2xl font-bold bg-gradient-to-r from-[#1C5D97] to-[#36B197] bg-clip-text text-transparent">
-                                  €{hotel.averagePrice}
-                                </div>
-                                <div className="text-xs text-gray-500">per night</div>
-                              </div>
+                      </CardHeader>
+                      <CardContent className="pt-0">
+                        <div className="space-y-3">
+                          {hotel.stars && (
+                            <div className="flex items-center gap-1">
+                              {Array.from({ length: hotel.stars }).map((_, i) => (
+                                <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                              ))}
+                              <span className="text-sm text-gray-500 ml-2">{hotel.stars} Star Hotel</span>
                             </div>
+                          )}
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-gray-500">Rooms:</span>
+                            <span className="font-medium">{hotel.roomCount || 'N/A'}</span>
                           </div>
-                        )}
-
-                        {/* Hotel Details Grid */}
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="bg-gradient-to-br from-[#5E98BD]/10 to-[#1C5D97]/10 rounded-lg p-4 border border-[#5E98BD]/20">
-                            <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Rooms</div>
-                            <div className="text-xl font-bold text-[#1C5D97]">{hotel.roomCount || 'N/A'}</div>
-                          </div>
-                          
-                          <div className="bg-gradient-to-br from-[#88E7D3]/10 to-[#36B197]/10 rounded-lg p-4 border border-[#36B197]/20">
-                            <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">Category</div>
-                            <div className="text-sm font-semibold text-[#36B197]">
-                              {hotel.stars ? `${hotel.stars} Star` : 'Standard'}
+                          {hotel.averagePrice && (
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-gray-500">Avg. Price:</span>
+                              <span className="font-semibold text-green-600">€{hotel.averagePrice}</span>
                             </div>
-                          </div>
-                        </div>
-
-                        {/* Description */}
-                        {hotel.description && (
-                          <div className="bg-gradient-to-r from-slate-50 to-blue-50/50 rounded-lg p-4 border border-slate-200">
-                            <div className="text-xs text-gray-500 uppercase tracking-wide mb-2">Description</div>
-                            <p className="text-sm text-gray-700 leading-relaxed line-clamp-3">{hotel.description}</p>
-                          </div>
-                        )}
-
-                        {/* Contact Information */}
-                        {hotel.contact && (
-                          <div className="pt-2 border-t border-slate-200">
-                            <div className="flex items-center justify-between text-xs text-gray-500">
-                              {hotel.contact.email && (
-                                <span className="truncate mr-2">{hotel.contact.email}</span>
-                              )}
-                              {hotel.contact.phone && (
-                                <span>{hotel.contact.phone}</span>
-                              )}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Action Buttons */}
-                        <div className="flex gap-2 pt-2">
-                          <Button 
-                            size="sm" 
-                            className="flex-1 bg-gradient-to-r from-[#1C5D97] to-[#5E98BD] hover:from-[#1C5D97]/90 hover:to-[#5E98BD]/90 text-white border-0 transition-all duration-300"
-                          >
-                            View Details
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            className="border-[#36B197] text-[#36B197] hover:bg-[#36B197] hover:text-white transition-all duration-300"
-                          >
-                            Edit
-                          </Button>
+                          )}
+                          {hotel.description && (
+                            <p className="text-sm text-gray-600 line-clamp-2">{hotel.description}</p>
+                          )}
                         </div>
                       </CardContent>
                     </Card>
