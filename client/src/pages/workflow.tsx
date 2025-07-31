@@ -2517,7 +2517,7 @@ export default function Workflow() {
                             step="0.1"
                             value={editableCosts.vatRate7}
                             onChange={(e) => setEditableCosts(prev => ({...prev, vatRate7: parseFloat(e.target.value) || 7.0}))}
-                            className="w-12 h-6 text-xs font-bold text-orange-700 bg-white/80 border-orange-300 text-center"
+                            className="w-16 h-8 text-sm font-bold text-orange-700 bg-white/80 border-orange-300 text-center"
                           />
                           <span className="text-xs font-bold text-orange-700">%</span>
                         </div>
@@ -2531,7 +2531,7 @@ export default function Workflow() {
                             step="0.1"
                             value={editableCosts.vatRate19}
                             onChange={(e) => setEditableCosts(prev => ({...prev, vatRate19: parseFloat(e.target.value) || 19.0}))}
-                            className="w-12 h-6 text-xs font-bold text-amber-700 bg-white/80 border-amber-300 text-center"
+                            className="w-16 h-8 text-sm font-bold text-amber-700 bg-white/80 border-amber-300 text-center"
                           />
                           <span className="text-xs font-bold text-amber-700">%</span>
                         </div>
@@ -2612,7 +2612,7 @@ export default function Workflow() {
                               step="0.1"
                               value={editableCosts.vatRate7}
                               onChange={(e) => setEditableCosts(prev => ({...prev, vatRate7: parseFloat(e.target.value) || 7.0}))}
-                              className="w-12 h-6 text-xs font-bold text-green-700 bg-white/80 border-green-300 text-center"
+                              className="w-16 h-8 text-sm font-bold text-green-700 bg-white/80 border-green-300 text-center"
                             />
                             <span className="text-xs font-bold text-green-700">%</span>
                           </div>
@@ -2626,7 +2626,7 @@ export default function Workflow() {
                               step="0.1"
                               value={editableCosts.vatRate19}
                               onChange={(e) => setEditableCosts(prev => ({...prev, vatRate19: parseFloat(e.target.value) || 19.0}))}
-                              className="w-12 h-6 text-xs font-bold text-emerald-700 bg-white/80 border-emerald-300 text-center"
+                              className="w-16 h-8 text-sm font-bold text-emerald-700 bg-white/80 border-emerald-300 text-center"
                             />
                             <span className="text-xs font-bold text-emerald-700">%</span>
                           </div>
