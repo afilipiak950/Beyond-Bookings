@@ -32,10 +32,10 @@ export default function CustomerManagement() {
 
   // Create hotel mutation
   const createHotelMutation = useMutation({
-    mutationFn: (data: any) => apiRequest('/api/hotels', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    }),
+    mutationFn: async (data: any) => {
+      const response = await apiRequest('/api/hotels', 'POST', data);
+      return response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/hotels'] });
       setAddHotelOpen(false);
@@ -61,15 +61,13 @@ export default function CustomerManagement() {
     
     setExtractionLoading(true);
     try {
-      const response = await apiRequest('/api/hotels/extract', {
-        method: 'POST',
-        body: JSON.stringify({
-          hotelName: hotelName.trim(),
-          hotelUrl: hotelUrl.trim() || null,
-        }),
+      const response = await apiRequest('/api/hotels/extract', 'POST', {
+        hotelName: hotelName.trim(),
+        hotelUrl: hotelUrl.trim() || null,
       });
       
-      setExtractedData(response);
+      const data = await response.json();
+      setExtractedData(data);
       toast({
         title: "Hotel data extracted",
         description: "Hotel information has been successfully extracted.",

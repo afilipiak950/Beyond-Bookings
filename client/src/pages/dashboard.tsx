@@ -53,17 +53,21 @@ export default function Dashboard() {
     return null;
   }
 
-  const totalCalculations = calculations?.length || 0;
-  const totalHotels = hotels?.length || 0;
-  const recentCalculations = calculations?.slice(0, 5) || [];
+  // Calculate stats with type safety
+  const calculationsArray = Array.isArray(calculations) ? calculations : [];
+  const hotelsArray = Array.isArray(hotels) ? hotels : [];
+  
+  const totalCalculations = calculationsArray.length;
+  const totalHotels = hotelsArray.length;
+  const recentCalculations = calculationsArray.slice(0, 5);
   
   // Calculate average margin
-  const avgMargin = calculations?.length > 0 
-    ? calculations.reduce((sum: number, calc: any) => sum + parseFloat(calc.profitMargin || 0), 0) / calculations.length 
+  const avgMargin = calculationsArray.length > 0 
+    ? calculationsArray.reduce((sum: number, calc: any) => sum + parseFloat(calc.profitMargin || 0), 0) / calculationsArray.length 
     : 0;
 
   // Calculate total revenue potential
-  const totalRevenue = calculations?.reduce((sum: number, calc: any) => sum + parseFloat(calc.totalPrice || 0), 0) || 0;
+  const totalRevenue = calculationsArray.reduce((sum: number, calc: any) => sum + parseFloat(calc.totalPrice || 0), 0);
 
   return (
     <AppLayout>
