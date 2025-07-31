@@ -30,7 +30,7 @@ Preferred communication style: Simple, everyday language.
 
 ### Key Features & Design Decisions
 - **Pricing Calculator**: Excel-like calculation interface with real-time updates, supporting VAT calculations, profit margins, and discount analysis. Includes PDF and Excel export.
-- **Hotel Management**: Automated data scraping from URLs and storage in a comprehensive hotel database, with real-time pricing data fetching. Integrates OpenAI GPT-4o for automated average room price research.
+- **Hotel Management**: Comprehensive data extraction system with multi-platform review integration. Features automated hotel data scraping, OpenAI GPT-4o powered average room price research, and complete review extraction from Booking.com, Google Reviews, HolidayCheck, and TripAdvisor with clickable links, ratings, and AI-generated summaries.
 - **Document Analysis Workflow**:
     - **Step 1 (Upload)**: ZIP file upload with drag-and-drop, processing PDFs, images, and Excel files.
     - **Step 2 (Analysis)**: AI-powered OCR using Mistral AI for document processing and multi-worksheet Excel analysis. Features an "Output Calculations" section presenting 14 key financial metrics based on Excel column structures.
