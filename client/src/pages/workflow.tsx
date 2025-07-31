@@ -592,7 +592,9 @@ export default function Workflow() {
     realCosts: 17.00,           // Reale Kosten
     realCostPerVoucher: 17.00,  // 17€ per voucher for Beyond Bookings
     taxBurden: 1800.90,         // Steuerbelastung
-    productType: "Finanzierung Rechnung für Dritte"  // Produkt
+    productType: "Finanzierung Rechnung für Dritte",  // Produkt
+    vatRate7: 7.0,              // Mehrwertsteuer 7%
+    vatRate19: 19.0             // Mehrwertsteuer 19%
   });
   
   // Hotel search states
@@ -2438,8 +2440,8 @@ export default function Workflow() {
                             // Beyond Bookings real costs calculation
                             const beyondBookingsCosts = roomnights * editableCosts.realCostPerVoucher;
                             const steuerbelastung = editableCosts.taxBurden;
-                            const nettoKosten = projectCosts / 1.19;
-                            const steuervorteil = nettoKosten * 0.19;
+                            const nettoKosten = projectCosts / (1 + editableCosts.vatRate19/100);
+                            const steuervorteil = nettoKosten * (editableCosts.vatRate19/100);
                             const gesamtkosten = beyondBookingsCosts + steuerbelastung - steuervorteil;
                             
                             const advantage = projectCosts - gesamtkosten;
@@ -2454,10 +2456,10 @@ export default function Workflow() {
                             const roomnights = Math.round(projectCosts / voucherValue);
                             
                             // Beyond Bookings real costs calculation
-                            const beyondBookingsCosts = roomnights * 17;
-                            const steuerbelastung = 1800.90;
-                            const nettoKosten = projectCosts / 1.19;
-                            const steuervorteil = nettoKosten * 0.19;
+                            const beyondBookingsCosts = roomnights * editableCosts.realCostPerVoucher;
+                            const steuerbelastung = editableCosts.taxBurden;
+                            const nettoKosten = projectCosts / (1 + editableCosts.vatRate19/100);
+                            const steuervorteil = nettoKosten * (editableCosts.vatRate19/100);
                             const gesamtkosten = beyondBookingsCosts + steuerbelastung - steuervorteil;
                             
                             const factor = gesamtkosten / projectCosts;
@@ -2492,7 +2494,7 @@ export default function Workflow() {
                         <div className="text-lg font-black text-orange-900">
                           {(() => {
                             const projectCosts = workflowData.projectCosts || 20000;
-                            const nettoKosten = projectCosts / 1.19; // Remove VAT to get netto
+                            const nettoKosten = projectCosts / (1 + editableCosts.vatRate19/100); // Remove VAT to get netto
                             return nettoKosten.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €';
                           })()}
                         </div>
@@ -2502,22 +2504,42 @@ export default function Workflow() {
                         <div className="text-lg font-black text-amber-900">
                           {(() => {
                             const projectCosts = workflowData.projectCosts || 20000;
-                            const nettoKosten = projectCosts / 1.19; // Remove VAT to get netto
+                            const nettoKosten = projectCosts / (1 + editableCosts.vatRate19/100); // Remove VAT to get netto
                             return nettoKosten.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €';
                           })()}
                         </div>
                       </div>
                       <div className="text-center p-3 bg-orange-50/80 rounded-xl border border-orange-200/50">
-                        <div className="text-xs font-bold text-orange-700 uppercase tracking-wider">Mehrwertsteuer 7%</div>
+                        <div className="flex items-center justify-center space-x-1 mb-2">
+                          <span className="text-xs font-bold text-orange-700 uppercase tracking-wider">Mehrwertsteuer</span>
+                          <Input
+                            type="number"
+                            step="0.1"
+                            value={editableCosts.vatRate7}
+                            onChange={(e) => setEditableCosts(prev => ({...prev, vatRate7: parseFloat(e.target.value) || 7.0}))}
+                            className="w-12 h-6 text-xs font-bold text-orange-700 bg-white/80 border-orange-300 text-center"
+                          />
+                          <span className="text-xs font-bold text-orange-700">%</span>
+                        </div>
                         <div className="text-lg font-black text-orange-900">0 €</div>
                       </div>
                       <div className="text-center p-3 bg-amber-50/80 rounded-xl border border-amber-200/50">
-                        <div className="text-xs font-bold text-amber-700 uppercase tracking-wider">Mehrwertsteuer 19%</div>
+                        <div className="flex items-center justify-center space-x-1 mb-2">
+                          <span className="text-xs font-bold text-amber-700 uppercase tracking-wider">Mehrwertsteuer</span>
+                          <Input
+                            type="number"
+                            step="0.1"
+                            value={editableCosts.vatRate19}
+                            onChange={(e) => setEditableCosts(prev => ({...prev, vatRate19: parseFloat(e.target.value) || 19.0}))}
+                            className="w-12 h-6 text-xs font-bold text-amber-700 bg-white/80 border-amber-300 text-center"
+                          />
+                          <span className="text-xs font-bold text-amber-700">%</span>
+                        </div>
                         <div className="text-lg font-black text-amber-900">
                           {(() => {
                             const projectCosts = workflowData.projectCosts || 20000;
-                            const nettoKosten = projectCosts / 1.19;
-                            const mwst19 = nettoKosten * 0.19;
+                            const nettoKosten = projectCosts / (1 + editableCosts.vatRate19/100);
+                            const mwst19 = nettoKosten * (editableCosts.vatRate19/100);
                             return mwst19.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €';
                           })()}
                         </div>
@@ -2583,11 +2605,31 @@ export default function Workflow() {
                       
                       <div className="grid grid-cols-2 gap-3">
                         <div className="text-center p-3 bg-green-50/80 rounded-xl border border-green-200/50">
-                          <div className="text-xs font-bold text-green-700 uppercase">MWST-Wert-Beträge 7%</div>
+                          <div className="flex items-center justify-center space-x-1 mb-2">
+                            <span className="text-xs font-bold text-green-700 uppercase">MWST-Wert-Beträge</span>
+                            <Input
+                              type="number"
+                              step="0.1"
+                              value={editableCosts.vatRate7}
+                              onChange={(e) => setEditableCosts(prev => ({...prev, vatRate7: parseFloat(e.target.value) || 7.0}))}
+                              className="w-12 h-6 text-xs font-bold text-green-700 bg-white/80 border-green-300 text-center"
+                            />
+                            <span className="text-xs font-bold text-green-700">%</span>
+                          </div>
                           <div className="text-lg font-black text-green-900">0 €</div>
                         </div>
                         <div className="text-center p-3 bg-emerald-50/80 rounded-xl border border-emerald-200/50">
-                          <div className="text-xs font-bold text-emerald-700 uppercase">MWST-Wert-Beträge 19%</div>
+                          <div className="flex items-center justify-center space-x-1 mb-2">
+                            <span className="text-xs font-bold text-emerald-700 uppercase">MWST-Wert-Beträge</span>
+                            <Input
+                              type="number"
+                              step="0.1"
+                              value={editableCosts.vatRate19}
+                              onChange={(e) => setEditableCosts(prev => ({...prev, vatRate19: parseFloat(e.target.value) || 19.0}))}
+                              className="w-12 h-6 text-xs font-bold text-emerald-700 bg-white/80 border-emerald-300 text-center"
+                            />
+                            <span className="text-xs font-bold text-emerald-700">%</span>
+                          </div>
                           <div className="text-lg font-black text-emerald-900">
                             {(() => {
                               const projectCosts = workflowData.projectCosts || 20000;
@@ -2595,7 +2637,7 @@ export default function Workflow() {
                               const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : 30;
                               const roomnights = Math.round(projectCosts / voucherValue);
                               const totalVoucherValue = roomnights * voucherValue;
-                              const mwst19 = totalVoucherValue * 0.19 / 1.19;
+                              const mwst19 = totalVoucherValue * (editableCosts.vatRate19/100) / (1 + editableCosts.vatRate19/100);
                               return mwst19.toLocaleString('de-DE', {minimumFractionDigits: 0, maximumFractionDigits: 0}) + ' €';
                             })()}
                           </div>
@@ -2648,8 +2690,8 @@ export default function Workflow() {
                           <span className="text-lg font-black text-purple-900">
                             {(() => {
                               const projectCosts = workflowData.projectCosts || 20000;
-                              const nettoKosten = projectCosts / 1.19;
-                              const mwst19 = nettoKosten * 0.19;
+                              const nettoKosten = projectCosts / (1 + editableCosts.vatRate19/100);
+                              const mwst19 = nettoKosten * (editableCosts.vatRate19/100);
                               return mwst19.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €';
                             })()}
                           </span>
@@ -2666,8 +2708,8 @@ export default function Workflow() {
                             const roomnights = Math.round(projectCosts / voucherValue);
                             const costs = roomnights * editableCosts.realCostPerVoucher;
                             const steuerbelastung = editableCosts.taxBurden;
-                            const nettoKosten = projectCosts / 1.19;
-                            const steuervorteil = nettoKosten * 0.19;
+                            const nettoKosten = projectCosts / (1 + editableCosts.vatRate19/100);
+                            const steuervorteil = nettoKosten * (editableCosts.vatRate19/100);
                             const gesamtkosten = costs + steuerbelastung - steuervorteil;
                             return gesamtkosten.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €';
                           })()}
