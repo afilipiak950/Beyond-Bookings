@@ -237,11 +237,11 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Average Price:</span>
-                    <span className="font-medium text-blue-900">{getCurrencySymbol(workflowData.currency)}{workflowData.averagePrice}</span>
+                    <span className="font-medium text-blue-900">{workflowData.averagePrice} {getCurrencySymbol(workflowData.currency)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Project Costs:</span>
-                    <span className="font-medium text-blue-900">{getCurrencySymbol(workflowData.currency)}{workflowData.projectCosts?.toLocaleString('de-DE')}</span>
+                    <span className="font-medium text-blue-900">{workflowData.projectCosts?.toLocaleString('de-DE')} {getCurrencySymbol(workflowData.currency)}</span>
                   </div>
                 </div>
               </div>
@@ -255,7 +255,7 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
                   <div className="flex justify-between">
                     <span className="text-gray-600">Voucher Value:</span>
                     <span className="font-medium text-emerald-900">
-                      {getCurrencySymbol(workflowData.currency)}{convertFromEUR(workflowData.stars === 5 ? 50 : workflowData.stars === 4 ? 40 : workflowData.stars === 3 ? 30 : 30, workflowData.currency, exchangeRates).toFixed(2)}
+                      {convertFromEUR(workflowData.stars === 5 ? 50 : workflowData.stars === 4 ? 40 : workflowData.stars === 3 ? 30 : 30, workflowData.currency).toFixed(2)} {getCurrencySymbol(workflowData.currency)}
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -267,18 +267,18 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
                   <div className="flex justify-between">
                     <span className="text-gray-600">Cost Advantage:</span>
                     <span className="font-medium text-emerald-900">
-                      {getCurrencySymbol(workflowData.currency)}{(() => {
+                      {(() => {
                         const projectCosts = workflowData.projectCosts || 0;
-                        const voucherValue = convertFromEUR(workflowData.stars === 5 ? 50 : workflowData.stars === 4 ? 40 : workflowData.stars === 3 ? 30 : 30, workflowData.currency, exchangeRates);
+                        const voucherValue = convertFromEUR(workflowData.stars === 5 ? 50 : workflowData.stars === 4 ? 40 : workflowData.stars === 3 ? 30 : 30, workflowData.currency);
                         const roomnights = Math.round(projectCosts / voucherValue);
-                        const beyondBookingsCosts = roomnights * convertFromEUR(17, workflowData.currency, exchangeRates);
-                        const steuerbelastung = convertFromEUR(1800.90, workflowData.currency, exchangeRates);
+                        const beyondBookingsCosts = roomnights * convertFromEUR(17, workflowData.currency);
+                        const steuerbelastung = convertFromEUR(1800.90, workflowData.currency);
                         const nettoKosten = projectCosts / 1.19;
                         const steuervorteil = nettoKosten * 0.19;
                         const gesamtkosten = beyondBookingsCosts + steuerbelastung - steuervorteil;
                         const advantage = projectCosts - gesamtkosten;
                         return advantage.toLocaleString('de-DE');
-                      })()}
+                      })()} {getCurrencySymbol(workflowData.currency)}
                     </span>
                   </div>
                 </div>
@@ -291,19 +291,19 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
                     { label: "Hotel Name", value: workflowData.hotelName },
                     { label: "Star Rating", value: workflowData.stars + " Stars" },
                     { label: "Room Count", value: workflowData.roomCount },
-                    { label: "Average Price", value: getCurrencySymbol(workflowData.currency) + workflowData.averagePrice },
-                    { label: "Project Costs", value: getCurrencySymbol(workflowData.currency) + workflowData.projectCosts?.toLocaleString('de-DE') },
-                    { label: "Cost Advantage", value: getCurrencySymbol(workflowData.currency) + (() => {
+                    { label: "Average Price", value: workflowData.averagePrice + " " + getCurrencySymbol(workflowData.currency) },
+                    { label: "Project Costs", value: workflowData.projectCosts?.toLocaleString('de-DE') + " " + getCurrencySymbol(workflowData.currency) },
+                    { label: "Cost Advantage", value: (() => {
                       const projectCosts = workflowData.projectCosts || 0;
-                      const voucherValue = convertFromEUR(workflowData.stars === 5 ? 50 : workflowData.stars === 4 ? 40 : workflowData.stars === 3 ? 30 : 30, workflowData.currency, exchangeRates);
+                      const voucherValue = convertFromEUR(workflowData.stars === 5 ? 50 : workflowData.stars === 4 ? 40 : workflowData.stars === 3 ? 30 : 30, workflowData.currency);
                       const roomnights = Math.round(projectCosts / voucherValue);
-                      const beyondBookingsCosts = roomnights * convertFromEUR(17, workflowData.currency, exchangeRates);
-                      const steuerbelastung = convertFromEUR(1800.90, workflowData.currency, exchangeRates);
+                      const beyondBookingsCosts = roomnights * convertFromEUR(17, workflowData.currency);
+                      const steuerbelastung = convertFromEUR(1800.90, workflowData.currency);
                       const nettoKosten = projectCosts / 1.19;
                       const steuervorteil = nettoKosten * 0.19;
                       const gesamtkosten = beyondBookingsCosts + steuerbelastung - steuervorteil;
                       const advantage = projectCosts - gesamtkosten;
-                      return advantage.toLocaleString('de-DE');
+                      return advantage.toLocaleString('de-DE') + " " + getCurrencySymbol(workflowData.currency);
                     })()}
                   ].map((field, index) => (
                     <div
@@ -474,17 +474,7 @@ const CURRENCY_OPTIONS = [
   { code: "HUF", name: "Hungarian Forint", symbol: "Ft" }
 ];
 
-// Currency helper functions
-const getCurrencySymbol = (currencyCode: string) => {
-  const currency = CURRENCY_OPTIONS.find(c => c.code === currencyCode);
-  return currency ? currency.symbol : "€";
-};
-
-const convertFromEUR = (eurAmount: number, targetCurrency: string, exchangeRates?: Record<string, number>) => {
-  if (targetCurrency === "EUR") return eurAmount;
-  if (!exchangeRates || !exchangeRates[targetCurrency]) return eurAmount;
-  return eurAmount * exchangeRates[targetCurrency];
-};
+// Currency helper functions - these are used globally throughout the component
 
 export default function Workflow() {
   const [, navigate] = useLocation();
@@ -773,7 +763,7 @@ export default function Workflow() {
             
             toast({
               title: "Price research completed!",
-              description: `Automated research found: ${convertFromEUR(data.averagePrice, workflowData.currency, exchangeRates).toFixed(2)}${getCurrencySymbol(workflowData.currency)} (${data.priceResearch?.confidence || 'medium'} confidence)`,
+              description: `Automated research found: ${convertFromEUR(data.averagePrice, workflowData.currency).toFixed(2)} ${getCurrencySymbol(workflowData.currency)} (${data.priceResearch?.confidence || 'medium'} confidence)`,
             });
           } else {
             // Even if no price found, ensure the field can be used for manual input
@@ -848,7 +838,7 @@ export default function Workflow() {
         if (data.averagePrice && data.priceResearch) {
           toast({
             title: "Complete data extracted!",
-            description: `Hotel data + automated price research completed: ${convertFromEUR(data.averagePrice, workflowData.currency, exchangeRates).toFixed(2)}${getCurrencySymbol(workflowData.currency)} (${data.priceResearch.confidence} confidence)`,
+            description: `Hotel data + automated price research completed: ${convertFromEUR(data.averagePrice, workflowData.currency).toFixed(2)} ${getCurrencySymbol(workflowData.currency)} (${data.priceResearch.confidence} confidence)`,
           });
         } else if (data.stars || data.roomCount || data.location) {
           toast({
@@ -1571,7 +1561,7 @@ export default function Workflow() {
                             {extractedData.priceResearch.methodology}
                           </p>
                           <div className="flex flex-wrap gap-2 text-blue-600">
-                            <span>Spanne: {convertFromEUR(extractedData.priceResearch.priceRange?.low || 0, workflowData.currency, exchangeRates).toFixed(2)}{getCurrencySymbol(workflowData.currency)} - {convertFromEUR(extractedData.priceResearch.priceRange?.high || 0, workflowData.currency, exchangeRates).toFixed(2)}{getCurrencySymbol(workflowData.currency)}</span>
+                            <span>Spanne: {convertFromEUR(extractedData.priceResearch.priceRange?.low || 0, workflowData.currency).toFixed(2)} {getCurrencySymbol(workflowData.currency)} - {convertFromEUR(extractedData.priceResearch.priceRange?.high || 0, workflowData.currency).toFixed(2)} {getCurrencySymbol(workflowData.currency)}</span>
                             <span>•</span>
                             <span>Quellen: {extractedData.priceResearch.dataSource}</span>
                           </div>
@@ -2677,7 +2667,7 @@ export default function Workflow() {
                         const stars = workflowData.stars || 3;
                         const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : 30;
                         const roomnights = Math.round(projectCosts / voucherValue);
-                        return `${roomnights} Gutscheine × ${convertFromEUR(voucherValue, workflowData.currency, exchangeRates).toFixed(2)}${getCurrencySymbol(workflowData.currency)}`;
+                        return `${roomnights} Gutscheine × ${convertFromEUR(voucherValue, workflowData.currency).toFixed(2)} ${getCurrencySymbol(workflowData.currency)}`;
                       })()}
                     </div>
                     <div className="text-xl font-bold text-emerald-900 mt-1">
@@ -2931,11 +2921,11 @@ export default function Workflow() {
                         </div>
                         <ul className="text-sm text-slate-600 ml-8 space-y-1">
                           <li>• <span className="font-semibold">{workflowData.roomCount || 857}</span> Gutscheine (ca. 5% Deiner jährlichen Leistung)</li>
-                          <li className="text-green-600 font-semibold">{convertFromEUR(workflowData.hotelVoucherValue || 35, workflowData.currency, exchangeRates).toFixed(2)} {getCurrencySymbol(workflowData.currency)}</li>
+                          <li className="text-green-600 font-semibold">{convertFromEUR(workflowData.hotelVoucherValue || 35, workflowData.currency).toFixed(2)} {getCurrencySymbol(workflowData.currency)}</li>
                           <li>• davon MwSt. 7% bei Erteilung vor Ort</li>
-                          <li className="text-blue-600 font-semibold">{(convertFromEUR(workflowData.hotelVoucherValue || 35, workflowData.currency, exchangeRates) * 0.07).toFixed(2)} {getCurrencySymbol(workflowData.currency)} (R)</li>
-                          <li>• Erm. 19% für Frühstück (ca nach Setting /or {convertFromEUR(3, workflowData.currency, exchangeRates).toFixed(2)}{getCurrencySymbol(workflowData.currency)})</li>
-                          <li className="text-red-600 font-semibold">{(convertFromEUR(workflowData.hotelVoucherValue || 35, workflowData.currency, exchangeRates) * 0.19).toFixed(2)} {getCurrencySymbol(workflowData.currency)} (R)</li>
+                          <li className="text-blue-600 font-semibold">{(convertFromEUR(workflowData.hotelVoucherValue || 35, workflowData.currency) * 0.07).toFixed(2)} {getCurrencySymbol(workflowData.currency)} (R)</li>
+                          <li>• Erm. 19% für Frühstück (ca nach Setting /or {convertFromEUR(3, workflowData.currency).toFixed(2)} {getCurrencySymbol(workflowData.currency)})</li>
+                          <li className="text-red-600 font-semibold">{(convertFromEUR(workflowData.hotelVoucherValue || 35, workflowData.currency) * 0.19).toFixed(2)} {getCurrencySymbol(workflowData.currency)} (R)</li>
                         </ul>
                       </div>
 
@@ -2954,21 +2944,21 @@ export default function Workflow() {
                         <h3 className="text-lg font-bold text-blue-700 mb-3">Deine Kosten:</h3>
                         <div className="space-y-2">
                           <div className="flex justify-between items-center">
-                            <span className="text-slate-600">{convertFromEUR(20, workflowData.currency, exchangeRates).toFixed(2)} {getCurrencySymbol(workflowData.currency)} (s) Gutschein² × {workflowData.roomCount || 857} RoomNights</span>
-                            <span className="font-bold text-slate-800">{((workflowData.roomCount || 857) * convertFromEUR(20, workflowData.currency, exchangeRates)).toLocaleString('de-DE')} {getCurrencySymbol(workflowData.currency)}</span>
+                            <span className="text-slate-600">{convertFromEUR(20, workflowData.currency).toFixed(2)} {getCurrencySymbol(workflowData.currency)} (s) Gutschein² × {workflowData.roomCount || 857} RoomNights</span>
+                            <span className="font-bold text-slate-800">{((workflowData.roomCount || 857) * convertFromEUR(20, workflowData.currency)).toLocaleString('de-DE')} {getCurrencySymbol(workflowData.currency)}</span>
                           </div>
                           <div className="flex justify-between items-center text-red-600">
                             <span>(e) Steuerbelastung bei Gutscheineinlösung</span>
-                            <span className="font-bold">{((workflowData.roomCount || 857) * convertFromEUR(2.61, workflowData.currency, exchangeRates)).toLocaleString('de-DE')} {getCurrencySymbol(workflowData.currency)}</span>
+                            <span className="font-bold">{((workflowData.roomCount || 857) * convertFromEUR(2.61, workflowData.currency)).toLocaleString('de-DE')} {getCurrencySymbol(workflowData.currency)}</span>
                           </div>
                           <div className="flex justify-between items-center text-green-600">
                             <span>(e) Umsatzsteuerklärung 19%</span>
-                            <span className="font-bold">- {((workflowData.roomCount || 857) * convertFromEUR(4.78, workflowData.currency, exchangeRates)).toLocaleString('de-DE')} {getCurrencySymbol(workflowData.currency)}</span>
+                            <span className="font-bold">- {((workflowData.roomCount || 857) * convertFromEUR(4.78, workflowData.currency)).toLocaleString('de-DE')} {getCurrencySymbol(workflowData.currency)}</span>
                           </div>
                           <div className="w-full h-0.5 bg-gradient-to-r from-blue-300 to-teal-300 rounded-full"></div>
                           <div className="flex justify-between items-center p-3 bg-gradient-to-r from-blue-100 to-teal-100 rounded-xl">
                             <span className="font-bold text-blue-700 text-lg">Gesamtkosten</span>
-                            <span className="font-bold text-blue-800 text-xl">{((workflowData.roomCount || 857) * (convertFromEUR(20, workflowData.currency, exchangeRates) + convertFromEUR(2.61, workflowData.currency, exchangeRates) - convertFromEUR(4.78, workflowData.currency, exchangeRates))).toLocaleString('de-DE')} {getCurrencySymbol(workflowData.currency)}</span>
+                            <span className="font-bold text-blue-800 text-xl">{((workflowData.roomCount || 857) * (convertFromEUR(20, workflowData.currency) + convertFromEUR(2.61, workflowData.currency) - convertFromEUR(4.78, workflowData.currency))).toLocaleString('de-DE')} {getCurrencySymbol(workflowData.currency)}</span>
                           </div>
                         </div>
                       </div>
@@ -2982,7 +2972,7 @@ export default function Workflow() {
                     <h2 className="text-xl font-bold text-teal-700 mb-4">Ihr Kostenvorteil:</h2>
                     <div className="text-center mb-6">
                       <div className="text-4xl font-bold text-teal-600 bg-white/70 rounded-xl p-4 shadow-inner">
-                        {convertFromEUR(((workflowData.projectCosts || 30000) * 1.19 - (workflowData.roomCount || 857) * 17.83), workflowData.currency, exchangeRates).toLocaleString('de-DE')} {getCurrencySymbol(workflowData.currency)} 
+                        {convertFromEUR(((workflowData.projectCosts || 30000) * 1.19 - (workflowData.roomCount || 857) * 17.83), workflowData.currency).toLocaleString('de-DE')} {getCurrencySymbol(workflowData.currency)} 
                         <span className="text-lg text-teal-500 ml-2">= -XX%</span>
                       </div>
                     </div>
@@ -3010,7 +3000,7 @@ export default function Workflow() {
                           <div className="w-2 h-2 bg-teal-500 rounded-full mt-2 flex-shrink-0"></div>
                           <div>
                             <span className="font-semibold text-teal-700">Mehr Umsatz</span>
-                            <span className="text-slate-600 ml-2">von ca. {((workflowData.roomCount || 857) * convertFromEUR(20, workflowData.currency, exchangeRates)).toLocaleString('de-DE')} {getCurrencySymbol(workflowData.currency)} durch Zusatzeinnahmen in Euren Outlets und durch Upselling.</span>
+                            <span className="text-slate-600 ml-2">von ca. {((workflowData.roomCount || 857) * convertFromEUR(20, workflowData.currency)).toLocaleString('de-DE')} {getCurrencySymbol(workflowData.currency)} durch Zusatzeinnahmen in Euren Outlets und durch Upselling.</span>
                           </div>
                         </div>
                       </div>
@@ -3022,11 +3012,11 @@ export default function Workflow() {
                     <div className="text-sm text-slate-600 space-y-2">
                       <p>¹) Erfahrung: Kosten je Gutschein:</p>
                       <div className="ml-4 space-y-1">
-                        <p>© Kosten für ein leeres Zimmer: ≈ {convertFromEUR(25, workflowData.currency, exchangeRates).toFixed(2)} {getCurrencySymbol(workflowData.currency)}</p>
-                        <p>© Kosten für ein belegtes Zimmer: ≈ {convertFromEUR(45, workflowData.currency, exchangeRates).toFixed(2)} {getCurrencySymbol(workflowData.currency)}</p>
+                        <p>© Kosten für ein leeres Zimmer: ≈ {convertFromEUR(25, workflowData.currency).toFixed(2)} {getCurrencySymbol(workflowData.currency)}</p>
+                        <p>© Kosten für ein belegtes Zimmer: ≈ {convertFromEUR(45, workflowData.currency).toFixed(2)} {getCurrencySymbol(workflowData.currency)}</p>
                       </div>
                       <div className="bg-slate-100 rounded-lg p-3 mt-4">
-                        <p className="font-semibold text-slate-700">Ihre Kosten Gutschein: {convertFromEUR(workflowData.hotelVoucherValue || 30, workflowData.currency, exchangeRates).toFixed(2)} {getCurrencySymbol(workflowData.currency)}</p>
+                        <p className="font-semibold text-slate-700">Ihre Kosten Gutschein: {convertFromEUR(workflowData.hotelVoucherValue || 30, workflowData.currency).toFixed(2)} {getCurrencySymbol(workflowData.currency)}</p>
                       </div>
                     </div>
                   </div>
