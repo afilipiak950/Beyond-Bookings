@@ -1518,14 +1518,11 @@ export default function Workflow() {
                   </div>
                   
                   <div className="relative">
-                    <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none z-10">
-                      {getCurrencySymbol(workflowData.currency)}
-                    </div>
                     <input 
                       type="number"
                       step="0.01"
                       placeholder="Automatisch recherchiert oder manuell eingeben"
-                      className={`w-full p-3 pl-8 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                      className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                         extractedData?.averagePrice ? 'bg-green-50 border-green-300' : ''
                       }`}
                       value={workflowData.averagePrice === 0 || !workflowData.averagePrice ? '' : workflowData.averagePrice}
