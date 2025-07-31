@@ -2326,7 +2326,114 @@ export default function Workflow() {
             {/* Main Comparison Grid */}
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
               
-              {/* Left Card - Selbstbeschaffung */}
+              {/* Left Card - Kostenvorteil */}
+              <div className="bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden">
+                <div className="bg-blue-50 px-6 py-4 border-b border-blue-100">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+                      <TrendingDown className="h-5 w-5 text-white" />
+                    </div>
+                    <h3 className="text-xl font-bold text-blue-900">Kostenvorteil</h3>
+                  </div>
+                </div>
+                
+                <div className="p-6 space-y-4">
+                  {/* Editable Cost Fields */}
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <span className="text-sm font-medium text-gray-700">Kosten leeres Zimmer</span>
+                      <div className="flex items-center space-x-2">
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={editableCosts.emptyRoomCost}
+                          onChange={(e) => setEditableCosts(prev => ({...prev, emptyRoomCost: parseFloat(e.target.value) || 0}))}
+                          className="w-20 h-8 text-right text-sm border-gray-300"
+                        />
+                        <span className="text-sm font-medium text-gray-700">€</span>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <span className="text-sm font-medium text-gray-700">Kosten belegtes Zimmer</span>
+                      <div className="flex items-center space-x-2">
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={editableCosts.occupiedRoomCost}
+                          onChange={(e) => setEditableCosts(prev => ({...prev, occupiedRoomCost: parseFloat(e.target.value) || 0}))}
+                          className="w-20 h-8 text-right text-sm border-gray-300"
+                        />
+                        <span className="text-sm font-medium text-gray-700">€</span>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <span className="text-sm font-medium text-gray-700">Reale Kosten</span>
+                      <div className="flex items-center space-x-2">
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={editableCosts.realCosts}
+                          onChange={(e) => setEditableCosts(prev => ({...prev, realCosts: parseFloat(e.target.value) || 0}))}
+                          className="w-20 h-8 text-right text-sm border-gray-300"
+                        />
+                        <span className="text-sm font-medium text-gray-700">€</span>
+                      </div>
+                    </div>
+
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <div className="text-sm font-medium text-gray-700 mb-2">Produkt</div>
+                      <Input
+                        value={editableCosts.productType}
+                        onChange={(e) => setEditableCosts(prev => ({...prev, productType: e.target.value}))}
+                        className="text-sm border-gray-300"
+                      />
+                    </div>
+
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <span className="text-sm font-medium text-gray-700">Kosten in Nächten</span>
+                      <span className="text-lg font-semibold text-gray-900">
+                        {(() => {
+                          const projectCosts = workflowData.projectCosts || 0;
+                          const stars = workflowData.stars || 0;
+                          const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : 30;
+                          const roomnights = Math.round(projectCosts / voucherValue);
+                          return roomnights > 0 ? roomnights.toLocaleString('de-DE') : '667';
+                        })()}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Main Advantage Display */}
+                  <div className="bg-blue-500 rounded-lg p-6 text-center">
+                    <div className="text-blue-100 text-sm mb-2">Kostenvorteil gesamt</div>
+                    <div className="text-3xl font-bold text-white mb-2">
+                      {(() => {
+                        const projectCosts = workflowData.projectCosts || 20000;
+                        const stars = workflowData.stars || 3;
+                        const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : 30;
+                        const roomnights = Math.round(projectCosts / voucherValue);
+                        
+                        // Beyond Bookings real costs calculation
+                        const beyondBookingsCosts = roomnights * editableCosts.realCostPerVoucher;
+                        const steuerbelastung = editableCosts.taxBurden;
+                        const nettoKosten = projectCosts / (1 + editableCosts.vatRate19/100);
+                        const steuervorteil = nettoKosten * (editableCosts.vatRate19/100);
+                        const gesamtkosten = beyondBookingsCosts + steuerbelastung - steuervorteil;
+                        
+                        const advantage = projectCosts - gesamtkosten;
+                        return advantage.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €';
+                      })()}
+                    </div>
+                    <div className="text-blue-200 text-sm">
+                      Ersparnis gegenüber Selbstbeschaffung
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Middle Card - Selbstbeschaffung */}
               <div className="bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden">
                 <div className="bg-orange-50 px-6 py-4 border-b border-orange-100">
                   <div className="flex items-center space-x-3">
@@ -2336,7 +2443,7 @@ export default function Workflow() {
                     <h3 className="text-xl font-bold text-orange-900">Selbstbeschaffung</h3>
                   </div>
                 </div>
-                
+
                 <div className="p-6 space-y-4">
                   {/* Kosten Netto */}
                   <div className="bg-gray-50 rounded-lg p-4">
@@ -2402,7 +2509,7 @@ export default function Workflow() {
                 </div>
               </div>
 
-              {/* Middle Card - Beyond Bookings */}
+              {/* Right Card - Beyond Bookings */}
               <div className="bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden">
                 <div className="bg-emerald-50 px-6 py-4 border-b border-emerald-100">
                   <div className="flex items-center space-x-3">
@@ -2412,7 +2519,7 @@ export default function Workflow() {
                     <h3 className="text-xl font-bold text-emerald-900">Beyond Bookings</h3>
                   </div>
                 </div>
-
+                
                 <div className="p-6 space-y-4">
                   {/* Voucher Information */}
                   <div className="bg-emerald-50 rounded-lg p-4">
@@ -2537,113 +2644,6 @@ export default function Workflow() {
                         const gesamtkosten = costs + steuerbelastung - steuervorteil;
                         return gesamtkosten.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €';
                       })()}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Right Card - Kostenvorteil */}
-              <div className="bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden">
-                <div className="bg-blue-50 px-6 py-4 border-b border-blue-100">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
-                      <TrendingDown className="h-5 w-5 text-white" />
-                    </div>
-                    <h3 className="text-xl font-bold text-blue-900">Kostenvorteil</h3>
-                  </div>
-                </div>
-                
-                <div className="p-6 space-y-4">
-                  {/* Editable Cost Fields */}
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                      <span className="text-sm font-medium text-gray-700">Kosten leeres Zimmer</span>
-                      <div className="flex items-center space-x-2">
-                        <Input
-                          type="number"
-                          step="0.01"
-                          value={editableCosts.emptyRoomCost}
-                          onChange={(e) => setEditableCosts(prev => ({...prev, emptyRoomCost: parseFloat(e.target.value) || 0}))}
-                          className="w-20 h-8 text-right text-sm border-gray-300"
-                        />
-                        <span className="text-sm font-medium text-gray-700">€</span>
-                      </div>
-                    </div>
-
-                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                      <span className="text-sm font-medium text-gray-700">Kosten belegtes Zimmer</span>
-                      <div className="flex items-center space-x-2">
-                        <Input
-                          type="number"
-                          step="0.01"
-                          value={editableCosts.occupiedRoomCost}
-                          onChange={(e) => setEditableCosts(prev => ({...prev, occupiedRoomCost: parseFloat(e.target.value) || 0}))}
-                          className="w-20 h-8 text-right text-sm border-gray-300"
-                        />
-                        <span className="text-sm font-medium text-gray-700">€</span>
-                      </div>
-                    </div>
-
-                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                      <span className="text-sm font-medium text-gray-700">Reale Kosten</span>
-                      <div className="flex items-center space-x-2">
-                        <Input
-                          type="number"
-                          step="0.01"
-                          value={editableCosts.realCosts}
-                          onChange={(e) => setEditableCosts(prev => ({...prev, realCosts: parseFloat(e.target.value) || 0}))}
-                          className="w-20 h-8 text-right text-sm border-gray-300"
-                        />
-                        <span className="text-sm font-medium text-gray-700">€</span>
-                      </div>
-                    </div>
-
-                    <div className="p-3 bg-gray-50 rounded-lg">
-                      <div className="text-sm font-medium text-gray-700 mb-2">Produkt</div>
-                      <Input
-                        value={editableCosts.productType}
-                        onChange={(e) => setEditableCosts(prev => ({...prev, productType: e.target.value}))}
-                        className="text-sm border-gray-300"
-                      />
-                    </div>
-
-                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                      <span className="text-sm font-medium text-gray-700">Kosten in Nächten</span>
-                      <span className="text-lg font-semibold text-gray-900">
-                        {(() => {
-                          const projectCosts = workflowData.projectCosts || 0;
-                          const stars = workflowData.stars || 0;
-                          const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : 30;
-                          const roomnights = Math.round(projectCosts / voucherValue);
-                          return roomnights > 0 ? roomnights.toLocaleString('de-DE') : '667';
-                        })()}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Main Advantage Display */}
-                  <div className="bg-blue-500 rounded-lg p-6 text-center">
-                    <div className="text-blue-100 text-sm mb-2">Kostenvorteil gesamt</div>
-                    <div className="text-3xl font-bold text-white mb-2">
-                      {(() => {
-                        const projectCosts = workflowData.projectCosts || 20000;
-                        const stars = workflowData.stars || 3;
-                        const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : 30;
-                        const roomnights = Math.round(projectCosts / voucherValue);
-                        
-                        // Beyond Bookings real costs calculation
-                        const beyondBookingsCosts = roomnights * editableCosts.realCostPerVoucher;
-                        const steuerbelastung = editableCosts.taxBurden;
-                        const nettoKosten = projectCosts / (1 + editableCosts.vatRate19/100);
-                        const steuervorteil = nettoKosten * (editableCosts.vatRate19/100);
-                        const gesamtkosten = beyondBookingsCosts + steuerbelastung - steuervorteil;
-                        
-                        const advantage = projectCosts - gesamtkosten;
-                        return advantage.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €';
-                      })()}
-                    </div>
-                    <div className="text-blue-200 text-sm">
-                      Ersparnis gegenüber Selbstbeschaffung
                     </div>
                   </div>
                 </div>
