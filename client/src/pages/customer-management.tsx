@@ -103,8 +103,7 @@ export default function CustomerManagement() {
     return <div className="space-y-1">{formattedElements}</div>;
   };
 
-  type Hotel = typeof hotels.$inferSelect;
-  const { data: hotels = [], isLoading: hotelsLoading } = useQuery<Hotel[]>({
+  const { data: hotelData = [], isLoading: hotelsLoading } = useQuery<typeof hotels.$inferSelect[]>({
     queryKey: ["/api/hotels"],
     retry: false,
   });
@@ -820,7 +819,7 @@ export default function CustomerManagement() {
           <CardHeader>
             <CardTitle>Hotel Clients</CardTitle>
             <CardDescription>
-              {hotels?.length || 0} hotels in your database
+              {hotelData?.length || 0} hotels in your database
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -828,7 +827,7 @@ export default function CustomerManagement() {
               <div className="text-center py-6">
                 <div className="text-muted-foreground">Loading customers...</div>
               </div>
-            ) : !hotels || hotels.length === 0 ? (
+            ) : !hotelData || hotelData.length === 0 ? (
               <div className="text-center py-12">
                 <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">No customers yet</h3>
@@ -842,23 +841,23 @@ export default function CustomerManagement() {
               </div>
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                {hotels.map((hotel: Hotel) => (
-                  <Card key={hotel.id} className="hover:shadow-md transition-shadow">
-                    <CardHeader className="pb-3">
+                {hotelData.map((hotel) => (
+                  <Card key={hotel.id} className="hover:shadow-md transition-shadow h-[280px] flex flex-col">
+                    <CardHeader className="pb-3 flex-shrink-0">
                       <div className="flex items-start justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                        <div className="flex items-center space-x-3 flex-1 min-w-0">
+                          <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
                             <Building2 className="h-5 w-5 text-primary" />
                           </div>
-                          <div>
-                            <CardTitle className="text-lg">{hotel.name}</CardTitle>
+                          <div className="min-w-0 flex-1">
+                            <CardTitle className="text-lg truncate">{hotel.name}</CardTitle>
                             {hotel.location && (
-                              <p className="text-sm text-muted-foreground">{hotel.location}</p>
+                              <p className="text-sm text-muted-foreground truncate">{hotel.location}</p>
                             )}
                           </div>
                         </div>
                         {hotel.stars && (
-                          <div className="flex items-center">
+                          <div className="flex items-center flex-shrink-0 ml-2">
                             <span className="text-amber-400">
                               {"★".repeat(hotel.stars)}
                             </span>
@@ -869,33 +868,33 @@ export default function CustomerManagement() {
                         )}
                       </div>
                     </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2 text-sm">
-                        {hotel.roomCount && (
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Rooms:</span>
-                            <span>{hotel.roomCount}</span>
-                          </div>
-                        )}
-                        {hotel.url && (
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Website:</span>
+                    <CardContent className="flex-1 flex flex-col justify-between">
+                      <div className="space-y-2 text-sm flex-1">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Rooms:</span>
+                          <span>{hotel.roomCount || 'N/A'}</span>
+                        </div>
+                        <div className="flex justify-between items-start">
+                          <span className="text-muted-foreground">Website:</span>
+                          {hotel.url ? (
                             <a 
                               href={hotel.url} 
                               target="_blank" 
                               rel="noopener noreferrer"
-                              className="text-primary hover:underline truncate max-w-32"
+                              className="text-primary hover:underline truncate max-w-32 text-right"
                             >
                               {new URL(hotel.url).hostname}
                             </a>
-                          </div>
-                        )}
+                          ) : (
+                            <span>N/A</span>
+                          )}
+                        </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Added:</span>
-                          <span>{new Date(hotel.createdAt).toLocaleDateString()}</span>
+                          <span>{hotel.createdAt ? new Date(hotel.createdAt).toLocaleDateString() : 'N/A'}</span>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-2 mt-4">
+                      <div className="flex items-center space-x-2 mt-4 flex-shrink-0">
                         <Button size="sm" variant="outline" className="flex-1" onClick={() => handleViewDetails(hotel)}>
                           View Details
                         </Button>
