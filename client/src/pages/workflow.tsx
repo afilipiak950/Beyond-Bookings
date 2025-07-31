@@ -1998,15 +1998,12 @@ export default function Workflow() {
                           </span>
                         </div>
                         <div className="relative w-48">
-                          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none z-10">
-                            {getCurrencySymbol(workflowData.currency)}
-                          </div>
                           <Input
                             type="number"
                             step="0.01"
                             min="0"
                             placeholder="Projektkosten eingeben..."
-                            className="pl-8 bg-white/60 backdrop-blur-sm border-rose-300/50 focus:border-rose-500 focus:ring-rose-500/20 text-right font-bold placeholder:text-xs"
+                            className="bg-white/60 backdrop-blur-sm border-rose-300/50 focus:border-rose-500 focus:ring-rose-500/20 text-right font-bold placeholder:text-xs"
                             value={workflowData.projectCosts === 0 ? '' : workflowData.projectCosts}
                             onFocus={(e) => {
                               if (workflowData.projectCosts === 0) {
