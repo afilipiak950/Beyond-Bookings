@@ -2717,7 +2717,7 @@ export default function Workflow() {
                         const stars = workflowData.stars || 3;
                         const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : 30;
                         const roomnights = Math.round(projectCosts / voucherValue);
-                        return `${roomnights} Gutscheine × ${convertFromEUR(voucherValue, workflowData.currency).toFixed(2)} ${getCurrencySymbol(workflowData.currency)}`;
+                        return `${roomnights} Gutscheine × ${convertFromEUR(voucherValue, workflowData.currency, exchangeRates).toFixed(2)} ${getCurrencySymbol(workflowData.currency)}`;
                       })()}
                     </div>
                     <div className="text-lg font-semibold text-gray-900 mt-1">
@@ -2768,7 +2768,7 @@ export default function Workflow() {
                           const roomnights = Math.round(projectCosts / voucherValue);
                           const totalVoucherValue = roomnights * voucherValue;
                           const mwst19 = totalVoucherValue * (editableCosts.vatRate19/100) / (1 + editableCosts.vatRate19/100);
-                          return mwst19.toLocaleString('de-DE', {minimumFractionDigits: 0, maximumFractionDigits: 0}) + ' {getCurrencySymbol(workflowData.currency)}';
+                          return mwst19.toLocaleString('de-DE', {minimumFractionDigits: 0, maximumFractionDigits: 0}) + ' ' + getCurrencySymbol(workflowData.currency);
                         })()}
                       </div>
                     </div>
@@ -2809,7 +2809,7 @@ export default function Workflow() {
                           const projectCosts = workflowData.projectCosts || 20000;
                           const nettoKosten = projectCosts / (1 + editableCosts.vatRate19/100);
                           const mwst19 = nettoKosten * (editableCosts.vatRate19/100);
-                          return '- ' + mwst19.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' {getCurrencySymbol(workflowData.currency)}';
+                          return '- ' + mwst19.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' ' + getCurrencySymbol(workflowData.currency);
                         })()}
                       </span>
                     </div>
@@ -3132,34 +3132,35 @@ export default function Workflow() {
 
   return (
     <AppLayout>
-      <div className="space-y-6">
-        {/* Workflow Header */}
-        <div className="relative">
-          {/* Back Button - Positioned Absolutely */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate("/")}
-            className="absolute right-0 top-0 flex items-center gap-1 text-gray-500 hover:text-blue-600 hover:bg-blue-50 text-xs px-2 py-1"
-          >
-            <ArrowLeft className="h-3 w-3" />
-            Back
-          </Button>
-          
-          {/* Centered Title and Badge */}
-          <div className="flex flex-col items-center text-center">
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
-              AI Pricing Agent
-            </h1>
-            <p className="text-gray-600 mt-2 mb-4">Complete hotel pricing analysis in three steps</p>
+      <div className="min-h-screen flex flex-col items-center w-full">
+        <div className="w-full max-w-7xl mx-auto px-4 space-y-8">
+          {/* Workflow Header */}
+          <div className="relative w-full">
+            {/* Back Button - Positioned Absolutely */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/")}
+              className="absolute right-0 top-0 flex items-center gap-1 text-gray-500 hover:text-blue-600 hover:bg-blue-50 text-xs px-2 py-1"
+            >
+              <ArrowLeft className="h-3 w-3" />
+              Back
+            </Button>
+            
+            {/* Centered Title and Badge */}
+            <div className="flex flex-col items-center text-center w-full">
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
+                AI Pricing Agent
+              </h1>
+              <p className="text-gray-600 mt-2 mb-4">Complete hotel pricing analysis in three steps</p>
+            </div>
           </div>
-        </div>
 
-        {/* Progress Steps */}
-        <div className="space-y-6">
-          {/* Step Progress Indicator */}
-          <div className="flex justify-center items-center w-full">
-            <div className="flex items-center justify-center max-w-4xl w-full">
+          {/* Progress Steps */}
+          <div className="space-y-8 w-full">
+            {/* Step Progress Indicator */}
+            <div className="flex justify-center items-center w-full">
+              <div className="flex items-center justify-center w-full max-w-5xl">
               {steps.map((step, index) => (
                 <div key={step.id} className="flex items-center">
                   {/* Step Circle */}
@@ -3224,18 +3225,21 @@ export default function Workflow() {
             </div>
           </div>
 
-          {/* Progress Bar */}
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div
-              className="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full transition-all duration-500 ease-out"
-              style={{ width: `${progress}%` }}
-            />
+            {/* Progress Bar */}
+            <div className="w-full max-w-4xl mx-auto bg-gray-200 rounded-full h-2">
+              <div
+                className="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full transition-all duration-500 ease-out"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
           </div>
-        </div>
 
-        {/* Step Content */}
-        <div className="space-y-6">
-          {renderStepContent()}
+          {/* Step Content */}
+          <div className="w-full flex justify-center">
+            <div className="w-full max-w-7xl">
+              {renderStepContent()}
+            </div>
+          </div>
         </div>
       </div>
       
