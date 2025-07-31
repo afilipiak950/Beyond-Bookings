@@ -204,16 +204,16 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
 
   return (
     <div className="h-screen bg-gradient-to-br from-slate-50 to-gray-100 overflow-hidden">
-      <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 p-4 shadow-lg animate-slideInFromTop">
+      <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 p-4 shadow-lg">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4 animate-slideInFromLeft">
+          <div className="flex items-center space-x-4">
             <Button variant="ghost" onClick={onBack} className="flex items-center space-x-2 hover:bg-gray-100 transition-colors">
               <ArrowLeft className="h-4 w-4" />
               <span>Back</span>
             </Button>
             <div className="h-6 w-px bg-gray-300"></div>
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl flex items-center justify-center animate-morphGradient">
+              <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl flex items-center justify-center">
                 <Presentation className="h-5 w-5 text-white" />
               </div>
               <div>
@@ -222,7 +222,7 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
               </div>
             </div>
           </div>
-          <div className="flex items-center space-x-3 animate-slideInFromRight">
+          <div className="flex items-center space-x-3">
             <Button onClick={addSlide} className="bg-emerald-600 hover:bg-emerald-700 text-white transform hover:scale-105 transition-all duration-300">
               <Plus className="h-4 w-4 mr-2" />
               New Slide
@@ -236,10 +236,10 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
       </div>
 
       <div className="flex h-full">
-        <div className="w-80 bg-white/90 backdrop-blur-sm border-r border-gray-200/50 p-6 overflow-y-auto animate-slideInFromLeft">
+        <div className="w-80 bg-white/90 backdrop-blur-sm border-r border-gray-200/50 p-6 overflow-y-auto">
           <div className="space-y-6">
             <div className="space-y-4">
-              <h2 className="text-xl font-bold text-gray-900 animate-slideTrail">Data Summary</h2>
+              <h2 className="text-xl font-bold text-gray-900">Data Summary</h2>
               
               <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-4 border border-blue-200/50">
                 <h3 className="font-semibold text-blue-900 mb-3 flex items-center">
@@ -350,8 +350,8 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
           </div>
         </div>
 
-        <div className="flex-1 flex flex-col animate-slideInFromRight">
-          <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 p-4 animate-slideInFromTop">
+        <div className="flex-1 flex flex-col">
+          <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 p-4">
             <div className="flex space-x-3 overflow-x-auto">
               {slides.map((slide, index) => (
                 <div
@@ -388,10 +388,10 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
             </div>
           </div>
 
-          <div className="flex-1 bg-gray-100 p-8 overflow-auto animate-slideInFromBottom">
+          <div className="flex-1 bg-gray-100 p-8 overflow-auto">
             <div className="max-w-4xl mx-auto">
               <div
-                className={`aspect-[16/9] bg-gradient-to-r ${slides[currentSlide]?.backgroundGradient} rounded-2xl shadow-2xl p-12 text-white relative overflow-hidden cursor-text animate-slideReveal animate-morphGradient transition-all duration-500`}
+                className={`aspect-[16/9] bg-gradient-to-r ${slides[currentSlide]?.backgroundGradient} rounded-2xl shadow-2xl p-12 text-white relative overflow-hidden cursor-text transition-all duration-500`}
                 onClick={() => setIsEditing(!isEditing)}
                 onDrop={(e) => {
                   e.preventDefault();
@@ -401,12 +401,12 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
                 onDragOver={(e) => e.preventDefault()}
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent"></div>
-                <div className="absolute top-4 right-4 w-24 h-24 bg-white/10 rounded-full blur-xl animate-pulse"></div>
-                <div className="absolute bottom-8 left-8 w-16 h-16 bg-white/5 rounded-full blur-lg animate-pulse"></div>
+                <div className="absolute top-4 right-4 w-24 h-24 bg-white/10 rounded-full blur-xl"></div>
+                <div className="absolute bottom-8 left-8 w-16 h-16 bg-white/5 rounded-full blur-lg"></div>
                 
                 <div className="relative z-10 h-full flex flex-col justify-center">
                   {isEditing ? (
-                    <div className="space-y-4 animate-slideInFromTop">
+                    <div className="space-y-4">
                       <Input
                         value={editingText || slides[currentSlide]?.title}
                         onChange={(e) => setEditingText(e.target.value)}
@@ -431,7 +431,7 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
                       />
                     </div>
                   ) : (
-                    <div className="text-center space-y-6 animate-slideTrail">
+                    <div className="text-center space-y-6">
                       <h1 className="text-4xl font-bold mb-4 drop-shadow-lg">{slides[currentSlide]?.title}</h1>
                       <p className="text-xl opacity-90 drop-shadow-md">{slides[currentSlide]?.content}</p>
                     </div>
@@ -439,7 +439,7 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
                 </div>
                 
                 {!isEditing && (
-                  <div className="absolute top-4 left-4 bg-white/20 rounded-full px-3 py-1 text-sm font-medium backdrop-blur-sm animate-pulse">
+                  <div className="absolute top-4 left-4 bg-white/20 rounded-full px-3 py-1 text-sm font-medium backdrop-blur-sm">
                     Click to edit
                   </div>
                 )}
@@ -1363,7 +1363,7 @@ export default function Workflow() {
                     </select>
                     {isLoadingRates && (
                       <div className="absolute right-8 top-1/2 transform -translate-y-1/2">
-                        <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+                        <Loader2 className="h-4 w-4 text-blue-500" />
                       </div>
                     )}
                     <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
@@ -1397,7 +1397,7 @@ export default function Workflow() {
                       <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
                         {hotelsLoading ? (
                           <div className="p-3 text-center text-gray-500">
-                            <Loader2 className="h-4 w-4 animate-spin mx-auto mb-2" />
+                            <Loader2 className="h-4 w-4 mx-auto mb-2" />
                             Lade Hotels...
                           </div>
                         ) : filteredHotels.length > 0 ? (
@@ -1617,7 +1617,7 @@ export default function Workflow() {
                   >
                     {isSaving ? (
                       <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        <Loader2 className="mr-2 h-4 w-4" />
                         Saving...
                       </>
                     ) : (
@@ -1652,45 +1652,34 @@ export default function Workflow() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4 p-4">
-                {/* Floating Background Elements */}
-                <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                  <div className="absolute top-10 left-10 w-32 h-32 bg-blue-500/10 rounded-full blur-xl animate-float"></div>
-                  <div className="absolute bottom-20 right-20 w-24 h-24 bg-green-500/10 rounded-full blur-lg animate-float-delayed"></div>
-                  <div className="absolute top-1/2 left-1/3 w-16 h-16 bg-purple-500/10 rounded-full blur-md animate-pulse"></div>
-                </div>
+
 
                 {/* Calculation Results - Ultra Modern Glassmorphism */}
                 <div className="relative space-y-3">
                   {/* AI-Powered Realistic Price - Hero Section with Advanced Effects */}
                   <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/40 to-blue-50/30 backdrop-blur-xl border border-white/20 shadow-xl transition-all duration-500">
                     {/* Animated Background Layers */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-transparent to-green-500/10 animate-gradient-x"></div>
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-transparent to-green-500/10"></div>
                     <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/5 to-transparent group-hover:via-white/10 transition-all duration-500"></div>
                     
-                    {/* Floating Particles */}
-                    <div className="absolute top-2 right-2 w-2 h-2 bg-blue-400 rounded-full animate-ping opacity-60"></div>
-                    <div className="absolute bottom-3 left-3 w-2 h-2 bg-green-400 rounded-full animate-ping animation-delay-1000 opacity-80"></div>
-                    <div className="absolute top-1/2 right-1/4 w-2 h-2 bg-purple-400 rounded-full animate-bounce animation-delay-500 opacity-70"></div>
+
                     
                     <div className="relative p-4 space-y-3">
                       <div className="flex justify-between items-center">
                         <div className="flex items-center space-x-3">
-                          <div className="relative">
-                            <div className="w-2 h-2 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 animate-pulse shadow-lg shadow-blue-500/50"></div>
-                            <div className="absolute inset-0 w-2 h-2 rounded-full bg-blue-400 animate-ping opacity-40"></div>
-                          </div>
+                          <div className="w-2 h-2 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 shadow-lg shadow-blue-500/50"></div>
                           <span className="font-bold text-sm bg-gradient-to-r from-blue-800 to-blue-600 bg-clip-text text-transparent">
                             Realistischer Hotelverkaufspreis (KI)
                           </span>
                         </div>
                         <div className="flex items-center space-x-3">
                           {isManualEdit ? (
-                            <span className="text-sm bg-gradient-to-r from-orange-100 to-orange-50 text-orange-700 px-4 py-2 rounded-full font-semibold flex items-center space-x-2 shadow-lg shadow-orange-200/50 border border-orange-200/30 backdrop-blur-sm animate-bounce-gentle">
-                              <Edit3 className="h-4 w-4 animate-pulse" />
+                            <span className="text-sm bg-gradient-to-r from-orange-100 to-orange-50 text-orange-700 px-4 py-2 rounded-full font-semibold flex items-center space-x-2 shadow-lg shadow-orange-200/50 border border-orange-200/30 backdrop-blur-sm">
+                              <Edit3 className="h-4 w-4" />
                               <span>Manuell</span>
                             </span>
                           ) : (
-                            <span className="text-sm bg-gradient-to-r from-green-100 to-emerald-50 text-green-700 px-4 py-2 rounded-full font-semibold shadow-lg shadow-green-200/50 border border-green-200/30 backdrop-blur-sm animate-pulse">
+                            <span className="text-sm bg-gradient-to-r from-green-100 to-emerald-50 text-green-700 px-4 py-2 rounded-full font-semibold shadow-lg shadow-green-200/50 border border-green-200/30 backdrop-blur-sm">
                               KI: 56%
                             </span>
                           )}
@@ -1699,10 +1688,10 @@ export default function Workflow() {
                       
                       <div className="flex justify-between items-center mt-4">
                         <div className="relative">
-                          <span className="text-lg font-black bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 bg-clip-text text-transparent tracking-tight animate-text-shimmer bg-300% bg-size-200">
+                          <span className="text-lg font-black bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 bg-clip-text text-transparent tracking-tight">
                             {actualPrice ? `${actualPrice.toFixed(2)} ${getCurrencySymbol(workflowData.currency)}` : `0.00 ${getCurrencySymbol(workflowData.currency)}`}
                           </span>
-                          <div className="absolute -inset-1 bg-gradient-to-r from-blue-500/20 to-purple-500/20 blur-sm -z-10 animate-pulse"></div>
+                          <div className="absolute -inset-1 bg-gradient-to-r from-blue-500/20 to-purple-500/20 blur-sm -z-10"></div>
                         </div>
                         <Dialog open={manualEditOpen} onOpenChange={setManualEditOpen}>
                           <DialogTrigger asChild>
@@ -1788,7 +1777,7 @@ export default function Workflow() {
                           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 animate-gradient-x"></div>
                           <div className="flex items-start space-x-3">
                             <div className="mt-1">
-                              <Brain className="h-5 w-5 text-blue-600 animate-pulse" />
+                              <Brain className="h-5 w-5 text-blue-600" />
                             </div>
                             <div className="flex-1">
                               <span className="font-semibold text-blue-800 text-sm">KI-Begründung:</span>
@@ -1811,10 +1800,10 @@ export default function Workflow() {
                     {/* 65% Calculation - Floating Card */}
                     <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-white/50 to-gray-50/30 backdrop-blur-xl border border-white/30 shadow-lg transition-all duration-300 h-16">
                       <div className="absolute inset-0 bg-gradient-to-r from-gray-400/5 via-transparent to-gray-500/5 animate-gradient-x"></div>
-                      <div className="absolute top-2 right-2 w-2 h-2 bg-gray-400 rounded-full animate-ping opacity-40"></div>
+
                       <div className="relative p-4 flex justify-between items-center h-full">
                         <div className="flex items-center space-x-2">
-                          <div className="w-2 h-2 rounded-full bg-gradient-to-r from-gray-400 to-gray-500 animate-pulse shadow-md shadow-gray-400/30 flex-shrink-0"></div>
+                          <div className="w-2 h-2 rounded-full bg-gradient-to-r from-gray-400 to-gray-500 shadow-md shadow-gray-400/30 flex-shrink-0"></div>
                           <span className="text-sm font-bold bg-gradient-to-r from-gray-700 to-gray-600 bg-clip-text text-transparent break-words">
                             65% des durchschnittlichen Zimmerpreises
                           </span>
@@ -1828,12 +1817,11 @@ export default function Workflow() {
                     {/* Hotel Voucher - Dynamic Star-Based Card with Manual Edit */}
                     <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-red-50/40 to-rose-100/30 backdrop-blur-xl border border-red-200/40 shadow-lg transition-all duration-300 h-16">
                       <div className="absolute inset-0 bg-gradient-to-r from-red-400/10 via-transparent to-rose-500/10 animate-gradient-x"></div>
-                      <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-red-500 to-rose-500 animate-pulse"></div>
-                      <div className="absolute top-2 right-2 w-2 h-2 bg-red-400 rounded-full animate-ping opacity-60"></div>
+                      <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-red-500 to-rose-500"></div>
                       <div className="relative p-4 h-full">
                         <div className="flex justify-between items-center h-full">
                           <div className="flex items-center space-x-2">
-                            <div className="w-2 h-2 rounded-full bg-gradient-to-r from-red-500 to-rose-500 animate-pulse shadow-lg shadow-red-500/40 flex-shrink-0"></div>
+                            <div className="w-2 h-2 rounded-full bg-gradient-to-r from-red-500 to-rose-500 shadow-lg shadow-red-500/40 flex-shrink-0"></div>
                             <span className="text-sm font-bold bg-gradient-to-r from-red-700 to-red-600 bg-clip-text text-transparent break-words">
                               Gutscheinwert für Hotel
                             </span>
@@ -1938,11 +1926,10 @@ export default function Workflow() {
                     {/* Profit Margin - Animated Success Card */}
                     <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-50/40 to-green-100/30 backdrop-blur-xl border border-green-200/40 shadow-lg transition-all duration-300 h-16">
                       <div className="absolute inset-0 bg-gradient-to-r from-green-400/10 via-transparent to-emerald-500/10 animate-gradient-x"></div>
-                      <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-green-500 to-emerald-500 animate-pulse"></div>
-                      <div className="absolute top-2 right-2 w-2 h-2 bg-green-400 rounded-full animate-ping opacity-60"></div>
+                      <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-green-500 to-emerald-500"></div>
                       <div className="relative p-4 flex justify-between items-center h-full">
                         <div className="flex items-center space-x-2">
-                          <div className="w-2 h-2 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 animate-pulse shadow-lg shadow-green-500/40 flex-shrink-0"></div>
+                          <div className="w-2 h-2 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 shadow-lg shadow-green-500/40 flex-shrink-0"></div>
                           <span className="text-sm font-bold bg-gradient-to-r from-green-700 to-green-600 bg-clip-text text-transparent break-words">
                             Marge nach Steuern
                           </span>
@@ -1986,11 +1973,10 @@ export default function Workflow() {
                     {/* Tripz Payment - Ultra Modern Card */}
                     <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-indigo-50/40 to-purple-100/30 backdrop-blur-xl border border-indigo-200/40 shadow-lg transition-all duration-300 h-16">
                       <div className="absolute inset-0 bg-gradient-to-r from-indigo-400/10 via-transparent to-purple-500/10 animate-gradient-x"></div>
-                      <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-indigo-500 to-purple-500 animate-pulse"></div>
-                      <div className="absolute top-2 right-2 w-2 h-2 bg-indigo-400 rounded-full animate-ping opacity-60"></div>
+                      <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
                       <div className="relative p-4 flex justify-between items-center h-full">
                         <div className="flex items-center space-x-2">
-                          <div className="w-2 h-2 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 animate-pulse shadow-lg shadow-indigo-500/40 flex-shrink-0"></div>
+                          <div className="w-2 h-2 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 shadow-lg shadow-indigo-500/40 flex-shrink-0"></div>
                           <span className="text-sm font-bold bg-gradient-to-r from-indigo-700 to-indigo-600 bg-clip-text text-transparent break-words">
                             Zahlung von Tripz Estimate
                           </span>
@@ -2004,11 +1990,10 @@ export default function Workflow() {
                     {/* Contract Volume - Ultra Modern Blue Card */}
                     <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-cyan-50/40 to-blue-100/30 backdrop-blur-xl border border-cyan-200/40 shadow-lg transition-all duration-300 h-16">
                       <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/10 via-transparent to-blue-500/10 animate-gradient-x"></div>
-                      <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-cyan-500 to-blue-500 animate-pulse"></div>
-                      <div className="absolute top-2 right-2 w-2 h-2 bg-cyan-400 rounded-full animate-ping opacity-60"></div>
+                      <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-cyan-500 to-blue-500"></div>
                       <div className="relative p-4 flex justify-between items-center h-full">
                         <div className="flex items-center space-x-2">
-                          <div className="w-2 h-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 animate-pulse shadow-lg shadow-cyan-500/40 flex-shrink-0"></div>
+                          <div className="w-2 h-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 shadow-lg shadow-cyan-500/40 flex-shrink-0"></div>
                           <span className="text-sm font-bold bg-gradient-to-r from-cyan-700 to-cyan-600 bg-clip-text text-transparent break-words">
                             Vertragsvolumen Estimate
                           </span>
@@ -2029,18 +2014,12 @@ export default function Workflow() {
                     <div className="absolute inset-0 bg-gradient-to-r from-rose-400/15 via-red-500/10 to-rose-400/15 animate-gradient-x"></div>
                     <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/10 to-transparent group-hover:via-white/20 transition-all duration-500"></div>
                     
-                    {/* Enhanced floating particles */}
-                    <div className="absolute top-1 right-1 w-2 h-2 rounded-full bg-rose-500 animate-ping opacity-60"></div>
-                    <div className="absolute bottom-2 left-2 w-2 h-2 rounded-full bg-red-400 animate-bounce opacity-50"></div>
-                    <div className="absolute top-1/2 left-1/3 w-2 h-2 rounded-full bg-rose-300 animate-ping animation-delay-1000 opacity-40"></div>
+
                     
                     <div className="relative">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
-                          <div className="relative">
-                            <div className="w-2 h-2 rounded-full bg-gradient-to-r from-rose-500 to-red-600 animate-pulse shadow-xl shadow-rose-500/60"></div>
-                            <div className="absolute inset-0 w-2 h-2 rounded-full bg-rose-400 animate-ping opacity-30"></div>
-                          </div>
+                          <div className="w-2 h-2 rounded-full bg-gradient-to-r from-rose-500 to-red-600 shadow-xl shadow-rose-500/60"></div>
                           <span className="text-xs font-bold bg-gradient-to-r from-rose-800 to-red-700 bg-clip-text text-transparent">
                             Finanzierung: Projektkosten brutto
                           </span>
@@ -2147,11 +2126,10 @@ export default function Workflow() {
                   
                   {/* Column C - Finanzierung (Förderung) für Hotelbett */}
                   <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-blue-50/80 to-indigo-50/60 backdrop-blur-sm border border-blue-200/50 p-4 shadow-md h-24">
-                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-indigo-400 animate-pulse"></div>
-                    <div className="absolute top-2 right-2 w-2 h-2 bg-blue-400 rounded-full animate-ping opacity-50"></div>
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-indigo-400"></div>
                     <div className="flex flex-col space-y-2 h-full justify-between">
                       <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce flex-shrink-0"></div>
+                        <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></div>
                         <span className="text-xs font-bold text-blue-800 break-words">Zielpreis (in Roomnights) über Gesamtzeit</span>
                       </div>
                       <div className="text-2xl font-black text-blue-900">
@@ -2857,7 +2835,7 @@ export default function Workflow() {
                 >
                   {isSaving ? (
                     <>
-                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      <Loader2 className="mr-2 h-5 w-5" />
                       Saving...
                     </>
                   ) : (
@@ -2871,7 +2849,7 @@ export default function Workflow() {
                   onClick={nextStep}
                   className="group relative overflow-hidden px-8 py-4 bg-gradient-to-r from-emerald-600 via-cyan-600 to-blue-600 hover:from-emerald-700 hover:via-cyan-700 hover:to-blue-700 shadow-xl shadow-emerald-500/25 transition-all duration-500 rounded-2xl"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/20 to-blue-400/20 animate-pulse"></div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/20 to-blue-400/20"></div>
                   <span className="relative z-10 font-semibold text-white">PDF-Bericht erstellen</span>
                   <ArrowRight className="h-5 w-5 ml-2 text-white" />
                 </Button>
@@ -2886,12 +2864,12 @@ export default function Workflow() {
             <div className="bg-gradient-to-br from-slate-50 via-white to-slate-50 backdrop-blur-md border border-slate-200/40 rounded-3xl p-8 shadow-2xl">
               {/* Header Section */}
               <div className="mb-8 relative">
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-teal-500 to-green-500 rounded-full animate-gradient-x"></div>
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-teal-500 to-green-500 rounded-full"></div>
                 <div className="pt-6 text-center">
-                  <h1 className="text-4xl font-bold text-blue-600 mb-2 animate-fade-in">
+                  <h1 className="text-4xl font-bold text-blue-600 mb-2">
                     bebo convert - Währungsrechner
                   </h1>
-                  <p className="text-slate-600 text-lg animate-fade-in animation-delay-300">
+                  <p className="text-slate-600 text-lg">
                     Gutscheine werden als Übernachtung (DZ inkl. Frühstück) genutzt
                   </p>
                 </div>
@@ -3093,7 +3071,7 @@ export default function Workflow() {
                   >
                     {isSaving ? (
                       <>
-                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        <Loader2 className="mr-2 h-5 w-5" />
                         Saving...
                       </>
                     ) : (
@@ -3110,7 +3088,7 @@ export default function Workflow() {
                   >
                     {isExporting ? (
                       <>
-                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        <Loader2 className="mr-2 h-5 w-5" />
                         Wird exportiert...
                       </>
                     ) : (
@@ -3183,10 +3161,7 @@ export default function Workflow() {
                         <step.icon className="h-6 w-6" />
                       )}
                       
-                      {/* Step glow effect */}
-                      {currentStep === step.id && (
-                        <div className="absolute inset-0 rounded-full bg-blue-500 opacity-20 animate-ping" />
-                      )}
+
                     </div>
 
                     {/* Step Label */}
@@ -3285,7 +3260,7 @@ export default function Workflow() {
               >
                 {extractionLoading ? (
                   <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    <Loader2 className="h-4 w-4 mr-2" />
                     Extracting Data...
                   </>
                 ) : (

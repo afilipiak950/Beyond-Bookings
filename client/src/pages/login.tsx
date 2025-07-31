@@ -104,9 +104,9 @@ export default function Login() {
       <div className="relative z-10 min-h-screen flex items-center justify-center px-4">
         <div className="w-full max-w-md">
           {/* Logo section with animation */}
-          <div className="text-center mb-8 animate-fadeInUp">
+          <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-20 h-20 mb-6 bg-gradient-to-br from-primary to-secondary rounded-2xl shadow-2xl transform hover:scale-105 transition-all duration-300">
-              <Hotel className="h-10 w-10 text-white animate-pulse" />
+              <Hotel className="h-10 w-10 text-white" />
             </div>
             <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-2">
               Beyond Bookings
@@ -116,7 +116,7 @@ export default function Login() {
             </p>
             <div className="flex items-center justify-center gap-1 mt-2">
               {[...Array(5)].map((_, i) => (
-                <Star key={i} className="h-4 w-4 text-yellow-400 fill-current animate-twinkle" style={{animationDelay: `${i * 0.2}s`}} />
+                <Star key={i} className="h-4 w-4 text-yellow-400 fill-current" />
               ))}
             </div>
           </div>

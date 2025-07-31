@@ -1392,8 +1392,8 @@ export default function DocumentAnalysis() {
                                             // Check if it's currently being processed in comprehensive analysis
                                             if (comprehensiveAnalysisMutation.isPending) {
                                               return (
-                                                <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800 animate-pulse">
-                                                  <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
+                                                <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800">
+                                                  <RefreshCw className="h-3 w-3 mr-1" />
                                                   Umfassende Analyse...
                                                 </Badge>
                                               );
