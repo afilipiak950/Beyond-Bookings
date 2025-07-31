@@ -51,7 +51,7 @@ const navigation = [
     gradient: "from-emerald-500 to-teal-500",
   },
   {
-    name: "Analysis Results",
+    name: "Calculations",
     href: "/calculations",
     icon: Calculator,
     description: "View all document analyses",
