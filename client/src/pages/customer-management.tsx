@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Users, Building2, Search, Plus, Globe, MapPin, Star, Loader2, Trash2, MoreHorizontal, Send, Bot, User, Clock } from "lucide-react";
+import { Users, Building2, Search, Plus, Globe, MapPin, Star, Loader2, Trash2, MoreHorizontal, Send, Bot, User, Clock, Brain } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
 export default function CustomerManagement() {
@@ -477,6 +477,25 @@ export default function CustomerManagement() {
                           className="mt-1"
                         />
                       </div>
+                      <div>
+                        <Label htmlFor="editAveragePrice" className="flex items-center gap-2">
+                          Durchschnittlicher Zimmerpreis (€)
+                          {extractedData.averagePrice && (
+                            <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">
+                              Auto-recherchiert
+                            </span>
+                          )}
+                        </Label>
+                        <Input
+                          id="editAveragePrice"
+                          type="number"
+                          step="0.01"
+                          value={extractedData.averagePrice || ''}
+                          onChange={(e) => setExtractedData({...extractedData, averagePrice: parseFloat(e.target.value) || 0})}
+                          className="mt-1"
+                          placeholder="12-Monats-Durchschnitt automatisch recherchiert"
+                        />
+                      </div>
                       <div className="md:col-span-2">
                         <Label htmlFor="editAmenities">Amenities (comma-separated)</Label>
                         <Input
@@ -487,6 +506,30 @@ export default function CustomerManagement() {
                           placeholder="Wi-Fi, Spa, Restaurant, Bar, etc."
                         />
                       </div>
+                      
+                      {/* Price research information display */}
+                      {extractedData.priceResearch && (
+                        <div className="md:col-span-2 mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                          <div className="flex items-start gap-2">
+                            <Brain className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                            <div className="flex-1 text-xs">
+                              <p className="font-medium text-blue-800 mb-1">
+                                12-Monats-Preisrecherche ({extractedData.priceResearch.confidence} Zuverlässigkeit)
+                              </p>
+                              <p className="text-blue-700 mb-2">
+                                {extractedData.priceResearch.methodology}
+                              </p>
+                              {extractedData.priceResearch.priceRange && (
+                                <div className="flex flex-wrap gap-2 text-blue-600">
+                                  <span>Spanne: {extractedData.priceResearch.priceRange.low}€ - {extractedData.priceResearch.priceRange.high}€</span>
+                                  <span>•</span>
+                                  <span>Quellen: {extractedData.priceResearch.dataSource}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
