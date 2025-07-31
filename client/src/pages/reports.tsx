@@ -900,18 +900,18 @@ export default function Reports() {
                   {/* Excel Export */}
                   <Button 
                     variant="outline"
-                    className="h-24 flex-col space-y-2 border-green-200 hover:bg-green-50"
+                    className="h-24 flex-col space-y-2 border-green-200 bg-green-600 hover:bg-green-700"
                     onClick={() => exportExcelMutation.mutate()}
                     disabled={filteredCalculations.length === 0 || exportExcelMutation.isPending}
                   >
                     {exportExcelMutation.isPending ? (
-                      <RefreshCw className="h-6 w-6 animate-spin text-green-600" />
+                      <RefreshCw className="h-6 w-6 animate-spin text-white" />
                     ) : (
-                      <FileSpreadsheet className="h-6 w-6 text-green-600" />
+                      <FileSpreadsheet className="h-6 w-6 text-white" />
                     )}
                     <div className="text-center">
-                      <div className="font-semibold text-green-700">Excel Export</div>
-                      <div className="text-xs text-green-600">Raw data with formulas</div>
+                      <div className="font-semibold text-white">Excel Export</div>
+                      <div className="text-xs text-white">Raw data with formulas</div>
                     </div>
                   </Button>
                 </div>
