@@ -2,7 +2,14 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { requireAuth, hashPassword, comparePassword } from "./localAuth";
-import { insertPricingCalculationSchema, insertFeedbackSchema, insertOcrAnalysisSchema } from "@shared/schema";
+import { 
+  insertPricingCalculationSchema, 
+  insertFeedbackSchema, 
+  insertOcrAnalysisSchema,
+  createUserSchema,
+  updateUserProfileSchema,
+  type User
+} from "@shared/schema";
 import { documentProcessor } from "./documentProcessor";
 import { insightRestorer } from "./insightRestorer";
 import { z } from "zod";
@@ -44,7 +51,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
-        role: user.role
+        isActive: user.isActive
       });
     } catch (error) {
       console.error("Login error:", error);
@@ -67,7 +74,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         password: hashedPassword,
         firstName: firstName || null,
         lastName: lastName || null,
-        role: "user"
+        isActive: true
       });
 
       req.session.userId = user.id;
@@ -76,7 +83,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
-        role: user.role
+        isActive: user.isActive
       });
     } catch (error) {
       console.error("Register error:", error);
@@ -98,6 +105,161 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  app.post('/api/auth/logout', (req, res) => {
+    req.session.destroy((err) => {
+      if (err) {
+        console.error("Logout error:", err);
+        return res.status(500).json({ message: "Failed to logout" });
+      }
+      res.clearCookie('connect.sid');
+      res.json({ message: "Logged out successfully" });
+    });
+  });
+
+  // User Management API Routes - All users can access (no role management)
+  
+  // Get all users
+  app.get('/api/admin/users', requireAuth, async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      // Remove password field from response
+      const safeUsers = users.map(user => {
+        const { password, ...safeUser } = user;
+        return safeUser;
+      });
+      res.json(safeUsers);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  // Create new user (admin function)
+  app.post('/api/admin/users', requireAuth, async (req, res) => {
+    try {
+      const userData = createUserSchema.parse(req.body);
+      
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(userData.email);
+      if (existingUser) {
+        return res.status(400).json({ message: "User with this email already exists" });
+      }
+
+      // Hash password and create user
+      const hashedPassword = await hashPassword(userData.password);
+      const newUser = await storage.createUser({
+        ...userData,
+        password: hashedPassword,
+        isActive: true
+      });
+
+      // Return user without password
+      const { password, ...safeUser } = newUser;
+      res.status(201).json(safeUser);
+    } catch (error) {
+      console.error("Error creating user:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors 
+        });
+      }
+      res.status(500).json({ message: "Failed to create user" });
+    }
+  });
+
+  // Update user
+  app.put('/api/admin/users/:id', requireAuth, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const updateData = updateUserProfileSchema.parse(req.body);
+
+      // Handle password update if provided
+      let finalUpdateData = { ...updateData };
+      if (updateData.newPassword) {
+        finalUpdateData.password = await hashPassword(updateData.newPassword);
+        delete finalUpdateData.newPassword;
+        delete finalUpdateData.currentPassword;
+      }
+
+      const updatedUser = await storage.updateUser(userId, finalUpdateData);
+      
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Return user without password
+      const { password, ...safeUser } = updatedUser;
+      res.json(safeUser);
+    } catch (error) {
+      console.error("Error updating user:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors 
+        });
+      }
+      res.status(500).json({ message: "Failed to update user" });
+    }
+  });
+
+  // Delete user
+  app.delete('/api/admin/users/:id', requireAuth, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const currentUserId = (req as any).user.id;
+
+      // Prevent users from deleting themselves
+      if (userId === currentUserId) {
+        return res.status(400).json({ message: "Cannot delete your own account" });
+      }
+
+      const deleted = await storage.deleteUser(userId);
+      
+      if (!deleted) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json({ message: "User deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      res.status(500).json({ message: "Failed to delete user" });
+    }
+  });
+
+  // Toggle user active status
+  app.patch('/api/admin/users/:id/toggle-status', requireAuth, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const currentUserId = (req as any).user.id;
+
+      // Prevent users from deactivating themselves
+      if (userId === currentUserId) {
+        return res.status(400).json({ message: "Cannot change your own status" });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const updatedUser = await storage.updateUser(userId, { 
+        isActive: !user.isActive 
+      });
+
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Return user without password
+      const { password, ...safeUser } = updatedUser;
+      res.json(safeUser);
+    } catch (error) {
+      console.error("Error toggling user status:", error);
+      res.status(500).json({ message: "Failed to toggle user status" });
     }
   });
 
