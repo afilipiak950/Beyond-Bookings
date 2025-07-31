@@ -905,13 +905,13 @@ export default function Reports() {
                     disabled={filteredCalculations.length === 0 || exportExcelMutation.isPending}
                   >
                     {exportExcelMutation.isPending ? (
-                      <RefreshCw className="h-6 w-6 animate-spin text-green-600" />
+                      <RefreshCw className="h-6 w-6 animate-spin text-white" />
                     ) : (
-                      <FileSpreadsheet className="h-6 w-6 text-green-600" />
+                      <FileSpreadsheet className="h-6 w-6 text-white" />
                     )}
                     <div className="text-center">
-                      <div className="font-semibold text-green-700">Excel Export</div>
-                      <div className="text-xs text-green-600">Raw data with formulas</div>
+                      <div className="font-semibold text-white">Excel Export</div>
+                      <div className="text-xs text-white">Raw data with formulas</div>
                     </div>
                   </Button>
                 </div>
