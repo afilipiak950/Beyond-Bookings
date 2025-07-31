@@ -1923,13 +1923,13 @@ export default function Workflow() {
                             // Marge = Vertragsvolumen Estimate - Projektkosten brutto
                             const marge = vertragsvolumenEstimate - projectCosts;
                             
-                            // Calculate tax components
-                            const vorsteuerProdukt = (projectCosts * 1.19) - projectCosts; // 19% VAT on project costs
-                            const vorsteuerTripz = (vertragsvolumenEstimate * 0.19) * 0.23; // VAT on Tripz provision
-                            const nettoSteuerzahlung = vorsteuerProdukt - vorsteuerTripz; // Net tax payment
+                            // Calculate tax components correctly
+                            const vorsteuerProdukt = projectCosts * 0.19; // 19% VAT on project costs
+                            const vorsteuerTripz = (vertragsvolumenEstimate * 0.19) * 0.23; // VAT we can deduct from Tripz
+                            const nettoSteuerzahlung = vorsteuerProdukt - vorsteuerTripz; // Net tax we must pay
                             
-                            // Marge nach Steuern = Marge - Netto Steuerzahlung
-                            const margeNachSteuern = marge - nettoSteuerzahlung;
+                            // Marge nach Steuern = Marge - Net Tax Payment (only if positive)
+                            const margeNachSteuern = marge - Math.max(0, nettoSteuerzahlung);
                             
                             // Calculate percentage: (Marge nach Steuern / Vertragsvolumen Estimate) × 100
                             if (vertragsvolumenEstimate === 0 || projectCosts === 0 || currentActualPrice === 0) {
@@ -2281,9 +2281,9 @@ export default function Workflow() {
                           // Get actual input values from form
                           const projectCosts = workflowData.projectCosts || 0;
                           
-                          // Vorsteuer Produktkauf = (Projektkosten × 1.19) - Projektkosten
-                          // This calculates the 19% VAT amount
-                          const vorsteuerProdukt = (projectCosts * 1.19) - projectCosts;
+                          // Vorsteuer Produktkauf = Projektkosten × 0.19
+                          // This calculates the 19% VAT amount we pay
+                          const vorsteuerProdukt = projectCosts * 0.19;
                           
                           // Show 0 when no meaningful input data
                           if (projectCosts === 0) {
@@ -2354,8 +2354,8 @@ export default function Workflow() {
                           // Formula: Vertragsvolumen Estimate = (Project Costs / Hotel Voucher Value) × (Actual Price × 0.75) × 1.1
                           const vertragsvolumenEstimate = (projectCosts / voucherValue) * (currentActualPrice * 0.75) * 1.1;
                           
-                          // Vorsteuer Produktkauf = (Projektkosten × 1.19) - Projektkosten
-                          const vorsteuerProdukt = (projectCosts * 1.19) - projectCosts;
+                          // Vorsteuer Produktkauf = Projektkosten × 0.19
+                          const vorsteuerProdukt = projectCosts * 0.19;
                           
                           // Vorsteuer Tripz Provision = (Vertragsvolumen Estimate × 0.19) × 0.23
                           const vorsteuerTripz = (vertragsvolumenEstimate * 0.19) * 0.23;
@@ -2399,13 +2399,21 @@ export default function Workflow() {
                           // Marge = Vertragsvolumen Estimate - Projektkosten brutto
                           const marge = vertragsvolumenEstimate - projectCosts;
                           
-                          // Calculate margin percentage: (Marge / Vertragsvolumen Estimate) × 100
+                          // Calculate tax components correctly
+                          const vorsteuerProdukt = projectCosts * 0.19; // 19% VAT on project costs
+                          const vorsteuerTripz = (vertragsvolumenEstimate * 0.19) * 0.23; // VAT we can deduct from Tripz
+                          const nettoSteuerzahlung = vorsteuerProdukt - vorsteuerTripz; // Net tax we must pay
+                          
+                          // Marge nach Steuern = Marge - Net Tax Payment (only if positive)
+                          const margeNachSteuern = marge - Math.max(0, nettoSteuerzahlung);
+                          
+                          // Calculate percentage: (Marge nach Steuern / Vertragsvolumen Estimate) × 100
                           if (vertragsvolumenEstimate === 0 || projectCosts === 0 || currentActualPrice === 0) {
                             return '-';
                           }
                           
-                          const marginPercentage = (marge / vertragsvolumenEstimate) * 100;
-                          return `${marginPercentage.toFixed(1)}%`;
+                          const margeNachSteuernPercentage = (margeNachSteuern / vertragsvolumenEstimate) * 100;
+                          return `${margeNachSteuernPercentage.toFixed(1)}%`;
                         })()}
                       </div>
                     </div>
