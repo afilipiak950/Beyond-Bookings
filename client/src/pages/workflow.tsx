@@ -565,6 +565,13 @@ export default function Workflow() {
   const [editFeedback, setEditFeedback] = useState("");
   const [tempPrice, setTempPrice] = useState("");
 
+  // Synchronize actualPrice with workflowData.averagePrice
+  useEffect(() => {
+    if (workflowData.averagePrice !== actualPrice) {
+      setActualPrice(workflowData.averagePrice || 0);
+    }
+  }, [workflowData.averagePrice]);
+
   // Hotel Voucher Value State
   const [hotelVoucherValue, setHotelVoucherValue] = useState(0);
   const [isVoucherManualEdit, setIsVoucherManualEdit] = useState(false);
@@ -633,25 +640,30 @@ export default function Workflow() {
         if (response.ok) {
           const data = await response.json();
           
-          // Update workflow data with researched price
+          // Always store extracted data for UI display
+          setExtractedData(data);
+          
+          // Update workflow data with researched price if available
           if (data.averagePrice && data.averagePrice > 0) {
-            // Update workflow data first
             setWorkflowData(prev => ({
               ...prev,
               averagePrice: data.averagePrice
             }));
-            
-            // Store the extracted data for UI display
-            setExtractedData(data);
             
             toast({
               title: "Price research completed!",
               description: `Automated research found: ${data.averagePrice}€ (${data.priceResearch?.confidence || 'medium'} confidence)`,
             });
           } else {
+            // Even if no price found, ensure the field can be used for manual input
+            setWorkflowData(prev => ({
+              ...prev,
+              averagePrice: 0 // Set to 0 so manual input works properly
+            }));
+            
             toast({
-              title: "Hotel selected",
-              description: `Selected ${hotel.name} - manual price input needed`,
+              title: "Price research completed",
+              description: `${hotel.name} selected - no pricing data found, please enter manually`,
             });
           }
         }
@@ -1358,13 +1370,16 @@ export default function Workflow() {
                       className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                         extractedData?.averagePrice ? 'bg-green-50 border-green-300' : ''
                       }`}
-                      value={workflowData.averagePrice === 0 ? '' : workflowData.averagePrice}
+                      value={workflowData.averagePrice === 0 || !workflowData.averagePrice ? '' : workflowData.averagePrice}
                       onFocus={(e) => {
-                        if (workflowData.averagePrice === 0) {
+                        if (!workflowData.averagePrice || workflowData.averagePrice === 0) {
                           e.target.value = '';
                         }
                       }}
-                      onChange={(e) => updateWorkflowData({ averagePrice: parseFloat(e.target.value) || 0 })}
+                      onChange={(e) => {
+                        const value = parseFloat(e.target.value) || 0;
+                        updateWorkflowData({ averagePrice: value });
+                      }}
                     />
                     {extractedData?.averagePrice && (
                       <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
