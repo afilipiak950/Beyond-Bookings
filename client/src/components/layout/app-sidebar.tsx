@@ -208,10 +208,7 @@ export default function AppSidebar({ className }: SidebarProps) {
                   </div>
                 )}
 
-                {/* Active Indicator */}
-                {isActive && (
-                  <div className="absolute right-2 w-2 h-2 bg-gradient-to-r from-blue-500 to-green-500 rounded-full animate-pulse" />
-                )}
+
 
                 {/* Hover Shimmer Effect */}
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -239,10 +236,9 @@ export default function AppSidebar({ className }: SidebarProps) {
                   bebo convert User
                 </p>
                 <div className="flex items-center space-x-1.5">
-                  <Badge className="text-xs bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0 px-1 py-0.5">
-                    Premium
+                  <Badge className="text-xs bg-gradient-to-r from-purple-500 to-blue-500 text-white border-0 px-1 py-0.5">
+                    AI Powered
                   </Badge>
-                  <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
                 </div>
               </div>
             </div>
