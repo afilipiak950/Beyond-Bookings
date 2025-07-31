@@ -2513,14 +2513,14 @@ export default function Workflow() {
             {/* Main Comparison Grid */}
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
               
-              {/* Left Card - Kostenvorteil */}
+              {/* Left Card - Kostenvorteil - Primary Blue (#1C5D97) */}
               <div className="bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden">
-                <div className="bg-gradient-to-r from-blue-50 to-blue-100 px-6 py-4 border-b border-blue-200">
+                <div className="bg-gradient-to-r from-[#1C5D97]/10 to-[#1C5D97]/20 px-6 py-4 border-b border-[#1C5D97]/30">
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center shadow-md">
+                    <div className="w-10 h-10 bg-gradient-to-br from-[#1C5D97] to-[#1C5D97]/80 rounded-lg flex items-center justify-center shadow-md">
                       <TrendingDown className="h-5 w-5 text-white" />
                     </div>
-                    <h3 className="text-xl font-bold text-blue-800">Kostenvorteil</h3>
+                    <h3 className="text-xl font-bold text-[#1C5D97]">Kostenvorteil</h3>
                   </div>
                 </div>
                 
@@ -2593,8 +2593,8 @@ export default function Workflow() {
                   </div>
 
                   {/* Main Advantage Display */}
-                  <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg p-6 text-center shadow-lg">
-                    <div className="text-blue-100 text-sm mb-2">Kostenvorteil gesamt</div>
+                  <div className="bg-gradient-to-br from-[#1C5D97] to-[#1C5D97]/80 rounded-lg p-6 text-center shadow-lg">
+                    <div className="text-[#1C5D97]/20 text-sm mb-2">Kostenvorteil gesamt</div>
                     <div className="text-2xl font-bold text-white mb-2">
                       {(() => {
                         const projectCosts = workflowData.projectCosts || 20000;
@@ -2613,21 +2613,21 @@ export default function Workflow() {
                         return advantage.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' ' + getCurrencySymbol(workflowData.currency);
                       })()}
                     </div>
-                    <div className="text-blue-200 text-sm">
+                    <div className="text-white/70 text-sm">
                       Ersparnis gegenüber Selbstbeschaffung
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Middle Card - Selbstbeschaffung */}
+              {/* Middle Card - Selbstbeschaffung - Light Blue (#5E98BD) */}
               <div className="bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden">
-                <div className="bg-gradient-to-r from-blue-50 to-blue-100 px-6 py-4 border-b border-blue-200">
+                <div className="bg-gradient-to-r from-[#5E98BD]/10 to-[#5E98BD]/20 px-6 py-4 border-b border-[#5E98BD]/30">
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center shadow-md">
+                    <div className="w-10 h-10 bg-gradient-to-br from-[#5E98BD] to-[#5E98BD]/80 rounded-lg flex items-center justify-center shadow-md">
                       <Calculator className="h-5 w-5 text-white" />
                     </div>
-                    <h3 className="text-xl font-bold text-blue-800">Selbstbeschaffung</h3>
+                    <h3 className="text-xl font-bold text-[#5E98BD]">Selbstbeschaffung</h3>
                   </div>
                 </div>
 
@@ -2684,8 +2684,8 @@ export default function Workflow() {
                   </div>
 
                   {/* Total Costs */}
-                  <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg p-6 text-center shadow-lg">
-                    <div className="text-blue-100 text-sm mb-2">Kosten brutto</div>
+                  <div className="bg-gradient-to-br from-[#5E98BD] to-[#5E98BD]/80 rounded-lg p-6 text-center shadow-lg">
+                    <div className="text-white/70 text-sm mb-2">Kosten brutto</div>
                     <div className="text-2xl font-bold text-white mb-2">
                       {(() => {
                         const projectCosts = workflowData.projectCosts || 20000;
@@ -2696,14 +2696,14 @@ export default function Workflow() {
                 </div>
               </div>
 
-              {/* Right Card - bebo convert */}
+              {/* Right Card - bebo convert - Teal Green (#36B197) */}
               <div className="bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden">
-                <div className="bg-gradient-to-r from-blue-50 to-blue-100 px-6 py-4 border-b border-blue-200">
+                <div className="bg-gradient-to-r from-[#36B197]/10 to-[#36B197]/20 px-6 py-4 border-b border-[#36B197]/30">
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center shadow-md">
+                    <div className="w-10 h-10 bg-gradient-to-br from-[#36B197] to-[#36B197]/80 rounded-lg flex items-center justify-center shadow-md">
                       <Star className="h-5 w-5 text-white" />
                     </div>
-                    <h3 className="text-xl font-bold text-blue-800">bebo convert</h3>
+                    <h3 className="text-xl font-bold text-[#36B197]">bebo convert</h3>
                   </div>
                 </div>
                 
@@ -2776,9 +2776,9 @@ export default function Workflow() {
 
                   {/* Cost Breakdown */}
                   <div className="space-y-3">
-                    <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
-                      <span className="text-sm font-medium text-blue-800">Reale Kosten pro Gutschein</span>
-                      <span className="text-lg font-semibold text-blue-900">
+                    <div className="flex justify-between items-center p-3 bg-[#36B197]/10 rounded-lg">
+                      <span className="text-sm font-medium text-[#36B197]">Reale Kosten pro Gutschein</span>
+                      <span className="text-lg font-semibold text-[#36B197]">
                         {convertFromEUR(editableCosts.realCostPerVoucher, workflowData.currency, exchangeRates).toFixed(2)}{getCurrencySymbol(workflowData.currency)} × {(() => {
                           const projectCosts = workflowData.projectCosts || 20000;
                           const stars = workflowData.stars || 3;
@@ -2802,9 +2802,9 @@ export default function Workflow() {
                       </div>
                     </div>
 
-                    <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
-                      <span className="text-sm font-medium text-green-700">Steuervorteil</span>
-                      <span className="text-lg font-semibold text-green-900">
+                    <div className="flex justify-between items-center p-3 bg-[#88E7D3]/20 rounded-lg">
+                      <span className="text-sm font-medium text-[#36B197]">Steuervorteil</span>
+                      <span className="text-lg font-semibold text-[#36B197]">
                         {(() => {
                           const projectCosts = workflowData.projectCosts || 20000;
                           const nettoKosten = projectCosts / (1 + editableCosts.vatRate19/100);
@@ -2816,8 +2816,8 @@ export default function Workflow() {
                   </div>
 
                   {/* Total Costs */}
-                  <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg p-6 text-center shadow-lg">
-                    <div className="text-blue-100 text-sm mb-2">Gesamtkosten</div>
+                  <div className="bg-gradient-to-br from-[#36B197] to-[#36B197]/80 rounded-lg p-6 text-center shadow-lg">
+                    <div className="text-white/70 text-sm mb-2">Gesamtkosten</div>
                     <div className="text-2xl font-bold text-white mb-2">
                       {(() => {
                         const projectCosts = workflowData.projectCosts || 20000;
