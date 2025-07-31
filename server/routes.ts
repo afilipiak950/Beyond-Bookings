@@ -995,6 +995,10 @@ Research authentic review data from actual platforms. If exact review counts una
 
       console.log('🤖 Sending extraction request to OpenAI...');
       
+      if (!process.env.OPENAI_API_KEY) {
+        throw new Error('OpenAI API key not configured');
+      }
+      
       const completion = await openai.chat.completions.create({
         model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
         messages: [
@@ -1019,8 +1023,15 @@ Research authentic review data from actual platforms. If exact review counts una
         throw new Error('No response from OpenAI');
       }
 
-      const hotelData = JSON.parse(response);
-      console.log('✅ Extracted hotel data with reviews:', hotelData);
+      let hotelData;
+      try {
+        hotelData = JSON.parse(response);
+        console.log('✅ Extracted hotel data with reviews:', hotelData);
+      } catch (parseError) {
+        console.error('❌ JSON parsing failed:', parseError);
+        console.error('Raw response that failed to parse:', response);
+        throw new Error(`Failed to parse OpenAI response: ${parseError.message}`);
+      }
 
       // Structure the final response with review data
       const extractedData = {
@@ -1046,11 +1057,12 @@ Research authentic review data from actual platforms. If exact review counts una
       console.log('🏁 Final hotel data with comprehensive reviews:', extractedData);
       res.json(extractedData);
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Hotel extraction with reviews error:', error);
       res.status(500).json({ 
         message: "Failed to extract hotel data with reviews", 
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error?.message || 'Unknown error',
+        details: error?.stack || 'No stack trace available'
       });
     }
   });
