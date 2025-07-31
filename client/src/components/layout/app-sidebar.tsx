@@ -74,13 +74,7 @@ const navigation = [
     description: "Smart document management",
     gradient: "from-green-500 to-emerald-500",
   },
-  {
-    name: "User Management",
-    href: "/user-management",
-    icon: Users,
-    description: "Manage system users",
-    gradient: "from-violet-500 to-purple-500",
-  },
+
   {
     name: "Intelligence Reports",
     href: "/reports",
@@ -89,10 +83,10 @@ const navigation = [
     gradient: "from-orange-500 to-red-500",
   },
   {
-    name: "AI Settings",
+    name: "Settings & Users",
     href: "/settings",
     icon: Settings,
-    description: "Document processing optimization",
+    description: "System settings & user management",
     gradient: "from-slate-500 to-gray-500",
   },
 ];
