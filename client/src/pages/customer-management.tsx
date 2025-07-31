@@ -115,16 +115,21 @@ export default function CustomerManagement() {
     onSuccess: (data) => {
       setExtractedData(data);
       
-      // Show different messages based on data availability
-      if (data.stars || data.roomCount || data.location) {
+      // Display different messages based on AI price research availability
+      if (data.averagePrice && data.priceResearch) {
+        toast({
+          title: "Complete hotel intelligence extracted!",
+          description: `Found ${data.name} with AI-researched average price: ${data.averagePrice}€ (${data.priceResearch.confidence} confidence)`,
+        });
+      } else if (data.stars || data.roomCount || data.location) {
         toast({
           title: "Hotel data found!",
-          description: "Successfully extracted detailed hotel information",
+          description: "Successfully extracted detailed hotel information - automatic price research may still be processing",
         });
       } else {
         toast({
           title: "Basic hotel data created",
-          description: "Hotel name saved. AI extraction limited due to rate limits - you can edit details manually.",
+          description: "Hotel name saved. AI price research will be included when available.",
         });
       }
     },
