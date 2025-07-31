@@ -1931,11 +1931,13 @@ export default function Workflow() {
                             // Marge nach Steuern = Marge - Netto Steuerzahlung
                             const margeNachSteuern = marge - nettoSteuerzahlung;
                             
+                            // Calculate percentage: (Marge nach Steuern / Vertragsvolumen Estimate) × 100
                             if (vertragsvolumenEstimate === 0 || projectCosts === 0 || currentActualPrice === 0) {
-                              return '0.00 ' + getCurrencySymbol(workflowData.currency);
+                              return '0.0%';
                             }
                             
-                            return margeNachSteuern.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' ' + getCurrencySymbol(workflowData.currency);
+                            const margeNachSteuernPercentage = (margeNachSteuern / vertragsvolumenEstimate) * 100;
+                            return `${margeNachSteuernPercentage.toFixed(1)}%`;
                           })()}
                         </span>
                       </div>
