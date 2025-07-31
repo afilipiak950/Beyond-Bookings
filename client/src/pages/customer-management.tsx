@@ -106,10 +106,10 @@ export default function CustomerManagement() {
     retry: false,
   });
 
-  // Mutation for comprehensive hotel data extraction with reviews
+  // Mutation for authentic hotel data extraction with real search URLs
   const scrapeHotelMutation = useMutation({
     mutationFn: async (data: { name: string; url?: string }) => {
-      const response = await apiRequest('/api/hotels/extract-with-reviews', 'POST', data);
+      const response = await apiRequest('/api/hotels/extract-authentic', 'POST', data);
       return await response.json();
     },
     onSuccess: (data) => {
@@ -578,16 +578,22 @@ export default function CustomerManagement() {
                                   )}
                                 </div>
                                 <div className="flex items-center gap-2 mb-1">
-                                  <span className="text-sm font-medium">{extractedData.bookingReviews.rating}/10</span>
-                                  <div className="flex">
-                                    {Array.from({length: 5}, (_, i) => (
-                                      <Star 
-                                        key={i} 
-                                        className={`h-3 w-3 ${i < Math.round(extractedData.bookingReviews.rating / 2) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
-                                      />
-                                    ))}
-                                  </div>
-                                  <span className="text-xs text-gray-600">({extractedData.bookingReviews.reviewCount} reviews)</span>
+                                  {extractedData.bookingReviews.rating ? (
+                                    <>
+                                      <span className="text-sm font-medium">{extractedData.bookingReviews.rating}/10</span>
+                                      <div className="flex">
+                                        {Array.from({length: 5}, (_, i) => (
+                                          <Star 
+                                            key={i} 
+                                            className={`h-3 w-3 ${i < Math.round(extractedData.bookingReviews.rating / 2) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
+                                          />
+                                        ))}
+                                      </div>
+                                      <span className="text-xs text-gray-600">({extractedData.bookingReviews.reviewCount} reviews)</span>
+                                    </>
+                                  ) : (
+                                    <span className="text-sm text-blue-600 font-medium">Click to view authentic ratings & reviews</span>
+                                  )}
                                 </div>
                                 <p className="text-xs text-gray-700">{extractedData.bookingReviews.summary}</p>
                               </div>
@@ -613,16 +619,22 @@ export default function CustomerManagement() {
                                   )}
                                 </div>
                                 <div className="flex items-center gap-2 mb-1">
-                                  <span className="text-sm font-medium">{extractedData.googleReviews.rating}/5</span>
-                                  <div className="flex">
-                                    {Array.from({length: 5}, (_, i) => (
-                                      <Star 
-                                        key={i} 
-                                        className={`h-3 w-3 ${i < Math.round(extractedData.googleReviews.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
-                                      />
-                                    ))}
-                                  </div>
-                                  <span className="text-xs text-gray-600">({extractedData.googleReviews.reviewCount} reviews)</span>
+                                  {extractedData.googleReviews.rating ? (
+                                    <>
+                                      <span className="text-sm font-medium">{extractedData.googleReviews.rating}/5</span>
+                                      <div className="flex">
+                                        {Array.from({length: 5}, (_, i) => (
+                                          <Star 
+                                            key={i} 
+                                            className={`h-3 w-3 ${i < Math.round(extractedData.googleReviews.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
+                                          />
+                                        ))}
+                                      </div>
+                                      <span className="text-xs text-gray-600">({extractedData.googleReviews.reviewCount} reviews)</span>
+                                    </>
+                                  ) : (
+                                    <span className="text-sm text-green-600 font-medium">Click to view authentic ratings & reviews</span>
+                                  )}
                                 </div>
                                 <p className="text-xs text-gray-700">{extractedData.googleReviews.summary}</p>
                               </div>
@@ -648,16 +660,22 @@ export default function CustomerManagement() {
                                   )}
                                 </div>
                                 <div className="flex items-center gap-2 mb-1">
-                                  <span className="text-sm font-medium">{extractedData.holidayCheckReviews.rating}/6</span>
-                                  <div className="flex">
-                                    {Array.from({length: 6}, (_, i) => (
-                                      <Star 
-                                        key={i} 
-                                        className={`h-3 w-3 ${i < Math.round(extractedData.holidayCheckReviews.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
-                                      />
-                                    ))}
-                                  </div>
-                                  <span className="text-xs text-gray-600">({extractedData.holidayCheckReviews.reviewCount} reviews)</span>
+                                  {extractedData.holidayCheckReviews.rating ? (
+                                    <>
+                                      <span className="text-sm font-medium">{extractedData.holidayCheckReviews.rating}/6</span>
+                                      <div className="flex">
+                                        {Array.from({length: 6}, (_, i) => (
+                                          <Star 
+                                            key={i} 
+                                            className={`h-3 w-3 ${i < Math.round(extractedData.holidayCheckReviews.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
+                                          />
+                                        ))}
+                                      </div>
+                                      <span className="text-xs text-gray-600">({extractedData.holidayCheckReviews.reviewCount} reviews)</span>
+                                    </>
+                                  ) : (
+                                    <span className="text-sm text-orange-600 font-medium">Click to view authentic ratings & reviews</span>
+                                  )}
                                 </div>
                                 <p className="text-xs text-gray-700">{extractedData.holidayCheckReviews.summary}</p>
                               </div>
@@ -683,16 +701,22 @@ export default function CustomerManagement() {
                                   )}
                                 </div>
                                 <div className="flex items-center gap-2 mb-1">
-                                  <span className="text-sm font-medium">{extractedData.tripadvisorReviews.rating}/5</span>
-                                  <div className="flex">
-                                    {Array.from({length: 5}, (_, i) => (
-                                      <Star 
-                                        key={i} 
-                                        className={`h-3 w-3 ${i < Math.round(extractedData.tripadvisorReviews.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
-                                      />
-                                    ))}
-                                  </div>
-                                  <span className="text-xs text-gray-600">({extractedData.tripadvisorReviews.reviewCount} reviews)</span>
+                                  {extractedData.tripadvisorReviews.rating ? (
+                                    <>
+                                      <span className="text-sm font-medium">{extractedData.tripadvisorReviews.rating}/5</span>
+                                      <div className="flex">
+                                        {Array.from({length: 5}, (_, i) => (
+                                          <Star 
+                                            key={i} 
+                                            className={`h-3 w-3 ${i < Math.round(extractedData.tripadvisorReviews.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
+                                          />
+                                        ))}
+                                      </div>
+                                      <span className="text-xs text-gray-600">({extractedData.tripadvisorReviews.reviewCount} reviews)</span>
+                                    </>
+                                  ) : (
+                                    <span className="text-sm text-red-600 font-medium">Click to view authentic ratings & reviews</span>
+                                  )}
                                 </div>
                                 <p className="text-xs text-gray-700">{extractedData.tripadvisorReviews.summary}</p>
                               </div>

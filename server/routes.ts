@@ -1067,6 +1067,109 @@ Research authentic review data from actual platforms. If exact review counts una
     }
   });
 
+  // NEW: Hotel extraction with AUTHENTIC review platform search URLs
+  app.post('/api/hotels/extract-authentic', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const { name, url } = req.body;
+      
+      if (!name?.trim()) {
+        return res.status(400).json({ message: "Hotel name is required" });
+      }
+
+      console.log(`🏨 Starting AUTHENTIC hotel extraction for: ${name}`);
+
+      const { default: OpenAI } = await import('openai');
+      const openai = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY
+      });
+
+      // Extract basic hotel data only (no fake URLs)
+      const basicDataPrompt = `Extract verifiable information for "${name}" hotel${url ? ` (website: ${url})` : ''}.
+
+Provide ONLY factual data you can verify:
+{
+  "name": "Exact hotel name",
+  "location": "Full address if available",
+  "city": "City name", 
+  "country": "Country",
+  "stars": number_or_null,
+  "roomCount": number_or_null,
+  "url": "Official website if available",
+  "category": "Hotel type",
+  "amenities": ["verified amenities"],
+  "averagePrice": number_in_EUR_or_null
+}`;
+
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          {
+            role: "system",
+            content: "Extract only verifiable hotel information. Do not generate fake URLs or data."
+          },
+          {
+            role: "user", 
+            content: basicDataPrompt
+          }
+        ],
+        max_tokens: 600,
+        temperature: 0.1,
+        response_format: { type: "json_object" }
+      });
+
+      const response = completion.choices[0].message.content;
+      if (!response) {
+        throw new Error('No response from OpenAI');
+      }
+
+      const basicData = JSON.parse(response);
+      console.log('✅ Basic hotel data extracted:', basicData);
+
+      // Generate REAL search URLs (not fake hotel pages)
+      const hotelSearchTerm = `${basicData.name} ${basicData.city || ''}`.trim();
+      
+      const extractedData = {
+        ...basicData,
+        bookingReviews: {
+          url: `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(hotelSearchTerm)}`,
+          rating: null,
+          reviewCount: null,
+          summary: "Click to search for this hotel on Booking.com and view authentic guest reviews."
+        },
+        googleReviews: {
+          url: `https://www.google.com/maps/search/${encodeURIComponent(hotelSearchTerm)}`,
+          rating: null,
+          reviewCount: null,
+          summary: "Click to find this hotel on Google Maps and view real guest reviews and photos."
+        },
+        holidayCheckReviews: {
+          url: `https://www.holidaycheck.de/suche?q=${encodeURIComponent(hotelSearchTerm)}`,
+          rating: null,
+          reviewCount: null,
+          summary: "Click to search for this hotel on HolidayCheck and read authentic traveler experiences."
+        },
+        tripadvisorReviews: {
+          url: `https://www.tripadvisor.com/Search?q=${encodeURIComponent(hotelSearchTerm)}`,
+          rating: null,
+          reviewCount: null,
+          summary: "Click to search for this hotel on TripAdvisor and access real traveler reviews and tips."
+        },
+        reviewSummary: `Search links provided for ${basicData.name}. Click each "View Reviews →" link to access authentic guest reviews on the respective platforms.`,
+        lastReviewUpdate: new Date().toISOString()
+      };
+
+      console.log('🔗 Generated authentic search URLs for:', basicData.name);
+      res.json(extractedData);
+      
+    } catch (error: any) {
+      console.error('Authentic extraction error:', error);
+      res.status(500).json({ 
+        message: "Failed to extract hotel data", 
+        error: error?.message || 'Unknown error'
+      });
+    }
+  });
+
   // Session refresh endpoint to keep sessions alive
   app.post('/api/auth/refresh', requireAuth, async (req: any, res) => {
     try {
