@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { hotels } from "@/../../shared/schema";
 import { useLocation } from "wouter";
 import AppLayout from "@/components/layout/app-layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Users, Building2, Search, Plus, Globe, MapPin, Star, Loader2, Trash2, MoreHorizontal, Send, Bot, User, Clock, Brain, MessageSquare } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
@@ -101,7 +103,8 @@ export default function CustomerManagement() {
     return <div className="space-y-1">{formattedElements}</div>;
   };
 
-  const { data: hotels, isLoading: hotelsLoading } = useQuery({
+  type Hotel = typeof hotels.$inferSelect;
+  const { data: hotels = [], isLoading: hotelsLoading } = useQuery<Hotel[]>({
     queryKey: ["/api/hotels"],
     retry: false,
   });
@@ -429,14 +432,22 @@ export default function CustomerManagement() {
                   </Button>
                 </div>
 
-                {/* Extracted Data Display - Editable */}
+                {/* Extracted Data Display - Tabbed Interface */}
                 {extractedData && (
                   <div className="mt-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200">
-                    <h3 className="font-semibold text-green-800 mb-3 flex items-center">
+                    <h3 className="font-semibold text-green-800 mb-4 flex items-center">
                       <Star className="h-4 w-4 mr-2" />
                       Hotel Information (Editable)
                     </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    
+                    <Tabs defaultValue="hotel-info" className="w-full">
+                      <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="hotel-info">Hotel Details</TabsTrigger>
+                        <TabsTrigger value="reviews">Reviews & Ratings</TabsTrigger>
+                      </TabsList>
+                      
+                      <TabsContent value="hotel-info" className="mt-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="editName">Hotel Name</Label>
                         <Input
@@ -548,9 +559,12 @@ export default function CustomerManagement() {
                           </div>
                         </div>
                       )}
-
-                      {/* Comprehensive Review Data Section */}
-                      {(extractedData.bookingReviews || extractedData.googleReviews || extractedData.holidayCheckReviews || extractedData.tripadvisorReviews) && (
+                        </div>
+                      </TabsContent>
+                      
+                      <TabsContent value="reviews" className="mt-4">
+                        {/* Comprehensive Review Data Section */}
+                        {(extractedData.bookingReviews || extractedData.googleReviews || extractedData.holidayCheckReviews || extractedData.tripadvisorReviews) && (
                         <div className="md:col-span-2 mt-6">
                           <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
                             <MessageSquare className="h-4 w-4 mr-2 text-blue-600" />
@@ -739,8 +753,9 @@ export default function CustomerManagement() {
                             </div>
                           )}
                         </div>
-                      )}
-                    </div>
+                        )}
+                      </TabsContent>
+                    </Tabs>
                   </div>
                 )}
 
@@ -827,7 +842,7 @@ export default function CustomerManagement() {
               </div>
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                {hotels.map((hotel: any) => (
+                {hotels.map((hotel: Hotel) => (
                   <Card key={hotel.id} className="hover:shadow-md transition-shadow">
                     <CardHeader className="pb-3">
                       <div className="flex items-start justify-between">
