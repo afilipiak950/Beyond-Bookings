@@ -883,13 +883,15 @@ export default function Workflow() {
           });
         }
       } else {
-        throw new Error('Failed to extract hotel data');
+        // Parse error response to get specific error message
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || errorData.message || 'Failed to extract hotel data');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error extracting hotel data:', error);
       toast({
-        title: "Error",
-        description: "Failed to extract hotel data. Please try again.",
+        title: "Hotel Not Found",
+        description: error.message || "Failed to extract hotel data. Please try a more specific hotel name with location (e.g., 'Hotel Adlon Berlin', 'Marriott Frankfurt').",
         variant: "destructive",
       });
     } finally {

@@ -151,8 +151,8 @@ export default function CustomerManagement() {
     onError: (error: any) => {
       console.error('Hotel scraping error:', error);
       toast({
-        title: "Extraction failed",
-        description: "Could not extract hotel data. Please check the hotel name and try again.",
+        title: "Hotel Not Found",
+        description: error.message || "Could not find hotel. Please try a more specific hotel name with location (e.g., 'Hotel Adlon Berlin', 'Marriott Frankfurt').",
         variant: "destructive",
       });
     },
@@ -419,7 +419,7 @@ export default function CustomerManagement() {
                   >
                     {extractionLoading ? (
                       <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        <Loader2 className="h-4 w-4 mr-2" />
                         Extracting Data...
                       </>
                     ) : (
@@ -778,7 +778,7 @@ export default function CustomerManagement() {
                   >
                     {createHotelMutation.isPending ? (
                       <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        <Loader2 className="h-4 w-4 mr-2" />
                         Adding Hotel...
                       </>
                     ) : (
