@@ -236,17 +236,25 @@ export default function Profile() {
   // Export account data mutation
   const exportDataMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest("/api/auth/export-data", "GET");
-      return response;
+      const response = await fetch("/api/export/all-data", {
+        method: "GET",
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to export data");
+      }
+
+      const blob = await response.blob();
+      return blob;
     },
-    onSuccess: (data) => {
-      // Create and download the JSON file
-      const jsonData = JSON.stringify(data, null, 2);
-      const blob = new Blob([jsonData], { type: 'application/json' });
+    onSuccess: (blob) => {
+      // Create and download the ZIP file
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `account-data-${new Date().toISOString().split('T')[0]}.json`;
+      const timestamp = new Date().toISOString().split('T')[0];
+      link.download = `bebo-convert-complete-export-${timestamp}.zip`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -254,7 +262,7 @@ export default function Profile() {
       
       toast({
         title: "Export Complete",
-        description: "Your account data has been downloaded successfully.",
+        description: "Your account data has been exported as individual .xls files in a .zip archive.",
       });
     },
     onError: (error: any) => {
@@ -682,7 +690,7 @@ export default function Profile() {
                         >
                           {exportDataMutation.isPending ? (
                             <>
-                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              <Loader2 className="h-4 w-4 mr-2" />
                               Exporting...
                             </>
                           ) : (
@@ -709,7 +717,7 @@ export default function Profile() {
                             >
                               {deleteAccountMutation.isPending ? (
                                 <>
-                                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                  <Loader2 className="h-4 w-4 mr-2" />
                                   Deleting...
                                 </>
                               ) : (

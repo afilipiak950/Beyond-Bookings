@@ -2336,9 +2336,143 @@ Only return hotel data if you can verify this is a real, existing hotel. Do not 
           XLSX.writeFile(hotelWorkbook, hotelPath);
           
           console.log(`Created detailed report for ${hotelName}: ${(hotelCalcs as any[]).length} calculations`);
+          
+          // Create individual calculation files within hotel folder
+          const individualCalcsDir = path.join(hotelDir, 'Individual_Calculations');
+          await fs.mkdir(individualCalcsDir, { recursive: true });
+          
+          for (let i = 0; i < (hotelCalcs as any[]).length; i++) {
+            const calc = (hotelCalcs as any[])[i];
+            const calcWorkbook = XLSX.utils.book_new();
+            
+            // Main calculation data
+            const calcData = [
+              { 'Property': 'Calculation ID', 'Value': calc.id },
+              { 'Property': 'Hotel Name', 'Value': calc.hotelName || '' },
+              { 'Property': 'Star Rating', 'Value': calc.stars || '' },
+              { 'Property': 'Room Count', 'Value': calc.roomCount || '' },
+              { 'Property': 'Occupancy Rate (%)', 'Value': calc.occupancyRate || '' },
+              { 'Property': '', 'Value': '' },
+              { 'Property': 'PRICING DETAILS', 'Value': '' },
+              { 'Property': 'Average Price (€)', 'Value': calc.averagePrice || '' },
+              { 'Property': 'Voucher Price (€)', 'Value': calc.voucherPrice || '' },
+              { 'Property': 'Operational Costs (€)', 'Value': calc.operationalCosts || '' },
+              { 'Property': '', 'Value': '' },
+              { 'Property': 'TAX CALCULATIONS', 'Value': '' },
+              { 'Property': 'VAT Rate (%)', 'Value': calc.vatRate || '' },
+              { 'Property': 'VAT Amount (€)', 'Value': calc.vatAmount || '' },
+              { 'Property': '', 'Value': '' },
+              { 'Property': 'FINANCIAL SUMMARY', 'Value': '' },
+              { 'Property': 'Profit Margin (€)', 'Value': calc.profitMargin || '' },
+              { 'Property': 'Total Price (€)', 'Value': calc.totalPrice || '' },
+              { 'Property': 'Discount vs Market (€)', 'Value': calc.discountVsMarket || '' },
+              { 'Property': '', 'Value': '' },
+              { 'Property': 'METADATA', 'Value': '' },
+              { 'Property': 'Created Date', 'Value': calc.createdAt ? new Date(calc.createdAt).toLocaleDateString() : '' },
+              { 'Property': 'Updated Date', 'Value': calc.updatedAt ? new Date(calc.updatedAt).toLocaleDateString() : '' }
+            ];
+            
+            const calcSheet = XLSX.utils.json_to_sheet(calcData);
+            XLSX.utils.book_append_sheet(calcWorkbook, calcSheet, 'Calculation_Details');
+            
+            // Financial breakdown sheet
+            const financialData = [
+              { 'Financial Component': 'Base Price', 'Amount (€)': calc.averagePrice || '0', 'Percentage': '100%' },
+              { 'Financial Component': 'Operational Costs', 'Amount (€)': calc.operationalCosts || '0', 'Percentage': calc.averagePrice ? (((parseFloat(calc.operationalCosts || '0') / parseFloat(calc.averagePrice || '1')) * 100).toFixed(2) + '%') : '0%' },
+              { 'Financial Component': 'VAT Amount', 'Amount (€)': calc.vatAmount || '0', 'Percentage': calc.totalPrice ? (((parseFloat(calc.vatAmount || '0') / parseFloat(calc.totalPrice || '1')) * 100).toFixed(2) + '%') : '0%' },
+              { 'Financial Component': 'Profit Margin', 'Amount (€)': calc.profitMargin || '0', 'Percentage': calc.totalPrice ? (((parseFloat(calc.profitMargin || '0') / parseFloat(calc.totalPrice || '1')) * 100).toFixed(2) + '%') : '0%' },
+              { 'Financial Component': '', 'Amount (€)': '', 'Percentage': '' },
+              { 'Financial Component': 'TOTAL PRICE', 'Amount (€)': calc.totalPrice || '0', 'Percentage': '100%' },
+              { 'Financial Component': 'Voucher Price', 'Amount (€)': calc.voucherPrice || '0', 'Percentage': calc.totalPrice ? (((parseFloat(calc.voucherPrice || '0') / parseFloat(calc.totalPrice || '1')) * 100).toFixed(2) + '%') : '0%' },
+              { 'Financial Component': 'Market Discount', 'Amount (€)': calc.discountVsMarket || '0', 'Percentage': calc.totalPrice ? (((parseFloat(calc.discountVsMarket || '0') / parseFloat(calc.totalPrice || '1')) * 100).toFixed(2) + '%') : '0%' }
+            ];
+            
+            const financialSheet = XLSX.utils.json_to_sheet(financialData);
+            XLSX.utils.book_append_sheet(calcWorkbook, financialSheet, 'Financial_Breakdown');
+            
+            // Save individual calculation file
+            const cleanHotelName = (calc.hotelName || 'Unknown').replace(/[^a-zA-Z0-9]/g, '_');
+            const calcFileName = `Calc_${calc.id}_${cleanHotelName}_${new Date(calc.createdAt || new Date()).toISOString().split('T')[0]}.xlsx`;
+            const calcPath = path.join(individualCalcsDir, calcFileName);
+            XLSX.writeFile(calcWorkbook, calcPath);
+          }
+          
+          console.log(`Created ${(hotelCalcs as any[]).length} individual calculation files for ${hotelName}`);
         }
         
-        // 3. Create master hotels database
+        // 3. Create separate folder for ALL individual calculations (not grouped by hotel)
+        const allCalculationsDir = path.join(tempDir, 'All_Individual_Calculations');
+        await fs.mkdir(allCalculationsDir, { recursive: true });
+        
+        console.log('Creating individual files for all calculations...');
+        for (let i = 0; i < calculations.length; i++) {
+          const calc = calculations[i];
+          const calcWorkbook = XLSX.utils.book_new();
+          
+          // Main calculation data
+          const calcData = [
+            { 'Property': 'Calculation ID', 'Value': calc.id },
+            { 'Property': 'Hotel Name', 'Value': calc.hotelName || 'Unknown Hotel' },
+            { 'Property': 'Star Rating', 'Value': calc.stars || 'Not specified' },
+            { 'Property': 'Room Count', 'Value': calc.roomCount || 'Not specified' },
+            { 'Property': 'Occupancy Rate (%)', 'Value': calc.occupancyRate || 'Not specified' },
+            { 'Property': '', 'Value': '' },
+            { 'Property': 'PRICING DETAILS', 'Value': '' },
+            { 'Property': 'Average Price (€)', 'Value': calc.averagePrice || '0' },
+            { 'Property': 'Voucher Price (€)', 'Value': calc.voucherPrice || '0' },
+            { 'Property': 'Operational Costs (€)', 'Value': calc.operationalCosts || '0' },
+            { 'Property': '', 'Value': '' },
+            { 'Property': 'TAX CALCULATIONS', 'Value': '' },
+            { 'Property': 'VAT Rate (%)', 'Value': calc.vatRate || '0' },
+            { 'Property': 'VAT Amount (€)', 'Value': calc.vatAmount || '0' },
+            { 'Property': '', 'Value': '' },
+            { 'Property': 'FINANCIAL SUMMARY', 'Value': '' },
+            { 'Property': 'Profit Margin (€)', 'Value': calc.profitMargin || '0' },
+            { 'Property': 'Total Price (€)', 'Value': calc.totalPrice || '0' },
+            { 'Property': 'Discount vs Market (€)', 'Value': calc.discountVsMarket || '0' },
+            { 'Property': '', 'Value': '' },
+            { 'Property': 'METADATA', 'Value': '' },
+            { 'Property': 'Created Date', 'Value': calc.createdAt ? new Date(calc.createdAt).toLocaleDateString() : 'Unknown' },
+            { 'Property': 'Updated Date', 'Value': calc.updatedAt ? new Date(calc.updatedAt).toLocaleDateString() : 'Unknown' }
+          ];
+          
+          const calcSheet = XLSX.utils.json_to_sheet(calcData);
+          XLSX.utils.book_append_sheet(calcWorkbook, calcSheet, 'Calculation_Details');
+          
+          // Financial breakdown sheet
+          const basePrice = parseFloat(calc.averagePrice || '0');
+          const operationalCosts = parseFloat(calc.operationalCosts || '0');
+          const vatAmount = parseFloat(calc.vatAmount || '0');
+          const profitMargin = parseFloat(calc.profitMargin || '0');
+          const totalPrice = parseFloat(calc.totalPrice || '0');
+          const voucherPrice = parseFloat(calc.voucherPrice || '0');
+          const discountVsMarket = parseFloat(calc.discountVsMarket || '0');
+          
+          const financialData = [
+            { 'Financial Component': 'Base Price', 'Amount (€)': basePrice.toFixed(2), 'Percentage': '100%' },
+            { 'Financial Component': 'Operational Costs', 'Amount (€)': operationalCosts.toFixed(2), 'Percentage': basePrice > 0 ? ((operationalCosts / basePrice) * 100).toFixed(2) + '%' : '0%' },
+            { 'Financial Component': 'VAT Amount', 'Amount (€)': vatAmount.toFixed(2), 'Percentage': totalPrice > 0 ? ((vatAmount / totalPrice) * 100).toFixed(2) + '%' : '0%' },
+            { 'Financial Component': 'Profit Margin', 'Amount (€)': profitMargin.toFixed(2), 'Percentage': totalPrice > 0 ? ((profitMargin / totalPrice) * 100).toFixed(2) + '%' : '0%' },
+            { 'Financial Component': '', 'Amount (€)': '', 'Percentage': '' },
+            { 'Financial Component': 'TOTAL PRICE', 'Amount (€)': totalPrice.toFixed(2), 'Percentage': '100%' },
+            { 'Financial Component': 'Voucher Price', 'Amount (€)': voucherPrice.toFixed(2), 'Percentage': totalPrice > 0 ? ((voucherPrice / totalPrice) * 100).toFixed(2) + '%' : '0%' },
+            { 'Financial Component': 'Market Discount', 'Amount (€)': discountVsMarket.toFixed(2), 'Percentage': totalPrice > 0 ? ((discountVsMarket / totalPrice) * 100).toFixed(2) + '%' : '0%' }
+          ];
+          
+          const financialSheet = XLSX.utils.json_to_sheet(financialData);
+          XLSX.utils.book_append_sheet(calcWorkbook, financialSheet, 'Financial_Breakdown');
+          
+          // Save individual calculation file with descriptive name
+          const cleanHotelName = (calc.hotelName || 'Unknown_Hotel').replace(/[^a-zA-Z0-9]/g, '_');
+          const createdDate = calc.createdAt ? new Date(calc.createdAt).toISOString().split('T')[0] : 'Unknown_Date';
+          const calcFileName = `Calculation_${calc.id}_${cleanHotelName}_${createdDate}.xlsx`;
+          const calcPath = path.join(allCalculationsDir, calcFileName);
+          XLSX.writeFile(calcWorkbook, calcPath);
+        }
+        
+        console.log(`Created ${calculations.length} individual calculation files in All_Individual_Calculations folder`);
+        
+        // 4. Create master hotels database
         const hotelsWorkbook = XLSX.utils.book_new();
         const hotelsData = hotels.map(hotel => ({
           'ID': hotel.id,
@@ -2359,7 +2493,7 @@ Only return hotel data if you can verify this is a real, existing hotel. Do not 
         const hotelsPath = path.join(tempDir, 'Hotels_Master_Database.xlsx');
         XLSX.writeFile(hotelsWorkbook, hotelsPath);
         
-        // 4. Create OCR analyses workbook if data exists
+        // 5. Create OCR analyses workbook if data exists
         if (ocrAnalyses.length > 0) {
           const ocrWorkbook = XLSX.utils.book_new();
           const ocrData = ocrAnalyses.map(analysis => ({
@@ -2381,13 +2515,13 @@ Only return hotel data if you can verify this is a real, existing hotel. Do not 
           XLSX.writeFile(ocrWorkbook, ocrPath);
         }
         
-        // 5. Create ZIP archive
+        // 6. Create ZIP archive
         console.log('Creating ZIP archive with all export files...');
         const archive = archiver.default('zip', { zlib: { level: 9 } });
         
         // Set response headers for ZIP download
         const timestamp = new Date().toISOString().split('T')[0];
-        const filename = `DocumentIQ_Complete_Export_${timestamp}.zip`;
+        const filename = `BeBo_Convert_Complete_Export_${timestamp}.zip`;
         
         res.setHeader('Content-Type', 'application/zip');
         res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
