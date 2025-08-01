@@ -111,7 +111,20 @@ export default function CustomerManagement() {
   // Mutation for authentic hotel data extraction with real search URLs
   const scrapeHotelMutation = useMutation({
     mutationFn: async (data: { name: string; url?: string }) => {
-      const response = await apiRequest('/api/hotels/extract-authentic', 'POST', data);
+      const response = await fetch('/api/hotels/extract-authentic', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || errorData.message || 'Failed to extract hotel data');
+      }
+
       return await response.json();
     },
     onSuccess: (data) => {
