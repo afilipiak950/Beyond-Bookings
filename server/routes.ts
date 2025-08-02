@@ -12,6 +12,7 @@ import {
 } from "@shared/schema";
 import { documentProcessor } from "./documentProcessor";
 import { insightRestorer } from "./insightRestorer";
+import { aiLearningService } from "./aiPriceLearning";
 import { z } from "zod";
 import multer from "multer";
 import path from "path";
@@ -5465,6 +5466,101 @@ Focus on:
     } catch (error) {
       console.error('Intelligent restoration error:', error);
       res.status(500).json({ error: 'Failed to process intelligent insight restoration' });
+    }
+  });
+
+  // AI Learning endpoints for price intelligence
+  app.post('/api/ai/price-suggestion', requireAuth, async (req: any, res) => {
+    try {
+      const { hotelName, stars, roomCount, averagePrice, location, category, amenities } = req.body;
+      
+      const features = {
+        stars: parseInt(stars) || 3,
+        roomCount: parseInt(roomCount) || 100,
+        averagePrice: parseFloat(averagePrice) || 0,
+        location: location || '',
+        category: category || '',
+        amenities: amenities || []
+      };
+      
+      const suggestion = await aiLearningService.generateAIPriceSuggestion(features, req.user.id);
+      
+      res.json({
+        success: true,
+        ...suggestion
+      });
+    } catch (error) {
+      console.error("AI price suggestion error:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to generate AI price suggestion",
+        error: error.message 
+      });
+    }
+  });
+
+  app.post('/api/ai/store-feedback', requireAuth, async (req: any, res) => {
+    try {
+      const { 
+        hotelName, 
+        stars, 
+        roomCount, 
+        averagePrice, 
+        aiSuggestedPrice, 
+        actualPrice, 
+        userFeedback,
+        location,
+        category,
+        amenities
+      } = req.body;
+      
+      const pricingData = {
+        hotelName,
+        features: {
+          stars: parseInt(stars) || 3,
+          roomCount: parseInt(roomCount) || 100,
+          averagePrice: parseFloat(averagePrice) || 0,
+          location: location || '',
+          category: category || '',
+          amenities: amenities || []
+        },
+        aiSuggestedPrice: parseFloat(aiSuggestedPrice) || 0,
+        actualPrice: parseFloat(actualPrice) || 0,
+        userFeedback: userFeedback || '',
+        userId: req.user.id
+      };
+      
+      await aiLearningService.storePricingFeedback(pricingData);
+      
+      res.json({
+        success: true,
+        message: "AI learning feedback stored successfully"
+      });
+    } catch (error) {
+      console.error("AI feedback storage error:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to store AI feedback",
+        error: error.message 
+      });
+    }
+  });
+
+  app.get('/api/ai/analytics', requireAuth, async (req: any, res) => {
+    try {
+      const analytics = await aiLearningService.getLearningAnalytics(req.user.id);
+      
+      res.json({
+        success: true,
+        ...analytics
+      });
+    } catch (error) {
+      console.error("AI analytics error:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to get AI analytics",
+        error: error.message 
+      });
     }
   });
 

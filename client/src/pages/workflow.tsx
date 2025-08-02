@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ChevronRight, Calculator, BarChart3, FileText, Check, ArrowLeft, ArrowRight, Edit3, Brain, Gift, TrendingDown, Star, Download, Plus, Eye, Trash2, Copy, Move, Image, Type, BarChart, PieChart, Presentation, Loader2, Save, Building2, Globe } from "lucide-react";
 import { useLocation, useRoute } from "wouter";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import AppLayout from "@/components/layout/app-layout";
 import type { PricingCalculation } from "@shared/schema";
@@ -687,6 +687,12 @@ export default function Workflow() {
   const [manualEditOpen, setManualEditOpen] = useState(false);
   const [editFeedback, setEditFeedback] = useState("");
   const [tempPrice, setTempPrice] = useState("");
+  
+  // AI Learning state
+  const [aiConfidence, setAiConfidence] = useState(56);
+  const [aiReasoning, setAiReasoning] = useState('Based on standard 56% calculation for hotel pricing.');
+  const [similarHotelsCount, setSimilarHotelsCount] = useState(0);
+  const [isLoadingAI, setIsLoadingAI] = useState(false);
 
   // Synchronize actualPrice with workflowData.averagePrice
   useEffect(() => {
@@ -742,6 +748,96 @@ export default function Workflow() {
   const { data: hotels, isLoading: hotelsLoading } = useQuery({
     queryKey: ["/api/hotels"],
     retry: false,
+  });
+
+  // AI Price Suggestion Mutation
+  const aiSuggestionMutation = useMutation({
+    mutationFn: async (data: {
+      hotelName: string;
+      stars: number;
+      roomCount: number;
+      averagePrice: number;
+      location?: string;
+      category?: string;
+      amenities?: string[];
+    }) => {
+      const response = await fetch('/api/ai/price-suggestion', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to get AI price suggestion');
+      }
+
+      return await response.json();
+    },
+    onSuccess: (data) => {
+      setAiSuggestedPrice(data.suggestedPrice);
+      setAiConfidence(data.confidencePercentage);
+      setAiReasoning(data.reasoning);
+      setSimilarHotelsCount(data.basedOnSimilarHotels);
+      
+      if (!isManualEdit) {
+        setActualPrice(data.suggestedPrice);
+      }
+    },
+    onError: (error: any) => {
+      console.error('AI price suggestion error:', error);
+      // Fallback to static calculation
+      const fallbackPrice = workflowData.averagePrice * 0.56;
+      setAiSuggestedPrice(fallbackPrice);
+      setAiConfidence(56);
+      setAiReasoning('Standard 56% calculation (AI learning temporarily unavailable).');
+      setSimilarHotelsCount(0);
+      
+      if (!isManualEdit) {
+        setActualPrice(fallbackPrice);
+      }
+    }
+  });
+
+  // AI Feedback Storage Mutation
+  const aiFeedbackMutation = useMutation({
+    mutationFn: async (data: {
+      hotelName: string;
+      stars: number;
+      roomCount: number;
+      averagePrice: number;
+      aiSuggestedPrice: number;
+      actualPrice: number;
+      userFeedback: string;
+      location?: string;
+      category?: string;
+      amenities?: string[];
+    }) => {
+      const response = await fetch('/api/ai/store-feedback', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to store AI feedback');
+      }
+
+      return await response.json();
+    },
+    onSuccess: () => {
+      console.log('🧠 AI Learning: Feedback stored successfully');
+    },
+    onError: (error: any) => {
+      console.error('AI feedback storage error:', error);
+    }
   });
   
   // Filter hotels based on search input
@@ -1046,16 +1142,37 @@ export default function Workflow() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Calculate AI suggested price (56% of average price, rounded up)
+  // Calculate AI suggested price using machine learning
   useEffect(() => {
-    if (workflowData.averagePrice > 0) {
+    if (workflowData.averagePrice > 0 && workflowData.hotelName && workflowData.stars > 0) {
+      setIsLoadingAI(true);
+      
+      const aiData = {
+        hotelName: workflowData.hotelName,
+        stars: workflowData.stars,
+        roomCount: workflowData.roomCount || 100,
+        averagePrice: workflowData.averagePrice,
+        location: '', // Could be enhanced with hotel location data
+        category: '',
+        amenities: []
+      };
+      
+      aiSuggestionMutation.mutate(aiData, {
+        onSettled: () => setIsLoadingAI(false)
+      });
+    } else if (workflowData.averagePrice > 0) {
+      // Fallback for incomplete data
       const suggested = Math.ceil(workflowData.averagePrice * 0.56);
       setAiSuggestedPrice(suggested);
+      setAiConfidence(56);
+      setAiReasoning('Basic 56% calculation (insufficient data for AI analysis).');
+      setSimilarHotelsCount(0);
+      
       if (!isManualEdit) {
         setActualPrice(suggested);
       }
     }
-  }, [workflowData.averagePrice, isManualEdit]);
+  }, [workflowData.averagePrice, workflowData.hotelName, workflowData.stars, workflowData.roomCount, isManualEdit]);
 
   // Calculate hotel voucher value based on star rating
   useEffect(() => {
@@ -1118,12 +1235,25 @@ export default function Workflow() {
     setIsManualEdit(true);
     setManualEditOpen(false);
 
-    // TODO: Send to AI learning API
-    console.log("Manual edit recorded:", {
-      hotel: workflowData.hotelName,
-      aiSuggested: aiSuggestedPrice,
-      userPrice: newPrice,
-      feedback: editFeedback
+    // Store feedback in AI learning system
+    const feedbackData = {
+      hotelName: workflowData.hotelName,
+      stars: workflowData.stars,
+      roomCount: workflowData.roomCount || 100,
+      averagePrice: workflowData.averagePrice,
+      aiSuggestedPrice: aiSuggestedPrice,
+      actualPrice: newPrice,
+      userFeedback: editFeedback,
+      location: '', // Could be enhanced with hotel location data
+      category: '',
+      amenities: []
+    };
+    
+    aiFeedbackMutation.mutate(feedbackData);
+    
+    toast({
+      title: "KI-Preis angepasst",
+      description: "Ihre Änderung wurde gespeichert und die KI lernt aus Ihrem Feedback.",
     });
   };
 
@@ -1681,8 +1811,21 @@ export default function Workflow() {
                               <span>Manuell</span>
                             </span>
                           ) : (
-                            <span className="text-sm bg-gradient-to-r from-green-100 to-emerald-50 text-green-700 px-4 py-2 rounded-full font-semibold shadow-lg shadow-green-200/50 border border-green-200/30 backdrop-blur-sm">
-                              KI: 56%
+                            <span className="text-sm bg-gradient-to-r from-green-100 to-emerald-50 text-green-700 px-4 py-2 rounded-full font-semibold shadow-lg shadow-green-200/50 border border-green-200/30 backdrop-blur-sm flex items-center space-x-2">
+                              {isLoadingAI ? (
+                                <>
+                                  <Loader2 className="h-3 w-3 animate-spin" />
+                                  <span>Analysiere...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Brain className="h-3 w-3" />
+                                  <span>KI: {aiConfidence}%</span>
+                                  {similarHotelsCount > 0 && (
+                                    <span className="text-xs opacity-70">({similarHotelsCount} ähnliche)</span>
+                                  )}
+                                </>
+                              )}
                             </span>
                           )}
                         </div>
@@ -1718,7 +1861,7 @@ export default function Workflow() {
                             <div className="space-y-4 pt-4">
                               <div className="bg-blue-50 p-3 rounded border-l-4 border-blue-400">
                                 <p className="text-sm text-blue-800">
-                                  <strong>KI-Vorschlag:</strong> {aiSuggestedPrice.toFixed(2)} {getCurrencySymbol(workflowData.currency)} (56% von {workflowData.averagePrice.toFixed(2)} {getCurrencySymbol(workflowData.currency)})
+                                  <strong>KI-Vorschlag:</strong> {aiSuggestedPrice.toFixed(2)} {getCurrencySymbol(workflowData.currency)} ({aiConfidence}% von {workflowData.averagePrice.toFixed(2)} {getCurrencySymbol(workflowData.currency)})
                                 </p>
                                 <p className="text-xs text-blue-600 mt-1">
                                   Ihre Anpassung hilft der KI beim Lernen und verbessert zukünftige Vorschläge.
@@ -1787,7 +1930,7 @@ export default function Workflow() {
                                 {isManualEdit ? (
                                   <>Manuell angepasst von <span className="font-bold text-blue-800">{aiSuggestedPrice.toFixed(2)} {getCurrencySymbol(workflowData.currency)}</span> auf <span className="font-bold text-green-600">{actualPrice.toFixed(2)} {getCurrencySymbol(workflowData.currency)}</span>. Die KI lernt aus Ihrer Korrektur für ähnliche {workflowData.stars}-Sterne Hotels.</>
                                 ) : (
-                                  <>Basierend auf <span className="font-bold text-blue-800">56%</span> des Durchschnittspreises für <span className="font-semibold">{workflowData.stars}-Sterne Hotels</span> mit <span className="font-semibold">{workflowData.roomCount} Zimmern</span> und <span className="font-semibold">{workflowData.occupancyRate}% Auslastung</span>. Selbstlernende KI passt sich an Ihre Korrekturen an.</>
+                                  <>{aiReasoning} {similarHotelsCount > 0 && <><br/><span className="text-xs">Basiert auf {similarHotelsCount} ähnlichen Hotels in der KI-Datenbank.</span></>}</>
                                 )}
                               </p>
                             </div>
