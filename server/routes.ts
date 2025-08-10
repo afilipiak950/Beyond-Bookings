@@ -1526,8 +1526,7 @@ Only return hotel data if you can verify this is a real, existing hotel. Do not 
   // Pricing calculation routes
   app.get('/api/pricing-calculations', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.id;
-      const calculations = await storage.getPricingCalculations(userId);
+      const calculations = await storage.getAllPricingCalculations();
       res.json(calculations);
     } catch (error) {
       console.error("Error fetching pricing calculations:", error);

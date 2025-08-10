@@ -53,6 +53,7 @@ export interface IStorage {
 
   // Pricing calculation operations
   getPricingCalculations(userId: number): Promise<PricingCalculation[]>;
+  getAllPricingCalculations(): Promise<(PricingCalculation & { createdBy: string })[]>;
   getPricingCalculation(id: number, userId: number): Promise<PricingCalculation | undefined>;
   createPricingCalculation(calculation: InsertPricingCalculation): Promise<PricingCalculation>;
   updatePricingCalculation(id: number, userId: number, calculation: Partial<InsertPricingCalculation>): Promise<PricingCalculation | undefined>;
@@ -236,6 +237,19 @@ export class DatabaseStorage implements IStorage {
       .from(pricingCalculations)
       .where(eq(pricingCalculations.userId, userId))
       .orderBy(desc(pricingCalculations.createdAt));
+  }
+
+  async getAllPricingCalculations(): Promise<(PricingCalculation & { createdBy: string })[]> {
+    const result = await db
+      .select()
+      .from(pricingCalculations)
+      .leftJoin(users, eq(pricingCalculations.userId, users.id))
+      .orderBy(desc(pricingCalculations.createdAt));
+    
+    return result.map(row => ({
+      ...row.pricing_calculations,
+      createdBy: row.users?.email || 'Unknown'
+    })) as (PricingCalculation & { createdBy: string })[];
   }
 
   async getPricingCalculation(id: number, userId: number): Promise<PricingCalculation | undefined> {

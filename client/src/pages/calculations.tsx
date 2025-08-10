@@ -33,18 +33,22 @@ import {
   BarChart3,
   Globe,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  User
 } from "lucide-react";
 import { formatCurrency, formatPercentage } from "@/lib/pricing";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { PricingCalculation } from "@shared/schema";
 
+// Extended type to include creator information
+type PricingCalculationWithCreator = PricingCalculation & { createdBy: string };
+
 export default function Calculations() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState<"date" | "hotel" | "revenue" | "profit">("date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-  const [selectedCalculation, setSelectedCalculation] = useState<PricingCalculation | null>(null);
+  const [selectedCalculation, setSelectedCalculation] = useState<PricingCalculationWithCreator | null>(null);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -108,7 +112,7 @@ export default function Calculations() {
     retry: false,
   });
 
-  const calculationsData = calculations as PricingCalculation[] || [];
+  const calculationsData = calculations as PricingCalculationWithCreator[] || [];
 
   // Delete mutation
   const deleteMutation = useMutation({
@@ -871,8 +875,21 @@ export default function Calculations() {
                             </Badge>
                           </div>
                           
-                          {/* Action buttons */}
-                          <div className="flex items-center gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
+                          {/* Assigned field and Action buttons */}
+                          <div className="flex items-center gap-3">
+                            {/* Assigned to field */}
+                            <div className="text-right opacity-70 group-hover:opacity-100 transition-opacity">
+                              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mb-1">
+                                <User className="h-3 w-3" />
+                                <span className="font-medium">Assigned</span>
+                              </div>
+                              <div className="text-xs font-medium text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-md">
+                                {calculation.createdBy || "Unknown"}
+                              </div>
+                            </div>
+                            
+                            {/* Action buttons */}
+                            <div className="flex items-center gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
                             <Button 
                               variant="ghost" 
                               size="sm"
@@ -920,6 +937,7 @@ export default function Calculations() {
                                 </AlertDialogFooter>
                               </AlertDialogContent>
                             </AlertDialog>
+                          </div>
                           </div>
                         </div>
 
