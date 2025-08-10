@@ -53,6 +53,7 @@ export default function CustomerManagement() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [hotelSearchQuery, setHotelSearchQuery] = useState("");  // For hotel list filtering
 
   // AI enrichment functions
   const runAIEnrichment = async (field: 'roomCount' | 'averagePrice', hotelName: string, hotelLocation?: string) => {
@@ -324,6 +325,7 @@ export default function CustomerManagement() {
       setUserEditedFields(new Set());
       setEnrichmentLoading({});
       setLastAutoEnrichmentName('');
+      setHotelSearchQuery('');
       toast({
         title: "Hotel added successfully!",
         description: "The hotel has been added to your database",
@@ -1051,6 +1053,7 @@ export default function CustomerManagement() {
                       setUserEditedFields(new Set());
                       setEnrichmentLoading({});
                       setLastAutoEnrichmentName('');
+                      setHotelSearchQuery('');
                     }}
                   >
                     Cancel
@@ -1124,8 +1127,19 @@ export default function CustomerManagement() {
                 <Input
                   placeholder="Search by hotel name, location, or contact..."
                   className="pl-10"
+                  value={hotelSearchQuery}
+                  onChange={(e) => setHotelSearchQuery(e.target.value)}
                 />
               </div>
+              {hotelSearchQuery && (
+                <Button 
+                  variant="outline" 
+                  onClick={() => setHotelSearchQuery("")}
+                  className="px-3"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
               <Button variant="outline">Filter</Button>
             </div>
           </CardContent>
@@ -1136,7 +1150,19 @@ export default function CustomerManagement() {
           <CardHeader>
             <CardTitle>Hotel Clients</CardTitle>
             <CardDescription>
-              {hotelData?.length || 0} hotels in your database
+              {hotelSearchQuery 
+                ? `${hotelData?.filter((hotel) => {
+                    const query = hotelSearchQuery.toLowerCase();
+                    return (
+                      hotel.name?.toLowerCase().includes(query) ||
+                      hotel.location?.toLowerCase().includes(query) ||
+                      hotel.category?.toLowerCase().includes(query) ||
+                      hotel.city?.toLowerCase().includes(query) ||
+                      hotel.country?.toLowerCase().includes(query)
+                    );
+                  }).length || 0} of ${hotelData?.length || 0} hotels found`
+                : `${hotelData?.length || 0} hotels in your database`
+              }
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -1158,7 +1184,19 @@ export default function CustomerManagement() {
               </div>
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                {hotelData.map((hotel) => (
+                {hotelData
+                  .filter((hotel) => {
+                    if (!hotelSearchQuery) return true;
+                    const query = hotelSearchQuery.toLowerCase();
+                    return (
+                      hotel.name?.toLowerCase().includes(query) ||
+                      hotel.location?.toLowerCase().includes(query) ||
+                      hotel.category?.toLowerCase().includes(query) ||
+                      hotel.city?.toLowerCase().includes(query) ||
+                      hotel.country?.toLowerCase().includes(query)
+                    );
+                  })
+                  .map((hotel) => (
                   <Card key={hotel.id} className="hover:shadow-md transition-shadow h-[280px] flex flex-col">
                     <CardHeader className="pb-3 flex-shrink-0">
                       <div className="flex items-start justify-between">
