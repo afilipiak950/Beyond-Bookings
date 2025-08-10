@@ -55,7 +55,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
-        isActive: user.isActive
+        isActive: user.isActive,
+        role: user.role || 'user'
       });
     } catch (error) {
       console.error("Login error:", error);
@@ -87,7 +88,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
-        isActive: user.isActive
+        isActive: user.isActive,
+        role: user.role || 'user'
       });
     } catch (error) {
       console.error("Register error:", error);
@@ -105,7 +107,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         req.session.touch();
       }
       
-      res.json(user);
+      // Ensure role is included in the response
+      const { password, ...safeUser } = user;
+      res.json({
+        ...safeUser,
+        role: safeUser.role || 'user' // Default to 'user' if role is missing
+      });
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });

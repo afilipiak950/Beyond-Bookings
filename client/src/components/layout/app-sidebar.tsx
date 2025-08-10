@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
+import { useRole } from "@/hooks/useRole";
 import { useApprovalStats } from "@/hooks/useApprovalStats";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -96,6 +97,7 @@ const navigation = [
     icon: BarChart3,
     description: "Advanced analytics & exports",
     gradient: "from-orange-500 to-red-500",
+    adminOnly: true,
   },
   {
     name: "Settings & Users",
@@ -109,8 +111,14 @@ const navigation = [
 export default function AppSidebar({ className }: SidebarProps) {
   const [location, setLocation] = useLocation();
   const { user } = useAuth();
+  const { isAdmin } = useRole();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { data: approvalStats } = useApprovalStats();
+  
+  // Filter navigation based on role
+  const visibleNavigation = navigation.filter(item => 
+    !item.adminOnly || isAdmin
+  );
 
   const handleLogout = () => {
     window.location.href = "/api/logout";
@@ -160,7 +168,7 @@ export default function AppSidebar({ className }: SidebarProps) {
 
       {/* Ultra-Modern Navigation */}
       <nav className="flex-1 px-3 py-6 space-y-2 relative z-10">
-        {navigation.filter(item => !item.adminOnly || user?.role === 'admin').map((item, index) => {
+        {visibleNavigation.map((item, index) => {
           const Icon = item.icon;
           const isActive = location === item.href;
           

@@ -22,6 +22,7 @@ import DocumentAnalysis from "@/pages/document-analysis";
 import CustomerRequest from "@/pages/customer-request";
 import { Approvals } from "@/pages/approvals";
 import UserManagement from "@/pages/user-management";
+import AccessDenied from "@/pages/403";
 
 
 function Router() {
@@ -46,6 +47,7 @@ function Router() {
           <Route path="/reports" component={Reports} />
           <Route path="/settings" component={Settings} />
           <Route path="/profile" component={Profile} />
+          <Route path="/403" component={AccessDenied} />
         </>
       )}
       <Route component={NotFound} />

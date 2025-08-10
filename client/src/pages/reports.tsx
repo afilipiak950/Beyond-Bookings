@@ -14,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { AdminGuard } from "@/components/auth/AdminGuard";
 import { 
   FileText, 
   Download, 
@@ -440,8 +441,9 @@ export default function Reports() {
   }
 
   return (
-    <AppLayout>
-      <div className="space-y-8 max-w-7xl mx-auto p-6">
+    <AdminGuard>
+      <AppLayout>
+        <div className="space-y-8 max-w-7xl mx-auto p-6">
         {/* Header */}
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-50/80 to-purple-100/60 backdrop-blur-xl border border-indigo-200/40 p-8 shadow-2xl">
           <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 via-transparent to-purple-500/10 animate-gradient-x"></div>
@@ -1057,8 +1059,9 @@ export default function Reports() {
               </CardContent>
             </Card>
           </div>
+          </div>
         </div>
-      </div>
-    </AppLayout>
+      </AppLayout>
+    </AdminGuard>
   );
 }

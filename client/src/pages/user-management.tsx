@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { AdminGuard } from "@/components/auth/AdminGuard";
 import { Search, UserPlus, Edit, Trash2, Shield, User as UserIcon, Crown, Clock } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import AppLayout from "@/components/layout/app-layout";
@@ -210,20 +211,23 @@ export default function UserManagement() {
 
   if (isLoading) {
     return (
-      <AppLayout>
-        <div className="p-6">
-          <div className="text-center">Loading users...</div>
-        </div>
-      </AppLayout>
+      <AdminGuard>
+        <AppLayout>
+          <div className="p-6">
+            <div className="text-center">Loading users...</div>
+          </div>
+        </AppLayout>
+      </AdminGuard>
     );
   }
 
   return (
-    <AppLayout>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 p-6">
-        <div className="max-w-7xl mx-auto space-y-6">
-          {/* Header */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-blue-100 p-6 shadow-lg">
+    <AdminGuard>
+      <AppLayout>
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 p-6">
+          <div className="max-w-7xl mx-auto space-y-6">
+            {/* Header */}
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-blue-100 p-6 shadow-lg">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-blue-500 rounded-lg">
@@ -368,7 +372,7 @@ export default function UserManagement() {
                 </CardContent>
               </Card>
             </div>
-          </div>
+            </div>
 
           {/* Filters */}
           <Card className="bg-white/80 backdrop-blur-sm border border-blue-100">
@@ -497,8 +501,9 @@ export default function UserManagement() {
               </Card>
             )}
           </div>
+          </div>
         </div>
-      </div>
-    </AppLayout>
+      </AppLayout>
+    </AdminGuard>
   );
 }
