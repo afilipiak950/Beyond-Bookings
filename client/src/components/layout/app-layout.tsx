@@ -33,7 +33,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
     {
       id: 1,
       role: 'assistant',
-      content: 'Hello! I\'m your **AI Assistant for Beyond Bookings**. I have access to all your hotel data, pricing calculations, and platform analytics. I can help you with:\n\n• **Hotel Management** - Analysis of your hotel portfolio\n• **Pricing Optimization** - VAT calculations and profit margin analysis\n• **Document Intelligence** - OCR processing and financial insights\n• **Business Intelligence** - Market trends and competitive analysis\n\nWhat would you like to know about your business today?',
+      content: 'Hallo! Ich bin Ihr **KI-Assistent für Beyond Bookings**. Als rollenbasierter Experte habe ich direkten Zugriff auf Ihre gesamte Plattform und kann folgende Aktionen ausführen:\n\n🏨 **Hotel-Management** - Suchen, anlegen, anreichern mit KI-Daten\n💰 **Preiskalkulation** - Erstellen, prüfen, zur Genehmigung senden\n✅ **Genehmigungsworkflow** - Status prüfen, entscheiden (Admin)\n📊 **Benachrichtigungen** - Abrufen, als gelesen markieren\n👥 **Benutzerverwaltung** - Rollen vergeben (Admin)\n📈 **Geschäftsanalysen** - Margen, Regeln, Performance\n\n*Ich erkenne automatisch Deutsch/Englisch und führe Aktionen direkt über die Plattform aus. Was kann ich für Sie tun?*',
       timestamp: new Date()
     }
   ]);
@@ -47,26 +47,46 @@ export default function AppLayout({ children }: AppLayoutProps) {
     setTheme(theme === "dark" ? "light" : "dark");
   };
 
-  // AI Chat mutation
+  // Enhanced AI Chat mutation with function calling support
   const aiChatMutation = useMutation({
     mutationFn: async (message: string) => {
-      const response = await apiRequest("/api/ai/chat", "POST", { message });
+      const response = await apiRequest("/api/ai/chat", "POST", { 
+        message,
+        language: 'auto' // Auto-detect language
+      });
       return await response.json();
     },
     onSuccess: (response: any) => {
-      console.log('AI Response received:', response);
+      console.log('🤖 AI Response received:', response);
       
       // Format message with context if available
       let messageContent = response?.message;
       
       // If no message, use fallback
       if (!messageContent || messageContent.trim() === '') {
-        messageContent = 'I apologize, but I encountered an issue processing your request. Please try again.';
+        messageContent = response.language === 'de' ? 
+          'Entschuldigung, ich konnte Ihre Anfrage nicht verarbeiten. Bitte versuchen Sie es erneut.' :
+          'I apologize, but I encountered an issue processing your request. Please try again.';
+      }
+      
+      // Add function call indicators if available
+      if (response?.functionCalls && response.functionCalls.length > 0) {
+        const isGerman = response.language === 'de';
+        const functionInfo = response.functionCalls.map((fc: any) => {
+          const funcName = fc.name;
+          const success = fc.result && !fc.result.error;
+          return `${success ? '✅' : '❌'} ${funcName}`;
+        }).join(' • ');
+        
+        messageContent += `\n\n---\n**${isGerman ? 'Ausgeführte Aktionen' : 'Executed Actions'}:**\n${functionInfo}`;
       }
       
       // Add context indicators if available
       if (response?.context) {
-        messageContent += `\n\n---\n**Analysis Context:**\n📊 ${response.context.calculationsReviewed || 0} calculations reviewed • 🏨 ${response.context.hotelsAnalyzed || 0} hotels analyzed • 📄 ${response.context.documentsProcessed || 0} documents processed`;
+        const ctx = response.context;
+        const isGerman = response.language === 'de';
+        const contextLabel = isGerman ? 'System-Kontext' : 'System Context';
+        messageContent += `\n\n---\n**${contextLabel}:**\n📊 ${ctx.calculationsTotal || 0} ${isGerman ? 'Kalkulationen' : 'calculations'} • 🏨 ${ctx.hotelsTotal || 0} Hotels${ctx.notificationsUnread ? ` • 🔔 ${ctx.notificationsUnread} ${isGerman ? 'ungelesen' : 'unread'}` : ''}${ctx.approvalsPending ? ` • ⏳ ${ctx.approvalsPending} ${isGerman ? 'ausstehend' : 'pending'}` : ''}`;
       }
       
       setChatMessages(prev => [...prev, {
@@ -78,7 +98,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
     },
     onError: (error: any) => {
       toast({
-        title: "AI Assistant Error",
+        title: "KI-Assistent Fehler / AI Assistant Error",
         description: error.message || "Failed to get response from AI assistant.",
         variant: "destructive",
       });
@@ -360,7 +380,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
                 <div className="border-t border-gray-200 pt-4">
                   <div className="flex gap-2">
                     <Input
-                      placeholder="Ask me about your hotels, pricing calculations, market analysis, or any business questions..."
+                      placeholder="Fragen Sie mich zu Hotels, Kalkulationen, Genehmigungen oder Analysen... | Ask about hotels, calculations, approvals or analytics..."
                       value={currentMessage}
                       onChange={(e) => setCurrentMessage(e.target.value)}
                       onKeyPress={handleKeyPress}
@@ -381,12 +401,12 @@ export default function AppLayout({ children }: AppLayoutProps) {
                   </div>
                   <div className="flex items-center justify-between mt-3 text-xs text-gray-500">
                     <div className="flex items-center gap-4">
-                      <span>💡 Press Enter to send • Shift+Enter for new line</span>
-                      <span className="text-blue-600">🧠 AI has access to all your data</span>
+                      <span>💡 Enter senden • Shift+Enter neue Zeile</span>
+                      <span className="text-blue-600">🔧 KI führt Aktionen direkt aus</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                      <span className="text-green-600 font-medium">GPT-4o Ready</span>
+                      <span className="text-green-600 font-medium">GPT-4o + Function Calling</span>
                     </div>
                   </div>
                 </div>

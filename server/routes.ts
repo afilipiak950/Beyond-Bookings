@@ -3674,224 +3674,689 @@ ${analyses.filter(a => a?.insights).map(analysis =>
   });
 
   // AI Assistant Chat endpoint with deep functionality
+  // Enhanced AI Chat with Function Calling and Role-based Access
   app.post("/api/ai/chat", requireAuth, async (req: Request, res: Response) => {
     try {
       const userId = (req as any).user.id;
-      const { message } = req.body;
+      const { message, language = 'de' } = req.body;
       
       if (!message || typeof message !== 'string') {
         return res.status(400).json({ message: "Message is required" });
       }
 
+      // Get user profile for RBAC
+      const userProfile = await storage.getUserById(userId);
+      if (!userProfile) {
+        return res.status(401).json({ message: "User not found" });
+      }
+
+      // Detect language from message content
+      const detectedLanguage = /[a-zA-Z]/.test(message) && !/[äöüßÄÖÜ]/.test(message) ? 'en' : 'de';
+      const responseLanguage = detectedLanguage;
+
+      // Function definitions for AI tool calling
+      const functions = [
+        {
+          name: "fetchHotels",
+          description: "Get hotels list with optional filters",
+          parameters: {
+            type: "object",
+            properties: {
+              search: { type: "string", description: "Search term for hotel name/location" },
+              stars: { type: "array", items: { type: "number" }, description: "Filter by star ratings" },
+              category: { type: "string", description: "Filter by category" },
+              limit: { type: "number", description: "Limit results" }
+            }
+          }
+        },
+        {
+          name: "getHotel",
+          description: "Get specific hotel details by ID",
+          parameters: {
+            type: "object",
+            properties: {
+              id: { type: "number", description: "Hotel ID", required: true }
+            },
+            required: ["id"]
+          }
+        },
+        {
+          name: "enrichHotel",
+          description: "AI-powered hotel enrichment for room count and average price",
+          parameters: {
+            type: "object",
+            properties: {
+              name: { type: "string", description: "Hotel name", required: true },
+              website: { type: "string", description: "Hotel website URL (optional)" }
+            },
+            required: ["name"]
+          }
+        },
+        {
+          name: "createHotel",
+          description: "Create a new hotel entry",
+          parameters: {
+            type: "object",
+            properties: {
+              name: { type: "string", required: true },
+              location: { type: "string", required: true },
+              stars: { type: "number" },
+              roomCount: { type: "number" },
+              category: { type: "string" },
+              url: { type: "string" }
+            },
+            required: ["name", "location"]
+          }
+        },
+        {
+          name: "fetchCalculations",
+          description: "Get pricing calculations with optional filters",
+          parameters: {
+            type: "object",
+            properties: {
+              userId: { type: "number", description: "Filter by user ID (admin only)" },
+              limit: { type: "number", description: "Limit results" }
+            }
+          }
+        },
+        {
+          name: "getCalculation",
+          description: "Get specific calculation details by ID",
+          parameters: {
+            type: "object",
+            properties: {
+              id: { type: "number", description: "Calculation ID", required: true }
+            },
+            required: ["id"]
+          }
+        },
+        {
+          name: "createCalculation",
+          description: "Create a new pricing calculation",
+          parameters: {
+            type: "object",
+            properties: {
+              hotelName: { type: "string", required: true },
+              stars: { type: "number", required: true },
+              roomPrice: { type: "number", required: true },
+              voucherPrice: { type: "number", required: true },
+              financing: { type: "number" },
+              operationalCosts: { type: "number" },
+              vatRate: { type: "number" }
+            },
+            required: ["hotelName", "stars", "roomPrice", "voucherPrice"]
+          }
+        },
+        {
+          name: "sendForApproval",
+          description: "Send calculation for admin approval",
+          parameters: {
+            type: "object",
+            properties: {
+              calculationId: { type: "number", required: true },
+              businessJustification: { type: "string", required: true }
+            },
+            required: ["calculationId", "businessJustification"]
+          }
+        },
+        {
+          name: "listApprovals",
+          description: "List approval requests (admin only)",
+          parameters: {
+            type: "object",
+            properties: {
+              status: { type: "string", enum: ["pending", "approved", "rejected", "all"] },
+              limit: { type: "number" }
+            }
+          }
+        },
+        {
+          name: "decideApproval",
+          description: "Approve or reject an approval request (admin only)",
+          parameters: {
+            type: "object",
+            properties: {
+              id: { type: "number", required: true },
+              action: { type: "string", enum: ["approve", "reject"], required: true },
+              comment: { type: "string", required: true }
+            },
+            required: ["id", "action", "comment"]
+          }
+        },
+        {
+          name: "getNotifications",
+          description: "Get user notifications",
+          parameters: {
+            type: "object",
+            properties: {
+              status: { type: "string", enum: ["unread", "read", "all"] }
+            }
+          }
+        },
+        {
+          name: "markNotificationRead",
+          description: "Mark notification as read",
+          parameters: {
+            type: "object",
+            properties: {
+              id: { type: "number", required: true }
+            },
+            required: ["id"]
+          }
+        },
+        {
+          name: "listUsers",
+          description: "List all users (admin only)",
+          parameters: {
+            type: "object",
+            properties: {
+              limit: { type: "number" }
+            }
+          }
+        },
+        {
+          name: "setUserRole",
+          description: "Set user role (admin only)",
+          parameters: {
+            type: "object",
+            properties: {
+              userId: { type: "number", required: true },
+              role: { type: "string", enum: ["user", "manager", "admin"], required: true }
+            },
+            required: ["userId", "role"]
+          }
+        }
+      ];
+
       // Gather comprehensive user data for AI context
       const [
-        userProfile,
         hotels,
         calculations,
-        documentUploads,
-        documentAnalyses,
-        documentInsights
+        notifications,
+        approvals,
+        users
       ] = await Promise.all([
-        storage.getUser(userId),
         storage.getHotels(),
         storage.getPricingCalculations(userId),
-        storage.getDocumentUploads(userId),
-        storage.getDocumentAnalyses(userId),
-        storage.getDocumentInsights(userId)
+        storage.getNotifications(userId),
+        userProfile.role === 'admin' ? storage.getApprovalRequests() : [],
+        userProfile.role === 'admin' ? storage.getUsers() : []
       ]);
 
       // Build comprehensive context for AI
       const userContext = {
         profile: {
-          name: userProfile ? `${userProfile.firstName || ''} ${userProfile.lastName || ''}`.trim() : 'User',
-          email: userProfile?.email || '',
-          role: userProfile?.role || 'user'
+          id: userProfile.id,
+          name: `${userProfile.firstName || ''} ${userProfile.lastName || ''}`.trim() || 'User',
+          email: userProfile.email,
+          role: userProfile.role
         },
         hotels: {
           total: hotels.length,
-          list: hotels.map(h => ({
+          recent: hotels.slice(0, 5).map(h => ({
+            id: h.id,
             name: h.name,
             location: h.location,
             stars: h.stars,
-            rooms: h.roomCount,
+            roomCount: h.roomCount,
             category: h.category,
-            url: h.url
+            averagePrice: h.averagePrice
           }))
         },
         calculations: {
           total: calculations.length,
           recent: calculations.slice(-5).map(c => ({
+            id: c.id,
             hotelName: c.hotelName,
             roomPrice: c.roomPrice,
             totalCost: c.totalCost,
             profitMargin: c.profitMargin,
+            approvalStatus: c.approvalStatus,
             createdAt: c.createdAt
           }))
         },
-        documents: {
-          uploads: documentUploads.length,
-          analyses: documentAnalyses.length,
-          insights: documentInsights.length
+        notifications: {
+          total: notifications.length,
+          unread: notifications.filter(n => !n.isRead).length
         },
-        platformStats: {
-          totalHotels: hotels.length,
-          totalCalculations: calculations.length,
-          totalDocuments: documentUploads.length,
-          averageRoomPrice: calculations.length > 0 ? 
-            calculations.reduce((sum, c) => sum + (c.roomPrice || 0), 0) / calculations.length : 0
+        approvals: userProfile.role === 'admin' ? {
+          total: approvals.length,
+          pending: approvals.filter(a => a.status === 'pending').length
+        } : null,
+        businessRules: {
+          starLimits: {
+            "3": { maxVoucherPrice: 50, maxRoomPrice: 30 },
+            "4": { maxVoucherPrice: 60, maxRoomPrice: 35 },
+            "5": { maxVoucherPrice: 75, maxRoomPrice: 45 }
+          },
+          approvalTriggers: {
+            marginBelow: 27, // percent
+            financingAbove: 50000 // euros
+          }
         }
       };
 
-      // Enhanced AI prompt with comprehensive context
-      const aiPrompt = `You are an expert AI assistant for Beyond Bookings, a comprehensive hotel pricing and document intelligence platform. You have access to all user data and provide ultra-detailed, personalized responses with specific insights.
+      // Function call handler
+      async function handleFunctionCall(functionName: string, args: any) {
+        try {
+          switch (functionName) {
+            case 'fetchHotels':
+              const hotelsFiltered = hotels.filter(h => {
+                if (args.search) {
+                  const searchLower = args.search.toLowerCase();
+                  return h.name.toLowerCase().includes(searchLower) || 
+                         h.location?.toLowerCase().includes(searchLower);
+                }
+                if (args.stars && Array.isArray(args.stars)) {
+                  return args.stars.includes(h.stars);
+                }
+                if (args.category) {
+                  return h.category?.toLowerCase().includes(args.category.toLowerCase());
+                }
+                return true;
+              });
+              return { 
+                hotels: hotelsFiltered.slice(0, args.limit || 10),
+                total: hotelsFiltered.length 
+              };
 
-USER CONTEXT:
+            case 'getHotel':
+              const hotel = hotels.find(h => h.id === args.id);
+              return hotel ? { hotel } : { error: 'Hotel not found' };
+
+            case 'enrichHotel':
+              // Call existing hotel enrichment endpoint
+              const enrichResponse = await fetch(`${req.protocol}://${req.get('host')}/api/hotels/enrich`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: args.name, website: args.website })
+              });
+              return await enrichResponse.json();
+
+            case 'createHotel':
+              if (userProfile.role !== 'admin' && userProfile.role !== 'manager') {
+                return { error: 'Insufficient permissions to create hotels' };
+              }
+              const newHotel = await storage.createHotel({
+                ...args,
+                createdByUserId: userId
+              });
+              return { hotel: newHotel, success: true };
+
+            case 'fetchCalculations':
+              const userCalcs = args.userId && userProfile.role === 'admin' 
+                ? await storage.getPricingCalculations(args.userId)
+                : calculations;
+              return { 
+                calculations: userCalcs.slice(0, args.limit || 10),
+                total: userCalcs.length 
+              };
+
+            case 'getCalculation':
+              const calc = calculations.find(c => c.id === args.id);
+              if (!calc) return { error: 'Calculation not found' };
+              if (calc.userId !== userId && userProfile.role !== 'admin') {
+                return { error: 'Access denied' };
+              }
+              return { calculation: calc };
+
+            case 'createCalculation':
+              // Validate business rules
+              const starLimits = userContext.businessRules.starLimits[args.stars.toString()];
+              const needsApproval = 
+                (starLimits && (args.voucherPrice > starLimits.maxVoucherPrice || args.roomPrice > starLimits.maxRoomPrice)) ||
+                (args.financing && args.financing > userContext.businessRules.approvalTriggers.financingAbove);
+                
+              const newCalc = await storage.createPricingCalculation({
+                userId,
+                hotelName: args.hotelName,
+                stars: args.stars,
+                roomPrice: args.roomPrice,
+                voucherPrice: args.voucherPrice,
+                financing: args.financing || 0,
+                operationalCosts: args.operationalCosts || 0,
+                vatRate: args.vatRate || 19,
+                approvalStatus: needsApproval ? 'required_not_sent' : 'none_required'
+              });
+              return { 
+                calculation: newCalc, 
+                needsApproval, 
+                reasons: needsApproval ? 
+                  ['Exceeds business rule limits'] : [],
+                success: true 
+              };
+
+            case 'sendForApproval':
+              if (userProfile.role === 'admin') {
+                return { error: 'Admins cannot send approvals to themselves' };
+              }
+              const approvalCalc = calculations.find(c => c.id === args.calculationId);
+              if (!approvalCalc || approvalCalc.userId !== userId) {
+                return { error: 'Calculation not found or access denied' };
+              }
+              
+              const approval = await storage.createApprovalRequest({
+                createdByUserId: userId,
+                calculationId: args.calculationId,
+                businessJustification: args.businessJustification,
+                status: 'pending'
+              });
+              return { approval, success: true };
+
+            case 'listApprovals':
+              if (userProfile.role !== 'admin') {
+                return { error: 'Admin permissions required' };
+              }
+              const filteredApprovals = approvals.filter(a => 
+                !args.status || args.status === 'all' || a.status === args.status
+              );
+              return { 
+                approvals: filteredApprovals.slice(0, args.limit || 20),
+                total: filteredApprovals.length 
+              };
+
+            case 'decideApproval':
+              if (userProfile.role !== 'admin') {
+                return { error: 'Admin permissions required' };
+              }
+              const approvalToDecide = approvals.find(a => a.id === args.id);
+              if (!approvalToDecide) return { error: 'Approval not found' };
+              
+              const updatedApproval = await storage.updateApprovalRequest(args.id, {
+                status: args.action === 'approve' ? 'approved' : 'rejected',
+                approvedByUserId: userId,
+                adminComment: args.comment
+              });
+              return { approval: updatedApproval, success: true };
+
+            case 'getNotifications':
+              const filteredNotifs = notifications.filter(n => 
+                !args.status || args.status === 'all' || 
+                (args.status === 'unread' && !n.isRead) ||
+                (args.status === 'read' && n.isRead)
+              );
+              return { notifications: filteredNotifs };
+
+            case 'markNotificationRead':
+              await storage.markNotificationAsRead(args.id);
+              return { success: true };
+
+            case 'listUsers':
+              if (userProfile.role !== 'admin') {
+                return { error: 'Admin permissions required' };
+              }
+              return { 
+                users: users.slice(0, args.limit || 50).map(u => ({
+                  id: u.id,
+                  email: u.email,
+                  firstName: u.firstName,
+                  lastName: u.lastName,
+                  role: u.role,
+                  createdAt: u.createdAt
+                }))
+              };
+
+            case 'setUserRole':
+              if (userProfile.role !== 'admin') {
+                return { error: 'Admin permissions required' };
+              }
+              const targetUser = users.find(u => u.id === args.userId);
+              if (!targetUser) return { error: 'User not found' };
+              
+              await storage.updateUserRole(args.userId, args.role);
+              return { success: true, message: `User role updated to ${args.role}` };
+
+            default:
+              return { error: `Unknown function: ${functionName}` };
+          }
+        } catch (error) {
+          console.error(`Function ${functionName} error:`, error);
+          return { error: `Function execution failed: ${error.message}` };
+        }
+      }
+
+      // Create role-based, domain-specific AI prompt in German or English
+      const systemPrompt = responseLanguage === 'de' ? 
+        `Du bist der **Beyond Bookings KI-Assistent** - ein rollenbasierter, domänenspezifischer Experte für Hotelpreisgestaltung und Geschäftsoptimierung.
+
+**BENUTZER-KONTEXT:**
+- Benutzer: ${userContext.profile.name} (${userContext.profile.email})
+- Rolle: ${userContext.profile.role === 'admin' ? 'Administrator' : userContext.profile.role === 'manager' ? 'Manager' : 'Benutzer'}
+- Hotels in Datenbank: ${userContext.hotels.total}
+- Preiskalkulationen: ${userContext.calculations.total}
+${userContext.notifications ? `- Ungelesene Benachrichtigungen: ${userContext.notifications.unread}` : ''}
+${userContext.approvals ? `- Ausstehende Genehmigungen: ${userContext.approvals.pending}` : ''}
+
+**GESCHÄFTSREGELN (wichtig für Genehmigungen):**
+- 3★ Hotels: Max. €50 Gutschein, €30 Zimmerpreis
+- 4★ Hotels: Max. €60 Gutschein, €35 Zimmerpreis  
+- 5★ Hotels: Max. €75 Gutschein, €45 Zimmerpreis
+- Marge unter 27% → Genehmigung erforderlich
+- Finanzierung über €50.000 → Genehmigung erforderlich
+
+**FUNCTION CALLING FÄHIGKEITEN:**
+Du kannst folgende Aktionen DIREKT ausführen:
+- fetchHotels(filter): Hotels suchen/filtern
+- getHotel(id): Hoteldetails abrufen
+- enrichHotel(name, website?): KI-Anreicherung für Zimmerzahl/Durchschnittspreis
+- createHotel(data): Neues Hotel anlegen (Manager+)
+- fetchCalculations(filter): Kalkulationen abrufen
+- createCalculation(data): Neue Kalkulation erstellen
+- sendForApproval(calculationId, reason): Zur Genehmigung senden
+- listApprovals(filter): Genehmigungen auflisten (nur Admin)
+- decideApproval(id, action, comment): Genehmigung entscheiden (nur Admin)
+- getNotifications(status): Benachrichtigungen abrufen
+- listUsers(): Benutzer auflisten (nur Admin)
+- setUserRole(userId, role): Benutzerrolle ändern (nur Admin)
+
+**ANTWORT-STIL:**
+- Deutsch als Standard (de-DE Formatierung: €1.234,56)
+- Kurz & klar bei einfachen Fragen
+- Strukturiert (Überschriften, Stichpunkte) bei komplexen Themen
+- Bei Admin-Funktionen ohne Admin-Rolle: "Dafür sind Admin-Rechte nötig"
+- Bestätigung vor Mutationen: "Soll ich diese Kalkulation erstellen? [Ja/Nein]"
+- Konkrete Zahlen und IDs verwenden
+- Bei Unsicherheit nachfragen, nicht halluzinieren
+
+**HÄUFIGE SYSTEMFRAGEN:**
+- "Warum braucht meine Kalkulation Genehmigung?" → Geschäftsregeln vergleichen
+- "Was bedeuten die Approval-Badges?" → Status erklären  
+- "Wie vergebe ich Admin-Rollen?" → Nur für Admins, Schritt-für-Schritt
+- "Welche Hotels fehlen Durchschnittspreise?" → Datenqualität analysieren` :
+
+        `You are the **Beyond Bookings AI Assistant** - a role-based, domain-specific expert for hotel pricing and business optimization.
+
+**USER CONTEXT:**
 - User: ${userContext.profile.name} (${userContext.profile.email})
 - Role: ${userContext.profile.role}
 - Hotels in database: ${userContext.hotels.total}
 - Pricing calculations: ${userContext.calculations.total}
-- Document uploads: ${userContext.documents.uploads}
+${userContext.notifications ? `- Unread notifications: ${userContext.notifications.unread}` : ''}
+${userContext.approvals ? `- Pending approvals: ${userContext.approvals.pending}` : ''}
 
-DETAILED HOTEL PORTFOLIO:
-${userContext.hotels.list.map(h => `• **${h.name}** (${h.stars}★) - ${h.location}, ${h.rooms} rooms${h.category ? `, Category: ${h.category}` : ''}${h.url ? `, URL: ${h.url}` : ''}`).join('\n')}
+**BUSINESS RULES (important for approvals):**
+- 3★ Hotels: Max €50 voucher, €30 room price
+- 4★ Hotels: Max €60 voucher, €35 room price  
+- 5★ Hotels: Max €75 voucher, €45 room price
+- Margin below 27% → Approval required
+- Financing above €50,000 → Approval required
 
-RECENT PRICING CALCULATIONS:
-${userContext.calculations.recent.map(c => `• **${c.hotelName}**: €${c.roomPrice} room price → €${c.totalCost} total cost (${c.profitMargin}% margin) - ${c.createdAt ? new Date(c.createdAt).toLocaleDateString() : 'Recent'}`).join('\n')}
+**FUNCTION CALLING CAPABILITIES:**
+You can DIRECTLY execute these actions:
+- fetchHotels(filter): Search/filter hotels
+- getHotel(id): Get hotel details
+- enrichHotel(name, website?): AI enrichment for room count/average price
+- createHotel(data): Create new hotel (Manager+)
+- fetchCalculations(filter): Get calculations
+- createCalculation(data): Create new calculation
+- sendForApproval(calculationId, reason): Send for approval
+- listApprovals(filter): List approvals (Admin only)
+- decideApproval(id, action, comment): Decide approval (Admin only)
+- getNotifications(status): Get notifications
+- listUsers(): List users (Admin only)
+- setUserRole(userId, role): Change user role (Admin only)
 
-PLATFORM ANALYTICS:
-- Total Hotels: ${userContext.platformStats.totalHotels}
-- Total Calculations: ${userContext.platformStats.totalCalculations}
-- Total Documents: ${userContext.platformStats.totalDocuments}
-- Average Room Price: €${userContext.platformStats.averageRoomPrice.toFixed(2)}
-- Average Profit Margin: ${userContext.calculations.total > 0 ? (userContext.calculations.recent.reduce((sum, c) => sum + (c.profitMargin || 0), 0) / userContext.calculations.recent.length).toFixed(1) : 0}%
+**RESPONSE STYLE:**
+- Clear and concise for simple questions
+- Structured (headings, bullet points) for complex topics
+- For admin functions without admin role: "Admin permissions required"
+- Confirmation before mutations: "Should I create this calculation? [Yes/No]"
+- Use concrete numbers and IDs
+- Ask for clarification when uncertain, don't hallucinate
 
-ADVANCED CAPABILITIES:
-1. **Portfolio Analysis**: Deep dive into hotel performance, star ratings, location analysis
-2. **Pricing Intelligence**: VAT calculations, profit optimization, competitive positioning
-3. **Document Processing**: OCR analysis, financial document insights, data extraction
-4. **Market Intelligence**: Industry benchmarks, pricing trends, competitive analysis
-5. **Business Intelligence**: Performance metrics, revenue optimization, strategic recommendations
-6. **Platform Optimization**: Feature guidance, workflow optimization, export strategies
+**COMMON SYSTEM QUESTIONS:**
+- "Why does my calculation need approval?" → Compare with business rules
+- "What do the approval badges mean?" → Explain statuses
+- "How do I assign admin roles?" → Admin only, step-by-step
+- "Which hotels are missing average prices?" → Analyze data quality`;
 
-RESPONSE STYLE:
-- Ultra-detailed and comprehensive
-- Reference specific user data and calculations
-- Provide actionable business recommendations
-- Use professional business terminology
-- Include specific numbers and percentages
-- Offer step-by-step guidance
-- Create bullet points and structured responses
-
-USER QUESTION: "${message}"
-
-Provide an ultra-detailed, comprehensive response that demonstrates deep analysis of the user's actual business data. Include specific insights, recommendations, and actionable advice based on their hotel portfolio and pricing calculations. Use markdown formatting for clear structure.`;
-
-      // Enhanced AI with web search capabilities
+      // Try OpenAI with function calling first
       let aiResponse = '';
-      
-      // First, try to use Perplexity for web search capabilities if question needs current market data
-      const needsWebSearch = message.toLowerCase().includes('market') || 
-                           message.toLowerCase().includes('trend') || 
-                           message.toLowerCase().includes('competitive') ||
-                           message.toLowerCase().includes('industry') ||
-                           message.toLowerCase().includes('benchmark');
-      
-      if (needsWebSearch && process.env.PERPLEXITY_API_KEY) {
+      let functionCallResults: any[] = [];
+
+      if (process.env.OPENAI_API_KEY) {
         try {
-          const perplexityResponse = await fetch('https://api.perplexity.ai/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${process.env.PERPLEXITY_API_KEY}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              model: 'llama-3.1-sonar-small-128k-online',
+          const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+          
+          const completion = await openai.chat.completions.create({
+            model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+            messages: [
+              { 
+                role: "system", 
+                content: systemPrompt + `\n\nCURRENT USER DATA:\nHotels: ${JSON.stringify(userContext.hotels.recent)}\nCalculations: ${JSON.stringify(userContext.calculations.recent)}`
+              },
+              { role: "user", content: message }
+            ],
+            functions: functions.map(f => ({
+              name: f.name,
+              description: f.description,
+              parameters: f.parameters
+            })),
+            function_call: "auto",
+            max_tokens: 2000,
+            temperature: 0.7
+          });
+
+          const choice = completion.choices[0];
+          
+          if (choice.message.function_call) {
+            // Execute function call
+            const functionName = choice.message.function_call.name;
+            const functionArgs = JSON.parse(choice.message.function_call.arguments || '{}');
+            
+            console.log(`🔧 AI Function Call: ${functionName}`, functionArgs);
+            
+            const functionResult = await handleFunctionCall(functionName, functionArgs);
+            functionCallResults.push({ name: functionName, args: functionArgs, result: functionResult });
+            
+            // Get AI response based on function result
+            const followUpCompletion = await openai.chat.completions.create({
+              model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
               messages: [
-                {
-                  role: 'system',
-                  content: 'You are a hotel industry expert providing current market insights, trends, and competitive analysis. Use recent data and industry reports.'
+                { 
+                  role: "system", 
+                  content: systemPrompt 
                 },
-                {
-                  role: 'user',
-                  content: message
+                { role: "user", content: message },
+                { 
+                  role: "assistant", 
+                  content: null,
+                  function_call: {
+                    name: functionName,
+                    arguments: JSON.stringify(functionArgs)
+                  }
+                },
+                { 
+                  role: "function", 
+                  name: functionName,
+                  content: JSON.stringify(functionResult)
                 }
               ],
-              max_tokens: 1000,
+              max_tokens: 2000,
               temperature: 0.7
-            })
-          });
-          
-          if (perplexityResponse.ok) {
-            const perplexityData = await perplexityResponse.json();
-            aiResponse = perplexityData.choices[0]?.message?.content || '';
+            });
+            
+            aiResponse = followUpCompletion.choices[0].message.content || '';
+          } else {
+            aiResponse = choice.message.content || '';
           }
-        } catch (perplexityError) {
-          console.log('Perplexity API not available, falling back to OpenAI');
+          
+        } catch (openaiError: any) {
+          console.error('OpenAI API Error:', openaiError.message);
+          
+          // Fallback response with business context
+          const fallbackMessage = responseLanguage === 'de' ?
+            `Entschuldigung, ich habe gerade technische Schwierigkeiten. Hier ist was ich über Ihre Daten weiß:
+
+**Ihr Hotel-Portfolio:**
+${userContext.hotels.recent.slice(0, 3).map(h => `• ${h.name} (${h.stars}★) - ${h.location}`).join('\n')}
+
+**Aktuelle Kalkulationen:**
+- Gesamt: ${userContext.calculations.total} Kalkulationen
+- Durchschnittlicher Zimmerpreis: €${(userContext.calculations.recent.reduce((sum, c) => sum + (c.roomPrice || 0), 0) / Math.max(userContext.calculations.recent.length, 1)).toFixed(2)}
+
+**Status:**
+${userContext.notifications ? `- ${userContext.notifications.unread} ungelesene Benachrichtigungen` : ''}
+${userContext.approvals ? `- ${userContext.approvals.pending} ausstehende Genehmigungen` : ''}
+
+Bitte versuchen Sie es in einem Moment erneut oder stellen Sie eine spezifische Frage zu Ihren Hotels oder Kalkulationen.` :
+
+            `I apologize, I'm experiencing technical difficulties. Here's what I know about your data:
+
+**Your Hotel Portfolio:**
+${userContext.hotels.recent.slice(0, 3).map(h => `• ${h.name} (${h.stars}★) - ${h.location}`).join('\n')}
+
+**Current Calculations:**
+- Total: ${userContext.calculations.total} calculations
+- Average room price: €${(userContext.calculations.recent.reduce((sum, c) => sum + (c.roomPrice || 0), 0) / Math.max(userContext.calculations.recent.length, 1)).toFixed(2)}
+
+**Status:**
+${userContext.notifications ? `- ${userContext.notifications.unread} unread notifications` : ''}
+${userContext.approvals ? `- ${userContext.approvals.pending} pending approvals` : ''}
+
+Please try again in a moment or ask a specific question about your hotels or calculations.`;
+          
+          return res.json({
+            message: fallbackMessage,
+            context: userContext,
+            error: "OpenAI API temporarily unavailable",
+            functionCalls: functionCallResults
+          });
         }
+      } else {
+        const noApiMessage = responseLanguage === 'de' ?
+          'Entschuldigung, der KI-Service ist derzeit nicht verfügbar. Bitte wenden Sie sich an den Administrator.' :
+          'Sorry, AI service is currently unavailable. Please contact your administrator.';
+          
+        return res.json({
+          message: noApiMessage,
+          context: userContext,
+          error: "No OpenAI API key configured"
+        });
       }
 
-      // If no web search response, use OpenAI with comprehensive context
-      if (!aiResponse) {
-        const OpenAI = await import('openai');
-        const openai = new OpenAI.default({
-          apiKey: process.env.OPENAI_API_KEY,
-        });
-
-        const response = await openai.chat.completions.create({
-          model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-          messages: [
-            {
-              role: "system",
-              content: aiPrompt
-            },
-            {
-              role: "user",
-              content: message
-            }
-          ],
-          max_tokens: 2000,
-          temperature: 0.7
-        });
-
-        aiResponse = response.choices[0]?.message?.content || 'I apologize, but I encountered an issue processing your request. Please try again.';
-      }
-
-      res.json({ 
+      // Return successful response
+      res.json({
         message: aiResponse,
         context: {
-          hotelsAnalyzed: userContext.hotels.total,
-          calculationsReviewed: userContext.calculations.total,
-          documentsProcessed: userContext.documents.uploads
-        }
+          role: userContext.profile.role,
+          hotelsTotal: userContext.hotels.total,
+          calculationsTotal: userContext.calculations.total,
+          notificationsUnread: userContext.notifications?.unread || 0,
+          approvalsPending: userContext.approvals?.pending || 0
+        },
+        functionCalls: functionCallResults,
+        language: responseLanguage
       });
+
     } catch (error) {
-      console.error('AI Chat error:', error);
-      
-      // Handle quota exceeded specifically with fallback response
-      if (error.code === 'insufficient_quota') {
-        // Provide a helpful fallback response based on the user's message
-        let fallbackMessage = "🚨 **OpenAI Quota Exceeded**\n\nYour OpenAI API key has run out of credits. To continue using the AI assistant:\n\n• **Add credits** at https://platform.openai.com/account/billing\n• **Check your usage** at https://platform.openai.com/usage\n• **Upgrade your plan** if needed\n\nThe AI assistant will work immediately after adding funds to your OpenAI account.";
-        
-        // Add contextual information based on available data
-        if (userContext) {
-          fallbackMessage += `\n\n---\n**Your Current Data Summary:**\n📊 ${userContext.calculations.total} pricing calculations in system\n🏨 ${userContext.hotels.total} hotels in portfolio\n📄 ${userContext.documents.uploads} documents uploaded`;
-        }
-        
-        res.status(200).json({ 
-          message: fallbackMessage,
-          context: {
-            hotelsAnalyzed: userContext?.hotels?.total || 0,
-            calculationsReviewed: userContext?.calculations?.total || 0,
-            documentsProcessed: userContext?.documents?.uploads || 0
-          },
-          error: "OpenAI quota exceeded - please add credits to your account"
-        });
-      } else {
-        res.status(500).json({ 
-          message: "I'm experiencing technical difficulties. Please ensure your OpenAI API key is configured correctly and try again.",
-          error: error.message 
-        });
-      }
+      console.error('AI Chat Error:', error);
+      res.status(500).json({ 
+        message: responseLanguage === 'de' ? 
+          'Entschuldigung, es ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.' :
+          'Sorry, an error occurred. Please try again.',
+        error: error.message 
+      });
     }
   });
 
