@@ -36,7 +36,7 @@ import {
   type InsertNotification,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, sql } from "drizzle-orm";
+import { eq, desc, and, sql, or } from "drizzle-orm";
 
 // Interface for storage operations
 export interface IStorage {
@@ -610,8 +610,11 @@ ${calculation.hotelName},${calculation.hotelUrl || ''},${calculation.stars || ''
       .from(approvalRequests)
       .leftJoin(users, eq(approvalRequests.createdByUserId, users.id))
       .leftJoin(pricingCalculations, 
-        eq(pricingCalculations.id, 
-          sql`CAST(${approvalRequests.inputSnapshot}->>'calculationId' AS INTEGER)`
+        or(
+          eq(pricingCalculations.id, approvalRequests.calculationId),
+          eq(pricingCalculations.id, 
+            sql`CAST(${approvalRequests.inputSnapshot}->>'calculationId' AS INTEGER)`
+          )
         )
       )
       .orderBy(desc(approvalRequests.createdAt));
@@ -631,13 +634,17 @@ ${calculation.hotelName},${calculation.hotelUrl || ''},${calculation.stars || ''
       .select({
         id: approvalRequests.id,
         createdByUserId: approvalRequests.createdByUserId,
+        calculationId: approvalRequests.calculationId,
+        inputHash: approvalRequests.inputHash,
         approvedByUserId: approvalRequests.approvedByUserId,
+        decisionByUserId: approvalRequests.decisionByUserId,
         status: approvalRequests.status,
         starCategory: approvalRequests.starCategory,
         inputSnapshot: approvalRequests.inputSnapshot,
         calculationSnapshot: approvalRequests.calculationSnapshot,
         reasons: approvalRequests.reasons,
         adminComment: approvalRequests.adminComment,
+        decisionAt: approvalRequests.decisionAt,
         createdAt: approvalRequests.createdAt,
         updatedAt: approvalRequests.updatedAt,
         createdByUser: {
@@ -702,25 +709,38 @@ ${calculation.hotelName},${calculation.hotelUrl || ''},${calculation.stars || ''
         return { success: false, error: 'Admin comment is required when rejecting a request' };
       }
 
-      // Get the linked calculation
-      const calculationId = approvalRequest.inputSnapshot?.calculationId;
+      // Get the linked calculation - try from direct field first, then fallback to inputSnapshot
+      let calculationId = approvalRequest.calculationId;
       if (!calculationId) {
-        return { success: false, error: 'No calculation linked to this approval request' };
+        calculationId = approvalRequest.inputSnapshot?.calculationId;
       }
-
-      const calculation = await this.getPricingCalculation(calculationId);
-      if (!calculation) {
+      console.log(`Debug: approval request ${requestId}, calculationId from field: ${approvalRequest.calculationId}, from snapshot: ${approvalRequest.inputSnapshot?.calculationId}, final calculationId: ${calculationId}`);
+      if (!calculationId) {
         return { success: false, error: 'Linked calculation not found' };
       }
 
+      // Get calculation without userId restriction (admin access)  
+      console.log(`Looking up calculation with ID: ${calculationId}`);
+      const [calculation] = await db
+        .select()
+        .from(pricingCalculations)
+        .where(eq(pricingCalculations.id, calculationId));
+        
+      if (!calculation) {
+        console.error(`Calculation not found for ID: ${calculationId}, approval request: ${requestId}`);
+        return { success: false, error: 'Linked calculation not found' };
+      }
+      
+      console.log(`Found calculation ${calculationId} for approval request ${requestId}`);
+
       // For approvals, check if input hash matches (input snapshot identity)
       if (action === 'approve') {
-        const requestInputHash = approvalRequest.inputSnapshot?.inputHash;
+        const requestInputHash = approvalRequest.inputHash;
         const currentInputHash = calculation.inputHash;
 
-        if (requestInputHash !== currentInputHash) {
+        if (requestInputHash && currentInputHash && requestInputHash !== currentInputHash) {
           // Inputs changed since request - set calculation to require new approval
-          await this.updatePricingCalculation(calculationId, {
+          await this.updatePricingCalculationByAdmin(calculationId, {
             approvalStatus: 'required_not_sent',
             lastApprovalRequestId: null,
             updatedAt: new Date(),
@@ -755,7 +775,7 @@ ${calculation.hotelName},${calculation.hotelUrl || ''},${calculation.stars || ''
         calculationUpdate.approvedInputHash = calculation.inputHash;
       }
 
-      const updatedCalculation = await this.updatePricingCalculation(calculationId, calculationUpdate);
+      const updatedCalculation = await this.updatePricingCalculationByAdmin(calculationId, calculationUpdate);
 
       return { 
         success: true, 

@@ -43,6 +43,8 @@ export const users = pgTable("users", {
 export const approvalRequests = pgTable("approval_requests", {
   id: serial("id").primaryKey(),
   createdByUserId: integer("created_by_user_id").notNull().references(() => users.id),
+  calculationId: integer("calculation_id").references(() => pricingCalculations.id), // Link to pricing calculation
+  inputHash: varchar("input_hash", { length: 64 }), // SHA-256 hash for tracking input changes
   approvedByUserId: integer("approved_by_user_id").references(() => users.id),
   decisionByUserId: integer("decision_by_user_id").references(() => users.id),
   status: varchar("status").default("pending").notNull(), // 'pending', 'approved', 'rejected'
@@ -57,8 +59,10 @@ export const approvalRequests = pgTable("approval_requests", {
 }, (table) => [
   index("approval_requests_status_idx").on(table.status),
   index("approval_requests_created_by_idx").on(table.createdByUserId),
+  index("approval_requests_calculation_idx").on(table.calculationId),
   index("approval_requests_decision_by_idx").on(table.decisionByUserId),
   index("approval_requests_created_at_idx").on(table.createdAt),
+  index("approval_requests_input_hash_idx").on(table.inputHash),
 ]);
 
 // Notifications table

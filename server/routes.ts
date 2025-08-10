@@ -5708,11 +5708,20 @@ Focus on:
         }
       }
       
+      // Generate input hash for validation
+      const crypto = require('crypto');
+      const inputString = JSON.stringify({
+        calculationData: enrichedSnapshot,
+        businessJustification
+      });
+      const inputHash = crypto.createHash('sha256').update(inputString).digest('hex');
+
       // Create input snapshot from calculation data (for schema compliance)
       const inputSnapshot = {
         calculationId,
         calculationData: enrichedSnapshot,
-        businessJustification
+        businessJustification,
+        inputHash
       };
       
       // Extract star category from calculation snapshot
@@ -5726,6 +5735,8 @@ Focus on:
 
       const approvalRequest = await storage.createApprovalRequest({
         createdByUserId: req.user.id,
+        calculationId: calculationId,
+        inputHash: inputHash,
         starCategory: starCategory,
         inputSnapshot: inputSnapshot,
         calculationSnapshot: enrichedSnapshot,

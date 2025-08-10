@@ -1,0 +1,125 @@
+Goal
+Fix the admin approval decision flow. Approve/Reject must work without 400s, update the linked calculation, and trigger notifications. The current error is: 400 {"success":false,"message":"Linked calculation not found"}.
+
+1) Reproduce & Inspect (start here)
+
+Open any pending request (e.g., Approval Request #7) and click Approve/Reject.
+
+Capture the network call (likely PATCH /api/approvals/:id) and payload.
+
+In DB, check approval_requests for that id:
+
+Fields: calculationId, inputHash, createdByUserId, status.
+
+Verify calculations has a row with that calculationId.
+
+Log both entities on the server when the PATCH is called.
+
+2) Root-Cause Audit & Data Fix
+
+If approval_requests.calculationId is null/wrong type, add migration/backfill:
+
+Make calculationId NOT NULL for new rows (keep existing nullable for backfill).
+
+Backfill orphan requests using ONE of:
+
+Match by calculations.lastApprovalRequestId == approval_requests.id, or
+
+Match unique pair (createdByUserId, inputHash) to a calculation with close createdAt (±10 min), or
+
+If inputSnapshot.calculationId exists, use it.
+
+Add index on approval_requests.calculationId.
+
+Ensure consistent ID types (int/uuid/ObjectId). Normalize conversions in DAO (e.g., parseInt, new ObjectId()).
+
+3) Request Creation Path (prevent future orphans)
+
+In POST /api/approvals:
+
+Require a valid calculationId. Validate calculation exists and belongs to requester.
+
+Persist approval_requests.calculationId and inputHash.
+
+Update the calculation: approvalStatus='pending', lastApprovalRequestId=request.id.
+
+If calculation missing → return 404 { error:'calculation_not_found' } (don’t create orphan).
+
+4) Decision Endpoint (robust)
+
+In PATCH /api/approvals/:id (admin only), implement:
+
+Load request including linked calculation by calculationId.
+
+If calculationId is null → try to resolve via backfill strategy (2). If still not found → return 422 { error:'orphan_approval_request' } with guidance; log error.
+
+On approve:
+
+If request.inputHash !== calculation.inputHash → 409 { error:'input_hash_mismatch' }; message: “Inputs changed since request—please resubmit.”
+
+Else set request.status='approved', decisionByUserId, decisionAt=now, store optional adminComment.
+
+Update calculation: approvalStatus='approved', approvedInputHash=request.inputHash.
+
+On reject:
+
+Require non-empty adminComment.
+
+Set request.status='rejected', decisionByUserId, decisionAt=now.
+
+Update calculation: approvalStatus='rejected'.
+
+Return updated request + calculation summary. Make the endpoint idempotent (repeat PATCH returns the decided state).
+
+5) Frontend Fixes (modal & list)
+
+Ensure the Approve/Reject modal calls the correct endpoint with { action:'approve'|'reject', adminComment? }.
+
+Do not pass calculationId from client; server derives it via request link.
+
+Disable buttons while loading; show success toasts.
+
+After success, refresh:
+
+the request row (status pill),
+
+the dashboard counters,
+
+and (optionally) the requester’s calculation page via notifications/polling.
+
+6) Notifications (keep parity)
+
+On create (pending): notify all admins (already implemented).
+
+On decision: notify requester (approved/rejected) with comment snippet and deep links.
+
+Email failures must not rollback DB; log them.
+
+7) Star Category & Snapshot Hygiene
+
+If starCategory is 0/missing in some requests:
+
+Fix the creation path to persist the selected star category (3/4/5 or ‘unknown’) into approval_requests.starCategory and snapshot.
+
+Show ‘Unbekannt’ in UI if not provided; still link to calculation.
+
+8) Tests
+
+Unit:
+
+Creation refuses missing/invalid calculationId.
+
+Decision approves with matching hash; rejects with required comment; 409 on hash mismatch.
+
+Orphan request → 422.
+
+Integration:
+
+End-to-end: create → pending → approve
+
+
+
+
+
+
+ChatGPT kann Fehler machen. Überprüfe wichtige Informationen. Siehe Cookie-Voreinstellungen.
