@@ -226,11 +226,7 @@ export default function AppSidebar({ className }: SidebarProps) {
                       )}>
                         {item.name}
                       </span>
-                      {(item as any).badge && (
-                        <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0 px-1 py-0.5 flex-shrink-0 text-xs scale-75 origin-left">
-                          {(item as any).badge}
-                        </Badge>
-                      )}
+
                       {/* Approval Requests Pending Badge */}
                       {item.href === "/approvals" && approvalStats && approvalStats.pending > 0 && (
                         <Badge 
