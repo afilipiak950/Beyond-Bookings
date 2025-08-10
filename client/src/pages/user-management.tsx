@@ -51,24 +51,38 @@ export default function UserManagement() {
   const queryClient = useQueryClient();
 
   // Fetch all users (admin only)
-  const { data: usersResponse, isLoading, error } = useQuery({
-    queryKey: ['/api/admin/users'],
-    queryFn: (): Promise<{ success: boolean; users: User[]; count: number }> => 
-      apiRequest('/api/admin/users'),
+  const { data: usersResponse, isLoading, error, refetch } = useQuery({
+    queryKey: ['/api/admin/users', currentUser?.id], // Add user ID to make unique
+    queryFn: async (): Promise<{ success: boolean; users: User[]; count: number }> => {
+      const response = await fetch('/api/admin/users', {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      return response.json();
+    },
     enabled: currentUser?.role === 'admin',
     retry: 2,
-    staleTime: 30000 // 30 seconds
+    staleTime: 0, // Disable cache to force fresh data
+    refetchOnMount: true,
+    refetchOnWindowFocus: false
   });
 
-  // Debug logging
-  console.log("UserManagement Debug:", {
-    currentUser,
-    queryEnabled: currentUser?.role === 'admin',
-    usersResponse,
-    isLoading,
-    error,
-    usersCount: usersResponse?.users?.length || 0
-  });
+  // Debug logging (remove in production)
+  if (process.env.NODE_ENV === 'development') {
+    console.log("UserManagement Debug:", {
+      usersCount: usersResponse?.users?.length || 0,
+      isLoading,
+      hasError: !!error
+    });
+  }
 
   const users = usersResponse?.users || [];
   const adminCount = users.filter(u => u.role === 'admin').length;
@@ -523,7 +537,10 @@ export default function UserManagement() {
             {filteredUsers.length === 0 && (
               <Card className="bg-white/80 backdrop-blur-sm border border-blue-100">
                 <CardContent className="p-8 text-center">
-                  <p className="text-gray-600">No users found matching your criteria.</p>
+                  <p className="text-gray-600 mb-4">No users found matching your criteria.</p>
+                  <Button onClick={() => refetch()} variant="outline" size="sm" className="mt-2">
+                    Refresh Data
+                  </Button>
                 </CardContent>
               </Card>
             )}
