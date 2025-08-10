@@ -116,6 +116,10 @@ export function Approvals() {
   const approvalRequestsData = approvalRequests?.approvalRequests || [];
   const myRequestsData = myRequests?.approvalRequests || [];
 
+  // Debug log to see what data we're getting
+  console.log('Debug - approvalRequests:', approvalRequests);
+  console.log('Debug - approvalRequestsData length:', approvalRequestsData.length);
+
   const pendingCount = approvalRequestsData.filter((req: ApprovalRequest) => req.status === 'pending').length;
   const approvedCount = approvalRequestsData.filter((req: ApprovalRequest) => req.status === 'approved').length;
   const rejectedCount = approvalRequestsData.filter((req: ApprovalRequest) => req.status === 'rejected').length;
