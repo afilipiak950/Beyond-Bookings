@@ -249,10 +249,7 @@ export default function AppSidebar({ className }: SidebarProps) {
 
 
 
-                {/* Hover Shimmer Effect */}
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 transform translate-x-[-100%] group-hover:translate-x-[200%] transition-transform duration-1000" />
-                </div>
+
               </Button>
             </div>
           );

@@ -1,0 +1,55 @@
+Title: Critical fix — True reset, full doc×question coverage (7 agents), stop “No evidence” spam, live updates
+
+Prompt:
+Big issue: Many documents could answer the questions, but most answers show “No specific evidence found” and runs finish unrealistically fast. Also, pressing “Reset & Run all analyses” must wipe old answers across all 7 agents and re-run everything, with UI updating as jobs finish. Find the exact root cause (file+line) and apply a minimal fix.
+
+Do:
+
+True Reset semantics
+
+On button click: abort running jobs, then delete only outputs: answers, combinedAnswers, status/progress, all 7 agents.
+
+Do not delete ingestion/OCR/chunks/embeddings.
+
+Clear caches and in-memory stores; emit UI event to set all progress bars to 0% and empty answers.
+
+Full fan-out scheduling
+
+Enqueue one job per (agentId, docId, questionId). Unique key: ${agentId}:${docId}:${questionId}:${version}; concurrency>1.
+
+Block analysis until embeddings exist for the doc. No hidden caps (LIMIT 3, .slice(0,3), “preview”).
+
+Retrieval must use the OCR content
+
+For each job, retrieval scoped to the docId, topK ≥ 8, reasonable threshold.
+
+If hits=0 → retry(3, backoff) and broaden query over all assigned docs for that agent before returning.
+
+Pass full metadata {docId,page,url,snippet,score}.
+
+Combine & generate
+
+After all doc×question jobs complete, merge evidence across all assigned docs for that question; dedupe (MMR); keep ≥15 snippets.
+
+Generate final answer with schema:
+{answer, confidence, sources:[{docId,page,url,snippet}], quotes:[{text,docId,page}], usedDocIds:[] }.
+
+Kill generic fallback
+
+Remove any hardcoded “No specific evidence found”.
+
+If still 0 after retries → persist {answer:null, reason:'no_hits', sources:[], quotes:[]} and log WARN.
+
+API/UI updates
+
+Expose granular (agentId, docId, questionId) and combined (agentId, questionId) endpoints.
+
+Push SSE/WebSocket events: ENQUEUED/STARTED/PROGRESS/DONE/FAILED; UI renders answers as they arrive.
+
+Verification (blocker)
+
+Print coverage matrix per agent: expected = assignedDocs × questions, plus enqueued/started/finished/persisted; list missing pairs.
+
+Targets: processed === expected; ≥80% questions have hit_count ≥ 5; realistic latencies (no mass sub-second jobs).
+
+Provide file+line root cause, minimal patch/diff, logs, and a screenshot showing diverse sources per question after a full reset.
