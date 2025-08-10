@@ -34,7 +34,10 @@ import {
   Globe,
   ChevronLeft,
   ChevronRight,
-  User
+  User,
+  XCircle,
+  CheckCircle,
+  AlertCircle
 } from "lucide-react";
 import { formatCurrency, formatPercentage } from "@/lib/pricing";
 import { apiRequest } from "@/lib/queryClient";
@@ -338,6 +341,109 @@ export default function Calculations() {
     if (margin > 30) return { variant: "default" as const, text: "High Profit" };
     if (margin > 20) return { variant: "secondary" as const, text: "Good Profit" };
     return { variant: "outline" as const, text: "Low Profit" };
+  };
+
+  // Approval status badge system
+  const getApprovalStatusBadge = (calculation: PricingCalculationWithCreator) => {
+    const approvalStatus = calculation.approvalStatus || 'none_required';
+    
+    switch (approvalStatus) {
+      case 'none_required':
+        return (
+          <Badge className="bg-green-500 text-white text-xs">
+            <CheckCircle className="h-3 w-3 mr-1" />
+            Kein Approval nötig
+          </Badge>
+        );
+      case 'required_not_sent':
+        return (
+          <div className="flex items-center gap-1">
+            <Badge variant="destructive" className="text-xs">
+              <AlertCircle className="h-3 w-3 mr-1" />
+              Approval erforderlich
+            </Badge>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-6 text-xs px-2"
+              onClick={() => handleSendForApproval(calculation)}
+            >
+              An Admin senden
+            </Button>
+          </div>
+        );
+      case 'pending':
+        return (
+          <Badge className="bg-yellow-500 text-white text-xs">
+            <Clock className="h-3 w-3 mr-1" />
+            Pending Approval
+          </Badge>
+        );
+      case 'approved':
+        return (
+          <Badge className="bg-blue-500 text-white text-xs">
+            <CheckCircle className="h-3 w-3 mr-1" />
+            Approved
+          </Badge>
+        );
+      case 'rejected':
+        return (
+          <div className="flex items-center gap-1">
+            <Badge variant="destructive" className="text-xs">
+              <XCircle className="h-3 w-3 mr-1" />
+              Declined
+            </Badge>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-6 text-xs px-2"
+              onClick={() => handleSendForApproval(calculation)}
+            >
+              Erneut senden
+            </Button>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
+  // Send calculation for approval
+  const handleSendForApproval = async (calculation: PricingCalculationWithCreator) => {
+    try {
+      const requestData = {
+        calculationId: calculation.id,
+        calculationSnapshot: {
+          stars: calculation.stars,
+          averagePrice: parseFloat(calculation.averagePrice || "0"),
+          voucherPrice: parseFloat(calculation.voucherPrice || "0"),
+          profitMargin: parseFloat(calculation.profitMargin || "0"),
+          operationalCosts: parseFloat(calculation.operationalCosts || "0"),
+          financingVolume: parseFloat(calculation.financingVolume || "0"),
+          vatRate: parseFloat(calculation.vatRate || "0")
+        },
+        businessJustification: "Calculation requires approval based on business rules"
+      };
+
+      await apiRequest('/api/approvals', {
+        method: 'POST',
+        body: requestData
+      });
+
+      toast({
+        title: "Success",
+        description: "Calculation sent for approval",
+      });
+
+      // Refresh calculations
+      queryClient.invalidateQueries({ queryKey: ['/api/pricing-calculations'] });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send for approval",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -872,9 +978,12 @@ export default function Calculations() {
                                 </div>
                               </div>
                             </div>
-                            <Badge variant={status.variant} className="shadow-sm">
-                              {status.text}
-                            </Badge>
+                            <div className="flex items-center gap-2">
+                              <Badge variant={status.variant} className="shadow-sm">
+                                {status.text}
+                              </Badge>
+                              {getApprovalStatusBadge(calculation)}
+                            </div>
                           </div>
                           
                           {/* Assigned field and Action buttons */}

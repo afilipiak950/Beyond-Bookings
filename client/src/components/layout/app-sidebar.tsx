@@ -21,6 +21,7 @@ import {
   Sparkles,
   TrendingUp,
   Database,
+  Shield,
   Zap
 } from "lucide-react";
 
@@ -77,6 +78,14 @@ const navigation = [
     icon: Users,
     description: "Review and approve calculations",
     gradient: "from-purple-500 to-pink-500",
+    adminOnly: true,
+  },
+  {
+    name: "User Management",
+    href: "/user-management",
+    icon: Shield,
+    description: "Manage user accounts and roles",
+    gradient: "from-yellow-500 to-orange-500",
     adminOnly: true,
   },
   {

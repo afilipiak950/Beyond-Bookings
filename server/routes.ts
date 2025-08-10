@@ -124,8 +124,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // User Management API Routes - All users can access (no role management)
   
-  // Get all users
-  app.get('/api/admin/users', requireAuth, async (req, res) => {
+  // Get all users (Admin only)
+  app.get('/api/admin/users', requireAuth, requireAdmin, async (req, res) => {
     try {
       const users = await storage.getAllUsers();
       // Remove password field from response
@@ -133,15 +133,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const { password, ...safeUser } = user;
         return safeUser;
       });
-      res.json(safeUsers);
+      res.json({
+        success: true,
+        users: safeUsers,
+        count: safeUsers.length
+      });
     } catch (error) {
       console.error("Error fetching users:", error);
       res.status(500).json({ message: "Failed to fetch users" });
     }
   });
 
-  // Create new user (admin function)
-  app.post('/api/admin/users', requireAuth, async (req, res) => {
+  // Create new user (Admin only)
+  app.post('/api/admin/users', requireAuth, requireAdmin, async (req, res) => {
     try {
       const userData = createUserSchema.parse(req.body);
       
@@ -174,8 +178,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Update user
-  app.put('/api/admin/users/:id', requireAuth, async (req, res) => {
+  // Update user role (Admin only)
+  app.patch('/api/admin/users/:id', requireAuth, requireAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { role } = req.body;
+
+      if (!['user', 'admin'].includes(role)) {
+        return res.status(400).json({ message: 'Invalid role. Must be user or admin' });
+      }
+
+      const userToUpdate = await storage.getUserById(userId);
+      if (!userToUpdate) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      // Check if this is the last admin (Last Admin Protection)
+      if (userToUpdate.role === 'admin' && role === 'user') {
+        const allUsers = await storage.getAllUsers();
+        const adminCount = allUsers.filter(u => u.role === 'admin').length;
+        
+        if (adminCount <= 1) {
+          return res.status(400).json({ 
+            message: 'Cannot change the last admin to user. At least one admin must remain.' 
+          });
+        }
+      }
+
+      // Update user role
+      const updatedUser = await storage.updateUser(userId, { role });
+
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Return user without password
+      const { password, ...safeUser } = updatedUser;
+      res.json({
+        success: true,
+        message: `User role updated to ${role} successfully`,
+        user: safeUser
+      });
+    } catch (error) {
+      console.error('Error updating user role:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Update user profile (Admin only)
+  app.put('/api/admin/users/:id', requireAuth, requireAdmin, async (req, res) => {
     try {
       const userId = parseInt(req.params.id);
       const updateData = updateUserProfileSchema.parse(req.body);
@@ -209,8 +260,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Delete user
-  app.delete('/api/admin/users/:id', requireAuth, async (req, res) => {
+  // Delete user (Admin only)
+  app.delete('/api/admin/users/:id', requireAuth, requireAdmin, async (req, res) => {
     try {
       const userId = parseInt(req.params.id);
       const currentUserId = (req as any).user.id;
@@ -220,13 +271,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Cannot delete your own account" });
       }
 
+      const userToDelete = await storage.getUserById(userId);
+      if (!userToDelete) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Check if this is the last admin (Last Admin Protection)
+      if (userToDelete.role === 'admin') {
+        const allUsers = await storage.getAllUsers();
+        const adminCount = allUsers.filter(u => u.role === 'admin').length;
+        
+        if (adminCount <= 1) {
+          return res.status(400).json({ 
+            message: 'Cannot delete the last admin. At least one admin must remain.' 
+          });
+        }
+      }
+
       const deleted = await storage.deleteUser(userId);
       
       if (!deleted) {
         return res.status(404).json({ message: "User not found" });
       }
 
-      res.json({ message: "User deleted successfully" });
+      res.json({ 
+        success: true,
+        message: "User deleted successfully" 
+      });
     } catch (error) {
       console.error("Error deleting user:", error);
       res.status(500).json({ message: "Failed to delete user" });

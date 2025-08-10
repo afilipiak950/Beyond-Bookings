@@ -110,6 +110,14 @@ export const pricingCalculations = pgTable("pricing_calculations", {
   additionalNotes: text("additional_notes"),
   requestType: text("request_type"), // 'standard', 'customer_financing'
   status: text("status").default("draft"), // 'draft', 'submitted', 'processing', 'completed'
+  
+  // Approval workflow fields
+  approvalStatus: text("approval_status", { 
+    enum: ["none_required", "required_not_sent", "pending", "approved", "rejected"] 
+  }).default("none_required"),
+  lastApprovalRequestId: integer("last_approval_request_id").references(() => approvalRequests.id),
+  inputHash: text("input_hash"), // SHA-256 hash of key input fields for change detection
+  
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

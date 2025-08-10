@@ -1,0 +1,201 @@
+Ziel
+Erweitere die „Pricing Agent – Beyond Bookings“ Plattform um einen Approval-Workflow mit klaren Rollen (admin, user). Ein User darf eine Kalkulation nur finalisieren, wenn keine Freigabe nötig ist oder wenn sie von einem Admin genehmigt wurde. Implementiere Role-Management im Frontend und Status-Anzeigen auf der Calculations-Seite. Führe alle Checks durch, nimm nötige Anpassungen vor und debugge bis alles grün ist.
+
+1) Code-/Stack-Audit & Branch
+
+Stack automatisch erkennen, Feature-Branch feature/approvals anlegen.
+
+Lint/Format fixen, Tests ausführen, gebrochene Stellen notieren.
+
+2) Rollen & Auth
+
+Falls noch nicht vorhanden: Rollen admin, user ins User-Schema aufnehmen (role mit Default user).
+
+Seed-Admin via ENV SEED_ADMIN_EMAIL, SEED_ADMIN_PASSWORD.
+
+Middleware/Guards:
+
+admin: Approvals sehen/filtern, approve/reject, User-Rollen verwalten.
+
+user: eigene Approvals erstellen/einsehen.
+
+Falls keine Auth: minimal JWT/Session einführen ohne Breaking Changes.
+
+3) Role-Management im Frontend (NEU)
+
+Es gibt aktuell keine Stelle, um die Rolle zu setzen. Ergänze:
+
+Users-List (nur admin): Tabelle mit Suche/Filter, Spalten: Name, E-Mail, Rolle, erstellt am, Aktionen.
+
+User anlegen (nur admin): Formular mit role-Select (admin/user).
+
+User bearbeiten (nur admin): Feld role änderbar.
+
+Aktionen: „Zu Admin machen“, „Zu User machen“.
+
+Sicherungen:
+
+Der letzte verbleibende Admin darf nicht zu user geändert werden.
+
+Bestätigungsdialog bei Rollenwechsel; Audit-Log (who → whom, vorher/nachher, Zeit).
+
+API:
+
+GET /api/users (admin) – Liste.
+
+PATCH /api/users/:id (admin) – { role } mit Validierung der „letzter Admin“-Regel.
+
+Optional: POST /api/users (admin) – Invite/Create inkl. Rolle.
+
+4) Business-Regeln (Approval-Trigger)
+
+Felder: Realistischer Hotelverkaufspreis, Gutscheinwert für Hotel, Marge nach Steuern, Finanzierung: Projektkosten brutto, Sternkategorie.
+
+Caps je Sternkategorie:
+
+3★: VK ≤ 50,00 €, Gutschein ≤ 30,00 €
+
+4★: VK ≤ 60,00 €, Gutschein ≤ 35,00 €
+
+5★: VK ≤ 75,00 €, Gutschein ≤ 45,00 €
+
+Weitere Regeln: Marge < 27 % → Approval nötig; Finanzierung > 50.000 € → Approval nötig; Sternkategorie ∉ {3,4,5} → Approval nötig.
+
+5) Parsing/Normalisierung (Debug-kritisch)
+
+parseEuro(value)/formatEuro(n) implementieren: akzeptiere 60, 60.00, 60,00, 60,00 €, 50.001,00 €.
+
+Numerische Vergleiche, 2 Nachkommastellen, strikte Schwellen: an der Grenze kein Approval.
+
+6) Validation-Funktion
+
+validatePricing(input) -> { needsApproval: boolean, reasons: string[], normalized: input }
+
+Gründe deutsch, z. B. „VK 62,00 € überschreitet 4★-Limit 60,00 €“.
+
+7) Datenmodell
+
+approval_requests:
+
+id, calculationId, createdByUserId, status (pending|approved|rejected),
+
+starCategory, inputSnapshot, calculationSnapshot, inputHash, reasons[], adminComment, timestamps, Indizes.
+
+Calculations (falls nicht vorhanden):
+
+id, createdByUserId, inputSnapshot, calculationSnapshot, inputHash,
+
+approvalStatus (none_required|required_not_sent|pending|approved|rejected), lastApprovalRequestId (nullable), timestamps.
+
+approvalStatus wird beim Rechnen/Anfragen/Entscheiden aktualisiert.
+
+8) API
+
+POST /api/approvals (user) – erstellt Request (pending), setzt Calculation auf pending + lastApprovalRequestId.
+
+GET /api/approvals?status=... (admin) – Liste.
+
+GET /api/approvals/:id (owner/admin) – Details.
+
+PATCH /api/approvals/:id (admin) – { status: 'approved'|'rejected', adminComment? }
+
+On approve: Calculation.approvalStatus=approved nur wenn inputHash identisch.
+
+On reject: Calculation.approvalStatus=rejected.
+
+Guards/Validierung (zod/yup) + saubere Fehlercodes.
+
+9) Calculations-Seite — Status-Badges (NEU)
+
+Jede Kalkulation zeigt oben rechts einen Status-Badge (i18n DE/EN):
+
+none_required → „Kein Approval nötig“
+
+required_not_sent → „Approval erforderlich (noch nicht gesendet)“ + Button „An Admin senden“
+
+pending → „Pending Approval“ + Zeitstempel + „Anfrage anzeigen“
+
+approved → „Approved“ (inkl. Admin, Zeit, Request-ID) → Finalisieren freigeben
+
+rejected → „Declined“ + Admin-Kommentar + Button „Erneut senden“ (falls Eingaben angepasst)
+
+Logik beim Rechnen/Speichern:
+
+validatePricing() liefert needsApproval.
+
+Wenn false: setze Calculation.approvalStatus=none_required.
+
+Wenn true und kein Request mit gleichem inputHash: required_not_sent.
+
+Wenn Request vorhanden: spiegel den Request-Status (pending|approved|rejected).
+
+Wichtig: Bei jeder Eingabeänderung inputHash neu berechnen. Weicht er vom genehmigten Hash ab → Status zurück auf required_not_sent oder gemäß existierendem Request.
+
+10) User-Flow (Form)
+
+Bei needsApproval=true: Felder rot umranden, kompakte Gründe anzeigen, Finalisierung deaktivieren.
+
+Button „Zur Freigabe an Admin senden“ → POST /api/approvals → Toast „An Admin gesendet“.
+
+Nach Freigabe: Finalisierung/Export wieder aktivieren (nur bei identischem inputHash).
+
+11) Admin-UI
+
+Route /admin/approvals (nur admin).
+
+Tabelle mit Filtern (Status, Datum, User, Sterne), Klick → Detail (Inputs, Berechnung, Gründe, Verlauf).
+
+Aktionen: Approve/Reject + Kommentar, mit in-app Benachrichtigung des Users (und E-Mail, wenn SMTP konfiguriert, sonst Stub).
+
+12) Echtzeit/Aktualität
+
+Entweder Polling (z. B. alle 10 s) oder WebSocket/SSE, damit Badges auf der Calculations-Seite automatisch von pending → approved/rejected wechseln.
+
+Sichtbare Refresh/Retry-Buttons bereitstellen.
+
+13) Feature-Flag & Konfiguration
+
+APPROVALS_ENABLED=true (Default on).
+
+Grenzwerte kapseln in pricingCaps.
+
+14) Tests (inkl. neue UI/Flows)
+
+Unit: validatePricing (Grenzen & Zahlformate).
+
+API: Role-Guards, Create/List/Approve/Reject, „letzter Admin“-Regel.
+
+E2E:
+
+User mit Out-of-Range → Badge required_not_sent → sendet → Admin approvt → Badge approved → Finalisierung möglich.
+
+Hash ändert sich nach Approval → Badge zurück auf required_not_sent.
+
+Role-Management: Admin kann Rolle setzen, letzter Admin kann nicht entzogen werden.
+
+15) Debugging & Hardening
+
+Strukturierte Logs (Request-ID, User-ID, Statuswechsel, Role-Changes).
+
+Race-Conditions: doppeltes Approve/Reject verhindern (idempotente PATCHs).
+
+Fehlerfälle: fehlende Sternkategorie, Parser-Fehler, ungültige Zahlformate → klare Fehlermeldungen.
+
+Regressionen vermeiden: Flow ohne Approval unverändert lauffähig.
+
+CI grün (Lint/Tests), Screenshots der neuen Views in PR.
+
+Akzeptanzkriterien
+
+Frontend besitzt User-Verwaltung mit Rollenwahl beim Anlegen/Bearbeiten (nur Admin), inkl. „letzter Admin“-Schutz.
+
+Calculations-Seite zeigt Badges: Kein Approval nötig, Approval erforderlich (noch nicht gesendet), Pending Approval, Approved, Declined.
+
+Button „An Admin senden“ vorhanden, Request erscheint in /admin/approvals, Admin kann approve/reject.
+
+Finalisierung ist nur möglich bei none_required oder approved (gleicher inputHash).
+
+Alle Regeln (Sterne-Caps, 27 % Marge, 50 k Finanzierung) greifen exakt; Zahlformate werden korrekt geparst.
+
+Tests bestehen; README dokumentiert Rollen, Badges, Flows, ENV.
+
