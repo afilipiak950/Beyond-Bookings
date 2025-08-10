@@ -772,10 +772,13 @@ export default function Workflow() {
   const [extractHotelUrl, setExtractHotelUrl] = useState("");
   
   // Fetch hotels from database
-  const { data: hotels, isLoading: hotelsLoading } = useQuery({
+  const { data: hotelsResponse, isLoading: hotelsLoading } = useQuery<{data: any[], pagination: any}>({
     queryKey: ["/api/hotels"],
     retry: false,
   });
+  
+  // Extract hotels data from the response object
+  const hotels = hotelsResponse?.data || [];
 
   // AI Price Suggestion Mutation
   const aiSuggestionMutation = useMutation({
@@ -868,7 +871,7 @@ export default function Workflow() {
   });
   
   // Filter hotels based on search input
-  const filteredHotels = (hotels || []).filter((hotel: any) => 
+  const filteredHotels = hotels.filter((hotel: any) => 
     hotel.name.toLowerCase().includes(workflowData.hotelName.toLowerCase())
   );
   
