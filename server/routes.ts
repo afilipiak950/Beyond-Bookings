@@ -508,7 +508,7 @@ MANDATORY OUTPUT FORMAT (valid JSON only):
 CRITICAL: You must always return a specific price number in EUR. Research 5-star luxury boutique hotels in Düsseldorf if exact data unavailable.`
               }
             ],
-            max_tokens: 600,
+            maxTokens: 600,
             temperature: 0.1
           });
 
@@ -631,7 +631,7 @@ Return ONLY this JSON format:
               content: priceSearchPrompt
             }
           ],
-          max_tokens: 600,
+          maxTokens: 600,
           temperature: 0.1
         });
 
@@ -712,7 +712,7 @@ If you cannot find exact room count data, set roomCount to null and explain in d
               content: researchPrompt
             }
           ],
-          max_tokens: 1000,
+          maxTokens: 1000,
           temperature: 0.1
         });
 
@@ -827,7 +827,7 @@ MANDATORY OUTPUT FORMAT (valid JSON only):
 CRITICAL: You must always return a specific price number in EUR. If exact data unavailable, research comparable ${cleanedData.stars || 3}-star hotels in the same area and provide informed estimate based on market standards.`
             }
           ],
-          max_tokens: 600,
+          maxTokens: 600,
           temperature: 0.1
         });
 
@@ -987,7 +987,7 @@ CRITICAL: You must always return a specific price number in EUR. If exact data u
           testResponse = await mistral.chat.complete({
             model: model,
             messages: [{ role: "user", content: "Hello, respond with 'API working'" }],
-            max_tokens: 50
+            maxTokens: 50
           });
           console.log(`Test successful with model: ${model}`);
           break;
@@ -1125,7 +1125,7 @@ Research authentic review data from actual platforms. If exact review counts una
             content: extractionPrompt
           }
         ],
-        max_tokens: 1500,
+        maxTokens: 1500,
         temperature: 0.1
       });
 
@@ -1229,7 +1229,7 @@ Only return hotel data if you can verify this is a real, existing hotel. Do not 
             content: basicDataPrompt
           }
         ],
-        max_tokens: 600,
+        maxTokens: 600,
         temperature: 0.1
       });
 
@@ -3078,7 +3078,7 @@ Provide an ultra-detailed, comprehensive response that demonstrates deep analysi
                   content: message
                 }
               ],
-              max_tokens: 1000,
+              maxTokens: 1000,
               temperature: 0.7
             })
           });
@@ -3111,7 +3111,7 @@ Provide an ultra-detailed, comprehensive response that demonstrates deep analysi
               content: message
             }
           ],
-          max_tokens: 2000,
+          maxTokens: 2000,
           temperature: 0.7
         });
 
@@ -3437,7 +3437,7 @@ CRITICAL: Extract ALL actual numbers from the document. Be exhaustive in your an
                 content: analysisPrompt
               }
             ],
-            max_tokens: 4000,
+            maxTokens: 4000,
             temperature: 0.2
           });
           
@@ -3519,7 +3519,7 @@ Format as JSON with fields: overallSummary, keyPatterns, strategicRecommendation
             content: summaryPrompt
           }
         ],
-        max_tokens: 2000,
+        maxTokens: 2000,
         temperature: 0.3
       });
       
@@ -3956,7 +3956,7 @@ Format your response in a clear, well-structured manner with bullet points where
             content: prompt
           }
         ],
-        max_tokens: 1000,
+        maxTokens: 1000,
         temperature: 0.7
       });
 
@@ -4025,7 +4025,7 @@ Return a JSON object with the following structure:
             content: queryAnalysisPrompt
           }
         ],
-        max_tokens: 500,
+        maxTokens: 500,
         temperature: 0.1
       });
 
@@ -4160,7 +4160,7 @@ Return a JSON object with the following structure:
               content: dataExtractionPrompt
             }
           ],
-          max_tokens: 2000,
+          maxTokens: 2000,
           temperature: 0.1
         });
 
@@ -4210,7 +4210,7 @@ Return a JSON object with the following structure:
                   content: locationLookupPrompt
                 }
               ],
-              max_tokens: 1000,
+              maxTokens: 1000,
               temperature: 0.1
             });
 
@@ -4296,7 +4296,7 @@ Return a JSON object with the following structure:
             content: analysisPrompt
           }
         ],
-        max_tokens: 3000,
+        maxTokens: 3000,
         temperature: 0.1
       });
 
@@ -4569,7 +4569,7 @@ Price data found: ${priceData.length} price points
 Return a JSON response with: documentType, keyFindings[], businessInsights[], recommendations[], summary`
                       }
                     ],
-                    max_tokens: 1000
+                    maxTokens: 1000
                   });
                   
                   const content = response.choices[0]?.message?.content || '{}';
@@ -4778,7 +4778,7 @@ Price data found: ${priceData.length} price points
 Return a JSON response with: documentType, keyFindings[], businessInsights[], recommendations[], summary`
                       }
                     ],
-                    max_tokens: 1000
+                    maxTokens: 1000
                   });
                   
                   const content = response.choices[0]?.message?.content || '{}';
@@ -5051,7 +5051,7 @@ Return a JSON response with: documentType, keyFindings[], businessInsights[], re
                 ]
               }
             ],
-            max_tokens: 1000
+            maxTokens: 1000
           });
 
           extractedText = response.choices[0]?.message?.content || '';
@@ -5131,7 +5131,7 @@ Price data found: ${priceData.length} price points
 Return a JSON response with: documentType, keyFindings[], businessInsights[], recommendations[], summary`
             }
           ],
-          max_tokens: 1000
+          maxTokens: 1000
         });
 
         const content = response.choices[0]?.message?.content || '{}';
@@ -5331,7 +5331,7 @@ Focus on:
                 content: prompt
               }
             ],
-            max_tokens: 2000,
+            maxTokens: 2000,
             temperature: 0.1,
           });
 
@@ -5496,7 +5496,7 @@ Focus on:
                 content: prompt
               }
             ],
-            max_tokens: 2000,
+            maxTokens: 2000,
             temperature: 0.3
           });
 

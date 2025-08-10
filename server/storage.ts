@@ -39,6 +39,7 @@ import { eq, desc, and } from "drizzle-orm";
 export interface IStorage {
   // User operations for local authentication
   getUser(id: number): Promise<User | undefined>;
+  getUserById(id: number): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: UpsertUser): Promise<User>;
   updateUser(id: number, user: Partial<UpsertUser>): Promise<User | undefined>;
@@ -112,6 +113,11 @@ export interface IStorage {
 export class DatabaseStorage implements IStorage {
   // User operations (mandatory for Replit Auth)
   async getUser(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+
+  async getUserById(id: number): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
   }
@@ -209,15 +215,19 @@ export class DatabaseStorage implements IStorage {
       
       // Simple mock data extraction - in a real implementation, you would use
       // web scraping libraries like Puppeteer or Playwright
+      const city = hostname.includes('berlin') ? 'Berlin' : 
+                   hostname.includes('munich') ? 'Munich' : 
+                   hostname.includes('hamburg') ? 'Hamburg' : 'Unknown';
+      
       const mockData = {
         name: `Hotel from ${hostname}`,
         url: url,
         stars: Math.floor(Math.random() * 5) + 1,
         roomCount: Math.floor(Math.random() * 300) + 50,
         averagePrice: Math.floor(Math.random() * 200) + 100,
-        location: hostname.includes('berlin') ? 'Berlin' : 
-                 hostname.includes('munich') ? 'Munich' : 
-                 hostname.includes('hamburg') ? 'Hamburg' : 'Unknown',
+        location: city,
+        city: city,
+        country: 'Germany',
       };
 
       // Check if hotel already exists and create if not
