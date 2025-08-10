@@ -136,10 +136,7 @@ export function Approvals() {
   const approvalRequestsData = approvalRequests?.approvalRequests || [];
   const myRequestsData = myRequests?.approvalRequests || [];
 
-  // Debug log to see what data we're getting
-  console.log('Debug - approvalRequests:', approvalRequests);
-  console.log('Debug - approvalRequestsData length:', approvalRequestsData.length);
-  console.log('Debug - query error:', error);
+
 
   const pendingCount = approvalRequestsData.filter((req: ApprovalRequest) => req.status === 'pending').length;
   const approvedCount = approvalRequestsData.filter((req: ApprovalRequest) => req.status === 'approved').length;
@@ -312,16 +309,22 @@ export function Approvals() {
                                 <div className="bg-gray-50 p-3 rounded-lg mt-1 text-sm">
                                   <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                      <span className="font-medium">Final Price:</span> {formatCurrency(request.calculationSnapshot.finalPrice || 0)}
+                                      <span className="font-medium">Stars:</span> {request.calculationSnapshot.stars || 'N/A'}
                                     </div>
                                     <div>
-                                      <span className="font-medium">Profit Margin:</span> {request.calculationSnapshot.profitMargin}%
+                                      <span className="font-medium">Profit Margin:</span> {formatCurrency(request.calculationSnapshot.profitMargin || 0)}
                                     </div>
                                     <div>
-                                      <span className="font-medium">Discount:</span> {request.calculationSnapshot.discount}%
+                                      <span className="font-medium">Average Price:</span> {formatCurrency(request.calculationSnapshot.averagePrice || 0)}
                                     </div>
                                     <div>
                                       <span className="font-medium">Voucher Price:</span> {formatCurrency(request.calculationSnapshot.voucherPrice || 0)}
+                                    </div>
+                                    <div>
+                                      <span className="font-medium">VAT Rate:</span> {request.calculationSnapshot.vatRate || 0}%
+                                    </div>
+                                    <div>
+                                      <span className="font-medium">Financing Volume:</span> {formatCurrency(request.calculationSnapshot.financingVolume || 0)}
                                     </div>
                                   </div>
                                 </div>
@@ -386,8 +389,8 @@ export function Approvals() {
                       </div>
                       {request.calculationSnapshot && (
                         <div className="flex justify-between">
-                          <span className="text-gray-600">Final Price:</span>
-                          <span className="font-medium">{formatCurrency(request.calculationSnapshot.finalPrice || 0)}</span>
+                          <span className="text-gray-600">Financing Volume:</span>
+                          <span className="font-medium">{formatCurrency(request.calculationSnapshot.financingVolume || 0)}</span>
                         </div>
                       )}
                     </div>
