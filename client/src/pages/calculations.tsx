@@ -189,7 +189,7 @@ export default function Calculations() {
 
   // Action handlers
   const handleView = (calculation: PricingCalculation) => {
-    setSelectedCalculation(calculation);
+    setSelectedCalculation({...calculation, createdBy: "Unknown"} as PricingCalculationWithCreator);
   };
 
   const handleEdit = (calculation: PricingCalculation) => {
@@ -960,7 +960,7 @@ export default function Calculations() {
 
                 {/* Table Rows */}
                 {filteredCalculations.map((calculation) => {
-                  const status = getStatusBadge(calculation.profitMargin || 0);
+                  const status = getStatusBadge(parseFloat(calculation.profitMargin?.toString() || "0"));
                   return (
                     <div key={calculation.id} className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/80 via-blue-50/60 to-purple-50/40 dark:from-slate-800/80 dark:via-blue-900/20 dark:to-purple-900/20 backdrop-blur-lg border border-white/40 dark:border-slate-700/40 hover:shadow-xl hover:shadow-blue-500/10 transition-all duration-300 group">
                       {/* Animated background gradient */}
@@ -1068,10 +1068,10 @@ export default function Calculations() {
                               <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Total Price</span>
                             </div>
                             <div className="text-lg font-bold text-emerald-700 dark:text-emerald-400">
-                              {formatCurrency(calculation.totalPrice || 0)}
+                              {formatCurrency(parseFloat(calculation.totalPrice?.toString() || "0"))}
                             </div>
                             <div className="text-xs text-gray-500">
-                              Base: {formatCurrency(calculation.voucherPrice || 0)}
+                              Base: {formatCurrency(parseFloat(calculation.voucherPrice?.toString() || "0"))}
                             </div>
                           </div>
 
@@ -1082,10 +1082,10 @@ export default function Calculations() {
                               <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Profit</span>
                             </div>
                             <div className="text-lg font-bold text-blue-700 dark:text-blue-400">
-                              {formatCurrency(calculation.profitMargin || 0)}
+                              {formatCurrency(parseFloat(calculation.profitMargin?.toString() || "0"))}
                             </div>
                             <div className="text-xs text-gray-500">
-                              {formatPercentage((calculation.profitMargin || 0) / (calculation.totalPrice || 1) * 100)}
+                              {formatPercentage((parseFloat(calculation.profitMargin?.toString() || "0")) / (parseFloat(calculation.totalPrice?.toString() || "1")) * 100)}
                             </div>
                           </div>
 
@@ -1096,7 +1096,7 @@ export default function Calculations() {
                               <span className="text-xs font-medium text-gray-600 dark:text-gray-400">VAT</span>
                             </div>
                             <div className="text-lg font-bold text-orange-700 dark:text-orange-400">
-                              {formatCurrency(calculation.vatAmount || 0)}
+                              {formatCurrency(parseFloat(calculation.vatAmount?.toString() || "0"))}
                             </div>
                             <div className="text-xs text-gray-500">
                               Rate: {calculation.vatRate || 0}%
@@ -1224,23 +1224,41 @@ export default function Calculations() {
           
           {selectedCalculation && (() => {
             // Extract real data from calculation using exact workflow formulas
-            const projectCosts = parseFloat(selectedCalculation.projectCosts || "0");
+            const projectCosts = parseFloat(selectedCalculation.operationalCosts || "0");
             const stars = selectedCalculation.stars || 0;
             const actualPrice = parseFloat(selectedCalculation.averagePrice || "0");
             const roomCount = selectedCalculation.roomCount || 0;
             const occupancyRate = parseFloat(selectedCalculation.occupancyRate || "0");
             
-            // Calculate hotel voucher value based on stars (exact workflow logic)
-            const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30;
+            // Use actual stored values from calculation or compute if missing
+            const totalPrice = parseFloat(selectedCalculation.totalPrice || "0");
+            const profitMargin = parseFloat(selectedCalculation.profitMargin || "0");
+            const vatAmount = parseFloat(selectedCalculation.vatAmount || "0");
+            const voucherPrice = parseFloat(selectedCalculation.voucherPrice || "0");
             
-            // Core Excel business formulas from workflow
-            const vertragsvolumenEstimate = (projectCosts / voucherValue) * (actualPrice * 0.75) * 1.1;
-            const profit = vertragsvolumenEstimate - projectCosts;
-            const marge = vertragsvolumenEstimate - projectCosts;
-            const vorsteuerProdukt = (projectCosts * 1.19) - projectCosts;
-            const vorsteuerTripz = (vertragsvolumenEstimate * 0.19) * 0.23;
-            const nettoSteuerzahlung = vorsteuerProdukt - vorsteuerTripz;
-            const profitMarginPercentage = vertragsvolumenEstimate > 0 ? (profit / vertragsvolumenEstimate) * 100 : 0;
+            // If we have stored calculated values, use them; otherwise compute
+            let vertragsvolumenEstimate, profit, marge, vorsteuerProdukt, vorsteuerTripz, nettoSteuerzahlung, profitMarginPercentage;
+            
+            if (totalPrice > 0) {
+              // Use stored calculated values
+              vertragsvolumenEstimate = totalPrice;
+              profit = profitMargin;
+              marge = profitMargin;
+              vorsteuerProdukt = vatAmount;
+              vorsteuerTripz = vatAmount * 0.23; // Estimate
+              nettoSteuerzahlung = vorsteuerProdukt - vorsteuerTripz;
+              profitMarginPercentage = totalPrice > 0 ? (profitMargin / totalPrice) * 100 : 0;
+            } else {
+              // Fallback to computing from inputs
+              const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30;
+              vertragsvolumenEstimate = projectCosts > 0 ? (projectCosts / voucherValue) * (actualPrice * 0.75) * 1.1 : 0;
+              profit = vertragsvolumenEstimate - projectCosts;
+              marge = vertragsvolumenEstimate - projectCosts;
+              vorsteuerProdukt = (projectCosts * 1.19) - projectCosts;
+              vorsteuerTripz = (vertragsvolumenEstimate * 0.19) * 0.23;
+              nettoSteuerzahlung = vorsteuerProdukt - vorsteuerTripz;
+              profitMarginPercentage = vertragsvolumenEstimate > 0 ? (profit / vertragsvolumenEstimate) * 100 : 0;
+            }
             
             // Additional metrics for display
             const totalRevenue = vertragsvolumenEstimate;
@@ -1249,12 +1267,11 @@ export default function Calculations() {
             const costPerRoom = roomCount > 0 ? totalCosts / roomCount : 0;
             const revenuePerRoom = roomCount > 0 ? totalRevenue / roomCount : 0;
             const discountPercentage = 0; // Not applicable in current business model
-            const vatAmount = vorsteuerProdukt;
-            const vatPercentage = 19;
+            const vatPercentage = parseFloat(selectedCalculation.vatRate || "19");
             const averagePrice = actualPrice;
-            const voucherPrice = voucherValue;
             const operationalCosts = projectCosts;
             const discountVsMarket = 0;
+            const voucherValue = voucherPrice || (stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30);
             
             return (
               <div className="space-y-8 p-6">

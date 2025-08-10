@@ -1,0 +1,147 @@
+Goal
+When a user creates/saves a calculation and opens its detail page, it must show the right calculation and the exact numbers (inputs + computed outputs). Fix mismatched IDs/links, stale cache, missing snapshots, and recalculation issues.
+
+Pre-flight
+
+Create branch fix/calc-detail-binding.
+
+Ensure env: APPROVALS_ENABLED=true, APP_URL set.
+
+Seed test user.
+
+1) Reproduce & Instrument
+Create a new calculation, set sample values (e.g., 5★, Avg Room 750 €, Voucher 50 €, Financing 65,000 €), click Save.
+
+From /calculations list, open the new item; capture:
+
+The route param used (e.g., /calculations/:id).
+
+Network calls: GET /api/calculations/:id (status, payload).
+
+Add temporary server logs around GET /api/calculations/:id to print { id, createdByUserId, inputSnapshot, calculationSnapshot?.totals }.
+
+2) Fix wrong record selection / linking
+List → Detail link: verify we pass the database id (UUID/ObjectId/int) to the detail route.
+
+Next.js: href={{ pathname: '/calculations/[id]', query: { id: calc.id } }} or href="/calculations/${calc.id}".
+
+React Router: <Link to={'/calculations/' + calc.id}>.
+
+If the list uses slug or index, replace with id.
+
+Detail page must read id via router and call GET /api/calculations/:id.
+
+Add 404 handling if not found or not owned.
+
+3) API: return complete data needed for rendering
+Ensure GET /api/calculations/:id returns:
+
+json
+Kopieren
+Bearbeiten
+{
+  "id": "...",
+  "title": "...",
+  "starCategory": 3|4|5,
+  "status": "draft|pending|approved|rejected|complete",
+  "inputSnapshot": {...},
+  "calculationSnapshot": {...},   // optional; server recomputes if absent/stale
+  "inputHash": "...",
+  "createdAt": "...",
+  "updatedAt": "..."
+}
+If calculationSnapshot is missing or stale (hash mismatch), recompute on the server before responding.
+
+4) Single source of truth: compute engine
+Create/confirm a pure function used everywhere:
+
+ts
+Kopieren
+Bearbeiten
+computePricing(normalizedInputs) => {
+  totals: { revenue, netProfit, totalCosts, discount, contractVolumeEstimate },
+  panels: {
+    pricingAnalysis: { projektkostenBrutto, hotelVoucherValue, avgRoomPrice, preTaxProduct, ... },
+    businessMetrics: { profitInclUpsell, margin, tripzProvision, nettoSteuerzahlung, ... }
+  }
+}
+Use the existing rules/caps (3★/4★/5★), margin, financing.
+
+Add normalizeInputs() + parseEuro() (supports 60, 60,00, 60.00, 50.001,00 €).
+
+On save and on detail load, do:
+
+normalized = normalizeInputs(inputSnapshot)
+
+result = computePricing(normalized)
+
+store/update calculationSnapshot = result.
+
+5) Detail page rendering (fix zeros/wrong numbers)
+On load:
+
+Fetch by id, prefer server-calculated calculationSnapshot; if not present, compute on client with the same function.
+
+Bind UI cards (Revenue, Net Profit, Total Costs, Discount, Vertragsvolumen Estimate) to calculationSnapshot.totals.
+
+Bind “Pricing Analysis” & “Business Metrics” to their respective values.
+
+Use formatEuro() for display.
+
+Ensure values update after any edit → recompute and optimistic update.
+
+6) Caching & revalidation
+Disable public caching for user-scoped detail responses: Cache-Control: private, no-store.
+
+If using SWR/RTK Query, mutate the list/detail keys after save so the detail view shows fresh data.
+
+In Next.js, avoid static generation for user detail pages; use SSR or client fetch with no-store.
+
+7) Field name mapping / migrations
+Common cause of zeros is key mismatch. Add a mapper to support legacy keys:
+
+ts
+Kopieren
+Bearbeiten
+mapLegacyInputKeys(input) {
+  // e.g., averageRoomPrice → avgRoomPrice, projectCostsBrutto → projektkostenBrutto
+}
+Write a one-time migration to align stored snapshots to the canonical names.
+
+8) Tests
+Unit
+
+normalizeInputs handles 750,00, 75.000,00 €, 0, '' gracefully.
+
+computePricing returns expected totals for known fixtures.
+
+Integration
+
+Create calc → GET /calculations/:id returns non-zero computed totals.
+
+Change inputs → hash changes → recompute → numbers change accordingly.
+
+E2E
+
+Create calc with distinct numbers, open detail → cards show exact values; compare against fixture.
+
+9) Deliverables
+Fixed links/routing by id.
+
+Hardened GET /api/calculations/:id with recompute on stale/missing snapshot.
+
+Shared compute module imported by save flow & detail page.
+
+Mapper for legacy keys + optional migration.
+
+Tests added; README note “Calculation detail data flow”.
+
+Acceptance Criteria
+
+Opening a calculation always shows the correct record and correct numbers (matching saved inputs & compute rules).
+
+No more zeroed cards unless inputs are truly zero.
+
+After saving, the detail page reflects updated numbers without hard refresh.
+
+Tests green.
