@@ -50,10 +50,7 @@ export function Approvals() {
 
   const updateRequestMutation = useMutation({
     mutationFn: ({ id, status, adminComment }: { id: number; status: string; adminComment?: string }) =>
-      apiRequest(`/api/approvals/${id}`, {
-        method: 'PATCH',
-        body: { status, adminComment }
-      }),
+      apiRequest(`/api/approvals/${id}`, 'PATCH', { status, adminComment }),
     onSuccess: (data) => {
       toast({
         title: "Success",

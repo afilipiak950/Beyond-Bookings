@@ -425,10 +425,7 @@ export default function Calculations() {
         businessJustification: "Calculation requires approval based on business rules"
       };
 
-      await apiRequest('/api/approvals', {
-        method: 'POST',
-        body: requestData
-      });
+      await apiRequest('/api/approvals', 'POST', requestData);
 
       toast({
         title: "Success",
