@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Users, Building2, Search, Plus, Globe, MapPin, Star, Loader2, Trash2, MoreHorizontal, Send, Bot, User, Clock, Brain, MessageSquare, RefreshCw, Eye, AlertCircle, CheckCircle } from "lucide-react";
+import { Users, Building2, Search, Plus, Globe, MapPin, Star, Loader2, Trash2, MoreHorizontal, Send, Bot, User, Clock, Brain, MessageSquare, RefreshCw, Eye, AlertCircle, CheckCircle, X } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
@@ -148,6 +148,8 @@ export default function CustomerManagement() {
     }
   }, [extractedData?.name, extractedData?.location, userEditedFields, enrichmentLoading, lastAutoEnrichmentName]);
 
+
+
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('de-DE', {
       style: 'currency',
@@ -157,20 +159,7 @@ export default function CustomerManagement() {
     }).format(price);
   };
 
-  // Auto-trigger enrichment when hotel name changes (debounced)
-  useEffect(() => {
-    if (!extractedData?.name) return;
-    
-    const timeoutId = setTimeout(() => {
-      if (extractedData.name.length > 3) {
-        // Auto-enrich both fields when name is ready
-        runAIEnrichment('roomCount', extractedData.name, extractedData.location);
-        runAIEnrichment('averagePrice', extractedData.name, extractedData.location);
-      }
-    }, 2000); // 2 second debounce
-    
-    return () => clearTimeout(timeoutId);
-  }, [extractedData?.name, extractedData?.location]);
+
 
   // Format AI response with proper styling
   const formatAIResponse = (response: string) => {
