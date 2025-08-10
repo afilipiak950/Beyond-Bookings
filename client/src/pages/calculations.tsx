@@ -37,7 +37,8 @@ import {
   User,
   XCircle,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Clock
 } from "lucide-react";
 import { formatCurrency, formatPercentage } from "@/lib/pricing";
 import { apiRequest } from "@/lib/queryClient";
