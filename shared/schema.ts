@@ -25,11 +25,12 @@ export const sessions = pgTable(
   (table) => [index("IDX_session_expire").on(table.expire)],
 );
 
-// User storage table with local authentication (no role management - all users see everything)
+// User storage table with role-based access control
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   email: varchar("email").unique().notNull(),
   password: varchar("password").notNull(),
+  role: varchar("role").default("user").notNull(), // 'admin' or 'user'
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
@@ -37,6 +38,25 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
+
+// Approval requests table for pricing calculations that exceed thresholds
+export const approvalRequests = pgTable("approval_requests", {
+  id: serial("id").primaryKey(),
+  createdByUserId: integer("created_by_user_id").notNull().references(() => users.id),
+  approvedByUserId: integer("approved_by_user_id").references(() => users.id),
+  status: varchar("status").default("pending").notNull(), // 'pending', 'approved', 'rejected'
+  starCategory: integer("star_category").notNull(),
+  inputSnapshot: jsonb("input_snapshot").notNull(), // All form inputs
+  calculationSnapshot: jsonb("calculation_snapshot"), // Results if calculated
+  reasons: text("reasons").array().notNull(), // Array of reason strings
+  adminComment: text("admin_comment"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("approval_requests_status_idx").on(table.status),
+  index("approval_requests_created_by_idx").on(table.createdByUserId),
+  index("approval_requests_created_at_idx").on(table.createdAt),
+]);
 
 // Hotels table with comprehensive review data
 export const hotels = pgTable("hotels", {
@@ -374,3 +394,13 @@ export type DocumentAnalysis = typeof documentAnalyses.$inferSelect;
 
 export type InsertDocumentInsight = z.infer<typeof insertDocumentInsightSchema>;
 export type DocumentInsight = typeof documentInsights.$inferSelect;
+
+// Approval request types and schemas
+export const insertApprovalRequestSchema = createInsertSchema(approvalRequests).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertApprovalRequest = z.infer<typeof insertApprovalRequestSchema>;
+export type ApprovalRequest = typeof approvalRequests.$inferSelect;

@@ -20,6 +20,7 @@ import Profile from "@/pages/profile";
 import Workflow from "@/pages/workflow";
 import DocumentAnalysis from "@/pages/document-analysis";
 import CustomerRequest from "@/pages/customer-request";
+import { Approvals } from "@/pages/approvals";
 
 
 function Router() {
@@ -39,7 +40,7 @@ function Router() {
           <Route path="/document-analysis" component={DocumentAnalysis} />
           <Route path="/customer-request" component={CustomerRequest} />
           <Route path="/customer-management" component={CustomerManagement} />
-
+          <Route path="/approvals" component={Approvals} />
           <Route path="/reports" component={Reports} />
           <Route path="/settings" component={Settings} />
           <Route path="/profile" component={Profile} />

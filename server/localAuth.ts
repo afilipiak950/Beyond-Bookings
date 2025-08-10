@@ -40,7 +40,7 @@ export const requireAuth = async (req: Request, res: Response, next: NextFunctio
     req.user = {
       id: user.id,
       email: user.email,
-      role: user.role,
+      role: user.role || 'user',
       firstName: user.firstName || undefined,
       lastName: user.lastName || undefined,
     };
@@ -50,6 +50,16 @@ export const requireAuth = async (req: Request, res: Response, next: NextFunctio
     console.error('Auth middleware error:', error);
     return res.status(500).json({ message: "Internal server error" });
   }
+};
+
+// Admin authorization middleware
+export const requireAdmin = async (req: Request, res: Response, next: NextFunction) => {
+  await requireAuth(req, res, () => {
+    if (req.user?.role !== 'admin') {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+    next();
+  });
 };
 
 declare module "express-session" {

@@ -39,6 +39,7 @@ import {
 import { formatCurrency, formatPercentage } from "@/lib/pricing";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import type { PricingCalculation } from "@shared/schema";
 
 // Extended type to include creator information
@@ -51,6 +52,7 @@ export default function Calculations() {
   const [selectedCalculation, setSelectedCalculation] = useState<PricingCalculationWithCreator | null>(null);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
 
   // Pagination state

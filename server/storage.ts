@@ -9,6 +9,7 @@ import {
   documentUploads,
   documentAnalyses,
   documentInsights,
+  approvalRequests,
   type User,
   type UpsertUser,
   type Hotel,
@@ -28,6 +29,8 @@ import {
   type InsertDocumentAnalysis,
   type DocumentInsight,
   type InsertDocumentInsight,
+  type ApprovalRequest,
+  type InsertApprovalRequest,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and } from "drizzle-orm";
@@ -97,6 +100,13 @@ export interface IStorage {
   createDocumentInsight(insight: InsertDocumentInsight): Promise<DocumentInsight>;
   updateDocumentInsight(id: number, userId: number, insight: Partial<InsertDocumentInsight>): Promise<DocumentInsight | undefined>;
   deleteDocumentInsight(id: number, userId: number): Promise<boolean>;
+
+  // Approval request operations
+  createApprovalRequest(request: InsertApprovalRequest): Promise<ApprovalRequest>;
+  getApprovalRequests(filters?: { status?: string; userId?: number }): Promise<(ApprovalRequest & { createdByUser: { email: string; firstName?: string; lastName?: string } })[]>;
+  getApprovalRequest(id: number): Promise<(ApprovalRequest & { createdByUser: { email: string; firstName?: string; lastName?: string } }) | undefined>;
+  updateApprovalRequest(id: number, adminUserId: number, data: { status: string; adminComment?: string }): Promise<ApprovalRequest | undefined>;
+  getUserApprovalRequests(userId: number): Promise<ApprovalRequest[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -409,7 +419,7 @@ ${calculation.hotelName},${calculation.hotelUrl || ''},${calculation.stars || ''
   async deleteOcrAnalysis(id: number, userId: number): Promise<boolean> {
     const result = await db.delete(ocrAnalyses)
       .where(and(eq(ocrAnalyses.id, id), eq(ocrAnalyses.userId, userId)));
-    return result.rowCount > 0;
+    return (result.rowCount || 0) > 0;
   }
 
   // AI Price Intelligence operations
@@ -498,7 +508,7 @@ ${calculation.hotelName},${calculation.hotelUrl || ''},${calculation.stars || ''
   async deleteDocumentAnalysis(id: number, userId: number): Promise<boolean> {
     const result = await db.delete(documentAnalyses)
       .where(and(eq(documentAnalyses.id, id), eq(documentAnalyses.userId, userId)));
-    return result.rowCount > 0;
+    return (result.rowCount || 0) > 0;
   }
 
   // Document Insights operations
@@ -528,7 +538,99 @@ ${calculation.hotelName},${calculation.hotelUrl || ''},${calculation.stars || ''
   async deleteDocumentInsight(id: number, userId: number): Promise<boolean> {
     const result = await db.delete(documentInsights)
       .where(and(eq(documentInsights.id, id), eq(documentInsights.userId, userId)));
-    return result.rowCount > 0;
+    return (result.rowCount || 0) > 0;
+  }
+
+  // Approval request operations
+  async createApprovalRequest(request: InsertApprovalRequest): Promise<ApprovalRequest> {
+    const [approvalRequest] = await db
+      .insert(approvalRequests)
+      .values(request)
+      .returning();
+    return approvalRequest;
+  }
+
+  async getApprovalRequests(filters?: { status?: string; userId?: number }): Promise<(ApprovalRequest & { createdByUser: { email: string; firstName?: string; lastName?: string } })[]> {
+    let query = db
+      .select({
+        id: approvalRequests.id,
+        createdByUserId: approvalRequests.createdByUserId,
+        approvedByUserId: approvalRequests.approvedByUserId,
+        status: approvalRequests.status,
+        starCategory: approvalRequests.starCategory,
+        inputSnapshot: approvalRequests.inputSnapshot,
+        calculationSnapshot: approvalRequests.calculationSnapshot,
+        reasons: approvalRequests.reasons,
+        adminComment: approvalRequests.adminComment,
+        createdAt: approvalRequests.createdAt,
+        updatedAt: approvalRequests.updatedAt,
+        createdByUser: {
+          email: users.email,
+          firstName: users.firstName,
+          lastName: users.lastName,
+        },
+      })
+      .from(approvalRequests)
+      .leftJoin(users, eq(approvalRequests.createdByUserId, users.id))
+      .orderBy(desc(approvalRequests.createdAt));
+
+    if (filters?.status) {
+      query = query.where(eq(approvalRequests.status, filters.status)) as any;
+    }
+    if (filters?.userId) {
+      query = query.where(eq(approvalRequests.createdByUserId, filters.userId)) as any;
+    }
+
+    return query as Promise<(ApprovalRequest & { createdByUser: { email: string; firstName?: string; lastName?: string } })[]>;
+  }
+
+  async getApprovalRequest(id: number): Promise<(ApprovalRequest & { createdByUser: { email: string; firstName?: string; lastName?: string } }) | undefined> {
+    const [result] = await db
+      .select({
+        id: approvalRequests.id,
+        createdByUserId: approvalRequests.createdByUserId,
+        approvedByUserId: approvalRequests.approvedByUserId,
+        status: approvalRequests.status,
+        starCategory: approvalRequests.starCategory,
+        inputSnapshot: approvalRequests.inputSnapshot,
+        calculationSnapshot: approvalRequests.calculationSnapshot,
+        reasons: approvalRequests.reasons,
+        adminComment: approvalRequests.adminComment,
+        createdAt: approvalRequests.createdAt,
+        updatedAt: approvalRequests.updatedAt,
+        createdByUser: {
+          email: users.email,
+          firstName: users.firstName,
+          lastName: users.lastName,
+        },
+      })
+      .from(approvalRequests)
+      .leftJoin(users, eq(approvalRequests.createdByUserId, users.id))
+      .where(eq(approvalRequests.id, id));
+
+    return result as (ApprovalRequest & { createdByUser: { email: string; firstName?: string; lastName?: string } }) | undefined;
+  }
+
+  async updateApprovalRequest(id: number, adminUserId: number, data: { status: string; adminComment?: string }): Promise<ApprovalRequest | undefined> {
+    const [updated] = await db
+      .update(approvalRequests)
+      .set({
+        ...data,
+        approvedByUserId: adminUserId,
+        updatedAt: new Date(),
+      })
+      .where(eq(approvalRequests.id, id))
+      .returning();
+
+    return updated;
+  }
+
+  async getUserApprovalRequests(userId: number): Promise<ApprovalRequest[]> {
+    return await db
+      .select()
+      .from(approvalRequests)
+      .where(eq(approvalRequests.createdByUserId, userId))
+      .orderBy(desc(approvalRequests.createdAt));
   }
 }
 

@@ -71,7 +71,14 @@ const navigation = [
     description: "Smart document management",
     gradient: "from-green-500 to-emerald-500",
   },
-
+  {
+    name: "Approval Management",
+    href: "/approvals",
+    icon: Users,
+    description: "Review and approve calculations",
+    gradient: "from-purple-500 to-pink-500",
+    adminOnly: true,
+  },
   {
     name: "Intelligence Reports",
     href: "/reports",
@@ -141,7 +148,7 @@ export default function AppSidebar({ className }: SidebarProps) {
 
       {/* Ultra-Modern Navigation */}
       <nav className="flex-1 px-3 py-6 space-y-2 relative z-10">
-        {navigation.map((item, index) => {
+        {navigation.filter(item => !item.adminOnly || user?.role === 'admin').map((item, index) => {
           const Icon = item.icon;
           const isActive = location === item.href;
           

@@ -1,0 +1,161 @@
+Goal: Add an approval workflow to the existing “Pricing Agent – Beyond Bookings” app. If any input is outside the allowed assumptions, a User must submit the calculation for Admin approval before it can be used/saved/exported.
+
+1) Check/Setup Auth & Roles
+
+Inspect current auth/role management.
+
+If roles don’t exist, add two roles: admin, user.
+
+Default all existing users to user. Create one seeded admin (env vars: SEED_ADMIN_EMAIL, SEED_ADMIN_PASSWORD).
+
+Add authorization middleware/guards:
+
+admin can list/approve/reject requests.
+
+user can create/view their own requests only.
+
+2) Business Rules (Approval Triggers)
+Inputs (German labels kept as in UI):
+
+Realistischer Hotelverkaufspreis (Hotel VK – neu)
+
+Gutscheinwert für Hotel
+
+Marge nach Steuern
+
+Finanzierung: Projektkosten brutto
+
+Star-category dependent caps (from “Annahmen” table):
+
+3★: max VK 50,00 €, max Gutschein 30,00 €
+
+4★: max VK 60,00 €, max Gutschein 35,00 €
+
+5★: max VK 75,00 €, max Gutschein 45,00 €
+
+Trigger approval when ANY of these is true (strict comparisons as specified):
+
+VK > star-cap (3/4/5★).
+
+Gutschein > star-cap (3/4/5★).
+
+Marge nach Steuern < 27 %.
+
+Finanzierung: Projektkosten brutto > 50.000 €.
+
+If star category is not in {3,4,5}, require approval by default.
+
+Implement a pure function validatePricing(input) -> {needsApproval: boolean, reasons: string[]} that returns human-readable reasons (e.g., “VK 62,00 € exceeds 4★ cap 60,00 €”).
+
+3) Data Model
+Create ApprovalRequest table/collection:
+
+id, createdByUserId, status (pending|approved|rejected),
+
+starCategory (int or enum),
+
+inputSnapshot (JSON of all inputs),
+
+calculationSnapshot (JSON of outputs if relevant),
+
+reasons (string[]),
+
+adminComment (nullable),
+
+timestamps.
+
+4) User Flow (UI/UX)
+
+On calculate/save: run validatePricing.
+
+If needsApproval=false: proceed as today.
+
+If needsApproval=true: show a banner/card listing reasons and disable finalization/export.
+
+Add a “Send for admin approval” button.
+
+Clicking creates an ApprovalRequest (status pending) and shows a success toast (“Sent to admin”).
+
+Visual: highlight offending fields in red; show a compact list of reasons.
+
+5) Admin UI
+Add a new page: “Approval Requests” (route e.g. /admin/approvals).
+
+Table of requests with filters for pending/approved/rejected, date, user, star category.
+
+Row click opens detail view with:
+
+All inputs, calculation snapshot, and list of reasons.
+
+Actions: Approve or Reject with optional comment.
+
+Approve → status=approved; notify the requester in-app (and via email if SMTP already configured; if not, implement a stub notifier).
+
+Reject → status=rejected; show comment to requester.
+
+6) API/Backend
+
+POST /api/approvals (user) – create request.
+
+GET /api/approvals?status=... (admin) – list.
+
+GET /api/approvals/:id (owner or admin) – view.
+
+PATCH /api/approvals/:id (admin) – approve/reject {status, adminComment}.
+
+Add auth/role guards to each route.
+
+7) Persistence & Migrations
+
+Add role to users if missing.
+
+Create approval_requests with indexes on status, createdByUserId, timestamps.
+
+8) Frontend Integration
+
+Extend the calculation form to include/select star category (3/4/5) if not already present.
+
+Plug in validatePricing before final actions.
+
+Add button + spinner + success/error toasts.
+
+After approval, allow the original action to complete (e.g., enable save/export).
+
+9) Testing
+
+Unit tests for validatePricing with boundary conditions:
+
+Exactly 27% margin → no approval; 26.99% → approval.
+
+Exactly 50,000 € financing → no approval; 50,001 € → approval.
+
+VK/Gutschein exactly at caps → no approval; +0.01 → approval.
+
+Integration tests for role guards and endpoints.
+
+E2E test: user submits → admin approves → user can finalize.
+
+10) Non-functional
+
+Keep existing calculations unchanged when needsApproval=false.
+
+Add concise README section: roles, seeding, how to use the approvals UI.
+
+Feature-flag behind APPROVALS_ENABLED=true (env var).
+
+Acceptance Criteria
+
+A user who inputs any out-of-range value sees reasons and can send for admin approval; cannot finalize until approved.
+
+An admin can review requests on /admin/approvals, approve/reject, and the requester is notified.
+
+All four rules work with strict thresholds and star caps.
+
+Tests pass; README updated.
+
+Stack Note
+
+Detect the current stack (Node/Express, Next.js, Python/Flask/FastAPI, etc.) and implement accordingly.
+
+If no auth exists, add a minimal session/JWT auth consistent with the current stack; don’t break existing login.
+

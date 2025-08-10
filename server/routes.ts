@@ -1,18 +1,20 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { requireAuth, hashPassword, comparePassword } from "./localAuth";
+import { requireAuth, requireAdmin, hashPassword, comparePassword } from "./localAuth";
 import { 
   insertPricingCalculationSchema, 
   insertFeedbackSchema, 
   insertOcrAnalysisSchema,
   createUserSchema,
   updateUserProfileSchema,
+  insertApprovalRequestSchema,
   type User
 } from "@shared/schema";
 import { documentProcessor } from "./documentProcessor";
 import { insightRestorer } from "./insightRestorer";
 import { aiLearningService } from "./aiPriceLearning";
+import { validatePricing, extractPricingInputFromWorkflow } from "./approvalValidation";
 import { z } from "zod";
 import multer from "multer";
 import path from "path";
@@ -5558,6 +5560,168 @@ Focus on:
       res.status(500).json({ 
         success: false, 
         message: "Failed to get AI analytics",
+        error: error.message 
+      });
+    }
+  });
+
+  // Approval Workflow Routes
+  
+  // Create approval request
+  app.post('/api/approvals', requireAuth, async (req: any, res) => {
+    try {
+      const requestData = insertApprovalRequestSchema.parse(req.body);
+      
+      // Validate business rules
+      const pricingInput = extractPricingInputFromWorkflow(requestData.calculationSnapshot);
+      const validation = validatePricing(pricingInput);
+      if (!validation.needsApproval) {
+        return res.status(400).json({ 
+          message: "This calculation does not require approval",
+          reasons: validation.reasons 
+        });
+      }
+
+      const approvalRequest = await storage.createApprovalRequest({
+        ...requestData,
+        createdByUserId: req.user.id,
+        status: 'pending',
+        reasons: validation.reasons
+      });
+
+      res.json({
+        success: true,
+        approvalRequest,
+        message: "Approval request created successfully"
+      });
+    } catch (error) {
+      console.error("Create approval request error:", error);
+      res.status(500).json({ 
+        message: "Failed to create approval request",
+        error: error.message 
+      });
+    }
+  });
+
+  // Get approval requests (admin only)
+  app.get('/api/approvals', requireAdmin, async (req: any, res) => {
+    try {
+      const { status, userId } = req.query;
+      const approvalRequests = await storage.getApprovalRequests({ 
+        status: status as string,
+        userId: userId ? parseInt(userId) : undefined
+      });
+
+      res.json({
+        success: true,
+        approvalRequests
+      });
+    } catch (error) {
+      console.error("Get approval requests error:", error);
+      res.status(500).json({ 
+        message: "Failed to get approval requests",
+        error: error.message 
+      });
+    }
+  });
+
+  // Get user's own approval requests
+  app.get('/api/approvals/my-requests', requireAuth, async (req: any, res) => {
+    try {
+      const approvalRequests = await storage.getUserApprovalRequests(req.user.id);
+
+      res.json({
+        success: true,
+        approvalRequests
+      });
+    } catch (error) {
+      console.error("Get user approval requests error:", error);
+      res.status(500).json({ 
+        message: "Failed to get your approval requests",
+        error: error.message 
+      });
+    }
+  });
+
+  // Update approval request (admin only)
+  app.patch('/api/approvals/:id', requireAdmin, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { status, adminComment } = req.body;
+
+      if (!['approved', 'rejected'].includes(status)) {
+        return res.status(400).json({ 
+          message: "Invalid status. Must be 'approved' or 'rejected'" 
+        });
+      }
+
+      const updatedRequest = await storage.updateApprovalRequest(id, req.user.id, {
+        status,
+        adminComment
+      });
+
+      if (!updatedRequest) {
+        return res.status(404).json({ message: "Approval request not found" });
+      }
+
+      res.json({
+        success: true,
+        approvalRequest: updatedRequest,
+        message: `Approval request ${status} successfully`
+      });
+    } catch (error) {
+      console.error("Update approval request error:", error);
+      res.status(500).json({ 
+        message: "Failed to update approval request",
+        error: error.message 
+      });
+    }
+  });
+
+  // Get specific approval request details
+  app.get('/api/approvals/:id', requireAuth, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const approvalRequest = await storage.getApprovalRequest(id);
+
+      if (!approvalRequest) {
+        return res.status(404).json({ message: "Approval request not found" });
+      }
+
+      // Check if user has access (admin or owner)
+      if (req.user.role !== 'admin' && approvalRequest.createdByUserId !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      res.json({
+        success: true,
+        approvalRequest
+      });
+    } catch (error) {
+      console.error("Get approval request error:", error);
+      res.status(500).json({ 
+        message: "Failed to get approval request",
+        error: error.message 
+      });
+    }
+  });
+
+  // Check if calculation requires approval
+  app.post('/api/approvals/validate', requireAuth, async (req: any, res) => {
+    try {
+      const { calculationData } = req.body;
+      const pricingInput = extractPricingInputFromWorkflow(calculationData);
+      const validation = validatePricing(pricingInput);
+
+      res.json({
+        success: true,
+        requiresApproval: validation.needsApproval,
+        reasons: validation.reasons
+      });
+    } catch (error) {
+      console.error("Validation error:", error);
+      res.status(500).json({ 
+        message: "Failed to validate calculation",
         error: error.message 
       });
     }
