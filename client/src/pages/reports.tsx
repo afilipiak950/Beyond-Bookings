@@ -7,17 +7,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import { Separator } from "@/components/ui/separator";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { AdminGuard } from "@/components/auth/AdminGuard";
 import { 
-  FileText, 
-  Download, 
   TrendingUp, 
   Calendar, 
   Filter, 
@@ -51,19 +49,7 @@ interface ReportFilters {
   occupancyRange: { min: number; max: number; enabled: boolean };
 }
 
-interface ReportConfig {
-  title: string;
-  includeExecutiveSummary: boolean;
-  includeDetailedCalculations: boolean;
-  includeMarketAnalysis: boolean;
-  includeCharts: boolean;
-  includeRecommendations: boolean;
-  includeAppendix: boolean;
-  logoUrl?: string;
-  companyName: string;
-  reportDate: string;
-  authorName: string;
-}
+
 
 export default function Reports() {
   const { toast } = useToast();
@@ -81,22 +67,10 @@ export default function Reports() {
     occupancyRange: { min: 0, max: 100, enabled: false }
   });
 
-  const [reportConfig, setReportConfig] = useState<ReportConfig>({
-    title: "Hotel Pricing Analysis Report",
-    includeExecutiveSummary: true,
-    includeDetailedCalculations: true,
-    includeMarketAnalysis: true,
-    includeCharts: true,
-    includeRecommendations: true,
-    includeAppendix: false,
-    companyName: "bebo convert",
-    reportDate: new Date().toISOString().split('T')[0],
-    authorName: ""
-  });
+
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCalculations, setSelectedCalculations] = useState<number[]>([]);
-  const [reportDialogOpen, setReportDialogOpen] = useState(false);
 
   // Fetch calculations
   const { data: calculations, isLoading: calculationsLoading } = useQuery({
@@ -266,58 +240,7 @@ export default function Reports() {
     };
   }, [filteredCalculations]);
 
-  // PDF Generation Mutation
-  const generatePdfMutation = useMutation({
-    mutationFn: async () => {
-      const calculationsToExport = selectedCalculations.length > 0 
-        ? filteredCalculations.filter(calc => selectedCalculations.includes(calc.id))
-        : filteredCalculations;
 
-      const response = await fetch("/api/export/comprehensive-pdf", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({ 
-          calculations: calculationsToExport,
-          config: reportConfig,
-          analytics,
-          filters: reportFilters
-        })
-      });
-      
-      if (!response.ok) {
-        throw new Error(`PDF generation failed: ${response.statusText}`);
-      }
-      
-      return response.blob();
-    },
-    onSuccess: (blob) => {
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `${reportConfig.title.replace(/\s+/g, '-').toLowerCase()}-${new Date().toISOString().split('T')[0]}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-      
-      toast({
-        title: "PDF Report Generated",
-        description: `Successfully exported ${selectedCalculations.length > 0 ? selectedCalculations.length : filteredCalculations.length} calculations`,
-      });
-      setReportDialogOpen(false);
-    },
-    onError: (error: any) => {
-      console.error("PDF generation error:", error);
-      toast({
-        title: "PDF Generation Failed",
-        description: error.message || "Failed to generate PDF report",
-        variant: "destructive",
-      });
-    },
-  });
 
   // Excel Export Mutation
   const exportExcelMutation = useMutation({
@@ -452,16 +375,16 @@ export default function Reports() {
               <div className="flex items-center space-x-4">
                 <div className="relative">
                   <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-xl shadow-indigo-500/30">
-                    <FileText className="h-8 w-8 text-white animate-pulse" />
+                    <FileSpreadsheet className="h-8 w-8 text-white animate-pulse" />
                   </div>
                   <div className="absolute inset-0 w-16 h-16 rounded-2xl bg-indigo-400 animate-ping opacity-20"></div>
                 </div>
                 <div>
                   <h1 className="text-4xl font-black bg-gradient-to-r from-indigo-800 via-purple-700 to-indigo-800 bg-clip-text text-transparent">
-                    Advanced Reports
+                    Excel Reports
                   </h1>
                   <p className="text-lg text-indigo-700 font-medium mt-2">
-                    Generate comprehensive PDF reports with advanced filtering and analytics
+                    Export calculation data to Excel with advanced filtering and analytics
                   </p>
                 </div>
               </div>
@@ -742,7 +665,7 @@ export default function Reports() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
-                  <span>Export Options</span>
+                  <span>Excel Export</span>
                   <div className="flex items-center space-x-2">
                     {selectedCalculations.length > 0 && (
                       <Badge className="bg-blue-600 text-white">
@@ -752,157 +675,15 @@ export default function Reports() {
                   </div>
                 </CardTitle>
                 <CardDescription>
-                  Generate reports from {filteredCalculations.length} filtered calculations
+                  Export {filteredCalculations.length} filtered calculations to Excel
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* PDF Report */}
-                  <Dialog open={reportDialogOpen} onOpenChange={setReportDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button 
-                        className="h-24 flex-col space-y-2 bg-gradient-to-br from-red-500 to-red-600 hover:from-red-600 hover:to-red-700"
-                        disabled={filteredCalculations.length === 0}
-                      >
-                        <FileText className="h-6 w-6" />
-                        <div className="text-center">
-                          <div className="font-semibold">Professional PDF Report</div>
-                          <div className="text-xs opacity-90">Executive summary & detailed analytics</div>
-                        </div>
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                      <DialogHeader>
-                        <DialogTitle>Configure PDF Report</DialogTitle>
-                      </DialogHeader>
-                      
-                      <Tabs defaultValue="content" className="space-y-4">
-                        <TabsList className="grid w-full grid-cols-2">
-                          <TabsTrigger value="content">Content</TabsTrigger>
-                          <TabsTrigger value="settings">Settings</TabsTrigger>
-                        </TabsList>
-                        
-                        <TabsContent value="content" className="space-y-4">
-                          <div className="space-y-4">
-                            <div>
-                              <Label>Report Title</Label>
-                              <Input
-                                value={reportConfig.title}
-                                onChange={(e) => setReportConfig(prev => ({ ...prev, title: e.target.value }))}
-                              />
-                            </div>
-                            
-                            <div className="space-y-3">
-                              <Label>Include Sections:</Label>
-                              <div className="space-y-2">
-                                <div className="flex items-center space-x-2">
-                                  <Checkbox
-                                    id="executive-summary"
-                                    checked={reportConfig.includeExecutiveSummary}
-                                    onCheckedChange={(checked) => {
-                                      setReportConfig(prev => ({ ...prev, includeExecutiveSummary: !!checked }));
-                                    }}
-                                  />
-                                  <Label htmlFor="executive-summary">Executive Summary</Label>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <Checkbox
-                                    id="detailed-calculations"
-                                    checked={reportConfig.includeDetailedCalculations}
-                                    onCheckedChange={(checked) => {
-                                      setReportConfig(prev => ({ ...prev, includeDetailedCalculations: !!checked }));
-                                    }}
-                                  />
-                                  <Label htmlFor="detailed-calculations">Detailed Calculations</Label>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <Checkbox
-                                    id="market-analysis"
-                                    checked={reportConfig.includeMarketAnalysis}
-                                    onCheckedChange={(checked) => {
-                                      setReportConfig(prev => ({ ...prev, includeMarketAnalysis: !!checked }));
-                                    }}
-                                  />
-                                  <Label htmlFor="market-analysis">Market Analysis</Label>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <Checkbox
-                                    id="charts"
-                                    checked={reportConfig.includeCharts}
-                                    onCheckedChange={(checked) => {
-                                      setReportConfig(prev => ({ ...prev, includeCharts: !!checked }));
-                                    }}
-                                  />
-                                  <Label htmlFor="charts">Charts & Visualizations</Label>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <Checkbox
-                                    id="recommendations"
-                                    checked={reportConfig.includeRecommendations}
-                                    onCheckedChange={(checked) => {
-                                      setReportConfig(prev => ({ ...prev, includeRecommendations: !!checked }));
-                                    }}
-                                  />
-                                  <Label htmlFor="recommendations">AI Recommendations</Label>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </TabsContent>
-                        
-                        <TabsContent value="settings" className="space-y-4">
-                          <div className="space-y-4">
-                            <div>
-                              <Label>Company Name</Label>
-                              <Input
-                                value={reportConfig.companyName}
-                                onChange={(e) => setReportConfig(prev => ({ ...prev, companyName: e.target.value }))}
-                              />
-                            </div>
-                            <div>
-                              <Label>Author Name</Label>
-                              <Input
-                                placeholder="Report author"
-                                value={reportConfig.authorName}
-                                onChange={(e) => setReportConfig(prev => ({ ...prev, authorName: e.target.value }))}
-                              />
-                            </div>
-                            <div>
-                              <Label>Report Date</Label>
-                              <Input
-                                type="date"
-                                value={reportConfig.reportDate}
-                                onChange={(e) => setReportConfig(prev => ({ ...prev, reportDate: e.target.value }))}
-                              />
-                            </div>
-                          </div>
-                        </TabsContent>
-                      </Tabs>
-                      
-                      <div className="flex justify-end space-x-2">
-                        <Button variant="outline" onClick={() => setReportDialogOpen(false)}>
-                          Cancel
-                        </Button>
-                        <Button 
-                          onClick={() => generatePdfMutation.mutate()}
-                          disabled={generatePdfMutation.isPending}
-                          className="bg-red-600 hover:bg-red-700"
-                        >
-                          {generatePdfMutation.isPending ? (
-                            <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                          ) : (
-                            <Download className="h-4 w-4 mr-2" />
-                          )}
-                          Generate PDF
-                        </Button>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-
+                <div className="flex justify-center">
                   {/* Excel Export */}
                   <Button 
                     variant="outline"
-                    className="h-24 flex-col space-y-2 border-green-200 bg-green-600 hover:bg-green-700"
+                    className="h-24 flex-col space-y-2 border-green-200 bg-green-600 hover:bg-green-700 w-full max-w-md"
                     onClick={() => exportExcelMutation.mutate()}
                     disabled={filteredCalculations.length === 0 || exportExcelMutation.isPending}
                   >
@@ -927,7 +708,7 @@ export default function Reports() {
                   <div>
                     <CardTitle>Filtered Calculations ({filteredCalculations.length})</CardTitle>
                     <CardDescription>
-                      Select specific calculations for export or generate reports from all filtered results
+                      Select specific calculations for export to Excel from all filtered results
                     </CardDescription>
                   </div>
                   <div className="flex items-center space-x-2">
