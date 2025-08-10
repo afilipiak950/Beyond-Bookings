@@ -1424,29 +1424,48 @@ MANDATORY OUTPUT FORMAT (valid JSON only):
 
 CRITICAL: Always return a specific number if found. If no reliable data found, return {"value": null, "confidence": "Low", "source": "No reliable data found"}.`;
       } else if (field === 'averagePrice') {
-        prompt = `Find the 12-month average room price in EUR for the hotel "${hotelName}"${hotelLocation ? ` located at ${hotelLocation}` : ''}${city ? ` in ${city}` : ''}${country ? `, ${country}` : ''}.
+        prompt = `Research the 12-month average nightly room price in EUR for "${hotelName}"${hotelLocation ? ` at ${hotelLocation}` : ''}${city ? ` in ${city}` : ''}${country ? `, ${country}` : ''}.
 
-RESEARCH REQUIREMENTS:
-1. Search current booking rates on Booking.com, Hotels.com, Expedia
-2. Calculate 12-month average considering seasonal variations
-3. Convert all prices to EUR using current exchange rates
-4. Check hotel's official website for standard rates
-5. Consider hotel category and local market rates
+COMPREHENSIVE SOURCE STRATEGY:
+1. Official hotel website (rates page, booking section)
+2. Google Hotels real-time pricing data
+3. Booking.com current and historical rates
+4. Expedia.com standard room pricing
+5. Hotels.com average pricing data
+6. TripAdvisor pricing information
+7. Wikipedia/Wikidata if available for luxury properties
 
-MANDATORY OUTPUT FORMAT (valid JSON only):
+PRICE RESEARCH METHODOLOGY:
+- Search for phrases: "per night", "pro Nacht", "average", "standard rate", "room rate"
+- Collect multiple price points from different dates/seasons
+- Convert all currencies to EUR using current exchange rates
+- Remove obvious outliers (extremely high/low values)
+- Calculate trimmed median for accuracy
+- Focus on standard double room rates, not suites/premium rooms
+
+MANDATORY JSON FORMAT:
 {
-  "value": [exact_price_in_EUR],
-  "source": "Primary research methodology",
+  "value": [exact_EUR_amount_as_number],
+  "source": "Multi-platform research methodology",
   "confidence": "High/Medium/Low",
   "sources": [
     {
-      "title": "Booking platform or source",
-      "url": "Platform URL or description"
+      "title": "Booking.com - Standard Room",
+      "url": "booking platform URL or reference"
+    },
+    {
+      "title": "Hotel Official Website",
+      "url": "official rates page URL"
     }
   ]
 }
 
-CRITICAL: Research 12-month average, not single night rates. If no reliable average found, return {"value": null, "confidence": "Low", "source": "No reliable 12-month average found"}.`;
+CRITICAL REQUIREMENTS:
+- Return exact numeric value in EUR (e.g., 150.50, not "€150")
+- High confidence: 3+ consistent sources, Medium: 2 sources, Low: 1 source
+- If absolutely no reliable data found, return: {"value": null, "confidence": "Low", "source": "No reliable pricing data found"}
+- NEVER return 0 or placeholder values
+- Focus on realistic market rates for the hotel category and location`;
       } else {
         return res.status(400).json({ message: "Invalid field type" });
       }

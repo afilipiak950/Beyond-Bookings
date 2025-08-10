@@ -45,6 +45,7 @@ export default function CustomerManagement() {
     value: number;
     show: boolean;
   }>({ field: '', value: 0, show: false });
+  const [lastAutoEnrichmentName, setLastAutoEnrichmentName] = useState<string>('');
   
   // Hotel details dialog state
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -94,11 +95,17 @@ export default function CustomerManagement() {
           });
         }
       } else {
-        toast({
-          title: "Keine zuverlässigen Daten gefunden",
-          description: `Für ${field === 'roomCount' ? 'Zimmeranzahl' : 'Durchschnittspreis'} konnten keine verlässlichen Informationen recherchiert werden.`,
-          variant: "default"
-        });
+        // Show subtle hint instead of toast for better UX
+        console.log(`No reliable data found for ${field}`);
+        setAiEnrichment((prev: any) => ({
+          ...prev,
+          [field]: {
+            value: null,
+            source: "No reliable data found",
+            confidence: "Low",
+            sources: []
+          }
+        }));
       }
     } catch (error) {
       console.error(`AI enrichment error for ${field}:`, error);
@@ -116,6 +123,29 @@ export default function CustomerManagement() {
     setUserEditedFields((prev: any) => new Set(prev).add(field));
     setExtractedData((prev: any) => ({ ...prev, [field]: value }));
   };
+
+  // Auto-enrichment for both Room Count and Average Price when hotel data is extracted
+  useEffect(() => {
+    if (extractedData?.name && extractedData.name !== lastAutoEnrichmentName) {
+      const timeoutId = setTimeout(() => {
+        console.log('🤖 Auto-enriching Room Count and Average Price for:', extractedData.name);
+        
+        // Auto-enrich Room Count
+        if (!userEditedFields.has('roomCount') && !enrichmentLoading.roomCount) {
+          runAIEnrichment('roomCount', extractedData.name, extractedData.location);
+        }
+        
+        // Auto-enrich Average Price
+        if (!userEditedFields.has('averagePrice') && !enrichmentLoading.averagePrice) {
+          runAIEnrichment('averagePrice', extractedData.name, extractedData.location);
+        }
+        
+        setLastAutoEnrichmentName(extractedData.name);
+      }, 2000); // 2-second debounce
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [extractedData?.name, extractedData?.location, userEditedFields, enrichmentLoading, lastAutoEnrichmentName]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('de-DE', {
@@ -293,6 +323,7 @@ export default function CustomerManagement() {
       setAiEnrichment({});
       setUserEditedFields(new Set());
       setEnrichmentLoading({});
+      setLastAutoEnrichmentName('');
       toast({
         title: "Hotel added successfully!",
         description: "The hotel has been added to your database",
@@ -603,13 +634,13 @@ export default function CustomerManagement() {
                       <div>
                         <Label htmlFor="editRoomCount" className="flex items-center gap-2">
                           Room Count
-                          {aiEnrichment.roomCount && (
+                          {aiEnrichment.roomCount && aiEnrichment.roomCount.value !== null && (
                             <Badge variant="secondary" className="text-xs">
                               <Bot className="h-3 w-3 mr-1" />
                               AI
                             </Badge>
                           )}
-                          {aiEnrichment.roomCount && (
+                          {aiEnrichment.roomCount && aiEnrichment.roomCount.value !== null && (
                             <Popover>
                               <PopoverTrigger asChild>
                                 <Button variant="ghost" size="sm" className="h-5 w-5 p-0">
@@ -665,7 +696,13 @@ export default function CustomerManagement() {
                           value={extractedData.roomCount || ''}
                           onChange={(e) => handleFieldChange('roomCount', parseInt(e.target.value) || 0)}
                           className="mt-1"
-                          placeholder={aiEnrichment.roomCount ? "AI-Recherche verfügbar" : "Anzahl wird automatisch recherchiert"}
+                          placeholder={
+                            aiEnrichment.roomCount?.value 
+                              ? "AI-Recherche verfügbar" 
+                              : aiEnrichment.roomCount?.value === null
+                                ? "Keine verlässlichen Daten gefunden"
+                                : "Anzahl wird automatisch recherchiert"
+                          }
                         />
                       </div>
                       <div>
@@ -689,13 +726,13 @@ export default function CustomerManagement() {
                       <div>
                         <Label htmlFor="editAveragePrice" className="flex items-center gap-2">
                           Durchschnittlicher Zimmerpreis (€)
-                          {aiEnrichment.averagePrice && (
+                          {aiEnrichment.averagePrice && aiEnrichment.averagePrice.value !== null && (
                             <Badge variant="secondary" className="text-xs">
                               <Bot className="h-3 w-3 mr-1" />
                               AI
                             </Badge>
                           )}
-                          {aiEnrichment.averagePrice && (
+                          {aiEnrichment.averagePrice && aiEnrichment.averagePrice.value !== null && (
                             <Popover>
                               <PopoverTrigger asChild>
                                 <Button variant="ghost" size="sm" className="h-5 w-5 p-0">
@@ -758,7 +795,13 @@ export default function CustomerManagement() {
                           value={extractedData.averagePrice || ''}
                           onChange={(e) => handleFieldChange('averagePrice', parseFloat(e.target.value) || 0)}
                           className="mt-1"
-                          placeholder={aiEnrichment.averagePrice ? "AI-Recherche verfügbar" : "12-Monats-Durchschnitt automatisch recherchiert"}
+                          placeholder={
+                            aiEnrichment.averagePrice?.value 
+                              ? "AI-Recherche verfügbar" 
+                              : aiEnrichment.averagePrice?.value === null
+                                ? "Keine verlässlichen Daten gefunden"
+                                : "12-Monats-Durchschnitt automatisch recherchiert"
+                          }
                         />
                       </div>
                       <div className="md:col-span-2">
@@ -1007,6 +1050,7 @@ export default function CustomerManagement() {
                       setAiEnrichment({});
                       setUserEditedFields(new Set());
                       setEnrichmentLoading({});
+                      setLastAutoEnrichmentName('');
                     }}
                   >
                     Cancel
