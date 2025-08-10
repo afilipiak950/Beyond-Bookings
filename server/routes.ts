@@ -5965,7 +5965,36 @@ Focus on:
     }
   });
 
+  // Test notification creation endpoint (for debugging)
+  app.post('/api/test-notification', requireAuth, async (req: any, res) => {
+    try {
+      console.log('=== TEST NOTIFICATION ENDPOINT ===');
+      console.log('User object:', req.user);
+      console.log('Creating test notification for user:', req.user?.id);
+      
+      if (!req.user || !req.user.id) {
+        return res.status(401).json({ success: false, error: 'User not authenticated' });
+      }
+      
+      const notification = await storage.createNotification({
+        recipientUserId: req.user.id,
+        type: 'approval_pending',
+        title: 'Test Notification',
+        message: 'This is a test notification to verify the system is working.',
+        status: 'unread',
+        createdAt: new Date(),
+      });
+      
+      console.log('Test notification created:', notification);
+      res.json({ success: true, notification });
+    } catch (error) {
+      console.error('Test notification creation error:', error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
+
   // Notification API endpoints
   app.get('/api/notifications', requireAuth, async (req: any, res) => {
     try {

@@ -1,0 +1,163 @@
+Goal
+Ensure the following are visible/accessible only to admin users (not to normal user accounts):
+
+Intelligent Reports (aka Document Intelligence / AI Reports) – pages, cards, and APIs
+
+User Management – users list/create/edit and related APIs
+
+Approval Requests (Admin Management) – the admin approvals page & decision APIs
+
+Normal users must still be able to: create approval requests from a calculation, see status/comments on their own calculations, and receive notifications—but not access admin management UIs or admin-only endpoints.
+
+Pre-flight
+
+Create branch: secure/admin-only-rbac.
+
+Detect stack (Next.js/React + Node/Express/etc.) and keep conventions.
+
+Ensure auth exposes role in session/JWT and /api/me (or equivalent) returns { role }. If missing, add it.
+
+1) Server-side enforcement (hard gate – required)
+Add a single reusable admin guard middleware/dep:
+
+Middleware: requireAdmin(req,res,next) → 403 if req.user.role !== 'admin'.
+
+Apply to all admin-only API prefixes (adjust to repo):
+
+/api/admin/*
+
+/api/users* (list/create/update/delete)
+
+/api/reports* (intelligent/document/AI reports)
+
+/api/approvals list & decision routes:
+
+GET /api/approvals (global list) → admin only
+
+PATCH /api/approvals/:id (approve/reject) → admin only
+
+GET /api/approvals/stats|count → admin only
+
+Keep user-scope endpoints open:
+
+POST /api/approvals (create request) → logged-in user
+
+GET /api/approvals/:id → owner (requester) or admin
+
+Return 403 JSON with { error: 'admin_required' }.
+
+2) Route guards (pages)
+Protect admin pages server-side and client-side:
+
+Admin-only routes (redirect to /403 or show guarded screen):
+
+/admin (dashboard/layout)
+
+/admin/users (+ nested routes)
+
+/admin/approvals (+ details)
+
+/admin/reports or /reports/intelligence / /document-intelligence (whichever exists)
+
+Next.js 13+: add middleware.ts with a matcher for these paths; verify session and role; redirect non-admins to /403.
+
+React Router: wrap routes with <AdminGuard/>.
+
+Add a simple /403 page: “Admin rights required”.
+
+3) Client UI gating (navigation & widgets)
+Hide the following for non-admins (based on me.role):
+
+Sidebar/TopNav items: Intelligent Reports, User Management, Approval Requests
+
+Dashboard cards/CTAs for Intelligent/AI Reports
+
+Any admin-only quick actions or buttons
+
+Keep user notifications and calculation badges/comments visible to users (these are not admin-only).
+
+Implement a tiny useRole() hook or HasRole component for conditional rendering.
+
+4) Notifications split (sanity)
+Admin dashboard notifications should include pending approval requests only for admins.
+
+User dashboard notifications should include their own approval updates (pending/approved/rejected).
+
+Verify the API filters by recipientUserId so users never see admin-targeted items.
+
+5) Tests
+Add/adjust tests to prove RBAC:
+
+API
+
+Non-admin gets 403 on:
+
+GET /api/users, PATCH /api/users/:id
+
+GET /api/approvals (admin list), PATCH /api/approvals/:id
+
+GET /api/reports*
+
+Requester can POST /api/approvals and GET /api/approvals/:id for own item.
+
+E2E/UI
+
+Login as user:
+
+Sidebar/top-nav: no “Intelligent Reports”, no “User Management”, no “Approval Requests”.
+
+Direct navigation to /admin/* or /reports/intelligence → routed to /403.
+
+Login as admin:
+
+All admin items visible and pages load.
+
+Dashboard:
+
+Admin sees pending approvals; user sees only their updates.
+
+6) QA checklist (auto-run and fix)
+Ensure /api/me returns { role }. If missing → add and wire to client.
+
+Ensure middleware.ts (or router guard) blocks direct URL access for non-admins.
+
+Ensure nav config filters items by role (no flicker: prefetch role before render or render skeleton).
+
+Ensure cached pages aren’t served across users (disable public caching on admin routes).
+
+Add last-admin protection in user management (cannot demote the final admin).
+
+7) Deliverables
+PR secure/admin-only-rbac with:
+
+Admin guard middleware + applied routes
+
+Page guards (middleware/guards)
+
+Role-based nav & dashboard widgets
+
+/403 page
+
+Tests (API + E2E) all green
+
+Short README “RBAC & Admin-only Areas”
+
+Acceptance criteria
+
+Normal users cannot see Intelligent Reports, User Management, or Approval Requests anywhere (nav, cards, pages).
+
+Direct URL access by non-admins gets 403 (or redirect to /403).
+
+Admins retain full access; user approval workflows remain functional.
+
+Tests pass.
+
+
+
+
+
+
+
+
+
+ChatGPT fragen

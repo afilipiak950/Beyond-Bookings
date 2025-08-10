@@ -1,0 +1,115 @@
+
+Goal
+Debug the Notifications system and confirm it works on the Dashboard (replacing “Quick Actions”):
+
+Admins see Requested approvals (pending) with deep links.
+
+Users see their approval updates (pending/approved/declined) incl. admin comments.
+
+Unread counts/badges, mark-as-read, and live updates work. If anything is missing, implement/fix it.
+
+Pre-flight
+
+Create branch qa/notifications-debug.
+
+Ensure env: APPROVALS_ENABLED=true, EMAIL_NOTIFICATIONS_ENABLED=true, APP_URL set.
+
+Seed users:
+
+Admin: admin@test.dev / Passw0rd! (role=admin)
+
+User: user@test.dev / Passw0rd! (role=user)
+
+A. Backend sanity checks (fix if missing)
+
+DB schema notifications has: id, recipientUserId, type, title, message, approvalRequestId, calculationId, status(unread|read), readAt, createdAt + index (recipientUserId,status,createdAt).
+
+Producers (hooks):
+
+On POST /api/approvals → create approval_pending for each admin.
+
+On PATCH /api/approvals/:id → create approval_approved or approval_rejected for the requester, include admin name, time, and comment snippet.
+
+API endpoints:
+
+GET /api/notifications?status=unread|all&limit=20&cursor=... (owner only)
+
+GET /api/notifications/count → {unread} (owner only)
+
+PATCH /api/notifications/:id/read and POST /api/notifications/mark-all-read (owner only)
+
+Add server guards (no cross-user access).
+
+Real-time: if WS/SSE not configured, add 10s polling in dashboard for count + list refresh on change.
+
+B. Generate test events
+
+Log in as user@test.dev, create 2 approval requests (one to later approve, one to reject).
+
+Verify as admin@test.dev: GET /api/notifications returns 2 approval_pending items; count.unread matches.
+
+As Admin:
+
+Approve request A (optional comment).
+
+Reject request B (required comment).
+
+As User: confirm two new notifications (approved + rejected) exist with comment snippet on the rejected one.
+
+C. Dashboard UI checks (fix if missing)
+
+Replace Quick Actions card with Notifications panel. If Quick Actions still renders, replace it now.
+
+Role views:
+
+Admin tab shows pending approvals: title, requester, calc/hotel, time-ago, Open → /admin/approvals/:id, unread badge on header & top-nav bell.
+
+User tab shows: pending + decision updates; show admin comment preview on decisions; View → /calculations/:id.
+
+Controls: Mark all as read, filter All | Unread | Pending | Approved | Declined.
+
+Live updates: after admin decisions, user dashboard updates (WS or polling).
+
+Accessibility: focus states, ARIA labels on the bell & list items.
+
+D. Edge cases to test
+
+Mark-one-read and mark-all-read update counts immediately.
+
+Deep links open correct detail pages.
+
+Old/stale notifications don’t reappear after refresh.
+
+Security: user cannot read another user’s notifications (attempt should 403).
+
+E. Auto-fix if failures
+
+Missing producers → add hooks to approvals create/decision endpoints.
+
+Counts wrong → ensure status='unread' default and transitions to read.
+
+No live refresh → add polling loop on dashboard (10s).
+
+No admin comment in message → include 300-char snippet with safe HTML.
+
+Quick Actions still visible → remove and mount Notifications component.
+
+F. Outputs
+
+Save artifacts to /artifacts/notifications-qa/:
+
+report.md with PASS/FAIL per step,
+
+screenshots: admin dashboard (pending list), user dashboard (approved/rejected with comment), top-nav badge before/after mark-all-read,
+
+sample notifications.json (last 10 items for admin & user).
+
+Ensure CI tests cover: producers, API guards, mark-as-read, and dashboard rendering (component test).
+
+Acceptance
+
+Admin dashboard shows accurate pending approvals with unread badge and working links.
+
+User dashboard shows approved/declined notifications with comment preview; counts & mark-as-read work; list updates within 10s or via WS.
+
+All security checks pass and artifacts are produced.

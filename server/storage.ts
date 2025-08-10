@@ -862,12 +862,20 @@ ${calculation.hotelName},${calculation.hotelUrl || ''},${calculation.stars || ''
   }
 
   async createNotification(notification: InsertNotification): Promise<Notification> {
-    const [created] = await db
-      .insert(notifications)
-      .values(notification)
-      .returning();
+    try {
+      console.log('Storage: Creating notification with data:', notification);
+      
+      const [created] = await db
+        .insert(notifications)
+        .values(notification)
+        .returning();
 
-    return created;
+      console.log('Storage: Notification created successfully:', created);
+      return created;
+    } catch (error) {
+      console.error('Storage: Error creating notification:', error);
+      throw error;
+    }
   }
 
   async markNotificationAsRead(id: number, userId: number): Promise<boolean> {
