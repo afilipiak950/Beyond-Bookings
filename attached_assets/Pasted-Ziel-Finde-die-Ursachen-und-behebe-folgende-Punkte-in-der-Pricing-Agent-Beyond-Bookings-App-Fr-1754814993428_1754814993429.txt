@@ -1,0 +1,176 @@
+Ziel
+Finde die Ursachen und behebe folgende Punkte in der „Pricing Agent – Beyond Bookings“ App:
+
+Frontend-UI zum Zuweisen/Ändern der Rolle (admin/user) fehlt.
+
+Sidebar im Admin-Bereich zeigt „Approval Requests“ nicht an.
+
+Calculations-Seite zeigt Approval-Badges nicht (Status: none_required | required_not_sent | pending | approved | rejected).
+Führe Debugging, Implementierung, Tests und notwendige Migrations/Docs durch.
+
+Vorbereitung / Branch
+
+Erkenne Stack automatisch, lege Branch fix/ui-approvals-and-roles an.
+
+npm/yarn/pnpm install, Lint & Tests ausführen. Sammle Fehler.
+
+Debug-Checkliste (bitte systematisch abarbeiten)
+A) Rollen/Auth (Problem 1)
+Backend-Schema: Prüfe, ob das User-Modell ein role-Feld hat (enum/string: admin|user, Default user).
+
+Falls fehlt: Migration/Schema-Update hinzufügen.
+
+Seeding: Prüfe ENV SEED_ADMIN_EMAIL/SEED_ADMIN_PASSWORD; verifiziere, dass mind. ein Admin existiert.
+
+API: Suche Endpunkte GET /api/users, PATCH /api/users/:id (Rollenwechsel).
+
+Falls nicht vorhanden, implementieren inkl. Guard: nur admin darf Rollen ändern.
+
+Schutz: letzter Admin darf nicht auf user gesetzt werden.
+
+Auth Context/„me“-Endpoint: Prüfe, ob Frontend die Rolle des aktuellen Users erhält (z. B. /api/me gibt role).
+
+Fehlt das Feld, ergänzen.
+
+RBAC Guards: Verifiziere, dass Admin-Routen server- & clientseitig geschützt sind.
+
+B) Admin-Sidebar „Approval Requests“ (Problem 2)
+Sidebar-Konfiguration: Suche zentrale Nav/Sidebar-Konfig (z. B. adminNavItems, SidebarConfig).
+
+Prüfe, ob ein Eintrag für /admin/approvals existiert.
+
+Falls nicht, hinzufügen (nur sichtbar für admin).
+
+Pending-Badge: Prüfe, ob API für Pending-Zahl existiert (GET /api/approvals/stats oder GET /api/approvals?status=pending&countOnly=true).
+
+Falls nicht, hinzufügen und im Sidebar-Item integrieren (Polling alle 10–15s oder SSE/WS, falls vorhanden).
+
+Feature Flags/ENV: Prüfe APPROVALS_ENABLED; falls false oder nicht gesetzt → auf true setzen (Default on).
+
+Route/Seite: Stelle sicher, dass /admin/approvals existiert und lädt (Liste + Detail). 403-Seite testen.
+
+C) Calculations-Badges (Problem 3)
+Datenquelle: Prüfe, wo approvalStatus herkommt:
+
+Im Calculations-Modell Feld approvalStatus (string) vorhanden?
+
+Wenn nein: hinzufügen (none_required|required_not_sent|pending|approved|rejected) + Migration.
+
+Alternativ: wird Status on-the-fly aus letztem approval_requests Eintrag abgeleitet? Konsequent vereinheitlichen.
+
+Status-Update-Punkte:
+
+Beim Rechnen/Speichern → validatePricing() setzen:
+
+needsApproval=false → approvalStatus='none_required'
+
+needsApproval=true → wenn kein Request mit identischem inputHash: required_not_sent; wenn vorhanden → Spiegel des Request-Status.
+
+Beim POST /api/approvals → Calculation auf pending.
+
+Beim Approve/Reject → Calculation auf approved/rejected nur bei identischem inputHash.
+
+UI-Rendering:
+
+Stelle sicher, dass die Calculations-Seite den Status lädt (SSR/CSR beachten) und Badge-Komponente rendert.
+
+Mapping:
+
+none_required → „Kein Approval nötig“
+
+required_not_sent → „Approval erforderlich (noch nicht gesendet)“ + Button „An Admin senden“
+
+pending → „Pending Approval“
+
+approved → „Approved“
+
+rejected → „Declined“ (+ Admin-Kommentar)
+
+Reaktivität: Falls WS/SSE fehlt, Polling im Detail/Listen-View, damit pending → approved/rejected sichtbar wird.
+
+Common Pitfalls:
+
+Status kommt in der API als null/undefined → Default required_not_sent setzen, wenn needsApproval=true.
+
+„me“-Rolle fehlt → Client sieht keine Admin-UI.
+
+ENV/Feature-Flag verhindert Rendern der Komponenten.
+
+Implementierung (wenn oben Fehler gefunden/behoben)
+1) Frontend Role-Management (Admin)
+Admin-Seite /admin/users: Tabelle (Name, E-Mail, Rolle, erstellt am, Aktionen).
+
+Create/Edit-Dialog mit role-Select (admin|user).
+
+Aktionen: „Zu Admin machen“ / „Zu User machen“ (mit Confirm-Dialog).
+
+Schutz: letzter Admin nicht herabstufen (serverseitig erzwingen, clientseitig abfangen).
+
+Nutze bestehende UI-Komponenten/Designsystem; Loading/Errors/Toasts.
+
+2) Admin-Sidebar
+In der Sidebar „Approval Requests“ hinzufügen: Route /admin/approvals, role=admin.
+
+Pending-Badge mittels Endpoint für Count (neu oder bestehend).
+
+Aktiven Menüpunkt markieren; ARIA-Labels; Mobile-Ansicht prüfen.
+
+3) Calculations-Badges
+Badge-Komponente erstellen (<ApprovalBadge status />).
+
+Auf Calculations-Seite oben rechts einbinden; Status vom Server holen.
+
+Buttons je Status:
+
+required_not_sent → „An Admin senden“ → POST /api/approvals.
+
+rejected → „Erneut senden“ (falls Eingaben angepasst).
+
+Nach Aktion: UI aktualisieren (optimistic oder Re-Fetch).
+
+Tests
+Unit
+
+validatePricing: Grenzfälle (27,00 % ok / 26,99 % approval; 50.000 € ok / 50.001 € approval; Caps exakt/überschritten).
+
+Parser für Euro/Prozent (,, ., €, Tausenderpunkte).
+
+API
+
+GET/PATCH /api/users/:id nur für admin; „letzter Admin“-Regel.
+
+POST /api/approvals (user) → erstellt pending, Calculation auf pending.
+
+PATCH /api/approvals/:id (admin) → approved|rejected; Calculation spiegelt Status (Hash-Prüfung).
+
+E2E
+
+User mit out-of-range → Badge required_not_sent → sendet → Admin sieht in /admin/approvals → approve → Badge approved → Finalisierung möglich.
+
+Hash ändert sich nach Approval → Status zurück auf required_not_sent.
+
+Sidebar zeigt Pending-Badge, nur für admin.
+
+Deliverables / Abnahme
+Admin-UI für Rollenverwaltung vorhanden und funktionsfähig.
+
+Sidebar mit „Approval Requests“ + Pending-Badge sichtbar (nur Admin).
+
+Calculations zeigen korrekte Badges und Buttons, Status ändert sich über den Flow.
+
+ENV/Docs aktualisiert (APPROVALS_ENABLED, Seeding, Endpunkte).
+
+CI grün (Lint/Unit/API/E2E). Screenshots der neuen Seiten in PR fix/ui-approvals-and-roles.
+
+Hinweise für die Ursachenanalyse (zusammengefasst)
+
+Häufig sind die Rollen nicht im me-Payload → UI rendert keine Admin-Elemente.
+
+Sidebar wird role-basiert gefiltert, aber role ist im Client undefined.
+
+approvalStatus wird nie gesetzt (fehlende Status-Übergänge) oder kommt als null.
+
+APPROVALS_ENABLED ist false/fehlt → Komponenten werden ausgeblendet.
+
+Fehlende Routen/Guards blocken die Seiten trotz existierender Komponenten.
+

@@ -178,6 +178,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update user (Admin only)
+  app.patch('/api/admin/users/:id', requireAuth, requireAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { role, ...updates } = req.body;
+      
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+
+      // If changing role, check for last admin protection
+      if (role && role !== 'admin') {
+        const allUsers = await storage.getAllUsers();
+        const adminUsers = allUsers.filter(user => user.role === 'admin');
+        const targetUser = allUsers.find(user => user.id === userId);
+        
+        if (targetUser?.role === 'admin' && adminUsers.length <= 1) {
+          return res.status(400).json({ message: "Cannot remove the last admin user" });
+        }
+      }
+
+      // Update user with new data
+      const updatedUser = await storage.updateUser(userId, { role, ...updates });
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Return user without password
+      const { password, ...safeUser } = updatedUser;
+      res.json({
+        success: true,
+        user: safeUser,
+        message: "User updated successfully"
+      });
+    } catch (error) {
+      console.error("Error updating user:", error);
+      res.status(500).json({ message: "Failed to update user" });
+    }
+  });
+
   // Update user role (Admin only)
   app.patch('/api/admin/users/:id', requireAuth, requireAdmin, async (req, res) => {
     try {

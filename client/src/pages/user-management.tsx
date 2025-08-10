@@ -50,11 +50,14 @@ export default function UserManagement() {
   const queryClient = useQueryClient();
 
   // Fetch all users (admin only)
-  const { data: users, isLoading } = useQuery({
+  const { data: usersResponse, isLoading } = useQuery({
     queryKey: ['/api/admin/users'],
-    queryFn: () => apiRequest('/api/admin/users'),
+    queryFn: (): Promise<{ success: boolean; users: User[]; count: number }> => 
+      apiRequest('/api/admin/users'),
     enabled: currentUser?.role === 'admin'
   });
+
+  const users = usersResponse?.users || [];
 
   // Create user mutation
   const createUserMutation = useMutation({
