@@ -17,7 +17,7 @@ interface ApprovalRequest {
   createdByUserId: number;
   approvedByUserId?: number;
   status: 'pending' | 'approved' | 'rejected';
-  starCategory: string;
+  starCategory: number;
   inputSnapshot: any;
   calculationSnapshot: any;
   reasons: string[];
