@@ -61,6 +61,7 @@ export interface IStorage {
   getPricingCalculation(id: number, userId: number): Promise<PricingCalculation | undefined>;
   createPricingCalculation(calculation: InsertPricingCalculation): Promise<PricingCalculation>;
   updatePricingCalculation(id: number, userId: number, calculation: Partial<InsertPricingCalculation>): Promise<PricingCalculation | undefined>;
+  updatePricingCalculationByAdmin(id: number, calculation: Partial<InsertPricingCalculation>): Promise<PricingCalculation | undefined>;
   deletePricingCalculation(id: number, userId: number): Promise<boolean>;
 
   // Feedback operations
@@ -310,6 +311,21 @@ export class DatabaseStorage implements IStorage {
         eq(pricingCalculations.id, id),
         eq(pricingCalculations.userId, userId)
       ))
+      .returning();
+    return calculation;
+  }
+
+  async updatePricingCalculationByAdmin(
+    id: number, 
+    calculationData: Partial<InsertPricingCalculation>
+  ): Promise<PricingCalculation | undefined> {
+    const [calculation] = await db
+      .update(pricingCalculations)
+      .set({
+        ...calculationData,
+        updatedAt: new Date(),
+      })
+      .where(eq(pricingCalculations.id, id))
       .returning();
     return calculation;
   }

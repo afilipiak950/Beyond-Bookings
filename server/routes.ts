@@ -5708,6 +5708,14 @@ Focus on:
         status: 'pending'
       });
 
+      // Update the calculation's approval status and link to the approval request
+      if (calculationId) {
+        await storage.updatePricingCalculationByAdmin(calculationId, {
+          approvalStatus: 'pending',
+          lastApprovalRequestId: approvalRequest.id
+        });
+      }
+
       res.json({
         success: true,
         approvalRequest,
