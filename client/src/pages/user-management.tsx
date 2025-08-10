@@ -58,6 +58,7 @@ export default function UserManagement() {
   });
 
   const users = usersResponse?.users || [];
+  const adminCount = users.filter(u => u.role === 'admin').length;
 
   // Create user mutation
   const createUserMutation = useMutation({
@@ -145,8 +146,6 @@ export default function UserManagement() {
       </AppLayout>
     );
   }
-
-  const adminCount = users.filter((user: User) => user.role === 'admin').length;
 
   const filteredUsers = users.filter((user: User) => {
     const matchesSearch = 
@@ -338,7 +337,7 @@ export default function UserManagement() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm opacity-90">Total Users</p>
-                      <p className="text-2xl font-bold">{usersData.length}</p>
+                      <p className="text-2xl font-bold">{users.length}</p>
                     </div>
                     <UserIcon className="h-8 w-8 opacity-90" />
                   </div>
@@ -362,7 +361,7 @@ export default function UserManagement() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm opacity-90">Active Users</p>
-                      <p className="text-2xl font-bold">{usersData.filter((u: User) => u.isActive).length}</p>
+                      <p className="text-2xl font-bold">{users.filter((u: User) => u.isActive).length}</p>
                     </div>
                     <UserIcon className="h-8 w-8 opacity-90" />
                   </div>
