@@ -5675,6 +5675,26 @@ Focus on:
   });
 
   // Get approval requests (admin only)
+  // Get approval statistics for admin sidebar badge
+  app.get('/api/approvals/stats', requireAuth, requireAdmin, async (req: any, res) => {
+    try {
+      const pendingApprovals = await storage.getApprovalRequests({ status: 'pending' });
+      const totalApprovals = await storage.getApprovalRequests({});
+      
+      res.json({
+        success: true,
+        pending: pendingApprovals.length,
+        total: totalApprovals.length
+      });
+    } catch (error) {
+      console.error('Error fetching approval stats:', error);
+      res.status(500).json({ 
+        message: 'Failed to fetch approval statistics',
+        error: error.message 
+      });
+    }
+  });
+
   app.get('/api/approvals', requireAdmin, async (req: any, res) => {
     try {
       const { status, userId } = req.query;

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
+import { useApprovalStats } from "@/hooks/useApprovalStats";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -73,12 +74,13 @@ const navigation = [
     gradient: "from-green-500 to-emerald-500",
   },
   {
-    name: "Approval Management",
+    name: "Approval Requests",
     href: "/approvals",
     icon: Users,
     description: "Review and approve calculations",
     gradient: "from-purple-500 to-pink-500",
     adminOnly: true,
+    badge: true, // Enable badge for pending requests
   },
   {
     name: "User Management",
@@ -108,6 +110,7 @@ export default function AppSidebar({ className }: SidebarProps) {
   const [location, setLocation] = useLocation();
   const { user } = useAuth();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const { data: approvalStats } = useApprovalStats();
 
   const handleLogout = () => {
     window.location.href = "/api/logout";
@@ -185,6 +188,12 @@ export default function AppSidebar({ className }: SidebarProps) {
                 )}
                 onClick={() => setLocation(item.href)}
               >
+                {/* Badge for collapsed sidebar */}
+                {isCollapsed && item.href === "/approvals" && approvalStats && approvalStats.pending > 0 && (
+                  <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold animate-pulse z-10">
+                    {approvalStats.pending > 9 ? '9+' : approvalStats.pending}
+                  </div>
+                )}
                 {/* Icon with gradient background for active state */}
                 <div className={cn(
                   "flex items-center justify-center rounded-lg transition-all duration-300",
@@ -212,6 +221,15 @@ export default function AppSidebar({ className }: SidebarProps) {
                       {(item as any).badge && (
                         <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0 px-1 py-0.5 flex-shrink-0 text-xs scale-75 origin-left">
                           {(item as any).badge}
+                        </Badge>
+                      )}
+                      {/* Approval Requests Pending Badge */}
+                      {item.href === "/approvals" && approvalStats && approvalStats.pending > 0 && (
+                        <Badge 
+                          variant="destructive" 
+                          className="ml-auto px-1.5 py-0.5 text-xs font-semibold animate-pulse flex-shrink-0"
+                        >
+                          {approvalStats.pending}
                         </Badge>
                       )}
                     </div>

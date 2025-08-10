@@ -433,6 +433,15 @@ export default function Calculations() {
       toast({
         title: "Success",
         description: "Calculation sent for approval",
+        action: (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => window.location.href = "/approvals"}
+          >
+            View Requests
+          </Button>
+        ),
       });
 
       // Refresh calculations
