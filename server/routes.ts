@@ -218,8 +218,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Update user role (Admin only)
-  app.patch('/api/admin/users/:id', requireAuth, requireAdmin, async (req, res) => {
+  // Update user role (Admin only) - separate endpoint
+  app.patch('/api/admin/users/:id/role', requireAuth, requireAdmin, async (req, res) => {
     try {
       const userId = parseInt(req.params.id);
       const { role } = req.body;
@@ -508,7 +508,7 @@ MANDATORY OUTPUT FORMAT (valid JSON only):
 CRITICAL: You must always return a specific price number in EUR. Research 5-star luxury boutique hotels in Düsseldorf if exact data unavailable.`
               }
             ],
-            maxTokens: 600,
+            max_tokens: 600,
             temperature: 0.1
           });
 
@@ -631,7 +631,7 @@ Return ONLY this JSON format:
               content: priceSearchPrompt
             }
           ],
-          maxTokens: 600,
+          max_tokens: 600,
           temperature: 0.1
         });
 
@@ -712,7 +712,7 @@ If you cannot find exact room count data, set roomCount to null and explain in d
               content: researchPrompt
             }
           ],
-          maxTokens: 1000,
+          max_tokens: 1000,
           temperature: 0.1
         });
 
@@ -827,7 +827,7 @@ MANDATORY OUTPUT FORMAT (valid JSON only):
 CRITICAL: You must always return a specific price number in EUR. If exact data unavailable, research comparable ${cleanedData.stars || 3}-star hotels in the same area and provide informed estimate based on market standards.`
             }
           ],
-          maxTokens: 600,
+          max_tokens: 600,
           temperature: 0.1
         });
 

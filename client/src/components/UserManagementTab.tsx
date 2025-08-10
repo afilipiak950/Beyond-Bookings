@@ -100,10 +100,7 @@ export default function UserManagementTab() {
   // Create user mutation
   const createUserMutation = useMutation({
     mutationFn: async (userData: CreateUserForm) => {
-      return await apiRequest('/api/admin/users', {
-        method: 'POST',
-        body: userData,
-      });
+      return await apiRequest('/api/admin/users', 'POST', userData);
     },
     onSuccess: () => {
       toast({
@@ -126,10 +123,7 @@ export default function UserManagementTab() {
   // Update user mutation
   const updateUserMutation = useMutation({
     mutationFn: async ({ id, userData }: { id: number; userData: EditUserForm }) => {
-      return await apiRequest(`/api/admin/users/${id}`, {
-        method: 'PATCH',
-        body: userData,
-      });
+      return await apiRequest(`/api/admin/users/${id}`, 'PATCH', userData);
     },
     onSuccess: () => {
       toast({
@@ -153,9 +147,7 @@ export default function UserManagementTab() {
   // Delete user mutation
   const deleteUserMutation = useMutation({
     mutationFn: async (id: number) => {
-      return await apiRequest(`/api/admin/users/${id}`, {
-        method: 'DELETE',
-      });
+      return await apiRequest(`/api/admin/users/${id}`, 'DELETE');
     },
     onSuccess: () => {
       toast({
@@ -178,10 +170,7 @@ export default function UserManagementTab() {
   // Update user role mutation
   const updateUserRoleMutation = useMutation({
     mutationFn: async ({ id, role }: { id: number; role: 'user' | 'admin' }) => {
-      return await apiRequest(`/api/admin/users/${id}/role`, {
-        method: 'PATCH',
-        body: { role },
-      });
+      return await apiRequest(`/api/admin/users/${id}/role`, 'PATCH', { role });
     },
     onSuccess: () => {
       toast({
