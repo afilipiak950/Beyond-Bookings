@@ -995,7 +995,7 @@ CRITICAL: You must always return a specific price number in EUR. If exact data u
           testResponse = await mistral.chat.complete({
             model: model,
             messages: [{ role: "user", content: "Hello, respond with 'API working'" }],
-            maxTokens: 50
+            max_tokens: 50
           });
           console.log(`Test successful with model: ${model}`);
           break;
@@ -1133,7 +1133,7 @@ Research authentic review data from actual platforms. If exact review counts una
             content: extractionPrompt
           }
         ],
-        maxTokens: 1500,
+        max_tokens: 1500,
         temperature: 0.1
       });
 
@@ -1237,7 +1237,7 @@ Only return hotel data if you can verify this is a real, existing hotel. Do not 
             content: basicDataPrompt
           }
         ],
-        maxTokens: 600,
+        max_tokens: 600,
         temperature: 0.1
       });
 
@@ -3454,7 +3454,7 @@ Provide an ultra-detailed, comprehensive response that demonstrates deep analysi
                   content: message
                 }
               ],
-              maxTokens: 1000,
+              max_tokens: 1000,
               temperature: 0.7
             })
           });
@@ -3487,7 +3487,7 @@ Provide an ultra-detailed, comprehensive response that demonstrates deep analysi
               content: message
             }
           ],
-          maxTokens: 2000,
+          max_tokens: 2000,
           temperature: 0.7
         });
 
@@ -3813,7 +3813,7 @@ CRITICAL: Extract ALL actual numbers from the document. Be exhaustive in your an
                 content: analysisPrompt
               }
             ],
-            maxTokens: 4000,
+            max_tokens: 4000,
             temperature: 0.2
           });
           
@@ -3895,7 +3895,7 @@ Format as JSON with fields: overallSummary, keyPatterns, strategicRecommendation
             content: summaryPrompt
           }
         ],
-        maxTokens: 2000,
+        max_tokens: 2000,
         temperature: 0.3
       });
       
@@ -4332,7 +4332,7 @@ Format your response in a clear, well-structured manner with bullet points where
             content: prompt
           }
         ],
-        maxTokens: 1000,
+        max_tokens: 1000,
         temperature: 0.7
       });
 
@@ -4401,7 +4401,7 @@ Return a JSON object with the following structure:
             content: queryAnalysisPrompt
           }
         ],
-        maxTokens: 500,
+        max_tokens: 500,
         temperature: 0.1
       });
 
@@ -4536,7 +4536,7 @@ Return a JSON object with the following structure:
               content: dataExtractionPrompt
             }
           ],
-          maxTokens: 2000,
+          max_tokens: 2000,
           temperature: 0.1
         });
 
@@ -4586,7 +4586,7 @@ Return a JSON object with the following structure:
                   content: locationLookupPrompt
                 }
               ],
-              maxTokens: 1000,
+              max_tokens: 1000,
               temperature: 0.1
             });
 
@@ -4672,7 +4672,7 @@ Return a JSON object with the following structure:
             content: analysisPrompt
           }
         ],
-        maxTokens: 3000,
+        max_tokens: 3000,
         temperature: 0.1
       });
 
@@ -4945,7 +4945,7 @@ Price data found: ${priceData.length} price points
 Return a JSON response with: documentType, keyFindings[], businessInsights[], recommendations[], summary`
                       }
                     ],
-                    maxTokens: 1000
+                    max_tokens: 1000
                   });
                   
                   const content = response.choices[0]?.message?.content || '{}';
@@ -5154,7 +5154,7 @@ Price data found: ${priceData.length} price points
 Return a JSON response with: documentType, keyFindings[], businessInsights[], recommendations[], summary`
                       }
                     ],
-                    maxTokens: 1000
+                    max_tokens: 1000
                   });
                   
                   const content = response.choices[0]?.message?.content || '{}';
@@ -5427,7 +5427,7 @@ Return a JSON response with: documentType, keyFindings[], businessInsights[], re
                 ]
               }
             ],
-            maxTokens: 1000
+            max_tokens: 1000
           });
 
           extractedText = response.choices[0]?.message?.content || '';
@@ -5507,7 +5507,7 @@ Price data found: ${priceData.length} price points
 Return a JSON response with: documentType, keyFindings[], businessInsights[], recommendations[], summary`
             }
           ],
-          maxTokens: 1000
+          max_tokens: 1000
         });
 
         const content = response.choices[0]?.message?.content || '{}';
@@ -5707,7 +5707,7 @@ Focus on:
                 content: prompt
               }
             ],
-            maxTokens: 2000,
+            max_tokens: 2000,
             temperature: 0.1,
           });
 
@@ -5872,7 +5872,7 @@ Focus on:
                 content: prompt
               }
             ],
-            maxTokens: 2000,
+            max_tokens: 2000,
             temperature: 0.3
           });
 
