@@ -12,8 +12,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Users, Building2, Search, Plus, Globe, MapPin, Star, Loader2, Trash2, MoreHorizontal, Send, Bot, User, Clock, Brain, MessageSquare } from "lucide-react";
+import { Users, Building2, Search, Plus, Globe, MapPin, Star, Loader2, Trash2, MoreHorizontal, Send, Bot, User, Clock, Brain, MessageSquare, RefreshCw, Eye, AlertCircle, CheckCircle } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Badge } from "@/components/ui/badge";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 export default function CustomerManagement() {
   const { toast } = useToast();
@@ -27,12 +30,116 @@ export default function CustomerManagement() {
   const [extractedData, setExtractedData] = useState<any>(null);
   const [extractionLoading, setExtractionLoading] = useState(false);
   
+  // AI enrichment state
+  const [aiEnrichment, setAiEnrichment] = useState<{
+    roomCount?: { value: number; source: string; confidence: 'Low' | 'Medium' | 'High'; sources: any[] };
+    averagePrice?: { value: number; source: string; confidence: 'Low' | 'Medium' | 'High'; sources: any[] };
+  }>({});
+  const [enrichmentLoading, setEnrichmentLoading] = useState<{
+    roomCount?: boolean;
+    averagePrice?: boolean;
+  }>({});
+  const [userEditedFields, setUserEditedFields] = useState<Set<string>>(new Set());
+  const [showApplyDialog, setShowApplyDialog] = useState<{
+    field: string;
+    value: number;
+    show: boolean;
+  }>({ field: '', value: 0, show: false });
+  
   // Hotel details dialog state
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [selectedHotel, setSelectedHotel] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
+
+  // AI enrichment functions
+  const runAIEnrichment = async (field: 'roomCount' | 'averagePrice', hotelName: string, hotelLocation?: string) => {
+    setEnrichmentLoading((prev: any) => ({ ...prev, [field]: true }));
+    
+    try {
+      const response = await fetch('/api/hotels/enrich-field', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ 
+          field, 
+          hotelName, 
+          hotelLocation,
+          city: extractedData?.city,
+          country: extractedData?.country
+        })
+      });
+
+      const result = await response.json();
+      
+      if (result.success && result.data) {
+        setAiEnrichment((prev: any) => ({
+          ...prev,
+          [field]: result.data
+        }));
+        
+        // Auto-apply if user hasn't manually edited this field
+        if (!userEditedFields.has(field)) {
+          setExtractedData((prev: any) => ({
+            ...prev,
+            [field]: result.data.value
+          }));
+        } else {
+          // Show apply dialog if user has manually edited
+          setShowApplyDialog({
+            field,
+            value: result.data.value,
+            show: true
+          });
+        }
+      } else {
+        toast({
+          title: "Keine zuverlässigen Daten gefunden",
+          description: `Für ${field === 'roomCount' ? 'Zimmeranzahl' : 'Durchschnittspreis'} konnten keine verlässlichen Informationen recherchiert werden.`,
+          variant: "default"
+        });
+      }
+    } catch (error) {
+      console.error(`AI enrichment error for ${field}:`, error);
+      toast({
+        title: "Recherche-Fehler",
+        description: "Die automatische Recherche ist fehlgeschlagen. Bitte versuchen Sie es erneut.",
+        variant: "destructive"
+      });
+    } finally {
+      setEnrichmentLoading((prev: any) => ({ ...prev, [field]: false }));
+    }
+  };
+
+  const handleFieldChange = (field: string, value: any) => {
+    setUserEditedFields((prev: any) => new Set(prev).add(field));
+    setExtractedData((prev: any) => ({ ...prev, [field]: value }));
+  };
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('de-DE', {
+      style: 'currency',
+      currency: 'EUR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(price);
+  };
+
+  // Auto-trigger enrichment when hotel name changes (debounced)
+  useEffect(() => {
+    if (!extractedData?.name) return;
+    
+    const timeoutId = setTimeout(() => {
+      if (extractedData.name.length > 3) {
+        // Auto-enrich both fields when name is ready
+        runAIEnrichment('roomCount', extractedData.name, extractedData.location);
+        runAIEnrichment('averagePrice', extractedData.name, extractedData.location);
+      }
+    }, 2000); // 2 second debounce
+    
+    return () => clearTimeout(timeoutId);
+  }, [extractedData?.name, extractedData?.location]);
 
   // Format AI response with proper styling
   const formatAIResponse = (response: string) => {
@@ -183,6 +290,9 @@ export default function CustomerManagement() {
       setHotelName("");
       setHotelUrl("");
       setExtractedData(null);
+      setAiEnrichment({});
+      setUserEditedFields(new Set());
+      setEnrichmentLoading({});
       toast({
         title: "Hotel added successfully!",
         description: "The hotel has been added to your database",
@@ -491,13 +601,71 @@ export default function CustomerManagement() {
                         />
                       </div>
                       <div>
-                        <Label htmlFor="editRoomCount">Room Count</Label>
+                        <Label htmlFor="editRoomCount" className="flex items-center gap-2">
+                          Room Count
+                          {aiEnrichment.roomCount && (
+                            <Badge variant="secondary" className="text-xs">
+                              <Bot className="h-3 w-3 mr-1" />
+                              AI
+                            </Badge>
+                          )}
+                          {aiEnrichment.roomCount && (
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button variant="ghost" size="sm" className="h-5 w-5 p-0">
+                                  <Eye className="h-3 w-3" />
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-80">
+                                <div className="space-y-2">
+                                  <div className="flex items-center gap-2">
+                                    <Badge variant={
+                                      aiEnrichment.roomCount.confidence === 'High' ? 'default' :
+                                      aiEnrichment.roomCount.confidence === 'Medium' ? 'secondary' : 'outline'
+                                    }>
+                                      {aiEnrichment.roomCount.confidence} Confidence
+                                    </Badge>
+                                  </div>
+                                  <p className="text-sm text-muted-foreground">
+                                    Source: {aiEnrichment.roomCount.source}
+                                  </p>
+                                  {aiEnrichment.roomCount.sources?.length > 0 && (
+                                    <div className="space-y-1">
+                                      <p className="text-xs font-medium">Sources:</p>
+                                      {aiEnrichment.roomCount.sources.slice(0, 3).map((source, idx) => (
+                                        <div key={idx} className="text-xs">
+                                          <a href={source.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                                            {source.title}
+                                          </a>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              </PopoverContent>
+                            </Popover>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-5 w-5 p-0"
+                            onClick={() => extractedData?.name && runAIEnrichment('roomCount', extractedData.name, extractedData.location)}
+                            disabled={enrichmentLoading.roomCount || !extractedData?.name}
+                          >
+                            {enrichmentLoading.roomCount ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <RefreshCw className="h-3 w-3" />
+                            )}
+                          </Button>
+                        </Label>
                         <Input
                           id="editRoomCount"
                           type="number"
                           value={extractedData.roomCount || ''}
-                          onChange={(e) => setExtractedData({...extractedData, roomCount: parseInt(e.target.value) || 0})}
+                          onChange={(e) => handleFieldChange('roomCount', parseInt(e.target.value) || 0)}
                           className="mt-1"
+                          placeholder={aiEnrichment.roomCount ? "AI-Recherche verfügbar" : "Anzahl wird automatisch recherchiert"}
                         />
                       </div>
                       <div>
@@ -521,20 +689,76 @@ export default function CustomerManagement() {
                       <div>
                         <Label htmlFor="editAveragePrice" className="flex items-center gap-2">
                           Durchschnittlicher Zimmerpreis (€)
-                          {extractedData.averagePrice && (
-                            <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">
-                              Auto-recherchiert
-                            </span>
+                          {aiEnrichment.averagePrice && (
+                            <Badge variant="secondary" className="text-xs">
+                              <Bot className="h-3 w-3 mr-1" />
+                              AI
+                            </Badge>
                           )}
+                          {aiEnrichment.averagePrice && (
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button variant="ghost" size="sm" className="h-5 w-5 p-0">
+                                  <Eye className="h-3 w-3" />
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-80">
+                                <div className="space-y-2">
+                                  <div className="flex items-center gap-2">
+                                    <Badge variant={
+                                      aiEnrichment.averagePrice.confidence === 'High' ? 'default' :
+                                      aiEnrichment.averagePrice.confidence === 'Medium' ? 'secondary' : 'outline'
+                                    }>
+                                      {aiEnrichment.averagePrice.confidence} Confidence
+                                    </Badge>
+                                    <span className="text-sm font-medium">
+                                      {formatPrice(aiEnrichment.averagePrice.value)}
+                                    </span>
+                                  </div>
+                                  <p className="text-sm text-muted-foreground">
+                                    12-Monats-Durchschnitt
+                                  </p>
+                                  <p className="text-sm text-muted-foreground">
+                                    Source: {aiEnrichment.averagePrice.source}
+                                  </p>
+                                  {aiEnrichment.averagePrice.sources?.length > 0 && (
+                                    <div className="space-y-1">
+                                      <p className="text-xs font-medium">Sources:</p>
+                                      {aiEnrichment.averagePrice.sources.slice(0, 3).map((source, idx) => (
+                                        <div key={idx} className="text-xs">
+                                          <a href={source.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                                            {source.title}
+                                          </a>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              </PopoverContent>
+                            </Popover>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-5 w-5 p-0"
+                            onClick={() => extractedData?.name && runAIEnrichment('averagePrice', extractedData.name, extractedData.location)}
+                            disabled={enrichmentLoading.averagePrice || !extractedData?.name}
+                          >
+                            {enrichmentLoading.averagePrice ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <RefreshCw className="h-3 w-3" />
+                            )}
+                          </Button>
                         </Label>
                         <Input
                           id="editAveragePrice"
                           type="number"
                           step="0.01"
                           value={extractedData.averagePrice || ''}
-                          onChange={(e) => setExtractedData({...extractedData, averagePrice: parseFloat(e.target.value) || 0})}
+                          onChange={(e) => handleFieldChange('averagePrice', parseFloat(e.target.value) || 0)}
                           className="mt-1"
-                          placeholder="12-Monats-Durchschnitt automatisch recherchiert"
+                          placeholder={aiEnrichment.averagePrice ? "AI-Recherche verfügbar" : "12-Monats-Durchschnitt automatisch recherchiert"}
                         />
                       </div>
                       <div className="md:col-span-2">
@@ -780,6 +1004,9 @@ export default function CustomerManagement() {
                       setHotelName("");
                       setHotelUrl("");
                       setExtractedData(null);
+                      setAiEnrichment({});
+                      setUserEditedFields(new Set());
+                      setEnrichmentLoading({});
                     }}
                   >
                     Cancel
@@ -805,6 +1032,39 @@ export default function CustomerManagement() {
               </div>
             </DialogContent>
           </Dialog>
+
+          {/* AI Override Confirmation Dialog */}
+          <AlertDialog open={showApplyDialog.show} onOpenChange={(open) => setShowApplyDialog(prev => ({ ...prev, show: open }))}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>AI-Daten anwenden?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Die KI hat neue Daten für {showApplyDialog.field === 'roomCount' ? 'Zimmeranzahl' : 'Durchschnittspreis'} gefunden:
+                  <br />
+                  <span className="font-medium">
+                    {showApplyDialog.field === 'roomCount' 
+                      ? `${showApplyDialog.value} Zimmer`
+                      : formatPrice(showApplyDialog.value)
+                    }
+                  </span>
+                  <br />
+                  Möchten Sie diesen Wert übernehmen?
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Ignorieren</AlertDialogCancel>
+                <AlertDialogAction onClick={() => {
+                  setExtractedData((prev: any) => ({
+                    ...prev,
+                    [showApplyDialog.field]: showApplyDialog.value
+                  }));
+                  setShowApplyDialog({ field: '', value: 0, show: false });
+                }}>
+                  Anwenden
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
 
         {/* Search and Filters */}

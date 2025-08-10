@@ -1383,6 +1383,122 @@ Only return hotel data if you can verify this is a real, existing hotel. Do not 
     }
   });
 
+  // AI Field Enrichment endpoint
+  app.post('/api/hotels/enrich-field', requireAuth, async (req: any, res) => {
+    try {
+      const { field, hotelName, hotelLocation, city, country } = req.body;
+      
+      if (!field || !hotelName) {
+        return res.status(400).json({ message: "Field and hotel name are required" });
+      }
+
+      console.log(`🤖 AI enrichment for ${field}: ${hotelName}`);
+
+      const { default: OpenAI } = await import('openai');
+      const openai = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY
+      });
+
+      let prompt = '';
+      if (field === 'roomCount') {
+        prompt = `Find the total number of rooms for the hotel "${hotelName}"${hotelLocation ? ` located at ${hotelLocation}` : ''}${city ? ` in ${city}` : ''}${country ? `, ${country}` : ''}.
+
+RESEARCH REQUIREMENTS:
+1. Search hotel's official website and booking platforms
+2. Check hotel property information from trusted sources
+3. Look for "rooms", "suites", "accommodations" count
+4. Verify from multiple reliable sources
+
+MANDATORY OUTPUT FORMAT (valid JSON only):
+{
+  "value": [exact_number_of_rooms],
+  "source": "Primary source of information",
+  "confidence": "High/Medium/Low",
+  "sources": [
+    {
+      "title": "Source title",
+      "url": "Source URL or description"
+    }
+  ]
+}
+
+CRITICAL: Always return a specific number if found. If no reliable data found, return {"value": null, "confidence": "Low", "source": "No reliable data found"}.`;
+      } else if (field === 'averagePrice') {
+        prompt = `Find the 12-month average room price in EUR for the hotel "${hotelName}"${hotelLocation ? ` located at ${hotelLocation}` : ''}${city ? ` in ${city}` : ''}${country ? `, ${country}` : ''}.
+
+RESEARCH REQUIREMENTS:
+1. Search current booking rates on Booking.com, Hotels.com, Expedia
+2. Calculate 12-month average considering seasonal variations
+3. Convert all prices to EUR using current exchange rates
+4. Check hotel's official website for standard rates
+5. Consider hotel category and local market rates
+
+MANDATORY OUTPUT FORMAT (valid JSON only):
+{
+  "value": [exact_price_in_EUR],
+  "source": "Primary research methodology",
+  "confidence": "High/Medium/Low",
+  "sources": [
+    {
+      "title": "Booking platform or source",
+      "url": "Platform URL or description"
+    }
+  ]
+}
+
+CRITICAL: Research 12-month average, not single night rates. If no reliable average found, return {"value": null, "confidence": "Low", "source": "No reliable 12-month average found"}.`;
+      } else {
+        return res.status(400).json({ message: "Invalid field type" });
+      }
+
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          {
+            role: "system",
+            content: `You are a hotel data research specialist. Find authentic, verifiable information from real sources. Always return valid JSON format with exact numbers when found.`
+          },
+          {
+            role: "user",
+            content: prompt
+          }
+        ],
+        max_tokens: 800,
+        temperature: 0.1
+      });
+
+      const response = completion.choices[0].message.content;
+      if (!response) {
+        throw new Error('No response from OpenAI');
+      }
+
+      // Clean JSON response
+      let cleanResponse = response.trim();
+      if (cleanResponse.startsWith('```json')) {
+        cleanResponse = cleanResponse.replace(/```json\n?/, '').replace(/\n?```$/, '');
+      } else if (cleanResponse.startsWith('```')) {
+        cleanResponse = cleanResponse.replace(/```\n?/, '').replace(/\n?```$/, '');
+      }
+
+      const enrichmentData = JSON.parse(cleanResponse);
+      console.log(`✅ AI enrichment result for ${field}:`, enrichmentData);
+
+      if (enrichmentData.value === null || enrichmentData.value === undefined) {
+        return res.json({ success: false, message: "No reliable data found" });
+      }
+
+      res.json({ success: true, data: enrichmentData });
+      
+    } catch (error: any) {
+      console.error('AI enrichment error:', error);
+      res.status(500).json({ 
+        success: false,
+        message: "Failed to enrich field data", 
+        error: error?.message || 'Unknown error'
+      });
+    }
+  });
+
   // Session refresh endpoint to keep sessions alive
   app.post('/api/auth/refresh', requireAuth, async (req: any, res) => {
     try {
