@@ -10,6 +10,7 @@ import {
   documentAnalyses,
   documentInsights,
   approvalRequests,
+  notifications,
   type User,
   type UpsertUser,
   type Hotel,
@@ -31,6 +32,8 @@ import {
   type InsertDocumentInsight,
   type ApprovalRequest,
   type InsertApprovalRequest,
+  type Notification,
+  type InsertNotification,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql } from "drizzle-orm";
@@ -109,6 +112,13 @@ export interface IStorage {
   getApprovalRequest(id: number): Promise<(ApprovalRequest & { createdByUser: { email: string; firstName?: string; lastName?: string } }) | undefined>;
   updateApprovalRequest(id: number, adminUserId: number, data: { status: string; adminComment?: string }): Promise<ApprovalRequest | undefined>;
   getUserApprovalRequests(userId: number): Promise<ApprovalRequest[]>;
+
+  // Notification operations
+  getNotifications(userId: number, filters?: { status?: string; limit?: number; cursor?: string }): Promise<Notification[]>;
+  getNotificationCount(userId: number): Promise<{ unread: number }>;
+  createNotification(notification: InsertNotification): Promise<Notification>;
+  markNotificationAsRead(id: number, userId: number): Promise<boolean>;
+  markAllNotificationsAsRead(userId: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -815,6 +825,81 @@ ${calculation.hotelName},${calculation.hotelUrl || ''},${calculation.stars || ''
       .where(eq(approvalRequests.id, id));
 
     return result as (ApprovalRequest & { hotelName?: string; createdByUser: { email: string; firstName?: string; lastName?: string } }) | undefined;
+  }
+
+  // Notification operations
+  async getNotifications(userId: number, filters?: { status?: string; limit?: number; cursor?: string }): Promise<Notification[]> {
+    let query = db
+      .select()
+      .from(notifications)
+      .where(eq(notifications.recipientUserId, userId))
+      .orderBy(desc(notifications.createdAt));
+
+    if (filters?.status && filters.status !== 'all') {
+      query = query.where(and(
+        eq(notifications.recipientUserId, userId),
+        eq(notifications.status, filters.status)
+      ));
+    }
+
+    if (filters?.limit) {
+      query = query.limit(filters.limit);
+    }
+
+    return await query;
+  }
+
+  async getNotificationCount(userId: number): Promise<{ unread: number }> {
+    const [result] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(notifications)
+      .where(and(
+        eq(notifications.recipientUserId, userId),
+        eq(notifications.status, 'unread')
+      ));
+
+    return { unread: result?.count || 0 };
+  }
+
+  async createNotification(notification: InsertNotification): Promise<Notification> {
+    const [created] = await db
+      .insert(notifications)
+      .values(notification)
+      .returning();
+
+    return created;
+  }
+
+  async markNotificationAsRead(id: number, userId: number): Promise<boolean> {
+    const result = await db
+      .update(notifications)
+      .set({ 
+        status: 'read', 
+        readAt: new Date() 
+      })
+      .where(and(
+        eq(notifications.id, id),
+        eq(notifications.recipientUserId, userId)
+      ))
+      .returning();
+
+    return result.length > 0;
+  }
+
+  async markAllNotificationsAsRead(userId: number): Promise<boolean> {
+    const result = await db
+      .update(notifications)
+      .set({ 
+        status: 'read', 
+        readAt: new Date() 
+      })
+      .where(and(
+        eq(notifications.recipientUserId, userId),
+        eq(notifications.status, 'unread')
+      ))
+      .returning();
+
+    return result.length > 0;
   }
 }
 

@@ -61,6 +61,23 @@ export const approvalRequests = pgTable("approval_requests", {
   index("approval_requests_created_at_idx").on(table.createdAt),
 ]);
 
+// Notifications table
+export const notifications = pgTable("notifications", {
+  id: serial("id").primaryKey(),
+  recipientUserId: integer("recipient_user_id").notNull().references(() => users.id),
+  type: varchar("type").notNull(), // 'approval_pending', 'approval_approved', 'approval_rejected'
+  title: varchar("title").notNull(),
+  message: text("message").notNull(),
+  approvalRequestId: integer("approval_request_id").references(() => approvalRequests.id),
+  calculationId: integer("calculation_id").references(() => pricingCalculations.id),
+  status: varchar("status").default("unread").notNull(), // 'unread', 'read'
+  readAt: timestamp("read_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("notifications_recipient_status_idx").on(table.recipientUserId, table.status),
+  index("notifications_created_at_idx").on(table.createdAt),
+]);
+
 // Hotels table with comprehensive review data
 export const hotels = pgTable("hotels", {
   id: serial("id").primaryKey(),
@@ -223,6 +240,10 @@ export const insertFeedbackSchema = createInsertSchema(feedback).omit({
 
 export type InsertFeedback = z.infer<typeof insertFeedbackSchema>;
 export type Feedback = typeof feedback.$inferSelect;
+
+export const insertNotificationSchema = createInsertSchema(notifications);
+export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+export type Notification = typeof notifications.$inferSelect;
 
 // OCR Analysis table
 export const ocrAnalyses = pgTable("ocr_analyses", {

@@ -1,0 +1,141 @@
+Goal
+On the Dashboard, replace the Quick Actions card with a Notifications panel.
+
+Admins see: Requested approvals (pending list) with deep links.
+
+Users see: status updates for their approvals (approved/declined with admin comments) and their own pending requests.
+Add unread counts, real-time updates, and “mark as read”.
+
+1) Data model (add if missing)
+Create notifications table/collection:
+
+id
+
+recipientUserId
+
+type (approval_pending | approval_approved | approval_rejected)
+
+title (short)
+
+message (HTML/text; include admin comment snippet if present)
+
+approvalRequestId (nullable)
+
+calculationId (nullable)
+
+status (unread|read) with readAt (nullable)
+
+createdAt
+Indexes: recipientUserId+status, createdAt.
+
+2) Notification producers (hook into existing workflow)
+
+On POST /api/approvals (new pending):
+
+Create one approval_pending notification per admin recipient.
+
+Title: “Approval requested by ${userName}”.
+
+Message: hotel/calculation name, star category, reasons list, financing, link.
+
+On PATCH /api/approvals/:id decision:
+
+For requester only:
+
+approval_approved or approval_rejected with admin name, timestamp.
+
+Include adminComment snippet in message (first 300 chars).
+
+3) API
+
+GET /api/notifications?status=unread|all&limit=20&cursor=... (auth: owner)
+
+PATCH /api/notifications/:id/read → marks as read (owner only)
+
+POST /api/notifications/mark-all-read (owner)
+
+GET /api/notifications/count → { unread: number }
+Return title, message, type, createdAt, status, deep links:
+
+Admin: /admin/approvals/:approvalRequestId
+
+User: /calculations/:calculationId
+
+4) Dashboard UI (replace Quick Actions card)
+
+Replace the Quick Actions component with Notifications card:
+
+Header: “Notifications” (DE: “Benachrichtigungen”)
+
+Tabs auto by role:
+
+Admin view (role=admin): “Requested approvals” list
+
+Row: title, requester name, calc name, time-ago, status pill “PENDING”, CTA “Open” → admin approval detail.
+
+User view (role=user): “My approval updates”
+
+Rows for pending/approved/declined; show admin comment preview for decisions; CTA “View”.
+
+Controls: “Mark all as read”, filter by All | Unread | Pending | Approved | Declined.
+
+Empty states with short help text.
+
+Add unread badge to top-nav bell icon and to the Notifications card header.
+
+5) Real-time updates
+
+If WS/SSE available, push notification:new to recipients.
+
+Else polling every 10s for /api/notifications/count and refresh list if count changes.
+
+6) Email + Notifications parity
+
+Emails remain as implemented; creation of a notification must not depend on email success.
+
+Log email failures but do not block notification creation.
+
+7) Security & RBAC
+
+Only recipient can read/mark their notifications.
+
+Admin sees only admin-targeted notifications.
+
+Keep existing approval RBAC unchanged.
+
+8) Tests
+
+Unit: notification producer functions for each event type.
+
+API: list, count, mark read/mark all read (owner only).
+
+E2E:
+
+User submits approval → each admin gets pending notification on Dashboard; unread badges increment.
+
+Admin declines with comment → user gets approval_rejected notification; Dashboard shows comment snippet & link; badge decrements after read.
+
+Admin approves → user gets approval_approved; Calculation page shows approved badge + comment panel.
+
+9) Migration & Cleanup
+
+DB migration for notifications.
+
+Replace Dashboard Quick Actions import with new Notifications component (keep Quick Actions behind a small “Create” menu elsewhere if already used; otherwise remove).
+
+README: describe notifications, endpoints, and real-time/polling behavior.
+
+Acceptance Criteria
+
+Dashboard “Quick Actions” is replaced by Notifications.
+
+Admins see pending approval requests with deep links and unread counts.
+
+Users see their pending requests and decision updates with admin comment preview.
+
+Unread badges in top nav and card header; mark-as-read works.
+
+Real-time (or 10s polling) updates counts/lists.
+
+All tests pass.
+

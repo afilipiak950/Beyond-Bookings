@@ -15,6 +15,7 @@ import { documentProcessor } from "./documentProcessor";
 import { insightRestorer } from "./insightRestorer";
 import { aiLearningService } from "./aiPriceLearning";
 import { validatePricing, extractPricingInputFromWorkflow } from "./approvalValidation";
+import { notificationService } from "./notificationService";
 import { z } from "zod";
 import multer from "multer";
 import path from "path";
@@ -5733,22 +5734,22 @@ Focus on:
         });
       }
 
-      // Send email notifications to all admins (non-blocking)
+      // Send email and system notifications to all admins (non-blocking)
       try {
-        const { notifyAdminsPending } = await import('./emailNotifications');
         const adminUsers = await storage.getAllAdminUsers();
-        const requesterUser = await storage.getUserById(req.user.id);
+        const approvalWithHotelName = await storage.getApprovalRequestWithHotelName(approvalRequest.id);
 
-        if (adminUsers.length > 0 && requesterUser) {
-          // Get approval request with hotel name for email
-          const approvalWithHotelName = await storage.getApprovalRequestWithHotelName(approvalRequest.id);
-          if (approvalWithHotelName) {
-            await notifyAdminsPending(approvalWithHotelName, adminUsers);
-          }
+        if (adminUsers.length > 0 && approvalWithHotelName) {
+          // Send email notifications
+          const { notifyAdminsPending } = await import('./emailNotifications');
+          await notifyAdminsPending(approvalWithHotelName, adminUsers);
+          
+          // Send system notifications
+          await notificationService.notifyAdminsPending(approvalWithHotelName, adminUsers);
         }
-      } catch (emailError) {
-        console.error('Admin notification email failed (non-blocking):', emailError);
-        // Continue with response even if email fails
+      } catch (error) {
+        console.error('Admin notifications failed (non-blocking):', error);
+        // Continue with response even if notifications fail
       }
 
       res.json({
@@ -5870,28 +5871,33 @@ Focus on:
         });
       }
 
-      // Send email notifications (non-blocking)
+      // Send email and system notifications (non-blocking)
       try {
         // Import email notification functions
         const { notifyRequesterApproved, notifyRequesterRejected } = await import('./emailNotifications');
         
         // Get requester and admin details
-        const requesterUser = await storage.getUserById(result.approvalRequest!.createdByUserId);
         const adminUser = await storage.getUserById(req.user.id);
+        const approvalWithHotelName = await storage.getApprovalRequestWithHotelName(id);
 
-        if (requesterUser && adminUser) {
-          // Get hotel name for the approval request
-          const approvalWithHotelName = await storage.getApprovalRequestWithHotelName(id);
-          
+        if (adminUser && approvalWithHotelName) {
+          // Send email notifications
           if (action === 'approve') {
-            await notifyRequesterApproved(approvalWithHotelName!, adminUser, result.calculation!);
+            await notifyRequesterApproved(approvalWithHotelName, adminUser, result.calculation!);
           } else {
-            await notifyRequesterRejected(approvalWithHotelName!, adminUser, result.calculation!);
+            await notifyRequesterRejected(approvalWithHotelName, adminUser, result.calculation!);
           }
+          
+          // Send system notifications
+          await notificationService.notifyUserDecision(
+            approvalWithHotelName, 
+            adminUser, 
+            action as 'approve' | 'reject'
+          );
         }
-      } catch (emailError) {
-        console.error('Email notification failed (non-blocking):', emailError);
-        // Continue with response even if email fails
+      } catch (error) {
+        console.error('Notifications failed (non-blocking):', error);
+        // Continue with response even if notifications fail
       }
 
       res.json({
@@ -5960,5 +5966,67 @@ Focus on:
   });
 
   const httpServer = createServer(app);
+  // Notification API endpoints
+  app.get('/api/notifications', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { status = 'all', limit = 20 } = req.query;
+      
+      const notifications = await storage.getNotifications(userId, { 
+        status: status !== 'all' ? status : undefined,
+        limit: parseInt(limit) 
+      });
+      
+      res.json({ success: true, notifications });
+    } catch (error) {
+      console.error('Get notifications error:', error);
+      res.status(500).json({ success: false, message: 'Failed to get notifications' });
+    }
+  });
+
+  app.get('/api/notifications/count', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const count = await storage.getNotificationCount(userId);
+      res.json(count);
+    } catch (error) {
+      console.error('Get notification count error:', error);
+      res.status(500).json({ unread: 0 });
+    }
+  });
+
+  app.patch('/api/notifications/:id/read', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const notificationId = parseInt(req.params.id);
+      
+      const success = await storage.markNotificationAsRead(notificationId, userId);
+      
+      if (success) {
+        res.json({ success: true, message: 'Notification marked as read' });
+      } else {
+        res.status(404).json({ success: false, message: 'Notification not found' });
+      }
+    } catch (error) {
+      console.error('Mark notification as read error:', error);
+      res.status(500).json({ success: false, message: 'Failed to mark notification as read' });
+    }
+  });
+
+  app.post('/api/notifications/mark-all-read', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const success = await storage.markAllNotificationsAsRead(userId);
+      
+      res.json({ 
+        success: true, 
+        message: success ? 'All notifications marked as read' : 'No unread notifications found' 
+      });
+    } catch (error) {
+      console.error('Mark all notifications as read error:', error);
+      res.status(500).json({ success: false, message: 'Failed to mark notifications as read' });
+    }
+  });
+
   return httpServer;
 }

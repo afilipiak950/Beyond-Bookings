@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import AppLayout from "@/components/layout/app-layout";
+import { Notifications } from "@/components/notifications";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -300,72 +301,7 @@ export default function Dashboard() {
             </Card>
           </div>
 
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-teal-50 via-white to-teal-50 rounded-2xl opacity-60"></div>
-            <Card className="relative glass-card border-teal-200/30 rounded-2xl">
-              <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-                <CardDescription>
-                  Commonly used features
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <Link
-                    href="/document-analysis"
-                    className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-                  >
-                    <Upload className="h-5 w-5 text-primary" />
-                    <div>
-                      <p className="font-medium">Upload Documents</p>
-                      <p className="text-xs text-muted-foreground">
-                        Upload and analyze new document collections
-                      </p>
-                    </div>
-                  </Link>
-                  
-                  <Link
-                    href="/document-analysis"
-                    className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-                  >
-                    <Brain className="h-5 w-5 text-blue-500" />
-                    <div>
-                      <p className="font-medium">AI Analytics</p>
-                      <p className="text-xs text-muted-foreground">
-                        Ask intelligent questions about your documents
-                      </p>
-                    </div>
-                  </Link>
-                  
-                  <Link
-                    href="/workflow"
-                    className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-                  >
-                    <Calculator className="h-5 w-5 text-green-500" />
-                    <div>
-                      <p className="font-medium">Pricing Workflow</p>
-                      <p className="text-xs text-muted-foreground">
-                        Create hotel pricing calculations and presentations
-                      </p>
-                    </div>
-                  </Link>
-                  
-                  <Link
-                    href="/calculations"
-                    className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-                  >
-                    <FileText className="h-5 w-5 text-orange-500" />
-                    <div>
-                      <p className="font-medium">View Calculations</p>
-                      <p className="text-xs text-muted-foreground">
-                        Browse and manage saved pricing calculations
-                      </p>
-                    </div>
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          <Notifications />
         </div>
       </div>
     </AppLayout>
