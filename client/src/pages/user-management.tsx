@@ -51,11 +51,23 @@ export default function UserManagement() {
   const queryClient = useQueryClient();
 
   // Fetch all users (admin only)
-  const { data: usersResponse, isLoading } = useQuery({
+  const { data: usersResponse, isLoading, error } = useQuery({
     queryKey: ['/api/admin/users'],
     queryFn: (): Promise<{ success: boolean; users: User[]; count: number }> => 
       apiRequest('/api/admin/users'),
-    enabled: currentUser?.role === 'admin'
+    enabled: currentUser?.role === 'admin',
+    retry: 2,
+    staleTime: 30000 // 30 seconds
+  });
+
+  // Debug logging
+  console.log("UserManagement Debug:", {
+    currentUser,
+    queryEnabled: currentUser?.role === 'admin',
+    usersResponse,
+    isLoading,
+    error,
+    usersCount: usersResponse?.users?.length || 0
   });
 
   const users = usersResponse?.users || [];
@@ -213,8 +225,23 @@ export default function UserManagement() {
     return (
       <AdminGuard>
         <AppLayout>
-          <div className="p-6">
-            <div className="text-center">Loading users...</div>
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+          </div>
+        </AppLayout>
+      </AdminGuard>
+    );
+  }
+
+  if (error) {
+    return (
+      <AdminGuard>
+        <AppLayout>
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <p className="text-red-600 mb-4">Failed to load users: {(error as any)?.message || 'Unknown error'}</p>
+              <Button onClick={() => window.location.reload()}>Retry</Button>
+            </div>
           </div>
         </AppLayout>
       </AdminGuard>
