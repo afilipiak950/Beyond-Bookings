@@ -673,7 +673,7 @@ ${calculation.hotelName},${calculation.hotelUrl || ''},${calculation.stars || ''
   }> {
     try {
       // Get the approval request with calculation details
-      const approvalRequest = await this.getApprovalRequestById(requestId);
+      const approvalRequest = await this.getApprovalRequest(requestId);
       if (!approvalRequest) {
         return { success: false, error: 'Approval request not found' };
       }

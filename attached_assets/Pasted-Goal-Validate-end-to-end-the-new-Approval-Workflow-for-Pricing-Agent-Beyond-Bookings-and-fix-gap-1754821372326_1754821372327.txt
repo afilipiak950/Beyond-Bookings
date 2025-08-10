@@ -1,0 +1,170 @@
+Goal
+Validate end-to-end the new Approval Workflow for “Pricing Agent – Beyond Bookings” and fix gaps. Confirm every feature listed by the agent (emails, decision endpoint with input-hash validation, admin UI, badges, feedback panels) AND our earlier acceptance criteria (role guards, sidebar badge, statuses, thresholds). Produce a short test report with screenshots and logs.
+
+Pre-flight
+
+Detect stack & run on branch qa/approval-workflow.
+
+Ensure .env has: APPROVALS_ENABLED=true, EMAIL_NOTIFICATIONS_ENABLED=true, APP_URL set.
+
+For tests, use dev mail transport:
+
+If Node: nodemailer + Ethereal (auto-create test account) or json transport.
+
+Else: equivalent dev mail sink.
+
+Seed users:
+
+Admin: admin@test.dev / Passw0rd! (role: admin)
+
+User: user@test.dev / Passw0rd! (role: user)
+
+1) Automated checks (unit/integration)
+A) Validation & thresholds
+Test validatePricing() with strict boundaries:
+
+Margin 27.00% → no approval; 26.99% → needs approval.
+
+Financing 50,000.00 € → no approval; 50,001.00 € → needs approval.
+
+3★/4★/5★ VK & Gutschein exactly at caps → no approval; +0.01 → approval.
+
+Number parsing: "50.001,00 €", "60,00", "60.00", with € symbol and thousand separators.
+
+B) Approval requests API
+POST /api/approvals (user):
+
+Creates pending request, persists inputSnapshot, inputHash, links to calculation.
+
+Sends email to all admins (assert recipients list).
+
+PATCH /api/approvals/:id (admin):
+
+approve w/ optional comment → sets approved, decisionAt, decisionByUserId.
+
+reject requires comment → sets rejected.
+
+Idempotent on repeat calls.
+
+Input-hash mismatch returns 409 and does not set approved.
+
+Calculation reflects request:
+
+On create → approvalStatus='pending'.
+
+On approve → approvalStatus='approved', approvedInputHash stored.
+
+On reject → approvalStatus='rejected'.
+
+C) Role/guards
+Only admin can list/decide approvals and access /admin/approvals.
+
+User can only create/view own requests.
+
+(If role UI exists) last-admin safeguard enforced server-side.
+
+D) Email templates
+Pending email to admins contains: requester name, calculation title/hotel name, star category, reasons, deep link to /admin/approvals/:id.
+
+Decision email to requester contains: decision (approved/declined), admin name, timestamp, comment, deep link to /calculations/:id.
+
+Capture/mailbox logs for assertions.
+
+2) E2E flow (Playwright/Cypress; headless ok)
+Create three calculations as user@test.dev:
+
+Low margin: 4★, margin 19% → requires approval.
+
+Over cap: 5★, VK above cap (e.g., 75.01 €) → requires approval.
+
+Clean: 3★ within caps, margin ≥27%, financing ≤50k → no approval.
+
+Expected UI behavior to assert:
+
+Calculations list/detail shows badges:
+
+Clean → “Kein Approval nötig”.
+
+Others → show “Approval erforderlich (noch nicht gesendet)” then, after send, “Pending Approval”.
+
+“An Admin senden” button present for out-of-range; creates request; success toast.
+
+Switch to admin:
+
+Sidebar shows “Approval Requests” with pending count badge.
+
+Requests page lists 2 pending items; hotel name displays correctly.
+
+Open one request → decision UI shows comment textarea, Approve + Decline, confirm dialog.
+
+Decline one with comment “Increase margin to ≥27%” → request becomes rejected, requester email sent.
+
+Approve the other (comment optional) → request becomes approved, requester email sent.
+
+Switch back to user:
+
+Calculations page auto-updates (polling or WS) to:
+
+Rejected item: badge “Declined” + feedback panel with admin comment.
+
+Approved item: badge “Approved” + feedback panel with comment/admin/timestamp.
+
+Clean calc remains finalizable without approval.
+
+Capture screenshots of:
+
+Admin approvals list with count badge.
+
+A request detail before & after decision.
+
+Calculation page badges + feedback panel.
+
+3) Debug & fix instructions (apply automatically if any check fails)
+Emails not sending: implement dev transport (Ethereal or JSON); log messageId & preview URL; don’t hard-fail workflow.
+
+Badges not updating: ensure calculation approvalStatus is set on:
+
+submit → pending
+
+approve/reject → approved/rejected
+
+input change after approval → revert to required_not_sent
+
+Add polling (10s) if WS/SSE not present.
+
+Hash validation missing: compare request.inputHash to current calculation input; return 409 on mismatch; surface toast “Inputs changed since request—please resubmit”.
+
+Admin UI actions missing: add textarea + Approve/Decline buttons, confirm modal, disabled state for non-pending.
+
+Sidebar item/badge missing: add /admin/approvals link visible only to admins; add GET /api/approvals/stats for pending count.
+
+Role leaks: ensure server guards on list/patch; client hides admin views for users.
+
+Hotel name not shown: include calculation title/hotel name in request payload & UI card.
+
+4) Outputs
+Add/extend tests: tests/approval.* (unit/integration) and E2E spec.
+
+Store artifacts under /artifacts/qa-approval/:
+
+report.md (PASS/FAIL per checklist with timings),
+
+screenshots (admin list, request detail before/after, calc page badges),
+
+emails.log (JSON of captured dev emails).
+
+Update README with:
+
+Email envs & dev transport,
+
+Deep links used in templates,
+
+Status meanings & state transitions.
+
+Acceptance to mark QA complete
+
+All automated tests green.
+
+E2E confirms: admin can approve/decline with comments; requester sees status & feedback on the calculation page; emails go to correct recipients with deep links; sidebar shows pending count.
+
+report.md summarizes evidence; artifacts saved.

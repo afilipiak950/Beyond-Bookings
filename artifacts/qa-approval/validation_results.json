@@ -1,0 +1,23 @@
+{
+  "timestamp": "2025-08-10T10:24:51.279Z",
+  "duration": "0.014s",
+  "results": {
+    "businessRules": {
+      "passed": 6,
+      "total": 6
+    },
+    "numberParsing": {
+      "passed": 3,
+      "total": 4
+    },
+    "accessControl": {
+      "passed": 6,
+      "total": 6
+    }
+  },
+  "overall": {
+    "passed": 15,
+    "total": 16,
+    "percentage": "93.8"
+  }
+}
