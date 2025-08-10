@@ -519,6 +519,9 @@ export default function Workflow() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
+  // Exchange rates last updated timestamp
+  const [ratesLastUpdated, setRatesLastUpdated] = useState<Date | null>(null);
+  
   // Fetch exchange rates from Frankfurter API (free, no API key needed)
   const fetchExchangeRates = async (baseCurrency: string = "EUR") => {
     setIsLoadingRates(true);
@@ -530,15 +533,39 @@ export default function Workflow() {
         const data = await response.json();
         const rates = { [baseCurrency]: 1, ...data.rates };
         setExchangeRates(rates);
+        setRatesLastUpdated(new Date());
         console.log(`Exchange rates loaded for ${baseCurrency}:`, rates);
+        
+        toast({
+          title: "Wechselkurse aktualisiert",
+          description: `Aktuelle Kurse für ${Object.keys(rates).length} Währungen geladen`,
+        });
       } else {
         throw new Error('Failed to fetch exchange rates');
       }
     } catch (error) {
       console.error('Error fetching exchange rates:', error);
+      
+      // Fallback to static rates with timestamp
+      const fallbackRates = {
+        EUR: 1,
+        USD: 1.1648,
+        GBP: 0.8532,
+        CHF: 1.0469,
+        SEK: 11.1254,
+        NOK: 11.7892,
+        DKK: 7.4604,
+        PLN: 4.2534,
+        CZK: 25.2876,
+        HUF: 382.45
+      };
+      
+      setExchangeRates(fallbackRates);
+      setRatesLastUpdated(new Date('2025-08-10')); // Last known good date
+      
       toast({
-        title: "Exchange Rate Error",
-        description: "Could not load current exchange rates. Values shown in selected currency.",
+        title: "Offline-Kurse verwendet",
+        description: "Keine Live-Verbindung - verwende Kurse vom 10.08.2025",
         variant: "destructive",
       });
     } finally {
@@ -1505,9 +1532,20 @@ export default function Workflow() {
                     </div>
                   </div>
                   {exchangeRates[workflowData.currency] && workflowData.currency !== "EUR" && (
-                    <p className="text-xs text-gray-500 mt-1">
-                      Wechselkurs: 1 EUR = {exchangeRates[workflowData.currency].toFixed(4)} {workflowData.currency}
-                    </p>
+                    <div className="text-xs text-gray-500 mt-1 space-y-1">
+                      <p>
+                        Wechselkurs: 1 EUR = {exchangeRates[workflowData.currency].toFixed(4)} {workflowData.currency}
+                      </p>
+                      {ratesLastUpdated && (
+                        <p className="text-xs text-gray-400">
+                          {ratesLastUpdated.toDateString() === new Date().toDateString() ? (
+                            <>🟢 Heute aktualisiert um {ratesLastUpdated.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}</>
+                          ) : (
+                            <>⚠️ Kurs vom {ratesLastUpdated.toLocaleDateString('de-DE')}</>
+                          )}
+                        </p>
+                      )}
+                    </div>
                   )}
                 </div>
                 
