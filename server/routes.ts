@@ -5683,15 +5683,32 @@ Focus on:
     try {
       const { calculationId, calculationSnapshot, businessJustification } = req.body;
       
+      // Fetch the full calculation to get hotel name and other details
+      let enrichedSnapshot = calculationSnapshot;
+      if (calculationId) {
+        try {
+          const fullCalculation = await storage.getPricingCalculation(calculationId);
+          if (fullCalculation) {
+            enrichedSnapshot = {
+              ...calculationSnapshot,
+              hotelName: fullCalculation.hotelName,
+              calculationId: calculationId
+            };
+          }
+        } catch (error) {
+          console.warn("Could not fetch full calculation for hotel name:", error);
+        }
+      }
+      
       // Create input snapshot from calculation data (for schema compliance)
       const inputSnapshot = {
         calculationId,
-        calculationData: calculationSnapshot,
+        calculationData: enrichedSnapshot,
         businessJustification
       };
       
       // Extract star category from calculation snapshot
-      const starCategory = calculationSnapshot?.stars || 0;
+      const starCategory = enrichedSnapshot?.stars || 0;
       
       // Validate business rules
       const validation = {
@@ -5703,7 +5720,7 @@ Focus on:
         createdByUserId: req.user.id,
         starCategory: starCategory,
         inputSnapshot: inputSnapshot,
-        calculationSnapshot: calculationSnapshot,
+        calculationSnapshot: enrichedSnapshot,
         reasons: validation.reasons,
         status: 'pending'
       });

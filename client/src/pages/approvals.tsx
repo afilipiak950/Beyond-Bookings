@@ -118,6 +118,26 @@ export function Approvals() {
     return user.email;
   };
 
+  const getHotelNameFromRequest = (request: any) => {
+    // First priority: Hotel name from the backend join
+    if (request.hotelName) {
+      return request.hotelName;
+    }
+    
+    // Second priority: Try to get hotel name from calculation snapshot
+    if (request.calculationSnapshot?.hotelName) {
+      return request.calculationSnapshot.hotelName;
+    }
+    
+    // Third priority: Try to get hotel name from input snapshot
+    if (request.inputSnapshot?.calculationData?.hotelName) {
+      return request.inputSnapshot.calculationData.hotelName;
+    }
+    
+    // Fallback to generic request number
+    return `Request #${request.id}`;
+  };
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('de-DE', {
       style: 'currency',
@@ -254,7 +274,7 @@ export function Approvals() {
                     <div className="flex items-start justify-between">
                       <div>
                         <CardTitle className="text-lg flex items-center gap-2">
-                          Request #{request.id}
+                          {getHotelNameFromRequest(request)}
                           <Badge className={`${getStatusColor(request.status)} text-white flex items-center gap-1`}>
                             {getStatusIcon(request.status)}
                             {request.status.toUpperCase()}
@@ -416,7 +436,7 @@ export function Approvals() {
                     <div className="flex items-start justify-between">
                       <div>
                         <CardTitle className="text-lg flex items-center gap-2">
-                          Request #{request.id}
+                          {getHotelNameFromRequest(request)}
                           <Badge className={`${getStatusColor(request.status)} text-white flex items-center gap-1`}>
                             {getStatusIcon(request.status)}
                             {request.status.toUpperCase()}

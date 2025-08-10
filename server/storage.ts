@@ -33,7 +33,7 @@ import {
   type InsertApprovalRequest,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, sql } from "drizzle-orm";
 
 // Interface for storage operations
 export interface IStorage {
@@ -576,7 +576,7 @@ ${calculation.hotelName},${calculation.hotelUrl || ''},${calculation.stars || ''
     return approvalRequest;
   }
 
-  async getApprovalRequests(filters?: { status?: string; userId?: number }): Promise<(ApprovalRequest & { createdByUser: { email: string; firstName?: string; lastName?: string } })[]> {
+  async getApprovalRequests(filters?: { status?: string; userId?: number }): Promise<(ApprovalRequest & { createdByUser: { email: string; firstName?: string; lastName?: string }; hotelName?: string })[]> {
     let query = db
       .select({
         id: approvalRequests.id,
@@ -595,9 +595,15 @@ ${calculation.hotelName},${calculation.hotelUrl || ''},${calculation.stars || ''
           firstName: users.firstName,
           lastName: users.lastName,
         },
+        hotelName: pricingCalculations.hotelName,
       })
       .from(approvalRequests)
       .leftJoin(users, eq(approvalRequests.createdByUserId, users.id))
+      .leftJoin(pricingCalculations, 
+        eq(pricingCalculations.id, 
+          sql`CAST(${approvalRequests.inputSnapshot}->>'calculationId' AS INTEGER)`
+        )
+      )
       .orderBy(desc(approvalRequests.createdAt));
 
     if (filters?.status) {
@@ -607,7 +613,7 @@ ${calculation.hotelName},${calculation.hotelUrl || ''},${calculation.stars || ''
       query = query.where(eq(approvalRequests.createdByUserId, filters.userId)) as any;
     }
 
-    return query as Promise<(ApprovalRequest & { createdByUser: { email: string; firstName?: string; lastName?: string } })[]>;
+    return query as Promise<(ApprovalRequest & { createdByUser: { email: string; firstName?: string; lastName?: string }; hotelName?: string })[]>;
   }
 
   async getApprovalRequest(id: number): Promise<(ApprovalRequest & { createdByUser: { email: string; firstName?: string; lastName?: string } }) | undefined> {
