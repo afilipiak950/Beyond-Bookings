@@ -1,0 +1,102 @@
+Goal
+Fix the Hotel Pricing Intelligent Report generator so PDFs show the correct numbers, clean typography, and meaningful insights. Then ship a robust HTML→PDF pipeline with localization (de-DE), charts, and QA tests.
+
+What’s wrong in the sample PDF (use this as ground truth to reproduce)
+
+Broken hyphenation/word wraps (e.g., “Exe cuti ve Sum mar y”).
+
+Key figures show 0,00 € (e.g., “Room Base Price: €0.00”) while totals are >0 → data mapping/snapshot bug.
+
+KPI logic off (e.g., “Profitability Rate 100%”, category thresholds like “High-performing properties (>€50)” mixing € with percent).
+
+Repeated/misplaced fields (VAT/operational costs) and “URL not provided” leaking to report. 
+
+Tasks
+1) Data correctness (single source of truth)
+Create a shared compute module used by both app and report:
+computePricing(normalizedInputs) -> { totals, pricingAnalysis, businessMetrics }
+
+Use the same caps & rules as the pricing engine (3★/4★/5★, margin 27%, financing 50k).
+
+Build normalizeInputs() with euro parsing (60, 60,00, 60.00, 50.001,00 €).
+
+Report generator must recompute from the calculation’s inputSnapshot. If calculationSnapshot exists and inputHash matches, reuse; else recompute and persist.
+
+Map legacy keys → canonical names (e.g., averageRoomPrice → avgRoomPrice). Missing data shows “n/a”, not 0,00 €.
+
+KPIs:
+
+Portfolio value = Σ contract volume (not arbitrary totals).
+
+Profitability rate = % of calcs with positive margin.
+
+Average/median prices computed from the same source; bins defined in € ranges that make sense for contract volume (or use quantiles).
+
+ROI = profit / total costs; Margin % = profit / revenue.
+
+2) Report structure & content (HTML→PDF)
+Use Puppeteer (or Playwright) to render an SSR HTML report and print to PDF. Pages:
+
+Cover: title, logo (brand via ENV), generated on, author, #calculations.
+
+Executive Summary: big KPIs, short narrative (2–3 bullets), sparkline of contract volumes.
+
+Portfolio Table: one row per calculation (Name, ⭐, Occupancy, Voucher, Avg Room Price, Financing, Revenue, Profit, Margin %, Approval Status).
+
+Property Details: per hotel cards mirroring the app (Revenue, Net Profit, Total Costs, Discount) + inputs/outputs table.
+
+Market Analysis: proper histograms/boxplot (render as static images server-side), price bands by quantiles, margin distribution.
+
+Recommendations: rule-driven suggestions (only when data supports them; cite metrics).
+
+Appendix: metadata, assumptions, approval comments, version.
+
+3) Typography & layout fixes
+Global CSS: hyphens: none; word-break: normal; overflow-wrap: anywhere;
+
+Font stack: Inter/Roboto; consistent H1–H4 scales; page header/footer with page numbers.
+
+Number formatting: de-DE Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).
+
+Don’t render “URL not provided”; show link icon only if URL exists.
+
+4) API & storage
+POST /api/reports/generate?scope=portfolio|calculation&id=? → returns {reportId, url} and stores:
+id, type, params, createdByUserId, htmlSnapshotHash, pdfPath, size, createdAt.
+
+Link reports on calculation detail (“Download Report”).
+
+ENV for branding: REPORT_BRAND_NAME, REPORT_LOGO_URL.
+
+5) Charts as images
+Server-side static charts (Chart.js with chartjs-node-canvas or lightweight SVG components) → embed as <img> to keep PDFs crisp.
+
+6) QA & tests
+Unit tests for normalizeInputs, computePricing, KPI helpers.
+
+Snapshot test: generate report for 2–3 known fixtures; assert KPIs and a few numbers in HTML before PDF print.
+
+Visual tests: pixel-diff key sections (optional).
+
+Lint for orphan fields (no 0,00 € when input is missing).
+
+7) Migration / clean-up
+Backfill older calculations to canonical input keys where possible.
+
+Remove any ad-hoc string concatenation for € formatting; centralize formatter.
+
+Gate non-admin report generation if required by RBAC.
+
+Acceptance criteria
+No broken words/hyphenation in PDF; consistent fonts and page numbers.
+
+All monetary values and KPIs match the pricing engine’s outputs for the same inputs.
+
+“0,00 €” appears only when the true value is zero; otherwise “n/a” for missing.
+
+Executive Summary, Portfolio Table, Property Details, Market Analysis, and Recommendations render with correct data and charts.
+
+Reports generate via API and are downloadable from calculation detail.
+
+Branch: feature/intelligent-reports-fix
+Deliverables: code, tests, sample PDFs, and a short README “Report Generation”.

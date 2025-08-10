@@ -1962,7 +1962,7 @@ Only return hotel data if you can verify this is a real, existing hotel. Do not 
     }
   });
 
-  // Comprehensive PDF Report Generation with Advanced Analytics
+  // Comprehensive PDF Report Generation with Fixed Data and Typography
   app.post('/api/export/comprehensive-pdf', requireAuth, async (req: any, res) => {
     try {
       const { calculations, config, analytics, filters } = req.body;
@@ -1974,21 +1974,56 @@ Only return hotel data if you can verify this is a real, existing hotel. Do not 
         return res.status(400).json({ message: "No calculations provided for PDF report" });
       }
 
+      // Import shared computation utilities
+      const reportUtils = await import('../shared/reportUtils.js');
+      const { 
+        normalizeInputs, 
+        computePricing, 
+        computeBusinessMetrics,
+        formatCurrency,
+        formatNumber,
+        formatPercentage,
+        displayValue
+      } = reportUtils;
+
       // Dynamic imports for PDF generation
       const PDFDocument = (await import('pdfkit')).default;
       const fs = await import('fs/promises');
       const path = await import('path');
       
-      // Create PDF document with professional settings
+      // Recompute all calculations using shared computation module
+      const computedCalculations = calculations.map(calc => {
+        const inputs = normalizeInputs(calc);
+        const analysis = computePricing(inputs);
+        return {
+          ...calc,
+          inputs,
+          analysis,
+          // Store computed values for easy access
+          computedBasePrice: analysis.basePrice,
+          computedTotalPrice: analysis.totalPrice,
+          computedProfitMargin: analysis.profitMargin,
+          computedVatAmount: analysis.vatAmount,
+          computedOperationalCosts: inputs.operationalCosts,
+          computedMarginPercentage: analysis.marginPercentage,
+          computedRoi: analysis.roi
+        };
+      });
+
+      // Recompute business metrics using corrected data
+      const businessMetrics = computeBusinessMetrics(calculations);
+
+      // Create PDF document with professional settings and typography fixes
       const doc = new PDFDocument({
         size: 'A4',
         margin: 50,
+        bufferPages: true,
         info: {
-          Title: config?.title || 'Hotel Pricing Analysis Report',
+          Title: config?.title || 'Hotel Pricing Intelligence Report',
           Author: config?.authorName || config?.companyName || 'bebo convert',
           Subject: 'Comprehensive Hotel Pricing Analysis',
           Creator: 'bebo convert - Hotel Analytics Platform',
-          Producer: 'bebo convert PDF Generator'
+          Producer: 'bebo convert PDF Generator v3.0'
         }
       });
 
@@ -2012,12 +2047,18 @@ Only return hotel data if you can verify this is a real, existing hotel. Do not 
         success: '#059669'       // Dark green
       };
 
-      // Helper functions with enhanced professional styling
+      // Typography helper functions with hyphenation fixes
       const addHeader = (text: string, size = 20, color = colors.primary, spacing = 1.2) => {
         doc.fontSize(size)
            .fillColor(color)
            .font('Helvetica-Bold')
-           .text(text, { align: 'left', lineGap: 4 })
+           .text(text, { 
+             align: 'left',
+             lineGap: 4,
+             wordSpacing: 0,
+             characterSpacing: 0,
+             continued: false
+           })
            .moveDown(spacing);
       };
 
@@ -2025,7 +2066,13 @@ Only return hotel data if you can verify this is a real, existing hotel. Do not 
         doc.fontSize(size)
            .fillColor(color)
            .font('Helvetica-Bold')
-           .text(text, { align: 'left', lineGap: 2 })
+           .text(text, { 
+             align: 'left',
+             lineGap: 2,
+             wordSpacing: 0,
+             characterSpacing: 0,
+             continued: false
+           })
            .moveDown(spacing);
       };
 
@@ -2033,7 +2080,13 @@ Only return hotel data if you can verify this is a real, existing hotel. Do not 
         doc.fontSize(size)
            .fillColor(color)
            .font(font)
-           .text(text, { align: 'left', lineGap: 3 })
+           .text(text, { 
+             align: 'left',
+             lineGap: 3,
+             wordSpacing: 0,
+             characterSpacing: 0,
+             continued: false
+           })
            .moveDown(spacing);
       };
 
@@ -2137,6 +2190,8 @@ Only return hotel data if you can verify this is a real, existing hotel. Do not 
       doc.text(`Author: ${config?.authorName || 'Analytics Team'}`, { align: 'center' }).moveDown(0.4);
       doc.text(`Company: ${config?.companyName || 'bebo convert'}`, { align: 'center' }).moveDown(0.4);
       doc.text(`Calculations Analyzed: ${calculations.length}`, { align: 'center' });
+      
+      const brandName = process.env.REPORT_BRAND_NAME || 'bebo convert';
 
       // Professional footer with branding
       doc.y = 750;
@@ -2158,14 +2213,7 @@ Only return hotel data if you can verify this is a real, existing hotel. Do not 
         addHeader('Executive Summary');
         addSeparator();
         
-        // Calculate comprehensive metrics
-        const totalRevenue = calculations.reduce((sum, calc) => sum + parseFloat(calc.totalPrice?.toString() || "0"), 0);
-        const totalProfit = calculations.reduce((sum, calc) => sum + parseFloat(calc.profitMargin?.toString() || "0"), 0);
-        const averagePrice = calculations.length > 0 ? totalRevenue / calculations.length : 0;
-        const profitableCount = calculations.filter(c => parseFloat(c.profitMargin?.toString() || "0") > 0).length;
-        const profitabilityRate = calculations.length > 0 ? (profitableCount / calculations.length) * 100 : 0;
-        
-        addText(`This comprehensive analysis examines ${calculations.length} hotel pricing calculations, representing a total portfolio value of €${totalRevenue.toLocaleString('de-DE', { minimumFractionDigits: 2 })}. Our AI-powered intelligence platform has identified strategic opportunities for revenue optimization and enhanced profitability across your hotel portfolio.`, 12);
+        addText(`This comprehensive analysis examines ${calculations.length} hotel pricing calculations, representing a total portfolio value of ${formatCurrency(businessMetrics.portfolioValue)}. Our AI-powered intelligence platform has identified strategic opportunities for revenue optimization and enhanced profitability across your hotel portfolio.`, 12);
         
         doc.moveDown(0.5);
         
@@ -2190,29 +2238,29 @@ Only return hotel data if you can verify this is a real, existing hotel. Do not 
         doc.x = leftColX;
         doc.fontSize(11).fillColor(colors.textLight).font('Helvetica').text('Total Portfolio Value');
         doc.y += 18;
-        doc.fontSize(18).fillColor(colors.success).font('Helvetica-Bold').text(`€${totalRevenue.toLocaleString('de-DE', { minimumFractionDigits: 2 })}`);
+        doc.fontSize(18).fillColor(colors.success).font('Helvetica-Bold').text(formatCurrency(businessMetrics.portfolioValue));
         
         // Top-right: Average Transaction
         doc.y = topRowY;
         doc.x = rightColX;
         doc.fontSize(11).fillColor(colors.textLight).font('Helvetica').text('Average Transaction Value');
         doc.y += 18;
-        doc.fontSize(18).fillColor(colors.secondary).font('Helvetica-Bold').text(`€${averagePrice.toFixed(2)}`);
+        doc.fontSize(18).fillColor(colors.secondary).font('Helvetica-Bold').text(formatCurrency(businessMetrics.averagePrice));
         
         // Bottom-left: Total Profit
         doc.y = bottomRowY;
         doc.x = leftColX;
         doc.fontSize(11).fillColor(colors.textLight).font('Helvetica').text('Total Profit Generated');
         doc.y += 18;
-        doc.fontSize(18).fillColor(colors.success).font('Helvetica-Bold').text(`€${totalProfit.toLocaleString('de-DE', { minimumFractionDigits: 2 })}`);
+        doc.fontSize(18).fillColor(colors.success).font('Helvetica-Bold').text(formatCurrency(businessMetrics.totalProfit));
         
         // Bottom-right: Profitability Rate
         doc.y = bottomRowY;
         doc.x = rightColX;
         doc.fontSize(11).fillColor(colors.textLight).font('Helvetica').text('Profitability Rate');
         doc.y += 18;
-        const profitColor = profitabilityRate > 70 ? colors.success : profitabilityRate > 50 ? colors.secondary : colors.danger;
-        doc.fontSize(18).fillColor(profitColor).font('Helvetica-Bold').text(`${profitabilityRate.toFixed(1)}%`);
+        const profitColor = businessMetrics.profitabilityRate > 70 ? colors.success : businessMetrics.profitabilityRate > 50 ? colors.secondary : colors.danger;
+        doc.fontSize(18).fillColor(profitColor).font('Helvetica-Bold').text(formatPercentage(businessMetrics.profitabilityRate));
         
         // Reset positioning
         doc.y = kpiBoxY + kpiBoxHeight + 20;
@@ -2223,9 +2271,9 @@ Only return hotel data if you can verify this is a real, existing hotel. Do not 
         
         const insights = [
           `Portfolio encompasses ${calculations.length} strategic pricing calculations`,
-          `Average profit margin demonstrates ${totalProfit > 1000 ? 'strong' : 'moderate'} financial performance`,
-          `Revenue optimization potential identified across multiple market segments`,
-          `Data-driven insights support enhanced pricing strategy development`
+          `Average profit margin demonstrates ${businessMetrics.totalProfit > 10000 ? 'strong' : businessMetrics.totalProfit > 1000 ? 'moderate' : 'developing'} financial performance`,
+          `Profitability rate of ${formatPercentage(businessMetrics.profitabilityRate)} indicates ${businessMetrics.profitabilityRate > 70 ? 'excellent' : businessMetrics.profitabilityRate > 50 ? 'good' : 'developing'} portfolio health`,
+          `Revenue optimization potential identified across multiple market segments`
         ];
         
         insights.forEach(insight => {
@@ -2245,9 +2293,9 @@ Only return hotel data if you can verify this is a real, existing hotel. Do not 
         addText('This section provides comprehensive financial breakdowns for each hotel property, including cost structures, profit margins, and revenue calculations.', 12);
         doc.moveDown(0.5);
         
-        // Display calculations in a more readable format
+        // Display calculations with corrected data
         let calcCount = 0;
-        calculations.slice(0, 12).forEach((calc: any, index: number) => { // Limit to 12 for better formatting
+        computedCalculations.slice(0, 12).forEach((calc: any, index: number) => { // Limit to 12 for better formatting
           if (calcCount > 0 && calcCount % 4 === 0) {
             doc.addPage();
             addPageHeader('Detailed Analysis (cont.)');
@@ -2262,45 +2310,42 @@ Only return hotel data if you can verify this is a real, existing hotel. Do not 
           doc.y = cardY + 10;
           
           // Hotel name header
-          addSubheader(`${index + 1}. ${calc.hotelName || 'Unnamed Hotel'}`, 13, colors.primary, 0.3);
+          addSubheader(`${index + 1}. ${calc.inputs.hotelName}`, 13, colors.primary, 0.3);
           
-          // Hotel details row
+          // Hotel details row - only show URL if it exists
           const detailsY = doc.y;
           doc.fontSize(9).fillColor(colors.textLight).font('Helvetica');
-          doc.text(`🌐 ${calc.hotelUrl || 'URL not provided'}`, 70, detailsY);
-          doc.text(`📅 ${new Date(calc.createdAt || 0).toLocaleDateString('en-US', { 
+          if (calc.inputs.hotelUrl) {
+            doc.text(`🌐 ${calc.inputs.hotelUrl}`, 70, detailsY);
+          }
+          doc.text(`📅 ${new Date(calc.createdAt || 0).toLocaleDateString('de-DE', { 
             year: 'numeric', month: 'short', day: 'numeric' 
-          })}`, 350, detailsY);
+          })}`, calc.inputs.hotelUrl ? 350 : 70, detailsY);
           
           doc.y = detailsY + 20;
           
-          // Financial metrics in organized table format
-          const roomPrice = parseFloat(calc.roomPrice?.toString() || "0");
-          const totalPrice = parseFloat(calc.totalPrice?.toString() || "0");
-          const operationalCosts = parseFloat(calc.operationalCosts?.toString() || "0");
-          const profitMargin = parseFloat(calc.profitMargin?.toString() || "0");
-          const vatAmount = parseFloat(calc.vatAmount?.toString() || "0");
-          
-          // Two-column layout for metrics
-          const leftMetrics = [
-            ['Room Base Price:', `€${roomPrice.toFixed(2)}`],
-            ['Operational Costs:', `€${operationalCosts.toFixed(2)}`],
-            ['VAT Amount:', `€${vatAmount.toFixed(2)}`]
-          ];
-          
-          const rightMetrics = [
-            ['Total Price:', `€${totalPrice.toFixed(2)}`, colors.secondary],
-            ['Profit Margin:', `€${profitMargin.toFixed(2)}`, profitMargin > 0 ? colors.success : colors.danger],
-            ['ROI:', `${totalPrice > 0 ? ((profitMargin / totalPrice) * 100).toFixed(1) : '0.0'}%`, colors.accent]
-          ];
-          
+          // Financial metrics using computed values
           const metricsY = doc.y;
+          
+          // Left column metrics
+          const leftMetrics = [
+            ['Durchschnittlicher Zimmerpreis:', displayValue(calc.inputs.avgRoomPrice, formatCurrency)],
+            ['Betriebskosten:', displayValue(calc.analysis.operationalCosts || calc.inputs.operationalCosts, formatCurrency)],
+            ['MwSt.-Betrag:', displayValue(calc.analysis.vatAmount, formatCurrency)]
+          ];
+          
+          // Right column metrics
+          const rightMetrics = [
+            ['Gesamtpreis:', displayValue(calc.analysis.totalPrice, formatCurrency), colors.secondary],
+            ['Gewinnspanne:', displayValue(calc.analysis.profitMargin, formatCurrency), calc.analysis.profitMargin > 0 ? colors.success : colors.danger],
+            ['ROI:', displayValue(calc.analysis.roi, (v) => formatPercentage(v)), colors.accent]
+          ];
           
           // Left column
           leftMetrics.forEach((metric, i) => {
             const y = metricsY + (i * 18);
             doc.fontSize(10).fillColor(colors.text).font('Helvetica').text(metric[0], 70, y);
-            doc.fontSize(10).fillColor(colors.text).font('Helvetica-Bold').text(metric[1], 180, y);
+            doc.fontSize(10).fillColor(colors.text).font('Helvetica-Bold').text(metric[1], 200, y);
           });
           
           // Right column
@@ -2308,7 +2353,7 @@ Only return hotel data if you can verify this is a real, existing hotel. Do not 
             const y = metricsY + (i * 18);
             const color = metric[2] || colors.text;
             doc.fontSize(10).fillColor(colors.text).font('Helvetica').text(metric[0], 300, y);
-            doc.fontSize(10).fillColor(color).font('Helvetica-Bold').text(metric[1], 410, y);
+            doc.fontSize(10).fillColor(color).font('Helvetica-Bold').text(metric[1], 430, y);
           });
           
           doc.y = cardY + cardHeight + 15;
@@ -2329,12 +2374,12 @@ Only return hotel data if you can verify this is a real, existing hotel. Do not 
         addHeader('Market Analysis & Strategic Positioning');
         addSeparator();
         
-        // Price analysis with visual representations
-        const prices = calculations.map((calc: any) => parseFloat(calc.totalPrice?.toString() || "0"));
+        // Price analysis using corrected computed values
+        const prices = computedCalculations.map(calc => calc.analysis.totalPrice);
         const minPrice = Math.min(...prices);
         const maxPrice = Math.max(...prices);
-        const avgPrice = prices.reduce((sum, price) => sum + price, 0) / prices.length;
-        const medianPrice = prices.sort((a, b) => a - b)[Math.floor(prices.length / 2)];
+        const avgPrice = businessMetrics.averagePrice;
+        const medianPrice = businessMetrics.medianPrice;
         
         addSubheader('Portfolio Price Analysis', 14, colors.secondary);
         
@@ -2345,10 +2390,10 @@ Only return hotel data if you can verify this is a real, existing hotel. Do not 
         
         // Price metrics in grid
         const priceMetrics = [
-          ['Minimum Price:', `€${minPrice.toFixed(2)}`],
-          ['Maximum Price:', `€${maxPrice.toFixed(2)}`],
-          ['Average Price:', `€${avgPrice.toFixed(2)}`],
-          ['Median Price:', `€${medianPrice.toFixed(2)}`]
+          ['Mindestpreis:', formatCurrency(minPrice)],
+          ['Höchstpreis:', formatCurrency(maxPrice)],
+          ['Durchschnittspreis:', formatCurrency(avgPrice)],
+          ['Medianpreis:', formatCurrency(medianPrice)]
         ];
         
         priceMetrics.forEach((metric, index) => {
@@ -2364,12 +2409,9 @@ Only return hotel data if you can verify this is a real, existing hotel. Do not 
         addSubheader('Price Distribution Analysis', 14, colors.secondary);
         
         const priceRanges = {
-          budget: { count: calculations.filter(c => parseFloat(c.totalPrice?.toString() || "0") < 100).length, label: 'Budget (< €100)' },
-          midRange: { count: calculations.filter(c => {
-            const price = parseFloat(c.totalPrice?.toString() || "0");
-            return price >= 100 && price < 250;
-          }).length, label: 'Mid-Range (€100-€250)' },
-          luxury: { count: calculations.filter(c => parseFloat(c.totalPrice?.toString() || "0") >= 250).length, label: 'Luxury (> €250)' }
+          budget: { count: businessMetrics.priceDistribution.budget, label: 'Budget (< €10.000)' },
+          midRange: { count: businessMetrics.priceDistribution.midRange, label: 'Mittelklasse (€10.000-€50.000)' },
+          luxury: { count: businessMetrics.priceDistribution.luxury, label: 'Luxus (> €50.000)' }
         };
         
         // Visual distribution bars
@@ -2397,25 +2439,21 @@ Only return hotel data if you can verify this is a real, existing hotel. Do not 
           
           // Count and percentage
           doc.fontSize(10).fillColor(colors.text).font('Helvetica-Bold')
-             .text(`${range.count} (${percentage.toFixed(1)}%)`, 490, y + 5);
+             .text(`${range.count} (${formatPercentage(percentage)})`, 490, y + 5);
         });
         
         doc.y = chartY + 120;
         
-        // Profitability analysis
-        addSubheader('Profitability Performance Analysis', 14, colors.secondary);
+        // Profitability analysis using corrected business metrics
+        addSubheader('Rentabilitäts-Performance-Analyse', 14, colors.secondary);
         
-        const profits = calculations.map((calc: any) => parseFloat(calc.profitMargin?.toString() || "0"));
-        const avgProfitMargin = profits.reduce((sum, profit) => sum + profit, 0) / profits.length;
-        const highProfitCount = profits.filter(p => p > 50).length;
-        const mediumProfitCount = profits.filter(p => p >= 20 && p <= 50).length;
-        const lowProfitCount = profits.filter(p => p < 20).length;
+        const avgProfitMargin = businessMetrics.totalProfit / calculations.length;
         
         const profitInsights = [
-          `Average profit margin: €${avgProfitMargin.toFixed(2)} per calculation`,
-          `High-performing properties (>€50): ${highProfitCount} (${((highProfitCount / calculations.length) * 100).toFixed(1)}%)`,
-          `Standard-performing properties (€20-€50): ${mediumProfitCount} (${((mediumProfitCount / calculations.length) * 100).toFixed(1)}%)`,
-          `Underperforming properties (<€20): ${lowProfitCount} (${((lowProfitCount / calculations.length) * 100).toFixed(1)}%)`
+          `Durchschnittliche Gewinnspanne: ${formatCurrency(avgProfitMargin)} pro Kalkulation`,
+          `Hochperformante Immobilien (>€10.000): ${businessMetrics.highPerformingCount} (${formatPercentage((businessMetrics.highPerformingCount / calculations.length) * 100)})`,
+          `Standardperformante Immobilien (€1.000-€10.000): ${businessMetrics.standardPerformingCount} (${formatPercentage((businessMetrics.standardPerformingCount / calculations.length) * 100)})`,
+          `Unterperformante Immobilien (<€1.000): ${businessMetrics.underPerformingCount} (${formatPercentage((businessMetrics.underPerformingCount / calculations.length) * 100)})`
         ];
         
         profitInsights.forEach(insight => {
@@ -2586,7 +2624,7 @@ Only return hotel data if you can verify this is a real, existing hotel. Do not 
       doc.y = 750;
       addSeparator(2, colors.primary, 0.5);
       doc.fontSize(12).fillColor(colors.primary).font('Helvetica-Bold')
-         .text('bebo convert - Professional Hotel Analytics Platform', { align: 'center' });
+         .text(`${brandName} - Professional Hotel Analytics Platform`, { align: 'center' });
       doc.fontSize(9).fillColor(colors.textLight).font('Helvetica')
          .text('Empowering hotels with AI-powered pricing intelligence and strategic insights', { align: 'center' });
 
