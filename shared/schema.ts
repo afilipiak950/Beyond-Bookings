@@ -101,9 +101,22 @@ export const hotels = pgTable("hotels", {
   holidayCheckReviews: jsonb("holiday_check_reviews"), // {rating, count, summary, url}
   reviewSummary: text("review_summary"), // AI-generated summary of all reviews
   lastReviewUpdate: timestamp("last_review_update"),
+  createdByUserId: integer("created_by_user_id").references(() => users.id), // For owner filtering
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => [
+  // Add indexes for filtering performance
+  index("hotels_stars_idx").on(table.stars),
+  index("hotels_category_idx").on(table.category),
+  index("hotels_country_idx").on(table.country),
+  index("hotels_city_idx").on(table.city),
+  index("hotels_room_count_idx").on(table.roomCount),
+  index("hotels_average_price_idx").on(table.averagePrice),
+  index("hotels_created_at_idx").on(table.createdAt),
+  index("hotels_updated_at_idx").on(table.updatedAt),
+  index("hotels_created_by_idx").on(table.createdByUserId),
+  index("hotels_name_search_idx").on(table.name), // For text search optimization
+]);
 
 // Pricing calculations table
 export const pricingCalculations = pgTable("pricing_calculations", {

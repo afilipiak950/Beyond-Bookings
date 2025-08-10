@@ -21,8 +21,8 @@ import multer from "multer";
 import path from "path";
 import fs from "fs/promises";
 import { db } from "./db";
-import { documentAnalyses } from "@shared/schema";
-import { eq, desc, and, or, isNull } from "drizzle-orm";
+import { documentAnalyses, hotels, users } from "@shared/schema";
+import { eq, desc, and, or, isNull, gte, lte, like, ilike, inArray, sql, count } from "drizzle-orm";
 import OpenAI from "openai";
 
 // Login/Register schemas
@@ -1711,10 +1711,237 @@ CRITICAL REQUIREMENTS:
   // Hotel routes
   app.get('/api/hotels', requireAuth, async (req, res) => {
     try {
-      const hotels = await storage.getHotels();
-      res.json(hotels);
+      // Parse query parameters for filtering
+      const {
+        q, // search query
+        stars, // comma-separated star ratings (1,2,3,4,5) or "unrated"
+        category, // comma-separated categories
+        country,
+        city,
+        roomCountMin,
+        roomCountMax,
+        priceMin,
+        priceMax,
+        approvalStatus, // comma-separated approval statuses
+        dataQuality, // comma-separated quality filters: missingRoomCount,missingAvgPrice,lowAIConfidence
+        dateFrom,
+        dateTo,
+        amenities, // comma-separated amenities
+        amenitiesMode = 'any', // 'any' or 'all'
+        owner, // admin only - filter by creator
+        sortBy = 'updatedAt',
+        sortOrder = 'desc',
+        page = '1',
+        limit = '20'
+      } = req.query;
+
+      const pageNum = parseInt(page as string) || 1;
+      const limitNum = Math.min(parseInt(limit as string) || 20, 100); // Max 100 per page
+      const offset = (pageNum - 1) * limitNum;
+
+      // Build filter conditions using Drizzle ORM
+      const whereConditions: any[] = [];
+
+      // Text search (case-insensitive, partial match)
+      if (q && typeof q === 'string' && q.trim()) {
+        const searchTerm = `%${q.trim()}%`;
+        whereConditions.push(
+          or(
+            ilike(hotels.name, searchTerm),
+            ilike(hotels.location, searchTerm),
+            ilike(hotels.url, searchTerm)
+          )
+        );
+      }
+
+      // Stars filter
+      if (stars && typeof stars === 'string') {
+        const starValues = stars.split(',').map(s => s.trim());
+        const starNumbers = starValues.filter(s => s !== 'unrated').map(s => parseInt(s)).filter(s => s >= 1 && s <= 5);
+        const includeUnrated = starValues.includes('unrated');
+        
+        if (starNumbers.length > 0 || includeUnrated) {
+          const starConditions = [];
+          if (starNumbers.length > 0) {
+            starConditions.push(inArray(hotels.stars, starNumbers));
+          }
+          if (includeUnrated) {
+            starConditions.push(isNull(hotels.stars));
+          }
+          whereConditions.push(or(...starConditions));
+        }
+      }
+
+      // Category filter
+      if (category && typeof category === 'string') {
+        const categories = category.split(',').map(c => c.trim()).filter(c => c);
+        if (categories.length > 0) {
+          whereConditions.push(
+            or(...categories.map(cat => ilike(hotels.category, cat)))
+          );
+        }
+      }
+
+      // Location filters
+      if (country && typeof country === 'string' && country.trim()) {
+        whereConditions.push(ilike(hotels.country, `%${country.trim()}%`));
+      }
+
+      if (city && typeof city === 'string' && city.trim()) {
+        whereConditions.push(ilike(hotels.city, `%${city.trim()}%`));
+      }
+
+      // Room count range
+      if (roomCountMin && typeof roomCountMin === 'string') {
+        const min = parseInt(roomCountMin);
+        if (!isNaN(min)) {
+          whereConditions.push(gte(hotels.roomCount, min));
+        }
+      }
+
+      if (roomCountMax && typeof roomCountMax === 'string') {
+        const max = parseInt(roomCountMax);
+        if (!isNaN(max)) {
+          whereConditions.push(lte(hotels.roomCount, max));
+        }
+      }
+
+      // Price range
+      if (priceMin && typeof priceMin === 'string') {
+        const min = parseFloat(priceMin);
+        if (!isNaN(min)) {
+          whereConditions.push(gte(hotels.averagePrice, min.toString()));
+        }
+      }
+
+      if (priceMax && typeof priceMax === 'string') {
+        const max = parseFloat(priceMax);
+        if (!isNaN(max)) {
+          whereConditions.push(lte(hotels.averagePrice, max.toString()));
+        }
+      }
+
+      // Data quality filters
+      if (dataQuality && typeof dataQuality === 'string') {
+        const qualityFilters = dataQuality.split(',').map(q => q.trim());
+        const qualityConditions = [];
+        
+        if (qualityFilters.includes('missingRoomCount')) {
+          qualityConditions.push(isNull(hotels.roomCount));
+        }
+        if (qualityFilters.includes('missingAvgPrice')) {
+          qualityConditions.push(isNull(hotels.averagePrice));
+        }
+        
+        if (qualityConditions.length > 0) {
+          whereConditions.push(or(...qualityConditions));
+        }
+      }
+
+      // Date range filters
+      if (dateFrom && typeof dateFrom === 'string') {
+        whereConditions.push(gte(hotels.createdAt, new Date(dateFrom)));
+      }
+
+      if (dateTo && typeof dateTo === 'string') {
+        whereConditions.push(lte(hotels.createdAt, new Date(dateTo)));
+      }
+
+      // Amenities filter (PostgreSQL array operations)
+      if (amenities && typeof amenities === 'string') {
+        const amenityList = amenities.split(',').map(a => a.trim()).filter(a => a);
+        if (amenityList.length > 0) {
+          if (amenitiesMode === 'all') {
+            // All amenities must be present
+            whereConditions.push(sql`${hotels.amenities} @> ${JSON.stringify(amenityList)}`);
+          } else {
+            // Any amenity can be present
+            whereConditions.push(sql`${hotels.amenities} && ${JSON.stringify(amenityList)}`);
+          }
+        }
+      }
+
+      // Owner filter (admin only)
+      const currentUser = await storage.getUserById(req.session.userId!);
+      if (owner && typeof owner === 'string' && currentUser?.role === 'admin') {
+        const ownerId = parseInt(owner);
+        if (!isNaN(ownerId)) {
+          whereConditions.push(eq(hotels.createdByUserId, ownerId));
+        }
+      }
+
+      // Build sort order
+      const validSortFields = ['name', 'stars', 'roomCount', 'averagePrice', 'createdAt', 'updatedAt'];
+      const sortField = validSortFields.includes(sortBy as string) ? sortBy : 'updatedAt';
+      const sortDirection = sortOrder === 'asc' ? 'asc' : 'desc';
+      
+      // Map frontend field names to database columns
+      const sortColumnMap: Record<string, any> = {
+        'name': hotels.name,
+        'stars': hotels.stars,
+        'roomCount': hotels.roomCount,
+        'averagePrice': hotels.averagePrice,
+        'createdAt': hotels.createdAt,
+        'updatedAt': hotels.updatedAt
+      };
+      const sortColumn = sortColumnMap[sortField as string] || hotels.updatedAt;
+
+      // Combine all where conditions
+      const whereClause = whereConditions.length > 0 ? and(...whereConditions) : undefined;
+
+      // Execute count query
+      const countResult = await db.select({ total: count() })
+        .from(hotels)
+        .where(whereClause);
+      
+      const total = countResult[0]?.total || 0;
+      const totalPages = Math.ceil(total / limitNum);
+
+      // Execute data query with joins
+      const dataResult = await db.select({
+        id: hotels.id,
+        name: hotels.name,
+        url: hotels.url,
+        stars: hotels.stars,
+        roomCount: hotels.roomCount,
+        location: hotels.location,
+        city: hotels.city,
+        country: hotels.country,
+        category: hotels.category,
+        amenities: hotels.amenities,
+        averagePrice: hotels.averagePrice,
+        createdAt: hotels.createdAt,
+        updatedAt: hotels.updatedAt,
+        createdByUserId: hotels.createdByUserId,
+        createdByEmail: users.email,
+        createdByFirstName: users.firstName,
+        createdByLastName: users.lastName
+      })
+      .from(hotels)
+      .leftJoin(users, eq(hotels.createdByUserId, users.id))
+      .where(whereClause)
+      .orderBy(sortDirection === 'asc' ? sortColumn : desc(sortColumn))
+      .limit(limitNum)
+      .offset(offset);
+
+      res.json({
+        data: dataResult,
+        pagination: {
+          page: pageNum,
+          limit: limitNum,
+          total,
+          totalPages,
+          hasNext: pageNum < totalPages,
+          hasPrev: pageNum > 1
+        },
+        filters: {
+          applied: Object.keys(req.query).length > 0,
+          count: whereConditions.length
+        }
+      });
+
     } catch (error) {
-      console.error("Error fetching hotels:", error);
+      console.error("Error fetching hotels with filters:", error);
       res.status(500).json({ message: "Failed to fetch hotels" });
     }
   });

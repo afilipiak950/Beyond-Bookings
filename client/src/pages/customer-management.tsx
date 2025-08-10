@@ -12,11 +12,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Users, Building2, Search, Plus, Globe, MapPin, Star, Loader2, Trash2, MoreHorizontal, Send, Bot, User, Clock, Brain, MessageSquare, RefreshCw, Eye, AlertCircle, CheckCircle, X } from "lucide-react";
+import { Users, Building2, Search, Plus, Globe, MapPin, Star, Loader2, Trash2, MoreHorizontal, Send, Bot, User, Clock, Brain, MessageSquare, RefreshCw, Eye, AlertCircle, CheckCircle, X, Filter, Calendar, Euro, SlidersHorizontal, ChevronDown, ChevronUp } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Separator } from "@/components/ui/separator";
 
 export default function CustomerManagement() {
   const { toast } = useToast();
@@ -53,7 +56,110 @@ export default function CustomerManagement() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [hotelSearchQuery, setHotelSearchQuery] = useState("");  // For hotel list filtering
+  
+  // Comprehensive filter state
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [filters, setFilters] = useState({
+    q: '',
+    stars: [] as string[],
+    category: [] as string[],
+    country: '',
+    city: '',
+    roomCountMin: '',
+    roomCountMax: '',
+    priceMin: '',
+    priceMax: '',
+    approvalStatus: [] as string[],
+    dataQuality: [] as string[],
+    dateFrom: '',
+    dateTo: '',
+    amenities: [] as string[],
+    amenitiesMode: 'any' as 'any' | 'all',
+    owner: '',
+    sortBy: 'updatedAt',
+    sortOrder: 'desc' as 'asc' | 'desc',
+    page: 1,
+    limit: 20
+  });
+  const [appliedFilters, setAppliedFilters] = useState({ ...filters });
+  
+  // Available filter options
+  const starOptions = ['1', '2', '3', '4', '5', 'unrated'];
+  const categoryOptions = ['Luxury', 'Business', 'Boutique', 'Resort', 'Budget', 'Aparthotel'];
+  const approvalStatusOptions = ['none_required', 'required_not_sent', 'pending', 'approved', 'rejected'];
+  const dataQualityOptions = [
+    { value: 'missingRoomCount', label: 'Missing Room Count' },
+    { value: 'missingAvgPrice', label: 'Missing Avg Price' },
+    { value: 'lowAIConfidence', label: 'Low AI Confidence' }
+  ];
+  const sortOptions = [
+    { value: 'updatedAt', label: 'Updated (newest)' },
+    { value: 'name', label: 'Name (A-Z)' },
+    { value: 'stars', label: 'Stars' },
+    { value: 'roomCount', label: 'Room Count' },
+    { value: 'averagePrice', label: 'Avg Price' }
+  ];
+  
+  // Debounced search effect
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setAppliedFilters(prev => ({ ...prev, q: filters.q, page: 1 }));
+    }, 300);
+    
+    return () => clearTimeout(timer);
+  }, [filters.q]);
+  
+  // Apply other filters immediately
+  const applyFilters = () => {
+    setAppliedFilters({ ...filters, page: 1 });
+    setFilterOpen(false);
+  };
+  
+  // Clear all filters
+  const clearAllFilters = () => {
+    const resetFilters = {
+      q: '',
+      stars: [],
+      category: [],
+      country: '',
+      city: '',
+      roomCountMin: '',
+      roomCountMax: '',
+      priceMin: '',
+      priceMax: '',
+      approvalStatus: [],
+      dataQuality: [],
+      dateFrom: '',
+      dateTo: '',
+      amenities: [],
+      amenitiesMode: 'any' as 'any' | 'all',
+      owner: '',
+      sortBy: 'updatedAt',
+      sortOrder: 'desc' as 'asc' | 'desc',
+      page: 1,
+      limit: 20
+    };
+    setFilters(resetFilters);
+    setAppliedFilters(resetFilters);
+  };
+  
+  // Get active filter count
+  const getActiveFilterCount = () => {
+    let count = 0;
+    if (appliedFilters.q) count++;
+    if (appliedFilters.stars.length > 0) count++;
+    if (appliedFilters.category.length > 0) count++;
+    if (appliedFilters.country) count++;
+    if (appliedFilters.city) count++;
+    if (appliedFilters.roomCountMin || appliedFilters.roomCountMax) count++;
+    if (appliedFilters.priceMin || appliedFilters.priceMax) count++;
+    if (appliedFilters.approvalStatus.length > 0) count++;
+    if (appliedFilters.dataQuality.length > 0) count++;
+    if (appliedFilters.dateFrom || appliedFilters.dateTo) count++;
+    if (appliedFilters.amenities.length > 0) count++;
+    if (appliedFilters.owner) count++;
+    return count;
+  };
 
   // AI enrichment functions
   const runAIEnrichment = async (field: 'roomCount' | 'averagePrice', hotelName: string, hotelLocation?: string) => {
@@ -230,10 +336,39 @@ export default function CustomerManagement() {
     return <div className="space-y-1">{formattedElements}</div>;
   };
 
-  const { data: hotelData = [], isLoading: hotelsLoading } = useQuery<typeof hotels.$inferSelect[]>({
-    queryKey: ["/api/hotels"],
-    retry: false,
+  // Fetch hotels with filters
+  const { data: hotelResponse, isLoading: hotelsLoading, refetch: refetchHotels } = useQuery({
+    queryKey: ["/api/hotels", appliedFilters],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      
+      // Build query string from applied filters
+      Object.entries(appliedFilters).forEach(([key, value]) => {
+        if (value !== null && value !== undefined && value !== '' && 
+            !(Array.isArray(value) && value.length === 0)) {
+          if (Array.isArray(value)) {
+            params.set(key, value.join(','));
+          } else {
+            params.set(key, value.toString());
+          }
+        }
+      });
+
+      const response = await fetch(`/api/hotels?${params.toString()}`, {
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch hotels');
+      }
+      
+      return response.json();
+    }
   });
+  
+  const hotelData = hotelResponse?.data || [];
+  const pagination = hotelResponse?.pagination;
+  const filterInfo = hotelResponse?.filters;
 
   // Mutation for authentic hotel data extraction with real search URLs
   const scrapeHotelMutation = useMutation({
@@ -314,7 +449,7 @@ export default function CustomerManagement() {
       setUserEditedFields(new Set());
       setEnrichmentLoading({});
       setLastAutoEnrichmentName('');
-      setHotelSearchQuery('');
+      setFilters(prev => ({ ...prev, q: '' }));
       toast({
         title: "Hotel added successfully!",
         description: "The hotel has been added to your database",
@@ -1042,7 +1177,7 @@ export default function CustomerManagement() {
                       setUserEditedFields(new Set());
                       setEnrichmentLoading({});
                       setLastAutoEnrichmentName('');
-                      setHotelSearchQuery('');
+                      setFilters(prev => ({ ...prev, q: '' }));
                     }}
                   >
                     Cancel
@@ -1116,43 +1251,380 @@ export default function CustomerManagement() {
                 <Input
                   placeholder="Search by hotel name, location, or contact..."
                   className="pl-10"
-                  value={hotelSearchQuery}
-                  onChange={(e) => setHotelSearchQuery(e.target.value)}
+                  value={filters.q}
+                  onChange={(e) => setFilters(prev => ({ ...prev, q: e.target.value }))}
                 />
               </div>
-              {hotelSearchQuery && (
+              {filters.q && (
                 <Button 
                   variant="outline" 
-                  onClick={() => setHotelSearchQuery("")}
+                  onClick={() => setFilters(prev => ({ ...prev, q: "" }))}
                   className="px-3"
                 >
                   <X className="h-4 w-4" />
                 </Button>
               )}
-              <Button variant="outline">Filter</Button>
+              <Popover open={filterOpen} onOpenChange={setFilterOpen}>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="relative">
+                    <Filter className="h-4 w-4 mr-2" />
+                    Filter
+                    {getActiveFilterCount() > 0 && (
+                      <Badge variant="secondary" className="ml-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs">
+                        {getActiveFilterCount()}
+                      </Badge>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[600px] max-h-[600px] overflow-y-auto" align="start">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-medium">Advanced Filters</h4>
+                      {getActiveFilterCount() > 0 && (
+                        <Button variant="ghost" size="sm" onClick={clearAllFilters}>
+                          Clear All
+                        </Button>
+                      )}
+                    </div>
+                    
+                    <Separator />
+                    
+                    {/* Stars Filter */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Stars</Label>
+                      <div className="flex flex-wrap gap-2">
+                        {starOptions.map((star) => (
+                          <div key={star} className="flex items-center space-x-1">
+                            <Checkbox
+                              id={`star-${star}`}
+                              checked={filters.stars.includes(star)}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setFilters(prev => ({ ...prev, stars: [...prev.stars, star] }));
+                                } else {
+                                  setFilters(prev => ({ ...prev, stars: prev.stars.filter(s => s !== star) }));
+                                }
+                              }}
+                            />
+                            <Label htmlFor={`star-${star}`} className="text-sm">
+                              {star === 'unrated' ? 'Unrated' : `${star} ★`}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    {/* Category Filter */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Category</Label>
+                      <div className="flex flex-wrap gap-2">
+                        {categoryOptions.map((category) => (
+                          <div key={category} className="flex items-center space-x-1">
+                            <Checkbox
+                              id={`category-${category}`}
+                              checked={filters.category.includes(category)}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setFilters(prev => ({ ...prev, category: [...prev.category, category] }));
+                                } else {
+                                  setFilters(prev => ({ ...prev, category: prev.category.filter(c => c !== category) }));
+                                }
+                              }}
+                            />
+                            <Label htmlFor={`category-${category}`} className="text-sm">
+                              {category}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    {/* Location Filters */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="country" className="text-sm font-medium">Country</Label>
+                        <Input
+                          id="country"
+                          placeholder="Germany"
+                          value={filters.country}
+                          onChange={(e) => setFilters(prev => ({ ...prev, country: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="city" className="text-sm font-medium">City</Label>
+                        <Input
+                          id="city"
+                          placeholder="Berlin"
+                          value={filters.city}
+                          onChange={(e) => setFilters(prev => ({ ...prev, city: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+                    
+                    {/* Room Count Range */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Room Count</Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Input
+                          placeholder="Min"
+                          type="number"
+                          value={filters.roomCountMin}
+                          onChange={(e) => setFilters(prev => ({ ...prev, roomCountMin: e.target.value }))}
+                        />
+                        <Input
+                          placeholder="Max"
+                          type="number"
+                          value={filters.roomCountMax}
+                          onChange={(e) => setFilters(prev => ({ ...prev, roomCountMax: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+                    
+                    {/* Price Range (EUR) */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium flex items-center">
+                        <Euro className="h-4 w-4 mr-1" />
+                        Durchschnittlicher Zimmerpreis (€)
+                      </Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Input
+                          placeholder="Min €"
+                          type="number"
+                          value={filters.priceMin}
+                          onChange={(e) => setFilters(prev => ({ ...prev, priceMin: e.target.value }))}
+                        />
+                        <Input
+                          placeholder="Max €"
+                          type="number"
+                          value={filters.priceMax}
+                          onChange={(e) => setFilters(prev => ({ ...prev, priceMax: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+                    
+                    {/* Data Quality Filters */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Data Quality</Label>
+                      <div className="space-y-2">
+                        {dataQualityOptions.map((option) => (
+                          <div key={option.value} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`quality-${option.value}`}
+                              checked={filters.dataQuality.includes(option.value)}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setFilters(prev => ({ ...prev, dataQuality: [...prev.dataQuality, option.value] }));
+                                } else {
+                                  setFilters(prev => ({ ...prev, dataQuality: prev.dataQuality.filter(q => q !== option.value) }));
+                                }
+                              }}
+                            />
+                            <Label htmlFor={`quality-${option.value}`} className="text-sm">
+                              {option.label}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    {/* Date Range */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium flex items-center">
+                        <Calendar className="h-4 w-4 mr-1" />
+                        Date Range
+                      </Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Input
+                          type="date"
+                          value={filters.dateFrom}
+                          onChange={(e) => setFilters(prev => ({ ...prev, dateFrom: e.target.value }))}
+                        />
+                        <Input
+                          type="date"
+                          value={filters.dateTo}
+                          onChange={(e) => setFilters(prev => ({ ...prev, dateTo: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+                    
+                    <Separator />
+                    
+                    {/* Apply/Reset Buttons */}
+                    <div className="flex justify-end space-x-2">
+                      <Button variant="outline" onClick={() => setFilters({ ...appliedFilters })}>
+                        Reset
+                      </Button>
+                      <Button onClick={applyFilters}>
+                        Apply Filters
+                      </Button>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
           </CardContent>
         </Card>
 
+        {/* Active Filter Chips and Sort Controls */}
+        {(getActiveFilterCount() > 0 || appliedFilters.sortBy !== 'updatedAt') && (
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between flex-wrap gap-4">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-sm text-muted-foreground">Active filters:</span>
+                  
+                  {appliedFilters.q && (
+                    <Badge variant="secondary" className="gap-1">
+                      Search: "{appliedFilters.q}"
+                      <X className="h-3 w-3 cursor-pointer" onClick={() => {
+                        setFilters(prev => ({ ...prev, q: '' }));
+                        setAppliedFilters(prev => ({ ...prev, q: '' }));
+                      }} />
+                    </Badge>
+                  )}
+                  
+                  {appliedFilters.stars.length > 0 && (
+                    <Badge variant="secondary" className="gap-1">
+                      Stars: {appliedFilters.stars.join(', ')}
+                      <X className="h-3 w-3 cursor-pointer" onClick={() => {
+                        setFilters(prev => ({ ...prev, stars: [] }));
+                        setAppliedFilters(prev => ({ ...prev, stars: [] }));
+                      }} />
+                    </Badge>
+                  )}
+                  
+                  {appliedFilters.category.length > 0 && (
+                    <Badge variant="secondary" className="gap-1">
+                      Category: {appliedFilters.category.join(', ')}
+                      <X className="h-3 w-3 cursor-pointer" onClick={() => {
+                        setFilters(prev => ({ ...prev, category: [] }));
+                        setAppliedFilters(prev => ({ ...prev, category: [] }));
+                      }} />
+                    </Badge>
+                  )}
+                  
+                  {appliedFilters.country && (
+                    <Badge variant="secondary" className="gap-1">
+                      Country: {appliedFilters.country}
+                      <X className="h-3 w-3 cursor-pointer" onClick={() => {
+                        setFilters(prev => ({ ...prev, country: '' }));
+                        setAppliedFilters(prev => ({ ...prev, country: '' }));
+                      }} />
+                    </Badge>
+                  )}
+                  
+                  {appliedFilters.city && (
+                    <Badge variant="secondary" className="gap-1">
+                      City: {appliedFilters.city}
+                      <X className="h-3 w-3 cursor-pointer" onClick={() => {
+                        setFilters(prev => ({ ...prev, city: '' }));
+                        setAppliedFilters(prev => ({ ...prev, city: '' }));
+                      }} />
+                    </Badge>
+                  )}
+                  
+                  {(appliedFilters.roomCountMin || appliedFilters.roomCountMax) && (
+                    <Badge variant="secondary" className="gap-1">
+                      Rooms: {appliedFilters.roomCountMin || '0'}-{appliedFilters.roomCountMax || '∞'}
+                      <X className="h-3 w-3 cursor-pointer" onClick={() => {
+                        setFilters(prev => ({ ...prev, roomCountMin: '', roomCountMax: '' }));
+                        setAppliedFilters(prev => ({ ...prev, roomCountMin: '', roomCountMax: '' }));
+                      }} />
+                    </Badge>
+                  )}
+                  
+                  {(appliedFilters.priceMin || appliedFilters.priceMax) && (
+                    <Badge variant="secondary" className="gap-1">
+                      Price: €{appliedFilters.priceMin || '0'}-€{appliedFilters.priceMax || '∞'}
+                      <X className="h-3 w-3 cursor-pointer" onClick={() => {
+                        setFilters(prev => ({ ...prev, priceMin: '', priceMax: '' }));
+                        setAppliedFilters(prev => ({ ...prev, priceMin: '', priceMax: '' }));
+                      }} />
+                    </Badge>
+                  )}
+                  
+                  {appliedFilters.dataQuality.length > 0 && (
+                    <Badge variant="secondary" className="gap-1">
+                      Quality: {appliedFilters.dataQuality.length} filters
+                      <X className="h-3 w-3 cursor-pointer" onClick={() => {
+                        setFilters(prev => ({ ...prev, dataQuality: [] }));
+                        setAppliedFilters(prev => ({ ...prev, dataQuality: [] }));
+                      }} />
+                    </Badge>
+                  )}
+                  
+                  {(appliedFilters.dateFrom || appliedFilters.dateTo) && (
+                    <Badge variant="secondary" className="gap-1">
+                      Date Range
+                      <X className="h-3 w-3 cursor-pointer" onClick={() => {
+                        setFilters(prev => ({ ...prev, dateFrom: '', dateTo: '' }));
+                        setAppliedFilters(prev => ({ ...prev, dateFrom: '', dateTo: '' }));
+                      }} />
+                    </Badge>
+                  )}
+                  
+                  {getActiveFilterCount() > 0 && (
+                    <Button variant="ghost" size="sm" onClick={clearAllFilters} className="h-6 px-2">
+                      Clear All
+                    </Button>
+                  )}
+                </div>
+                
+                {/* Sort Control */}
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">Sort by:</span>
+                  <Select 
+                    value={appliedFilters.sortBy} 
+                    onValueChange={(value) => {
+                      setFilters(prev => ({ ...prev, sortBy: value }));
+                      setAppliedFilters(prev => ({ ...prev, sortBy: value, page: 1 }));
+                    }}
+                  >
+                    <SelectTrigger className="w-40">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {sortOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      const newOrder = appliedFilters.sortOrder === 'asc' ? 'desc' : 'asc';
+                      setFilters(prev => ({ ...prev, sortOrder: newOrder }));
+                      setAppliedFilters(prev => ({ ...prev, sortOrder: newOrder, page: 1 }));
+                    }}
+                  >
+                    {appliedFilters.sortOrder === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Customers List */}
         <Card>
           <CardHeader>
-            <CardTitle>Hotel Clients</CardTitle>
-            <CardDescription>
-              {hotelSearchQuery 
-                ? `${hotelData?.filter((hotel) => {
-                    const query = hotelSearchQuery.toLowerCase();
-                    return (
-                      hotel.name?.toLowerCase().includes(query) ||
-                      hotel.location?.toLowerCase().includes(query) ||
-                      hotel.category?.toLowerCase().includes(query) ||
-                      hotel.city?.toLowerCase().includes(query) ||
-                      hotel.country?.toLowerCase().includes(query)
-                    );
-                  }).length || 0} of ${hotelData?.length || 0} hotels found`
-                : `${hotelData?.length || 0} hotels in your database`
-              }
-            </CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Hotel Clients</CardTitle>
+                <CardDescription>
+                  {pagination ? `${pagination.total} hotel${pagination.total !== 1 ? 's' : ''}${filterInfo?.applied ? ' (filtered)' : ''}` : `${hotelData?.length || 0} hotels in your database`}
+                </CardDescription>
+              </div>
+              {pagination && pagination.total > 0 && (
+                <div className="text-sm text-muted-foreground">
+                  Page {pagination.page} of {pagination.totalPages}
+                </div>
+              )}
+            </div>
           </CardHeader>
           <CardContent>
             {hotelsLoading ? (
@@ -1173,19 +1645,7 @@ export default function CustomerManagement() {
               </div>
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                {hotelData
-                  .filter((hotel) => {
-                    if (!hotelSearchQuery) return true;
-                    const query = hotelSearchQuery.toLowerCase();
-                    return (
-                      hotel.name?.toLowerCase().includes(query) ||
-                      hotel.location?.toLowerCase().includes(query) ||
-                      hotel.category?.toLowerCase().includes(query) ||
-                      hotel.city?.toLowerCase().includes(query) ||
-                      hotel.country?.toLowerCase().includes(query)
-                    );
-                  })
-                  .map((hotel) => (
+                {hotelData.map((hotel) => (
                   <Card key={hotel.id} className="hover:shadow-md transition-shadow h-[280px] flex flex-col">
                     <CardHeader className="pb-3 flex-shrink-0">
                       <div className="flex items-start justify-between">
@@ -1262,6 +1722,35 @@ export default function CustomerManagement() {
                     </CardContent>
                   </Card>
                 ))}
+              </div>
+            )}
+            
+            {/* Pagination */}
+            {pagination && pagination.totalPages > 1 && (
+              <div className="flex items-center justify-between mt-6">
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="outline"
+                    disabled={!pagination.hasPrev}
+                    onClick={() => setAppliedFilters(prev => ({ ...prev, page: prev.page - 1 }))}
+                  >
+                    Previous
+                  </Button>
+                  <span className="text-sm text-muted-foreground">
+                    Page {pagination.page} of {pagination.totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    disabled={!pagination.hasNext}
+                    onClick={() => setAppliedFilters(prev => ({ ...prev, page: prev.page + 1 }))}
+                  >
+                    Next
+                  </Button>
+                </div>
+                
+                <div className="text-sm text-muted-foreground">
+                  Showing {((pagination.page - 1) * pagination.limit) + 1} to {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} results
+                </div>
               </div>
             )}
           </CardContent>
