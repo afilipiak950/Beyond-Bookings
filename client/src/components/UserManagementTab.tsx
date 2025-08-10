@@ -46,7 +46,9 @@ import {
   UserCheck, 
   UserX, 
   Users, 
-  UserPlus 
+  UserPlus,
+  Crown,
+  User as UserIcon
 } from "lucide-react";
 import { type User } from "@shared/schema";
 
@@ -173,6 +175,30 @@ export default function UserManagementTab() {
     },
   });
 
+  // Update user role mutation
+  const updateUserRoleMutation = useMutation({
+    mutationFn: async ({ id, role }: { id: number; role: 'user' | 'admin' }) => {
+      return await apiRequest(`/api/admin/users/${id}/role`, {
+        method: 'PATCH',
+        body: { role },
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "User role updated successfully!",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update user role",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!createForm.email || !createForm.password) {
@@ -223,6 +249,33 @@ export default function UserManagementTab() {
       deleteUserMutation.mutate(selectedUser.id as number);
     }
   };
+
+  const handleRoleChange = (user: User, newRole: 'user' | 'admin') => {
+    updateUserRoleMutation.mutate({ 
+      id: user.id as number, 
+      role: newRole 
+    });
+  };
+
+  const getRoleBadge = (role: string) => {
+    if (role === 'admin') {
+      return (
+        <Badge className="bg-yellow-500/20 text-yellow-700 border-yellow-300">
+          <Crown className="h-3 w-3 mr-1" />
+          Admin
+        </Badge>
+      );
+    }
+    return (
+      <Badge className="bg-blue-500/20 text-blue-700 border-blue-300">
+        <UserIcon className="h-3 w-3 mr-1" />
+        User
+      </Badge>
+    );
+  };
+
+  // Count admins for last admin protection
+  const adminCount = users.filter(user => user.role === 'admin').length;
 
   if (isLoading) {
     return (
@@ -325,7 +378,7 @@ export default function UserManagementTab() {
                 <TableRow>
                   <TableHead>Name</TableHead>
                   <TableHead>Email</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead>Role</TableHead>
                   <TableHead>Created</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
@@ -348,10 +401,7 @@ export default function UserManagementTab() {
                     </TableCell>
                     <TableCell>{user.email || 'No email'}</TableCell>
                     <TableCell>
-                      <Badge variant="default" className="bg-bebo-green/20 text-bebo-green">
-                        <UserCheck className="h-3 w-3 mr-1" />
-                        Active
-                      </Badge>
+                      {getRoleBadge(user.role || 'user')}
                     </TableCell>
                     <TableCell>
                       {user.createdAt 
@@ -367,6 +417,24 @@ export default function UserManagementTab() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          {/* Role Change Options */}
+                          {user.role === 'user' ? (
+                            <DropdownMenuItem 
+                              onClick={() => handleRoleChange(user, 'admin')}
+                              disabled={updateUserRoleMutation.isPending}
+                            >
+                              <Crown className="h-4 w-4 mr-2" />
+                              Make Admin
+                            </DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem 
+                              onClick={() => handleRoleChange(user, 'user')}
+                              disabled={updateUserRoleMutation.isPending || (user.role === 'admin' && adminCount === 1)}
+                            >
+                              <UserIcon className="h-4 w-4 mr-2" />
+                              Make User
+                            </DropdownMenuItem>
+                          )}
                           <DropdownMenuItem onClick={() => handleEditUser(user)}>
                             <Edit className="h-4 w-4 mr-2" />
                             Edit
@@ -374,6 +442,7 @@ export default function UserManagementTab() {
                           <DropdownMenuItem 
                             onClick={() => handleDeleteUser(user)}
                             className="text-red-600"
+                            disabled={user.role === 'admin' && adminCount === 1}
                           >
                             <Trash2 className="h-4 w-4 mr-2" />
                             Delete
