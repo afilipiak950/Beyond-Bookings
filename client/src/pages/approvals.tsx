@@ -38,14 +38,34 @@ export function Approvals() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: approvalRequests, isLoading } = useQuery({
+  const { data: approvalRequests, isLoading, error } = useQuery({
     queryKey: ['/api/approvals', selectedStatus === 'all' ? undefined : selectedStatus],
-    queryFn: () => apiRequest(`/api/approvals${selectedStatus !== 'all' ? `?status=${selectedStatus}` : ''}`)
+    queryFn: async () => {
+      try {
+        const response = await apiRequest(`/api/approvals${selectedStatus !== 'all' ? `?status=${selectedStatus}` : ''}`);
+        const data = await response.json();
+        console.log('API Response data:', data);
+        return data;
+      } catch (err) {
+        console.log('API Error:', err);
+        throw err;
+      }
+    },
+    retry: false
   });
 
   const { data: myRequests } = useQuery({
     queryKey: ['/api/approvals/my-requests'],
-    queryFn: () => apiRequest('/api/approvals/my-requests')
+    queryFn: async () => {
+      try {
+        const response = await apiRequest('/api/approvals/my-requests');
+        const data = await response.json();
+        return data;
+      } catch (err) {
+        console.log('My requests API Error:', err);
+        throw err;
+      }
+    }
   });
 
   const updateRequestMutation = useMutation({
@@ -119,6 +139,7 @@ export function Approvals() {
   // Debug log to see what data we're getting
   console.log('Debug - approvalRequests:', approvalRequests);
   console.log('Debug - approvalRequestsData length:', approvalRequestsData.length);
+  console.log('Debug - query error:', error);
 
   const pendingCount = approvalRequestsData.filter((req: ApprovalRequest) => req.status === 'pending').length;
   const approvedCount = approvalRequestsData.filter((req: ApprovalRequest) => req.status === 'approved').length;

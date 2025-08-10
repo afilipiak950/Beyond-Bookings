@@ -5751,7 +5751,7 @@ Focus on:
     }
   });
 
-  app.get('/api/approvals', requireAdmin, async (req: any, res) => {
+  app.get('/api/approvals', requireAuth, requireAdmin, async (req: any, res) => {
     try {
       const { status, userId } = req.query;
       const approvalRequests = await storage.getApprovalRequests({ 
