@@ -649,6 +649,8 @@ ${calculation.hotelName},${calculation.hotelUrl || ''},${calculation.stars || ''
       .set({
         ...data,
         approvedByUserId: adminUserId,
+        decisionByUserId: adminUserId,
+        decisionAt: new Date(),
         updatedAt: new Date(),
       })
       .where(eq(approvalRequests.id, id))
@@ -657,12 +659,162 @@ ${calculation.hotelName},${calculation.hotelUrl || ''},${calculation.stars || ''
     return updated;
   }
 
+  // Method for admin decision-making with comprehensive approval workflow
+  async makeApprovalDecision(
+    requestId: number, 
+    adminUserId: number, 
+    action: 'approve' | 'reject', 
+    adminComment?: string
+  ): Promise<{
+    success: boolean;
+    approvalRequest?: ApprovalRequest;
+    calculation?: PricingCalculation;
+    error?: string;
+  }> {
+    try {
+      // Get the approval request with calculation details
+      const approvalRequest = await this.getApprovalRequestById(requestId);
+      if (!approvalRequest) {
+        return { success: false, error: 'Approval request not found' };
+      }
+
+      // Check if already decided (idempotency)
+      if (approvalRequest.status !== 'pending') {
+        return { 
+          success: true, 
+          approvalRequest,
+          error: 'Request already decided'
+        };
+      }
+
+      // Validate admin comment requirement for rejections
+      if (action === 'reject' && !adminComment?.trim()) {
+        return { success: false, error: 'Admin comment is required when rejecting a request' };
+      }
+
+      // Get the linked calculation
+      const calculationId = approvalRequest.inputSnapshot?.calculationId;
+      if (!calculationId) {
+        return { success: false, error: 'No calculation linked to this approval request' };
+      }
+
+      const calculation = await this.getPricingCalculation(calculationId);
+      if (!calculation) {
+        return { success: false, error: 'Linked calculation not found' };
+      }
+
+      // For approvals, check if input hash matches (input snapshot identity)
+      if (action === 'approve') {
+        const requestInputHash = approvalRequest.inputSnapshot?.inputHash;
+        const currentInputHash = calculation.inputHash;
+
+        if (requestInputHash !== currentInputHash) {
+          // Inputs changed since request - set calculation to require new approval
+          await this.updatePricingCalculation(calculationId, {
+            approvalStatus: 'required_not_sent',
+            lastApprovalRequestId: null,
+            updatedAt: new Date(),
+          });
+
+          return { 
+            success: false, 
+            error: 'Inputs changed since request was created. Please resubmit for approval.', 
+            calculation 
+          };
+        }
+      }
+
+      // Update the approval request
+      const updatedRequest = await this.updateApprovalRequest(requestId, adminUserId, {
+        status: action === 'approve' ? 'approved' : 'rejected',
+        adminComment: adminComment || null,
+      });
+
+      if (!updatedRequest) {
+        return { success: false, error: 'Failed to update approval request' };
+      }
+
+      // Update the linked calculation
+      const calculationUpdate: any = {
+        approvalStatus: action === 'approve' ? 'approved' : 'rejected',
+        updatedAt: new Date(),
+      };
+
+      // For approvals, store the approved input hash
+      if (action === 'approve') {
+        calculationUpdate.approvedInputHash = calculation.inputHash;
+      }
+
+      const updatedCalculation = await this.updatePricingCalculation(calculationId, calculationUpdate);
+
+      return { 
+        success: true, 
+        approvalRequest: updatedRequest,
+        calculation: updatedCalculation || calculation
+      };
+
+    } catch (error) {
+      console.error('Error making approval decision:', error);
+      return { success: false, error: 'Failed to process approval decision' };
+    }
+  }
+
   async getUserApprovalRequests(userId: number): Promise<ApprovalRequest[]> {
     return await db
       .select()
       .from(approvalRequests)
       .where(eq(approvalRequests.createdByUserId, userId))
       .orderBy(desc(approvalRequests.createdAt));
+  }
+
+  // Get all users with admin role for email notifications
+  async getAllAdminUsers(): Promise<User[]> {
+    return await db
+      .select()
+      .from(users)
+      .where(eq(users.role, 'admin'));
+  }
+
+  // Get user by ID for decision notifications
+  async getUserById(userId: number): Promise<User | undefined> {
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, userId));
+    
+    return user;
+  }
+
+  // Get approval request with hotel name for email notifications
+  async getApprovalRequestWithHotelName(id: number): Promise<(ApprovalRequest & { hotelName?: string; createdByUser: { email: string; firstName?: string; lastName?: string } }) | undefined> {
+    const [result] = await db
+      .select({
+        id: approvalRequests.id,
+        createdByUserId: approvalRequests.createdByUserId,
+        approvedByUserId: approvalRequests.approvedByUserId,
+        decisionByUserId: approvalRequests.decisionByUserId,
+        status: approvalRequests.status,
+        starCategory: approvalRequests.starCategory,
+        inputSnapshot: approvalRequests.inputSnapshot,
+        calculationSnapshot: approvalRequests.calculationSnapshot,
+        reasons: approvalRequests.reasons,
+        adminComment: approvalRequests.adminComment,
+        decisionAt: approvalRequests.decisionAt,
+        createdAt: approvalRequests.createdAt,
+        updatedAt: approvalRequests.updatedAt,
+        hotelName: pricingCalculations.hotelName,
+        createdByUser: {
+          email: users.email,
+          firstName: users.firstName,
+          lastName: users.lastName,
+        },
+      })
+      .from(approvalRequests)
+      .leftJoin(users, eq(approvalRequests.createdByUserId, users.id))
+      .leftJoin(pricingCalculations, sql`${approvalRequests.inputSnapshot}->>'calculationId' = ${pricingCalculations.id}::text`)
+      .where(eq(approvalRequests.id, id));
+
+    return result as (ApprovalRequest & { hotelName?: string; createdByUser: { email: string; firstName?: string; lastName?: string } }) | undefined;
   }
 }
 

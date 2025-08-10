@@ -44,17 +44,20 @@ export const approvalRequests = pgTable("approval_requests", {
   id: serial("id").primaryKey(),
   createdByUserId: integer("created_by_user_id").notNull().references(() => users.id),
   approvedByUserId: integer("approved_by_user_id").references(() => users.id),
+  decisionByUserId: integer("decision_by_user_id").references(() => users.id),
   status: varchar("status").default("pending").notNull(), // 'pending', 'approved', 'rejected'
   starCategory: integer("star_category").notNull(),
   inputSnapshot: jsonb("input_snapshot").notNull(), // All form inputs
   calculationSnapshot: jsonb("calculation_snapshot"), // Results if calculated
   reasons: text("reasons").array().notNull(), // Array of reason strings
   adminComment: text("admin_comment"),
+  decisionAt: timestamp("decision_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
   index("approval_requests_status_idx").on(table.status),
   index("approval_requests_created_by_idx").on(table.createdByUserId),
+  index("approval_requests_decision_by_idx").on(table.decisionByUserId),
   index("approval_requests_created_at_idx").on(table.createdAt),
 ]);
 
@@ -117,6 +120,7 @@ export const pricingCalculations = pgTable("pricing_calculations", {
   }).default("none_required"),
   lastApprovalRequestId: integer("last_approval_request_id").references(() => approvalRequests.id),
   inputHash: text("input_hash"), // SHA-256 hash of key input fields for change detection
+  approvedInputHash: text("approved_input_hash"), // Hash of inputs when approved to enforce snapshot identity
   
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

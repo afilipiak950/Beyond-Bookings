@@ -5733,6 +5733,24 @@ Focus on:
         });
       }
 
+      // Send email notifications to all admins (non-blocking)
+      try {
+        const { notifyAdminsPending } = await import('./emailNotifications');
+        const adminUsers = await storage.getAllAdminUsers();
+        const requesterUser = await storage.getUserById(req.user.id);
+
+        if (adminUsers.length > 0 && requesterUser) {
+          // Get approval request with hotel name for email
+          const approvalWithHotelName = await storage.getApprovalRequestWithHotelName(approvalRequest.id);
+          if (approvalWithHotelName) {
+            await notifyAdminsPending(approvalWithHotelName, adminUsers);
+          }
+        }
+      } catch (emailError) {
+        console.error('Admin notification email failed (non-blocking):', emailError);
+        // Continue with response even if email fails
+      }
+
       res.json({
         success: true,
         approvalRequest,
@@ -5810,36 +5828,84 @@ Focus on:
   });
 
   // Update approval request (admin only)
+  // PATCH /api/approvals/:id - Admin decision endpoint with email notifications
   app.patch('/api/approvals/:id', requireAdmin, async (req: any, res) => {
     try {
       const id = parseInt(req.params.id);
-      const { status, adminComment } = req.body;
+      const { action, adminComment } = req.body;
 
-      if (!['approved', 'rejected'].includes(status)) {
+      // Validate action
+      if (!['approve', 'reject'].includes(action)) {
         return res.status(400).json({ 
-          message: "Invalid status. Must be 'approved' or 'rejected'" 
+          message: "Invalid action. Must be 'approve' or 'reject'" 
         });
       }
 
-      const updatedRequest = await storage.updateApprovalRequest(id, req.user.id, {
-        status,
-        adminComment
-      });
+      // Make the approval decision
+      const result = await storage.makeApprovalDecision(id, req.user.id, action, adminComment);
 
-      if (!updatedRequest) {
-        return res.status(404).json({ message: "Approval request not found" });
+      if (!result.success) {
+        // Check for input hash mismatch (409 conflict)
+        if (result.error?.includes('Inputs changed since request')) {
+          return res.status(409).json({ 
+            success: false,
+            message: result.error,
+            calculation: result.calculation
+          });
+        }
+        
+        return res.status(400).json({ 
+          success: false, 
+          message: result.error 
+        });
+      }
+
+      // Check for idempotent response
+      if (result.error === 'Request already decided') {
+        return res.json({
+          success: true,
+          approvalRequest: result.approvalRequest,
+          message: 'Request was already decided',
+          idempotent: true
+        });
+      }
+
+      // Send email notifications (non-blocking)
+      try {
+        // Import email notification functions
+        const { notifyRequesterApproved, notifyRequesterRejected } = await import('./emailNotifications');
+        
+        // Get requester and admin details
+        const requesterUser = await storage.getUserById(result.approvalRequest!.createdByUserId);
+        const adminUser = await storage.getUserById(req.user.id);
+
+        if (requesterUser && adminUser) {
+          // Get hotel name for the approval request
+          const approvalWithHotelName = await storage.getApprovalRequestWithHotelName(id);
+          
+          if (action === 'approve') {
+            await notifyRequesterApproved(approvalWithHotelName!, adminUser, result.calculation!);
+          } else {
+            await notifyRequesterRejected(approvalWithHotelName!, adminUser, result.calculation!);
+          }
+        }
+      } catch (emailError) {
+        console.error('Email notification failed (non-blocking):', emailError);
+        // Continue with response even if email fails
       }
 
       res.json({
         success: true,
-        approvalRequest: updatedRequest,
-        message: `Approval request ${status} successfully`
+        approvalRequest: result.approvalRequest,
+        calculation: result.calculation,
+        message: `Approval request ${action === 'approve' ? 'approved' : 'rejected'} successfully`
       });
+
     } catch (error) {
-      console.error("Update approval request error:", error);
+      console.error("Approval decision error:", error);
       res.status(500).json({ 
-        message: "Failed to update approval request",
-        error: error.message 
+        message: "Failed to process approval decision",
+        error: error?.message || 'Unknown error'
       });
     }
   });

@@ -34,6 +34,9 @@ interface ApprovalRequest {
 export function Approvals() {
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [adminComment, setAdminComment] = useState("");
+  const [decisionAction, setDecisionAction] = useState<'approve' | 'reject' | null>(null);
+  const [decisionRequestId, setDecisionRequestId] = useState<number | null>(null);
+  const [showDecisionDialog, setShowDecisionDialog] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<ApprovalRequest | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -69,23 +72,52 @@ export function Approvals() {
   });
 
   const updateRequestMutation = useMutation({
-    mutationFn: ({ id, status, adminComment }: { id: number; status: string; adminComment?: string }) =>
-      apiRequest(`/api/approvals/${id}`, 'PATCH', { status, adminComment }),
+    mutationFn: ({ id, action, adminComment }: { id: number; action: 'approve' | 'reject'; adminComment?: string }) =>
+      apiRequest(`/api/approvals/${id}`, 'PATCH', { action, adminComment }),
     onSuccess: (data) => {
-      toast({
-        title: "Success",
-        description: data.message,
-      });
+      // Handle different response scenarios
+      if (data.idempotent) {
+        toast({
+          title: "Already Decided",
+          description: data.message,
+          variant: "default",
+        });
+      } else {
+        toast({
+          title: "Decision Processed",
+          description: data.message,
+        });
+      }
+      
+      // Refresh all queries
       queryClient.invalidateQueries({ queryKey: ['/api/approvals'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/approvals/stats'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/approvals/my-requests'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/calculations'] });
+      
+      // Reset state
       setSelectedRequest(null);
       setAdminComment("");
+      setDecisionAction(null);
+      setDecisionRequestId(null);
+      setShowDecisionDialog(false);
     },
     onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update approval request",
-        variant: "destructive",
-      });
+      // Handle special case for input hash mismatch
+      if (error.status === 409) {
+        toast({
+          title: "Inputs Changed",
+          description: error.message || "The calculation inputs have changed since the approval request was created. Please ask the user to resubmit.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: error.message || "Failed to process approval decision",
+          variant: "destructive",
+        });
+      }
+      setShowDecisionDialog(false);
     },
   });
 
@@ -145,12 +177,31 @@ export function Approvals() {
     }).format(amount);
   };
 
-  const handleApprovalAction = (id: number, status: 'approved' | 'rejected') => {
-    updateRequestMutation.mutate({
-      id,
-      status,
-      adminComment: adminComment || undefined
-    });
+  const handleApprovalAction = (id: number, action: 'approve' | 'reject') => {
+    setDecisionRequestId(id);
+    setDecisionAction(action);
+    setAdminComment("");
+    setShowDecisionDialog(true);
+  };
+
+  const confirmDecision = () => {
+    if (decisionRequestId && decisionAction) {
+      // Validate admin comment for rejections
+      if (decisionAction === 'reject' && !adminComment.trim()) {
+        toast({
+          title: "Comment Required",
+          description: "Please provide a comment when rejecting an approval request.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      updateRequestMutation.mutate({
+        id: decisionRequestId,
+        action: decisionAction,
+        adminComment: adminComment.trim() || undefined
+      });
+    }
   };
 
   const approvalRequestsData = approvalRequests?.approvalRequests || [];
@@ -375,7 +426,7 @@ export function Approvals() {
                             {request.status === 'pending' && (
                               <div className="flex gap-3 pt-4">
                                 <Button
-                                  onClick={() => handleApprovalAction(request.id, 'approved')}
+                                  onClick={() => handleApprovalAction(request.id, 'approve')}
                                   disabled={updateRequestMutation.isPending}
                                   className="bg-green-500 hover:bg-green-600 text-white"
                                 >
@@ -383,7 +434,7 @@ export function Approvals() {
                                   Approve
                                 </Button>
                                 <Button
-                                  onClick={() => handleApprovalAction(request.id, 'rejected')}
+                                  onClick={() => handleApprovalAction(request.id, 'reject')}
                                   disabled={updateRequestMutation.isPending}
                                   variant="destructive"
                                 >
@@ -481,6 +532,111 @@ export function Approvals() {
         </Tabs>
         </div>
       </div>
+
+      {/* Admin Decision Dialog */}
+      <Dialog open={showDecisionDialog} onOpenChange={setShowDecisionDialog}>
+        <DialogContent className="max-w-md bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-slate-950 dark:via-slate-900 dark:to-blue-950 border-0 shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3">
+              {decisionAction === 'approve' ? (
+                <div className="p-2 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500">
+                  <CheckCircle className="h-5 w-5 text-white" />
+                </div>
+              ) : (
+                <div className="p-2 rounded-lg bg-gradient-to-r from-red-500 to-pink-500">
+                  <XCircle className="h-5 w-5 text-white" />
+                </div>
+              )}
+              {decisionAction === 'approve' ? 'Approve Request' : 'Reject Request'}
+            </DialogTitle>
+            <DialogDescription>
+              {decisionAction === 'approve' 
+                ? 'You are approving this pricing calculation request.'
+                : 'You are rejecting this pricing calculation request. Please provide feedback.'
+              }
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            {/* Admin Comment */}
+            <div className="space-y-2">
+              <Label htmlFor="admin-comment">
+                {decisionAction === 'approve' ? 'Admin Comment (optional)' : 'Admin Feedback (required)'}
+              </Label>
+              <textarea
+                id="admin-comment"
+                value={adminComment}
+                onChange={(e) => setAdminComment(e.target.value)}
+                placeholder={
+                  decisionAction === 'approve' 
+                    ? 'Add optional comment about the approval...'
+                    : 'Please explain why this request is being rejected...'
+                }
+                className="w-full min-h-[100px] p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required={decisionAction === 'reject'}
+              />
+              {decisionAction === 'reject' && !adminComment.trim() && (
+                <p className="text-sm text-red-600 dark:text-red-400">
+                  Admin feedback is required when rejecting a request.
+                </p>
+              )}
+            </div>
+            
+            {/* Confirmation Message */}
+            <div className={`p-4 rounded-lg ${
+              decisionAction === 'approve' 
+                ? 'bg-green-50 border border-green-200 dark:bg-green-900/20 dark:border-green-700' 
+                : 'bg-red-50 border border-red-200 dark:bg-red-900/20 dark:border-red-700'
+            }`}>
+              <div className={`text-sm ${
+                decisionAction === 'approve' ? 'text-green-800 dark:text-green-200' : 'text-red-800 dark:text-red-200'
+              }`}>
+                {decisionAction === 'approve' 
+                  ? 'The requester will be notified via email that their calculation has been approved.'
+                  : 'The requester will be notified via email with your feedback and can resubmit if needed.'
+                }
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex justify-end gap-3 pt-4">
+            <Button
+              variant="outline"
+              onClick={() => setShowDecisionDialog(false)}
+              disabled={updateRequestMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={confirmDecision}
+              disabled={updateRequestMutation.isPending || (decisionAction === 'reject' && !adminComment.trim())}
+              className={
+                decisionAction === 'approve'
+                  ? 'bg-green-500 hover:bg-green-600 text-white'
+                  : 'bg-red-500 hover:bg-red-600 text-white'
+              }
+            >
+              {updateRequestMutation.isPending ? (
+                <>Loading...</>
+              ) : (
+                <>
+                  {decisionAction === 'approve' ? (
+                    <>
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      Confirm Approval
+                    </>
+                  ) : (
+                    <>
+                      <XCircle className="h-4 w-4 mr-2" />
+                      Confirm Rejection
+                    </>
+                  )}
+                </>
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }

@@ -1,0 +1,227 @@
+Goal
+Finish the approval workflow for “Pricing Agent – Beyond Bookings”:
+
+On the Approval Management page, an admin can Approve or Decline a request and leave an admin comment.
+
+When a user submits an approval, all admins get an email with details + deep link.
+
+When an admin approves/declines, the requester gets an email and sees the status + comment reflected on the Calculations page via badge + comment panel.
+
+Pre-flight
+
+Create branch feature/approvals-actions-and-emails.
+
+Detect stack (likely Next/React + Node/Express or similar) and keep conventions.
+
+1) Data model & API
+Schema (ensure / migrate if missing):
+
+approval_requests fields:
+
+status: pending | approved | rejected
+
+adminComment: string | null
+
+decisionByUserId: string | null
+
+decisionAt: datetime | null
+
+calculations fields:
+
+approvalStatus: none_required | required_not_sent | pending | approved | rejected
+
+lastApprovalRequestId: string | null
+
+approvedInputHash: string | null (set when approved to enforce snapshot identity)
+
+PATCH decision endpoint (admin only):
+
+PATCH /api/approvals/:id
+
+body: { action: 'approve' | 'reject', adminComment?: string }
+
+requirements:
+
+On approve: set status='approved', decisionByUserId=currentAdmin, decisionAt=now, store adminComment (optional).
+
+Update linked calculation: if inputHash equals the request snapshot hash → approvalStatus='approved', approvedInputHash=inputHash; else keep rejected and return 409 with hint.
+
+On reject: set status='rejected', decisionByUserId=currentAdmin, decisionAt=now, require adminComment.
+
+Update calculation approvalStatus='rejected'.
+
+Returns full request + updated calculation summary.
+
+Idempotency: if already decided, return 200 with existing state; don’t duplicate emails.
+
+Create request hook (user):
+
+In POST /api/approvals (already exists), after persisting, call notifier to email all admins.
+
+GET request details:
+
+Ensure GET /api/approvals/:id returns adminComment, decisionByUserId (with populated admin name/email), decisionAt.
+
+2) Email notifications
+Env (add if missing):
+
+EMAIL_NOTIFICATIONS_ENABLED=true
+
+SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM
+
+APP_URL (e.g. https://app.domain.tld) to build deep links
+
+Mailer service (Node: nodemailer | Python: smtplib)
+
+Implement sendEmail(to, subject, htmlText).
+
+If SMTP not configured, log to server and proceed (non-blocking).
+
+Templates
+
+To Admin(s) on new pending request (send to all users with role admin):
+
+Subject: [Beyond Bookings] Approval requested by ${requesterName}: ${calculationTitle}
+
+Body (HTML/text):
+
+bash
+Kopieren
+Bearbeiten
+${requesterName} requested approval for: ${calculationTitle}
+Hotel Category: ${stars}★
+Reasons: ${reasons.join(', ')}
+Financing: ${financingEuro}
+Open request: ${APP_URL}/admin/approvals/${requestId}
+To Requester on decision (approve):
+
+Subject: [Beyond Bookings] Your approval was approved
+
+Body:
+
+nginx
+Kopieren
+Bearbeiten
+Approved by ${adminName} on ${decisionAt}.
+Comment: ${adminComment || '—'}
+View: ${APP_URL}/calculations/${calculationId}
+To Requester on decision (reject):
+
+Subject: [Beyond Bookings] Your approval was declined
+
+Body:
+
+nginx
+Kopieren
+Bearbeiten
+Declined by ${adminName} on ${decisionAt}.
+Feedback: ${adminComment}
+View: ${APP_URL}/calculations/${calculationId}
+Who to notify
+
+New pending: all admins (config flag APPROVAL_NOTIFY_ALL_ADMINS=true default).
+
+Decision: only the requester (createdByUserId).
+
+3) Admin UI – actions on Approval page
+On /admin/approvals:
+
+In detail drawer/page, add:
+
+Textarea “Admin comment”.
+
+Buttons: Approve (comment optional), Decline (comment required).
+
+Confirm dialog before action (shows calculation title + requester).
+
+On success: toast + update list row (status pill) + decision info (who/when).
+
+Disable buttons while request is pending=false. Guard double-clicks.
+
+If decision happens elsewhere, show “already decided” toast on 200 idempotent response.
+
+4) Calculations page – badges & comment panel
+On the calculation detail (and list cards if present):
+
+Use calculation.approvalStatus to render a badge:
+
+none_required → “Kein Approval nötig”
+
+required_not_sent → “Approval erforderlich (noch nicht gesendet)” + Send for approval button
+
+pending → “Pending Approval”
+
+approved → “Approved” ✓
+
+rejected → “Declined” ✕
+
+When status is approved or rejected, render a compact Feedback panel:
+
+Admin: name + timestamp
+
+Comment: adminComment (markdown-safe)
+
+Refresh logic:
+
+After decision PATCH, refetch calculation.
+
+Add polling (10s) or WS/SSE if available to live-update from pending → final state.
+
+5) Server-side hooks
+After POST /api/approvals (new pending) → call notifyAdminsPending(request).
+
+After PATCH /api/approvals/:id:
+
+On approve → notifyRequesterApproved(request, calculation)
+
+On reject → notifyRequesterRejected(request, calculation)
+
+Wrap in try/catch; email failures should not rollback DB; log error + Sentry if configured.
+
+6) Validation & Guards
+Only admin may call decision endpoint.
+
+Decline requires non-empty adminComment (server-side enforced).
+
+Approval allowed only if current status is pending.
+
+Approval applies only if request.inputHash === calculation.inputHash; otherwise return 409 with message “Inputs changed since request; please resubmit” and set calculation to required_not_sent.
+
+7) Tests
+Unit
+
+Decision endpoint:
+
+approve sets fields + timestamps, optional comment, idempotent on re-calls.
+
+reject requires comment; sets fields; idempotent.
+
+hash mismatch → 409.
+
+Mailer invoked with correct recipients and subjects (mock mailer).
+
+API/E2E
+
+User submits → admins receive pending email (mock).
+
+Admin approves → requester receives approved email; calculation status becomes approved; feedback visible.
+
+Admin rejects → requester receives declined email; status rejected; comment shown.
+
+8) Docs & ENV
+Update README: new endpoints, env vars, decision flow, email behavior.
+
+Add screenshots for admin decision UI and calculation badge + feedback panel.
+
+Acceptance Criteria
+
+Admin can Approve/Decline with comment on /admin/approvals/:id.
+
+On new pending request, admins get an email with summary + deep link.
+
+On decision, requester gets an email; calculation page shows updated badge and admin comment.
+
+Input snapshot gating with inputHash works; approvals only valid for unchanged inputs.
+
+Tests pass; emails gracefully degrade if SMTP missing (logs instead).
+

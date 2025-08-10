@@ -1428,6 +1428,80 @@ export default function Calculations() {
                   </div>
                 </div>
 
+                {/* Admin Feedback Panel for approved/rejected calculations */}
+                {(selectedCalculation.approvalStatus === 'approved' || selectedCalculation.approvalStatus === 'rejected') && (
+                  <div className="rounded-2xl bg-gradient-to-r from-blue-50/80 via-indigo-50/80 to-purple-50/80 dark:from-blue-900/30 dark:via-indigo-900/30 dark:to-purple-900/30 p-5 shadow-lg border border-blue-200/50 dark:border-blue-700/50">
+                    <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                      <div className={`p-1.5 rounded-lg ${selectedCalculation.approvalStatus === 'approved' ? 'bg-gradient-to-r from-green-500 to-emerald-500' : 'bg-gradient-to-r from-red-500 to-pink-500'}`}>
+                        {selectedCalculation.approvalStatus === 'approved' ? (
+                          <CheckCircle className="h-4 w-4 text-white" />
+                        ) : (
+                          <XCircle className="h-4 w-4 text-white" />
+                        )}
+                      </div>
+                      {selectedCalculation.approvalStatus === 'approved' ? 'Approval Granted' : 'Approval Declined'}
+                    </h3>
+                    
+                    <div className="space-y-3">
+                      {/* Admin Decision Info */}
+                      <div className="p-3 rounded-xl bg-white/70 dark:bg-slate-800/70 border border-white/50">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div>
+                            <div className="font-medium text-sm text-gray-700 dark:text-gray-300">Decision By</div>
+                            <div className="text-base font-semibold text-gray-900 dark:text-gray-100">
+                              Admin User
+                            </div>
+                          </div>
+                          <div>
+                            <div className="font-medium text-sm text-gray-700 dark:text-gray-300">Decision Date</div>
+                            <div className="text-base font-semibold text-gray-900 dark:text-gray-100">
+                              {selectedCalculation.updatedAt ? new Date(selectedCalculation.updatedAt).toLocaleDateString('de-DE', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              }) : 'Not available'}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Admin Comment */}
+                      <div className="p-3 rounded-xl bg-white/70 dark:bg-slate-800/70 border border-white/50">
+                        <div className="font-medium text-sm text-gray-700 dark:text-gray-300 mb-2">
+                          {selectedCalculation.approvalStatus === 'approved' ? 'Admin Comment' : 'Feedback'}
+                        </div>
+                        <div className="text-sm text-gray-800 dark:text-gray-200 italic leading-relaxed">
+                          {/* Note: Admin comment would come from the linked approval request */}
+                          "Admin comment will be displayed here when available from the approval request."
+                        </div>
+                      </div>
+                      
+                      {/* Status Badge */}
+                      <div className="flex justify-center">
+                        <Badge className={`px-4 py-2 text-sm font-semibold ${
+                          selectedCalculation.approvalStatus === 'approved' 
+                            ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white' 
+                            : 'bg-gradient-to-r from-red-500 to-pink-500 text-white'
+                        }`}>
+                          {selectedCalculation.approvalStatus === 'approved' ? (
+                            <>
+                              <CheckCircle className="h-4 w-4 mr-2" />
+                              Calculation Approved
+                            </>
+                          ) : (
+                            <>
+                              <XCircle className="h-4 w-4 mr-2" />
+                              Calculation Declined
+                            </>
+                          )}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Timeline Footer */}
                 <div className="rounded-2xl bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-900 dark:to-slate-900 p-4 shadow-lg">
                   <div className="flex items-center justify-between">
