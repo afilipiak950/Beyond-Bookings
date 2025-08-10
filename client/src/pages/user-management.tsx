@@ -146,10 +146,9 @@ export default function UserManagement() {
     );
   }
 
-  const usersData = users?.users || [];
-  const adminCount = usersData.filter((user: User) => user.role === 'admin').length;
+  const adminCount = users.filter((user: User) => user.role === 'admin').length;
 
-  const filteredUsers = usersData.filter((user: User) => {
+  const filteredUsers = users.filter((user: User) => {
     const matchesSearch = 
       user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       `${user.firstName || ''} ${user.lastName || ''}`.toLowerCase().includes(searchTerm.toLowerCase());

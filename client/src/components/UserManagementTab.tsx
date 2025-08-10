@@ -86,17 +86,21 @@ export default function UserManagementTab() {
   const queryClient = useQueryClient();
 
   // Fetch all users
-  const { data: users = [], isLoading } = useQuery<User[]>({
+  const { data: usersResponse, isLoading } = useQuery({
     queryKey: ['/api/admin/users'],
     retry: false,
   });
+
+  const usersData = usersResponse as { success: boolean; users: User[]; count: number } | undefined;
+
+  const users = usersData?.users || [];
 
   // Create user mutation
   const createUserMutation = useMutation({
     mutationFn: async (userData: CreateUserForm) => {
       return await apiRequest('/api/admin/users', {
         method: 'POST',
-        body: JSON.stringify(userData),
+        body: userData,
       });
     },
     onSuccess: () => {
@@ -121,8 +125,8 @@ export default function UserManagementTab() {
   const updateUserMutation = useMutation({
     mutationFn: async ({ id, userData }: { id: number; userData: EditUserForm }) => {
       return await apiRequest(`/api/admin/users/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(userData),
+        method: 'PATCH',
+        body: userData,
       });
     },
     onSuccess: () => {
