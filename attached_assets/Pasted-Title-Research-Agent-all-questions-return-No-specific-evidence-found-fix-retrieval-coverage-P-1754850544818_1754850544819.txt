@@ -1,0 +1,67 @@
+Title: Research Agent: all questions return “No specific evidence found” — fix retrieval/coverage
+
+Prompt:
+After running the Research agent tab, all questions show “No specific evidence found.” This is wrong—there are plenty of assigned docs with OCR text. Find the exact root cause (file+line) and apply a minimal fix.
+
+Do:
+
+Repro & Coverage (Research only)
+
+Print assignedDocIds and questionIds for Research.
+
+Compute expected = assignedDocIds.length × questionIds.length.
+
+Log counts enqueued/started/finished/persisted and list missing (docId, questionId) pairs.
+
+Scheduler fan-out
+
+Ensure we enqueue one job per (agentId='research', docId, questionId) (no preview caps like .slice(0,3) / LIMIT 3).
+
+Job key: research:${docId}:${questionId}:${version}; worker concurrency>1.
+
+Jobs must wait for ingestion/embeddings (dependency).
+
+Ingestion / Embeddings sanity
+
+For 15 random assigned docs: log OCR chars, chunk count, embedding rows, dimension, namespace/tenant.
+
+If rows=0 or dimension mismatch → fix config & re-embed, block analysis until ready.
+
+Retrieval must use OCR
+
+For each job, query scoped to that docId with topK ≥ 8 and a reasonable threshold; log hit_count + sample {docId,page,snippet,score}.
+
+If hit_count=0 or error → retry(3, backoff) and broaden query to other assigned docs before returning.
+
+Kill generic fallback
+
+Locate code emitting "No specific evidence found"; replace with structured {answer:null, reason:'no_hits', sources:[], quotes:[]}.
+
+Do not short-circuit generation on empty hits without retries; log WARN.
+
+Prompt/Generation & Schema
+
+Ensure prompt builder includes the actual question + retrieved snippets.
+
+Validate output to schema:
+{ answer, confidence, sources:[{docId,page,url,snippet}], quotes:[{text,docId,page}] }.
+
+Don’t drop answers when sources.length===0; render with notice.
+
+Persistence & UI binding
+
+Persist by (agentId='research', docId, questionId) and expose in API; renderer must read answers.research[questionId] (or combined) and not hide when confidence=0.
+
+Verification (blocker)
+
+Run Research on 20 assigned docs. Targets:
+
+processed === expected,
+
+≥80% questions have hit_count ≥ 5,
+
+realistic runtimes (no mass sub-second jobs).
+
+Provide file+line root cause, minimal patch/diff, logs (coverage & hit distribution), and a screenshot with Research answers + sources visible.
+
+Deployment URL: <DEPLOY_URL>.
