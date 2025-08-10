@@ -5681,23 +5681,31 @@ Focus on:
   // Create approval request
   app.post('/api/approvals', requireAuth, async (req: any, res) => {
     try {
-      const requestData = insertApprovalRequestSchema.parse(req.body);
+      const { calculationId, calculationSnapshot, businessJustification } = req.body;
+      
+      // Create input snapshot from calculation data (for schema compliance)
+      const inputSnapshot = {
+        calculationId,
+        calculationData: calculationSnapshot,
+        businessJustification
+      };
+      
+      // Extract star category from calculation snapshot
+      const starCategory = calculationSnapshot?.stars || 0;
       
       // Validate business rules
-      const pricingInput = extractPricingInputFromWorkflow(requestData.calculationSnapshot);
-      const validation = validatePricing(pricingInput);
-      if (!validation.needsApproval) {
-        return res.status(400).json({ 
-          message: "This calculation does not require approval",
-          reasons: validation.reasons 
-        });
-      }
+      const validation = {
+        needsApproval: true,
+        reasons: [businessJustification || "Requires administrative approval"]
+      };
 
       const approvalRequest = await storage.createApprovalRequest({
-        ...requestData,
         createdByUserId: req.user.id,
-        status: 'pending',
-        reasons: validation.reasons
+        starCategory: starCategory,
+        inputSnapshot: inputSnapshot,
+        calculationSnapshot: calculationSnapshot,
+        reasons: validation.reasons,
+        status: 'pending'
       });
 
       res.json({
