@@ -714,6 +714,14 @@ export default function Workflow() {
   const [manualEditOpen, setManualEditOpen] = useState(false);
   const [editFeedback, setEditFeedback] = useState("");
   const [tempPrice, setTempPrice] = useState("");
+
+  // Review Input Fields State
+  const [reviewData, setReviewData] = useState({
+    bookingReviews: '',
+    googleReviews: '',
+    holidayCheckReviews: '',
+    tripAdvisorReviews: ''
+  });
   
   // AI Learning state
   const [aiConfidence, setAiConfidence] = useState(56);
@@ -3001,8 +3009,209 @@ export default function Workflow() {
               </div>
             </div>
 
+            {/* Hotel Review Input Section */}
+            <Card className="relative overflow-hidden bg-gradient-to-br from-slate-50/80 to-blue-50/60 backdrop-blur-2xl border border-slate-300/50 shadow-2xl mt-8">
+              {/* Floating Background Elements */}
+              <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-6 left-6 w-20 h-20 bg-blue-500/10 rounded-full blur-xl animate-float"></div>
+                <div className="absolute bottom-8 right-8 w-16 h-16 bg-slate-500/10 rounded-full blur-lg animate-float-delayed"></div>
+                <div className="absolute top-1/3 right-1/4 w-12 h-12 bg-purple-500/10 rounded-full blur-md animate-pulse"></div>
+              </div>
+
+              <CardHeader className="relative">
+                <CardTitle className="flex items-center gap-3">
+                  <div className="relative">
+                    <div className="w-2 h-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 shadow-lg shadow-blue-500/40 animate-pulse"></div>
+                    <div className="absolute inset-0 w-2 h-2 rounded-full bg-blue-400 animate-ping opacity-25"></div>
+                  </div>
+                  <span className="bg-gradient-to-r from-slate-800 via-blue-700 to-purple-800 bg-clip-text text-transparent font-black text-xl">
+                    Hotel-Bewertungen erfassen
+                  </span>
+                </CardTitle>
+                <CardDescription className="text-gray-600 font-medium">
+                  Erfassen Sie Bewertungen von verschiedenen Plattformen für die Analyse
+                </CardDescription>
+              </CardHeader>
+
+              <CardContent className="relative space-y-6 p-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  
+                  {/* Booking.com Reviews */}
+                  <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-50/60 to-indigo-50/40 backdrop-blur-xl border border-blue-200/50 p-5 shadow-lg transition-all duration-300 hover:shadow-xl">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-indigo-500"></div>
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
+                        <span className="text-white font-bold text-sm">B</span>
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-blue-800 text-lg">Booking.com</h3>
+                        <p className="text-blue-600 text-sm">Bewertungen und Kommentare</p>
+                      </div>
+                    </div>
+                    <Textarea
+                      placeholder="Fügen Sie Booking.com Bewertungen ein... 
+Beispiel: 
+• 8.5/10 - 'Excellent location and friendly staff'
+• 9.2/10 - 'Great breakfast and clean rooms'
+• 7.8/10 - 'Good value for money'"
+                      value={reviewData.bookingReviews}
+                      onChange={(e) => setReviewData(prev => ({...prev, bookingReviews: e.target.value}))}
+                      className="min-h-[120px] bg-white/70 backdrop-blur-sm border-blue-300/50 focus:border-blue-500 focus:ring-blue-500/20 resize-none"
+                      rows={6}
+                    />
+                    <div className="flex items-center justify-between mt-3 text-xs text-blue-600">
+                      <span>📊 Bewertungen: {reviewData.bookingReviews.split('\n').filter(line => line.trim()).length}</span>
+                      <span className="font-medium">Booking.com Platform</span>
+                    </div>
+                  </div>
+
+                  {/* Google Reviews */}
+                  <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-green-50/60 to-emerald-50/40 backdrop-blur-xl border border-green-200/50 p-5 shadow-lg transition-all duration-300 hover:shadow-xl">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-500 to-emerald-500"></div>
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-10 h-10 bg-gradient-to-br from-green-600 to-emerald-600 rounded-lg flex items-center justify-center shadow-md">
+                        <span className="text-white font-bold text-sm">G</span>
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-green-800 text-lg">Google Reviews</h3>
+                        <p className="text-green-600 text-sm">Gästebewertungen und Feedback</p>
+                      </div>
+                    </div>
+                    <Textarea
+                      placeholder="Fügen Sie Google Bewertungen ein...
+Beispiel:
+• 4.2/5 ⭐ - 'Beautiful hotel with great service'
+• 4.5/5 ⭐ - 'Perfect location near city center'
+• 3.8/5 ⭐ - 'Nice rooms but expensive parking'"
+                      value={reviewData.googleReviews}
+                      onChange={(e) => setReviewData(prev => ({...prev, googleReviews: e.target.value}))}
+                      className="min-h-[120px] bg-white/70 backdrop-blur-sm border-green-300/50 focus:border-green-500 focus:ring-green-500/20 resize-none"
+                      rows={6}
+                    />
+                    <div className="flex items-center justify-between mt-3 text-xs text-green-600">
+                      <span>⭐ Bewertungen: {reviewData.googleReviews.split('\n').filter(line => line.trim()).length}</span>
+                      <span className="font-medium">Google Platform</span>
+                    </div>
+                  </div>
+
+                  {/* HolidayCheck Reviews */}
+                  <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-orange-50/60 to-amber-50/40 backdrop-blur-xl border border-orange-200/50 p-5 shadow-lg transition-all duration-300 hover:shadow-xl">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-500 to-amber-500"></div>
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-10 h-10 bg-gradient-to-br from-orange-600 to-amber-600 rounded-lg flex items-center justify-center shadow-md">
+                        <span className="text-white font-bold text-sm">H</span>
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-orange-800 text-lg">HolidayCheck</h3>
+                        <p className="text-orange-600 text-sm">Reisebewertungen und Erfahrungen</p>
+                      </div>
+                    </div>
+                    <Textarea
+                      placeholder="Fügen Sie HolidayCheck Bewertungen ein...
+Beispiel:
+• 5.2/6 - 'Tolles Hotel für Familienurlaub'
+• 4.8/6 - 'Sehr freundliches Personal'
+• 5.0/6 - 'Ausgezeichnetes Frühstück'"
+                      value={reviewData.holidayCheckReviews}
+                      onChange={(e) => setReviewData(prev => ({...prev, holidayCheckReviews: e.target.value}))}
+                      className="min-h-[120px] bg-white/70 backdrop-blur-sm border-orange-300/50 focus:border-orange-500 focus:ring-orange-500/20 resize-none"
+                      rows={6}
+                    />
+                    <div className="flex items-center justify-between mt-3 text-xs text-orange-600">
+                      <span>🏖️ Bewertungen: {reviewData.holidayCheckReviews.split('\n').filter(line => line.trim()).length}</span>
+                      <span className="font-medium">HolidayCheck Platform</span>
+                    </div>
+                  </div>
+
+                  {/* TripAdvisor Reviews */}
+                  <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-red-50/60 to-rose-50/40 backdrop-blur-xl border border-red-200/50 p-5 shadow-lg transition-all duration-300 hover:shadow-xl">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 to-rose-500"></div>
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-10 h-10 bg-gradient-to-br from-red-600 to-rose-600 rounded-lg flex items-center justify-center shadow-md">
+                        <span className="text-white font-bold text-sm">T</span>
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-red-800 text-lg">TripAdvisor</h3>
+                        <p className="text-red-600 text-sm">Reise- und Hotelbewertungen</p>
+                      </div>
+                    </div>
+                    <Textarea
+                      placeholder="Fügen Sie TripAdvisor Bewertungen ein...
+Beispiel:
+• 4/5 🔴🔴🔴🔴⚪ - 'Excellent service and location'
+• 5/5 🔴🔴🔴🔴🔴 - 'Perfect weekend getaway'
+• 3/5 🔴🔴🔴⚪⚪ - 'Good hotel but overpriced'"
+                      value={reviewData.tripAdvisorReviews}
+                      onChange={(e) => setReviewData(prev => ({...prev, tripAdvisorReviews: e.target.value}))}
+                      className="min-h-[120px] bg-white/70 backdrop-blur-sm border-red-300/50 focus:border-red-500 focus:ring-red-500/20 resize-none"
+                      rows={6}
+                    />
+                    <div className="flex items-center justify-between mt-3 text-xs text-red-600">
+                      <span>✈️ Bewertungen: {reviewData.tripAdvisorReviews.split('\n').filter(line => line.trim()).length}</span>
+                      <span className="font-medium">TripAdvisor Platform</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Review Summary */}
+                <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-50/80 to-gray-50/60 backdrop-blur-xl border border-slate-300/50 p-6 shadow-lg mt-6">
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-slate-500 via-blue-500 to-purple-500"></div>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 bg-gradient-to-br from-slate-600 to-gray-700 rounded-lg flex items-center justify-center shadow-md">
+                      <BarChart3 className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-slate-800 text-lg">Bewertungs-Zusammenfassung</h3>
+                      <p className="text-slate-600 text-sm">Überblick über alle erfassten Bewertungen</p>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="bg-blue-50/70 rounded-lg p-3 text-center">
+                      <div className="text-2xl font-bold text-blue-700">
+                        {reviewData.bookingReviews.split('\n').filter(line => line.trim()).length}
+                      </div>
+                      <div className="text-xs text-blue-600 font-medium">Booking.com</div>
+                    </div>
+                    <div className="bg-green-50/70 rounded-lg p-3 text-center">
+                      <div className="text-2xl font-bold text-green-700">
+                        {reviewData.googleReviews.split('\n').filter(line => line.trim()).length}
+                      </div>
+                      <div className="text-xs text-green-600 font-medium">Google</div>
+                    </div>
+                    <div className="bg-orange-50/70 rounded-lg p-3 text-center">
+                      <div className="text-2xl font-bold text-orange-700">
+                        {reviewData.holidayCheckReviews.split('\n').filter(line => line.trim()).length}
+                      </div>
+                      <div className="text-xs text-orange-600 font-medium">HolidayCheck</div>
+                    </div>
+                    <div className="bg-red-50/70 rounded-lg p-3 text-center">
+                      <div className="text-2xl font-bold text-red-700">
+                        {reviewData.tripAdvisorReviews.split('\n').filter(line => line.trim()).length}
+                      </div>
+                      <div className="text-xs text-red-600 font-medium">TripAdvisor</div>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200/30">
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-slate-700">Gesamt erfasste Bewertungen:</span>
+                      <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                        {Object.values(reviewData).reduce((total, reviews) => 
+                          total + reviews.split('\n').filter(line => line.trim()).length, 0
+                        )}
+                      </span>
+                    </div>
+                    <div className="text-xs text-slate-600 mt-2">
+                      Diese Bewertungen werden in die Analyse und Berichtserstellung einbezogen
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Navigation Buttons */}
-            <div className="flex justify-center">
+            <div className="flex justify-center mt-8">
               <div className="flex space-x-6">
                 <Button 
                   variant="outline" 
