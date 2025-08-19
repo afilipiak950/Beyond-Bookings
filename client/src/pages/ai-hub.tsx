@@ -337,6 +337,31 @@ export default function AIHub() {
     });
   };
 
+  // Clear all chats
+  const clearAllChats = useMutation({
+    mutationFn: () => apiRequest('/api/ai/threads', {
+      method: 'DELETE'
+    }),
+    onSuccess: (result: any) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/ai/threads'] });
+      setActiveThreadId(null);
+      setMessages([]);
+      messagesRef.current = [];
+      
+      toast({
+        title: "Success",
+        description: result.message || "All chats cleared successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error", 
+        description: error.message || "Failed to clear chats",
+        variant: "destructive"
+      });
+    }
+  });
+
   // Rename thread
   const handleRenameThread = async (threadId: number) => {
     const thread = threads.find(t => t.id === threadId);
@@ -580,9 +605,42 @@ export default function AIHub() {
               <Sparkles className="h-3.5 w-3.5 text-blue-500" />
               <h1 className="font-medium text-sm">AI Hub</h1>
             </div>
-            <Button onClick={createThread} size="sm" variant="ghost" className="h-6 w-6 p-0 shrink-0">
-              <Plus className="h-3 w-3" />
-            </Button>
+            <div className="flex items-center gap-1">
+              <Button onClick={createThread} size="sm" variant="ghost" className="h-6 w-6 p-0 shrink-0">
+                <Plus className="h-3 w-3" />
+              </Button>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button size="sm" variant="ghost" className="h-6 w-6 p-0 shrink-0 text-destructive hover:text-destructive">
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Clear All Chats</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <p className="text-sm text-muted-foreground">
+                      Are you sure you want to clear all chat threads? This action cannot be undone.
+                    </p>
+                    <div className="flex justify-end gap-2">
+                      <DialogTrigger asChild>
+                        <Button variant="outline">Cancel</Button>
+                      </DialogTrigger>
+                      <DialogTrigger asChild>
+                        <Button 
+                          variant="destructive" 
+                          onClick={() => clearAllChats.mutate()}
+                          disabled={clearAllChats.isPending}
+                        >
+                          {clearAllChats.isPending ? 'Clearing...' : 'Clear All'}
+                        </Button>
+                      </DialogTrigger>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
           </div>
           
           {/* Search */}

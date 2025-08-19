@@ -3,7 +3,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs/promises';
 import { db } from '../db';
-import { aiDocs, aiThreads, aiLogs } from '../../shared/schema';
+import { aiDocs, aiThreads, aiMessages, aiLogs } from '../../shared/schema';
 import { eq, desc, sum, count, and, gte } from 'drizzle-orm';
 import { AIService } from './aiService';
 import { RAGProcessor } from './ragProcessor';
@@ -203,6 +203,26 @@ router.delete('/threads/:id', async (req: AuthenticatedRequest, res: Response) =
   } catch (error: any) {
     console.error('Delete thread error:', error);
     res.status(500).json({ error: error.message || 'Failed to delete thread' });
+  }
+});
+
+// DELETE /api/ai/threads - Clear all threads for current user
+router.delete('/threads', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    if (!req.user?.id) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const deletedThreads = await aiService.clearAllThreads(req.user.id);
+    res.json({ 
+      success: true, 
+      deletedCount: deletedThreads,
+      message: `Cleared ${deletedThreads} chat threads` 
+    });
+
+  } catch (error: any) {
+    console.error('Clear all threads error:', error);
+    res.status(500).json({ error: error.message || 'Failed to clear all threads' });
   }
 });
 

@@ -579,4 +579,20 @@ HAUPT-BUSINESS-TABELLEN:
       .delete(aiThreads)
       .where(eq(aiThreads.id, threadId));
   }
+
+  // Clear all threads for a user
+  async clearAllThreads(userId: number): Promise<number> {
+    // First delete all messages (foreign key constraint)
+    await db
+      .delete(aiMessages)
+      .where(eq(aiMessages.userId, userId));
+
+    // Then delete all threads and return count
+    const result = await db
+      .delete(aiThreads)
+      .where(eq(aiThreads.userId, userId))
+      .returning();
+
+    return result.length;
+  }
 }
