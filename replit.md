@@ -5,6 +5,8 @@ KI Pricing Agent, rebranded as "bebo convert", is a production-ready SaaS web ap
 
 **Recent Major Enhancement (August 2025)**: Comprehensive approval workflow system with role-based access control, user management interface, and input hash validation for maintaining approval integrity. The business vision is to provide hotels with an exclusive currency for managing and optimizing their pricing and financial data.
 
+**Latest Update (August 19, 2025)**: Disabled all fade-in and slide-in animations platform-wide for instant page transitions, providing immediate content display across all pages and components.
+
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 

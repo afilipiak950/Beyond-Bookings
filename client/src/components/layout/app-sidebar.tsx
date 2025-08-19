@@ -141,10 +141,10 @@ export default function AppSidebar({ className }: SidebarProps) {
       <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-green-500/5 pointer-events-none" />
       
       {/* Ultra-Modern Header - Enlarged for Logo */}
-      <div className="flex items-center justify-between h-20 px-4 glass-nav animate-slideInUp relative z-10">
+      <div className="flex items-center justify-between h-20 px-4 glass-nav relative z-10">
         {!isCollapsed && (
-          <div className="flex items-center justify-center w-full animate-scaleIn">
-            <div className="flex items-center justify-center animate-breathe">
+          <div className="flex items-center justify-center w-full">
+            <div className="flex items-center justify-center">
               <img 
                 src="/bebo-convert-logo.png" 
                 alt="bebo convert" 
@@ -175,13 +175,7 @@ export default function AppSidebar({ className }: SidebarProps) {
           return (
             <div
               key={item.name}
-              className={cn(
-                "group relative animate-slideInRight",
-                `animation-delay-${(index + 1) * 100}`
-              )}
-              style={{
-                animationDelay: `${index * 0.1}s`
-              }}
+              className="group relative"
             >
               <Button
                 variant="ghost"
@@ -253,10 +247,10 @@ export default function AppSidebar({ className }: SidebarProps) {
       </nav>
 
       {/* Ultra-Modern User Section */}
-      <div className="p-4 glass-nav relative z-10 animate-slideInUp">
+      <div className="p-4 glass-nav relative z-10">
         {!isCollapsed && (
           <>
-            <div className="flex items-center space-x-3 p-3 mb-3 glass-card rounded-xl animate-scaleIn">
+            <div className="flex items-center space-x-3 p-3 mb-3 glass-card rounded-xl">
               <Avatar className="w-10 h-10 ring-2 ring-blue-500/30 animate-breathe">
                 <AvatarImage src="" alt="User" />
                 <AvatarFallback className="text-sm bg-gradient-to-br from-blue-500 to-green-500 text-white font-semibold">

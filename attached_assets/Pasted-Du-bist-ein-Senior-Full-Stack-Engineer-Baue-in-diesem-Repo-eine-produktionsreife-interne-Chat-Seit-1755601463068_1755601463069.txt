@@ -1,0 +1,154 @@
+Du bist ein Senior Full-Stack Engineer. Baue in diesem Repo eine produktionsreife, interne Chat-Seite /ai („AI Hub“) – eine ChatGPT-ähnliche Oberfläche, die Fragen zu unseren Kalkulationen, Datenbanken, Google-Sheets, Dokumenten/PDFs und internen APIs beantworten kann. Antworte mit funktionierendem Code, Migrationen, Tests und einem kurzen README.
+
+Stack-Präferenz (erkenne automatisch und passe an, sonst Standard unten):
+
+Falls Next.js (App Router) vorhanden → nutze Next.js 14 + TypeScript + React Server Actions + Route Handler, Tailwind, shadcn/ui.
+
+Wenn kein Frontend-Stack erkennbar → initialisiere minimal Next.js 14 + TS + Tailwind.
+
+Server: Node 18+; Streaming via Server-Sent Events.
+
+Model/LLM & Libraries
+
+Verwende OpenAI API (konfigurierbar): OPENAI_API_KEY, Standardmodell gpt-4o-mini (konfigurierbar UI-seitig).
+
+Embeddings: text-embedding-3-large (oder Repo-kompatibel).
+
+Vektorstore: Supabase + pgvector (Fallback: lokal @zilliz/milvus-lite oder Dateispeicher). ENV: SUPABASE_URL, SUPABASE_ANON_KEY (oder DATABASE_URL + PGVECTOR).
+
+Funktionen/Tools (über JSON-Function-Calling)
+Implementiere serverseitige Tools, alle parametrisiert und whitelisted. Gib im Chat Citations/Quellen zurück, wenn benutzt.
+
+calc_eval(expression: string, variables?: Record<string, number|string>) -> { result: number|string, steps?: string[] }
+
+Sichere Evaluation mit mathjs; kein eval. Unterstütze Einheiten/Prozent.
+
+sql_query(name: "readonly", sql: string, params?: any[]) -> { rows: any[] }
+
+Nur SELECT erlauben; blocke DDL/DML. Connection via DATABASE_URL.
+
+sheets_read(spreadsheetId: string, range: string) -> { values: string[][] }
+
+Google Service Account; ENV: GOOGLE_PROJECT_ID, GOOGLE_CLIENT_EMAIL, GOOGLE_PRIVATE_KEY.
+
+docs_search(query: string, topK?: number) -> { hits: Array<{docId:string, chunkId:string, score:number, preview:string}> }
+
+docs_get(docId: string, chunkId?: string) -> { content: string, sourceUrl?: string }
+
+RAG-Pipeline: Chunking (Markdown/PDF/CSV/XLSX), Embedding, Speicherung im Vektorstore.
+
+http_call(endpoint: string, method: "GET"|"POST", payload?: any) -> any
+
+Nur whitelist: /api/calc, /api/reports, weitere aus .env AIHUB_HTTP_WHITELIST.
+
+Datei-/Daten-Ingestion
+
+Auf /ai: Upload (PDF, MD, DOCX, CSV, XLSX).
+
+Serverseitig: extrahiere Text (z. B. pdf-parse, mammoth, csv-parse, xlsx), chunking (ca. 800–1200 Token, Overlap 150), Embeddings in Vektorstore, speichere Metadaten (Dateiname, Upload-User, Timestamp).
+
+Biete eine kleine Admin-Ansicht in /ai/admin (RBAC-geschützt) zum Re-Index, Re-Chunk, Löschen.
+
+UI/UX
+
+Seite /ai:
+
+Chat-Layout (links: Thread-Liste mit Suchfeld; rechts: Chat).
+
+Streaming der Token. Codeblocks, Markdown, Tabellen.
+
+Quellen-Badges unter Antworten (z. B. „Quelle: kalkulationen.xlsx, Zelle B14“ / „SQL: table xyz“ / „PDF: Seite 3“).
+
+Attachments Button (Dateien werden ingestiert & in Konversation referenziert).
+
+Modus-Switcher (General, Kalkulation, Docs/RAG, SQL, Sheets, API). Modus beeinflusst Tool-Priorität.
+
+Model-Selector (Fast/Smart) + Token-/Kostenanzeige.
+
+Thread-Funktionen: umbenennen, pinnen, löschen, export (JSON/Markdown).
+
+Komponenten mit shadcn/ui (Card, Input, Button, Badge, Tooltip, Dialog, Dropdown, Tabs).
+
+Security & Compliance
+
+Auth: nutze vorhandene Auth (z. B. NextAuth/JWT). Falls nichts vorhanden: minimale JWT-Middleware.
+
+RBAC: Rollen admin | manager | agent. Nur admin sieht /ai/admin und Tool-Whitelist.
+
+Rate-Limiting per IP/User.
+
+Secrets nur aus ENV.
+
+PII-Redaction Option: Regex-Filter vor Log-Persistierung (E-Mails, IBAN, Tel.).
+
+SQL-Safeguards: Parse/deny non-SELECT; Parametrisierung erzwingen; Timeout.
+
+Observability & Storage
+
+Logge in ai_logs (DB): userId, threadId, role, prompt, toolCalls, tokenUsage, cost, latency, citations, timestamp.
+
+Metriken-Endpoint /api/ai/metrics (nur Admin): letzte 30 Tage, #chats, Ø Latenz, Top-Tools, Kosten.
+
+ENV-Variablen
+
+OPENAI_API_KEY=
+DATABASE_URL=                      # Postgres mit pgvector oder Supabase
+SUPABASE_URL=                      # falls Supabase genutzt
+SUPABASE_ANON_KEY=
+GOOGLE_PROJECT_ID=
+GOOGLE_CLIENT_EMAIL=
+GOOGLE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+AIHUB_HTTP_WHITELIST=/api/calc,/api/reports
+
+
+Implementierungsschritte
+
+Stack erkennen; falls nötig Next.js + Tailwind initialisieren.
+
+UI /ai & /ai/admin erstellen; shadcn installieren & baseline theme.
+
+Server-Routes:
+
+POST /api/ai/chat (SSE-Streaming, Tool-Routing, citations).
+
+POST /api/ai/ingest (Upload & RAG-Index).
+
+GET /api/ai/metrics (RBAC admin).
+
+Tools implementieren (calc/sql/sheets/docs/http) mit strikter Whitelist/Guards.
+
+Vektorstore/Migrationen: Tabellen ai_docs, ai_chunks, ai_embeddings, ai_logs, ai_threads, ai_messages.
+
+Tests (Unit für Tools; E2E für /api/ai/chat mit Mock-LLM).
+
+Kurzes README: Setup, ENV, Start, RBAC, Kostenkontrolle.
+
+Akzeptanzkriterien
+
+Chat streamt stabil; Modus-Switcher beeinflusst Tool-Auswahl.
+
+Upload einer Beispiel-Kalkulation (CSV/XLSX) → Frage: „Was ist die Marge in Q3 vs Q2?“ Antwort mit Zell-/Datei-Citation.
+
+SQL-Tool blockt UPDATE/DELETE; SELECT mit Parametern funktioniert.
+
+Sheets-Tool liest einen Range und zitiert Sheet/Range.
+
+Admin: Re-Index, Löschen, Metriken (Top Tools, Kosten, Token).
+
+Logs enthalten tokenUsage & Quellen.
+
+Qualität & DX
+
+Saubere Ordnerstruktur: app/ai, app/api/ai/*, lib/ai/tools/*, lib/ai/rag/*.
+
+Typisierung (TypeScript), Zod-Schemas für Tool-Parameter.
+
+Kein any, keine toten Imports, Lint/Prettier ok.
+
+Wenn Information fehlt
+
+Triff sinnvolle Defaults (siehe oben) und dokumentiere sie im README.
+
+Nutze Dummy-Daten/Seeds, wenn reale Quellen nicht vorhanden.
+
+Liefere jetzt den gesamten Code, Migrationsskripte, Abhängigkeiten und README-Ergänzungen.

@@ -122,7 +122,7 @@ export default function Login() {
           </div>
 
           {/* Login card with glassmorphism effect */}
-          <Card className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-0 shadow-2xl transform hover:scale-[1.02] transition-all duration-300 animate-slideInUp">
+          <Card className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-0 shadow-2xl transform hover:scale-[1.02] transition-all duration-300">
             <CardHeader className="text-center pb-6">
               <CardTitle className="text-2xl font-bold text-gray-800 dark:text-white flex items-center justify-center gap-2">
                 <Key className="h-6 w-6 text-primary animate-bounce" />

@@ -161,7 +161,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
       </div>
 
       {/* Desktop Sidebar */}
-      <div className="hidden lg:flex lg:flex-shrink-0 relative z-10 animate-slideInLeft">
+      <div className="hidden lg:flex lg:flex-shrink-0 relative z-10">
         <AppSidebar />
       </div>
 
@@ -175,7 +175,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0 relative z-10">
         {/* Ultra-Modern Header */}
-        <header className="glass-nav h-16 flex items-center justify-between px-6 animate-slideInUp backdrop-blur-lg border-0 shadow-lg">
+        <header className="glass-nav h-16 flex items-center justify-between px-6 backdrop-blur-lg border-0 shadow-lg">
           <div className="flex items-center space-x-4">
             <Sheet>
               <SheetTrigger asChild>
@@ -196,7 +196,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
           
           <div className="flex items-center space-x-3">
             {/* AI Status Indicator */}
-            <div className="hidden md:flex items-center space-x-2 px-3 py-1.5 rounded-full glass-card animate-slideInRight">
+            <div className="hidden md:flex items-center space-x-2 px-3 py-1.5 rounded-full glass-card">
               <Activity className="h-4 w-4 text-green-500 animate-pulse" />
               <span className="text-sm font-medium text-foreground">Live AI</span>
             </div>

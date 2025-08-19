@@ -146,25 +146,22 @@
 }
 
 .animate-fadeInUp {
-  /* Disabled for instant page transitions */
   animation: none;
 }
 
 .animate-slideInUp {
-  animation: slideInUp 0.6s var(--elastic);
+  animation: none;
 }
 
 .animate-slideInRight {
-  /* Disabled for instant page transitions */
   animation: none;
 }
 
 .animate-slideInLeft {
-  animation: slideInLeft 0.6s var(--smooth-out);
+  animation: none;
 }
 
 .animate-scaleIn {
-  /* Disabled for instant page transitions */
   animation: none;
 }
 
@@ -574,19 +571,19 @@ button[data-variant="ghost"]:hover {
 }
 
 .animate-slideInFromLeft {
-  animation: slideInFromLeft 0.6s ease-out;
+  animation: none;
 }
 
 .animate-slideInFromRight {
-  animation: slideInFromRight 0.6s ease-out;
+  animation: none;
 }
 
 .animate-slideInFromTop {
-  animation: slideInFromTop 0.5s ease-out;
+  animation: none;
 }
 
 .animate-slideInFromBottom {
-  animation: slideInFromBottom 0.5s ease-out;
+  animation: none;
 }
 
 .animate-morphGradient {
@@ -595,9 +592,9 @@ button[data-variant="ghost"]:hover {
 }
 
 .animate-slideReveal {
-  animation: slideReveal 0.8s ease-out;
+  animation: none;
 }
 
 .animate-slideTrail {
-  animation: slideTrail 0.4s ease-out;
+  animation: none;
 }
