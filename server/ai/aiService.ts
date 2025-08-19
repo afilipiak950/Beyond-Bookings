@@ -131,11 +131,15 @@ export class AIService {
           // Use new comprehensive SQL tool - ULTRA DEBUG
           console.log('🔥🔥🔥 AI SERVICE SQL TOOL CALLED - Input parameters:', JSON.stringify(parameters));
           console.log('🔥🔥🔥 AI SERVICE SQL TOOL - User ID:', userId);
+          console.log('🔥🔥🔥 AI SERVICE SQL TOOL - Context:', parameters.context);
           
+          // CRITICAL: Preserve context from enhanced parameters
           const fixedParams = {
             ...parameters,
             query: parameters.sql || parameters.query,
-            sql: parameters.sql || parameters.query
+            sql: parameters.sql || parameters.query,
+            context: parameters.context, // PRESERVE THE CONTEXT!
+            userId: parameters.userId || userId
           };
           console.log('🔥🔥🔥 AI SERVICE SQL TOOL - Fixed parameters:', JSON.stringify(fixedParams));
           
@@ -521,14 +525,9 @@ Wenn der Nutzer fragt:
 SQL-QUERY KONSTRUKTION:
 1. PARSE die Nutzeranfrage für Hotelnamen/Stadt
 2. KONSTRUIERE SQL mit dem EXTRAHIERTEN Namen:
-   ```sql
-   -- Nutzer fragt nach "vier jahreszeiten hamburg"
-   SELECT * FROM pricing_calculations 
-   WHERE LOWER(hotel_name) LIKE '%vier jahreszeiten%' 
-      OR LOWER(hotel_name) LIKE '%hamburg%'
-   
-   -- NIEMALS: WHERE LOWER(hotel_name) LIKE '%dolder grand%' wenn nicht danach gefragt!
-   ```
+   - Nutzer fragt nach "vier jahreszeiten hamburg"
+   - KORREKT: SELECT * FROM pricing_calculations WHERE LOWER(hotel_name) LIKE '%vier jahreszeiten%' 
+   - FALSCH: WHERE LOWER(hotel_name) LIKE '%dolder grand%' wenn nicht danach gefragt!
 3. Wenn KEIN spezifisches Hotel erwähnt → zeige ALLE Hotels
 4. Wenn Hotel nicht gefunden → Liste verfügbare Hotels auf
 

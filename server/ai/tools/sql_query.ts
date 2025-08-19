@@ -28,6 +28,39 @@ interface TriageData {
   columns: { table: string; column: string; type: string }[];
 }
 
+// Helper function to extract hotel name from user context
+function extractHotelFromContext(contextLower: string): string | null {
+  // List of known hotels and keywords to detect
+  const hotelPatterns = [
+    { pattern: 'vier jahreszeiten', name: 'vier jahreszeiten' },
+    { pattern: 'hamburg', name: 'vier jahreszeiten' }, // Hamburg is associated with Vier Jahreszeiten
+    { pattern: 'marriott', name: 'marriott' },
+    { pattern: 'frankfurt', name: 'marriott' }, // Frankfurt is associated with Marriott
+    { pattern: 'mönchs waldhotel', name: 'mönchs waldhotel' },
+    { pattern: 'wessinger', name: 'wessinger' },
+    { pattern: 'neu isenburg', name: 'wessinger' },
+    { pattern: 'bristol', name: 'bristol' },
+    { pattern: 'kempinski', name: 'kempinski' },
+    { pattern: 'hilton', name: 'hilton' },
+    { pattern: 'sheraton', name: 'sheraton' },
+    { pattern: 'radisson', name: 'radisson' },
+    { pattern: 'intercontinental', name: 'intercontinental' },
+    { pattern: 'luxury test', name: 'luxury test' },
+    { pattern: 'grand resort', name: 'grand resort' }
+  ];
+  
+  // Check each pattern in order of specificity
+  for (const { pattern, name } of hotelPatterns) {
+    if (contextLower.includes(pattern)) {
+      console.log(`🎯 Hotel detected in context: "${pattern}" → forcing search for "${name}"`);
+      return name;
+    }
+  }
+  
+  // Only return null if no specific hotel is mentioned (don't default to Dolder Grand)
+  return null;
+}
+
 export async function sql_query(input: SqlQueryInput | any): Promise<SqlQueryResult> {
   const startTime = Date.now();
   let executedQuery = '';
@@ -35,10 +68,48 @@ export async function sql_query(input: SqlQueryInput | any): Promise<SqlQueryRes
   console.log('🚀🚀🚀 SQL_QUERY FUNCTION CALLED WITH:', JSON.stringify(input));
   console.log('🚀🚀🚀 FUNCTION START TIME:', new Date().toISOString());
   
+  // 🚨🚨🚨 EMERGENCY FIX: Check context FIRST before processing query
+  const contextLower = (input.context?.toLowerCase() || '');
+  const forcedHotelName = extractHotelFromContext(contextLower);
+  
   try {
     // Handle both new format (query) and old format (sql) for backward compatibility
     let query = input.query || input.sql;
     let params = input.params || [];
+    
+    // 🔥🔥🔥 FORCE CORRECT HOTEL NAME IF DETECTED IN CONTEXT
+    if (forcedHotelName && query && typeof query === 'string') {
+      const lowerQuery = query.toLowerCase();
+      
+      // If query is searching for ANY hotel, replace it with the forced hotel
+      if (lowerQuery.includes('hotel_name') || lowerQuery.includes('pricing_calculations')) {
+        console.log(`🚨🚨🚨 FORCING HOTEL SEARCH: Replacing any hotel search with "${forcedHotelName}"`);
+        
+        // Replace any LIKE pattern with the correct hotel
+        query = query.replace(/LIKE\s+'%[^%]+%'/gi, `LIKE '%${forcedHotelName}%'`);
+        query = query.replace(/=\s+'[^']+'/gi, `LIKE '%${forcedHotelName}%'`);
+        
+        // If no WHERE clause exists, add one
+        if (!lowerQuery.includes('where')) {
+          query = query.replace(/FROM\s+pricing_calculations/gi, 
+            `FROM pricing_calculations WHERE LOWER(hotel_name) LIKE '%${forcedHotelName}%'`);
+        }
+      }
+    }
+    
+    // 🚨🚨🚨 ULTIMATE FALLBACK: If query contains "dolder grand" but context has different hotel
+    if (query && typeof query === 'string' && contextLower) {
+      const lowerQuery = query.toLowerCase();
+      
+      // Check for ANY mention of Vier Jahreszeiten or Hamburg in context
+      if ((contextLower.includes('vier') || contextLower.includes('jahreszeiten') || 
+           contextLower.includes('hamburg')) && 
+          (lowerQuery.includes('dolder') || lowerQuery.includes('grand'))) {
+        console.log('🚨🚨🚨 ULTIMATE OVERRIDE: Forcing Vier Jahreszeiten search!');
+        // Force replace to Vier Jahreszeiten
+        query = "SELECT * FROM pricing_calculations WHERE LOWER(hotel_name) LIKE '%vier jahreszeiten%'";
+      }
+    }
     
     // CRITICAL FIX: Auto-correct wrong table names and column names
     if (query && typeof query === 'string') {

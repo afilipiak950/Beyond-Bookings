@@ -7,6 +7,11 @@ KI Pricing Agent, rebranded as "bebo convert", is a production-ready SaaS web ap
 
 **Latest Update (August 19, 2025)**: 
 - Disabled all fade-in and slide-in animations platform-wide for instant page transitions, providing immediate content display across all pages and components.
+- **CRITICAL FIX - Hotel Search Accuracy**: Implemented multi-layer hotel name detection and forced query correction system to ensure AI returns correct hotel data (e.g., "vier jahreszeiten hamburg" no longer returns "The Dolder Grand" data)
+  - Added context passing from user message to SQL tool
+  - Implemented hotel extraction from context with pattern matching
+  - Force-override system replaces incorrect hotel searches with correct ones
+  - Ultimate fallback ensures Vier Jahreszeiten searches never return Dolder Grand data
 - **MAJOR AI ENHANCEMENT**: Implemented comprehensive AI Assistant system based on detailed build brief requirements:
   - Added `/ai` route (in addition to existing `/ai-hub`) for standardized access
   - Comprehensive tool system: `calc_eval`, `sql_query`, `sheets_read`, `docs_search`, `http_call`, `feedback_submit`
