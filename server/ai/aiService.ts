@@ -126,12 +126,13 @@ export class AIService {
           };
 
         case 'sql_query':
-          const sqlResult = await sqlQuery(parameters);
+          // Use new comprehensive SQL tool
+          const sqlResult = await executeTool('sql_query', parameters, userId);
           return {
             result: sqlResult,
             citation: {
               type: 'database',
-              source: 'Database Query',
+              source: 'Database Query', 
               content: `Executed: ${parameters.query || parameters.sql}`,
               reference: `${sqlResult.rows?.length || 0} rows returned`,
             },
