@@ -385,8 +385,12 @@ export default function AIHub() {
 
   // Rename thread
   const handleRenameThread = async (threadId: number) => {
+    console.log('🔧 handleRenameThread called with threadId:', threadId);
     const thread = threads.find(t => t.id === threadId);
-    if (!thread) return;
+    if (!thread) {
+      console.log('❌ Thread not found for ID:', threadId);
+      return;
+    }
     
     const newTitle = prompt('Enter new thread title:', thread.title);
     if (newTitle && newTitle !== thread.title) {
@@ -419,8 +423,12 @@ export default function AIHub() {
 
   // Toggle pin thread
   const handleTogglePin = async (threadId: number) => {
+    console.log('📌 handleTogglePin called with threadId:', threadId);
     const thread = threads.find(t => t.id === threadId);
-    if (!thread) return;
+    if (!thread) {
+      console.log('❌ Thread not found for ID:', threadId);
+      return;
+    }
     
     try {
       const response = await fetch(`/api/ai/threads/${threadId}`, {
@@ -450,8 +458,12 @@ export default function AIHub() {
 
   // Export thread
   const handleExportThread = (threadId: number) => {
+    console.log('💾 handleExportThread called with threadId:', threadId);
     const thread = threads.find(t => t.id === threadId);
-    if (!thread) return;
+    if (!thread) {
+      console.log('❌ Thread not found for ID:', threadId);
+      return;
+    }
     
     // Get messages for this thread
     const threadMessages = messagesData?.messages || [];
@@ -481,8 +493,12 @@ export default function AIHub() {
 
   // Delete thread
   const handleDeleteThread = async (threadId: number) => {
+    console.log('🗑️ handleDeleteThread called with threadId:', threadId);
     const thread = threads.find(t => t.id === threadId);
-    if (!thread) return;
+    if (!thread) {
+      console.log('❌ Thread not found for ID:', threadId);
+      return;
+    }
     
     if (confirm(`Delete thread "${thread.title}"? This action cannot be undone.`)) {
       try {
@@ -840,32 +856,56 @@ export default function AIHub() {
                   {thread.isPinned && <Pin className="h-2 w-2 text-blue-500" />}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className="h-3 w-3 p-0 opacity-0 group-hover:opacity-100">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-3 w-3 p-0 opacity-0 group-hover:opacity-100"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }}
+                      >
                         <MoreVertical className="h-1.5 w-1.5" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-28">
                       <DropdownMenuItem 
                         className="text-xs py-1" 
-                        onClick={() => handleRenameThread(thread.id)}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleRenameThread(thread.id);
+                        }}
                       >
                         Rename
                       </DropdownMenuItem>
                       <DropdownMenuItem 
                         className="text-xs py-1"
-                        onClick={() => handleTogglePin(thread.id)}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleTogglePin(thread.id);
+                        }}
                       >
                         {thread.isPinned ? 'Unpin' : 'Pin'}
                       </DropdownMenuItem>
                       <DropdownMenuItem 
                         className="text-xs py-1"
-                        onClick={() => handleExportThread(thread.id)}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleExportThread(thread.id);
+                        }}
                       >
                         Export
                       </DropdownMenuItem>
                       <DropdownMenuItem 
                         className="text-destructive text-xs py-1"
-                        onClick={() => handleDeleteThread(thread.id)}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleDeleteThread(thread.id);
+                        }}
                       >
                         Delete
                       </DropdownMenuItem>
