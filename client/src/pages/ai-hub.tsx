@@ -66,6 +66,119 @@ interface ChatStreamChunk {
   error?: string;
 }
 
+// Helper function to format markdown-like text to React elements
+function formatMessage(text: string) {
+  if (!text) return text;
+  
+  // Split by lines to handle line breaks and paragraphs
+  const lines = text.split('\n');
+  const formattedLines: React.ReactNode[] = [];
+  
+  lines.forEach((line, lineIndex) => {
+    // Handle headers (####, ###, ##, #)
+    if (line.startsWith('####')) {
+      formattedLines.push(
+        <h4 key={lineIndex} className="text-sm font-bold mt-3 mb-1">
+          {formatInlineText(line.replace(/^####\s*/, ''))}
+        </h4>
+      );
+    } else if (line.startsWith('###')) {
+      formattedLines.push(
+        <h3 key={lineIndex} className="text-base font-bold mt-3 mb-1">
+          {formatInlineText(line.replace(/^###\s*/, ''))}
+        </h3>
+      );
+    } else if (line.startsWith('##')) {
+      formattedLines.push(
+        <h2 key={lineIndex} className="text-lg font-bold mt-3 mb-2">
+          {formatInlineText(line.replace(/^##\s*/, ''))}
+        </h2>
+      );
+    } else if (line.startsWith('#')) {
+      formattedLines.push(
+        <h1 key={lineIndex} className="text-xl font-bold mt-3 mb-2">
+          {formatInlineText(line.replace(/^#\s*/, ''))}
+        </h1>
+      );
+    } else if (line.startsWith('- ') || line.startsWith('* ')) {
+      // Handle list items
+      formattedLines.push(
+        <li key={lineIndex} className="ml-4 list-disc">
+          {formatInlineText(line.replace(/^[-*]\s*/, ''))}
+        </li>
+      );
+    } else if (line.trim() === '') {
+      // Handle empty lines as paragraph breaks
+      formattedLines.push(<br key={lineIndex} />);
+    } else {
+      // Handle regular text
+      formattedLines.push(
+        <span key={lineIndex}>
+          {formatInlineText(line)}
+          {lineIndex < lines.length - 1 && <br />}
+        </span>
+      );
+    }
+  });
+  
+  return <div className="space-y-1">{formattedLines}</div>;
+}
+
+// Helper function to format inline markdown (bold, italic, links)
+function formatInlineText(text: string): React.ReactNode {
+  if (!text) return text;
+  
+  const parts: React.ReactNode[] = [];
+  let lastIndex = 0;
+  
+  // Combined regex for all inline formats
+  const regex = /\*\*([^*]+)\*\*|\*([^*]+)\*|__([^_]+)__|_([^_]+)_|\[([^\]]+)\]\(([^)]+)\)/g;
+  let match;
+  
+  while ((match = regex.exec(text)) !== null) {
+    // Add text before the match
+    if (match.index > lastIndex) {
+      parts.push(text.substring(lastIndex, match.index));
+    }
+    
+    if (match[1]) {
+      // Bold with **
+      parts.push(<strong key={match.index} className="font-bold">{match[1]}</strong>);
+    } else if (match[2]) {
+      // Italic with *
+      parts.push(<em key={match.index} className="italic">{match[2]}</em>);
+    } else if (match[3]) {
+      // Bold with __
+      parts.push(<strong key={match.index} className="font-bold">{match[3]}</strong>);
+    } else if (match[4]) {
+      // Italic with _
+      parts.push(<em key={match.index} className="italic">{match[4]}</em>);
+    } else if (match[5] && match[6]) {
+      // Link [text](url)
+      parts.push(
+        <a 
+          key={match.index} 
+          href={match[6]} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="text-blue-600 dark:text-blue-400 hover:underline"
+        >
+          {match[5]}
+        </a>
+      );
+    }
+    
+    lastIndex = match.index + match[0].length;
+  }
+  
+  // Add remaining text
+  if (lastIndex < text.length) {
+    parts.push(text.substring(lastIndex));
+  }
+  
+  return parts.length > 0 ? parts : text;
+}
+
 const modeIcons: Record<string, any> = {
   general: Brain,
   calculation: Calculator,
@@ -1105,7 +1218,7 @@ export default function AIHub() {
                         })()}
                       </div>
                     ) : (
-                      msg.content
+                      formatMessage(msg.content)
                     )}
                   </div>
                   
@@ -1151,7 +1264,7 @@ export default function AIHub() {
             {isStreaming && streamingMessage && (
               <div className="flex gap-3 justify-start">
                 <div className="max-w-[80%] glass-card border border-border/50 rounded-lg p-4">
-                  <div className="whitespace-pre-wrap text-sm">{streamingMessage}</div>
+                  <div className="text-sm">{formatMessage(streamingMessage)}</div>
                   <div className="mt-2 flex items-center gap-2">
                     <div className="animate-pulse h-2 w-2 bg-green-500 rounded-full" />
                     <span className="text-xs text-muted-foreground">AI is responding...</span>
