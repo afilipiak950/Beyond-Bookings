@@ -1128,6 +1128,57 @@ CRITICAL: You must always return a specific price number in EUR. If exact data u
     }
   });
 
+  // AI-powered web search for authentic review data
+  async function searchHotelReviews(hotelName: string, platform: string) {
+    try {
+      console.log(`🔍 AI searching ${platform} reviews for: ${hotelName}`);
+      
+      const { default: OpenAI } = await import('openai');
+      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+      const searchPrompt = `Search for real review data for "${hotelName}" on ${platform}.
+
+Find the exact rating and number of reviews. Return ONLY this JSON format:
+{
+  "rating": exact_numeric_rating_or_null,
+  "reviewCount": exact_number_of_reviews_or_null,
+  "url": "direct_hotel_page_url_or_search_url",
+  "found": true_or_false
+}
+
+Platform-specific instructions:
+- Booking.com: Look for ratings out of 10 (e.g., 8.1/10)
+- Google Reviews: Look for ratings out of 5 (e.g., 4.2/5) 
+- HolidayCheck: Look for ratings out of 6 (e.g., 4.8/6)
+- TripAdvisor: Look for ratings out of 5 (e.g., 4.0/5)
+
+Return null values if you cannot find reliable data.`;
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          { role: "system", content: "You are a hotel review data researcher. Find authentic review information from real sources." },
+          { role: "user", content: searchPrompt }
+        ],
+        max_tokens: 300,
+        temperature: 0.1
+      });
+
+      let cleanResponse = response.choices[0].message.content?.trim() || '';
+      if (cleanResponse.startsWith('```json')) {
+        cleanResponse = cleanResponse.replace(/```json\n?/, '').replace(/\n?```$/, '');
+      }
+
+      const result = JSON.parse(cleanResponse);
+      console.log(`✅ AI search result for ${platform}:`, result);
+      return result;
+
+    } catch (error) {
+      console.error(`❌ AI search failed for ${platform}:`, error);
+      return { rating: null, reviewCount: null, url: null, found: false };
+    }
+  }
+
   // Real web scraping functions for authentic review data using HTTP requests
   async function scrapeBookingReviews(hotelName: string) {
     try {
@@ -1647,63 +1698,63 @@ RETURN ONLY BASIC HOTEL DATA in valid JSON format:
           }
         };
       } else {
-        // Attempt scraping for unknown hotels
-        console.log('🕷️ Attempting web scraping for unknown hotel...');
+        // Use AI search for unknown hotels
+        console.log('🤖 Using AI search for unknown hotel...');
         const [bookingData, googleData, holidayCheckData, tripAdvisorData] = await Promise.allSettled([
-          scrapeBookingReviews(name),
-          scrapeGoogleReviews(name),
-          scrapeHolidayCheckReviews(name),
-          scrapeTripAdvisorReviews(name)
+          searchHotelReviews(name, 'Booking.com'),
+          searchHotelReviews(name, 'Google Reviews'),
+          searchHotelReviews(name, 'HolidayCheck'),
+          searchHotelReviews(name, 'TripAdvisor')
         ]);
 
-        // Process scraped results with fallback to manual input URLs
+        // Process AI search results with fallback to search URLs
         reviewPlatforms = {
           booking: bookingData.status === 'fulfilled' && bookingData.value ? {
             url: bookingData.value.url || `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(name)}`,
             rating: bookingData.value.rating || null,
             reviewCount: bookingData.value.reviewCount || null,
-            summary: bookingData.value.rating ? "Real data extracted from Booking.com" : "Manual input required - use search to find hotel"
+            summary: bookingData.value.found && bookingData.value.rating ? "AI-sourced real review data from Booking.com" : "Search URL provided - manual verification recommended"
           } : {
             url: `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(name)}`,
             rating: null,
             reviewCount: null,
-            summary: "Unable to extract data - please input manually after searching"
+            summary: "AI search failed - please verify manually using search link"
           },
           
           google: googleData.status === 'fulfilled' && googleData.value ? {
             url: googleData.value.url || `https://www.google.com/maps/search/${encodeURIComponent(name + ' hotel')}`,
             rating: googleData.value.rating || null,
             reviewCount: googleData.value.reviewCount || null,
-            summary: googleData.value.rating ? "Real data extracted from Google Reviews" : "Manual input required - use search to find hotel"
+            summary: googleData.value.found && googleData.value.rating ? "AI-sourced real review data from Google Reviews" : "Search URL provided - manual verification recommended"
           } : {
             url: `https://www.google.com/maps/search/${encodeURIComponent(name + ' hotel')}`,
             rating: null,
             reviewCount: null,
-            summary: "Unable to extract data - please input manually after searching"
+            summary: "AI search failed - please verify manually using search link"
           },
           
           holidayCheck: holidayCheckData.status === 'fulfilled' && holidayCheckData.value ? {
             url: holidayCheckData.value.url || `https://www.holidaycheck.de/dcs/hotel-search?s=${encodeURIComponent(name)}`,
             rating: holidayCheckData.value.rating || null,
             reviewCount: holidayCheckData.value.reviewCount || null,
-            summary: holidayCheckData.value.rating ? "Real data extracted from HolidayCheck" : "Manual input required - use search to find hotel"
+            summary: holidayCheckData.value.found && holidayCheckData.value.rating ? "AI-sourced real review data from HolidayCheck" : "Search URL provided - manual verification recommended"
           } : {
             url: `https://www.holidaycheck.de/dcs/hotel-search?s=${encodeURIComponent(name)}`,
             rating: null,
             reviewCount: null,
-            summary: "Unable to extract data - please input manually after searching"
+            summary: "AI search failed - please verify manually using search link"
           },
           
           tripadvisor: tripAdvisorData.status === 'fulfilled' && tripAdvisorData.value ? {
             url: tripAdvisorData.value.url || `https://www.tripadvisor.com/Search?q=${encodeURIComponent(name + ' hotel')}`,
             rating: tripAdvisorData.value.rating || null,
             reviewCount: tripAdvisorData.value.reviewCount || null,
-            summary: tripAdvisorData.value.rating ? "Real data extracted from TripAdvisor" : "Manual input required - use search to find hotel"
+            summary: tripAdvisorData.value.found && tripAdvisorData.value.rating ? "AI-sourced real review data from TripAdvisor" : "Search URL provided - manual verification recommended"
           } : {
             url: `https://www.tripadvisor.com/Search?q=${encodeURIComponent(name + ' hotel')}`,
             rating: null,
             reviewCount: null,
-            summary: "Unable to extract data - please input manually after searching"
+            summary: "AI search failed - please verify manually using search link"
           }
         };
       }
