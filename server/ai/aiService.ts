@@ -128,15 +128,22 @@ export class AIService {
           };
 
         case 'sql_query':
-          // Use new comprehensive SQL tool - FIXED PARAMETERS
-          console.log('🔧 SQL TOOL DEBUG - Input parameters:', parameters);
-          const sqlResult = await executeTool('sql_query', {
+          // Use new comprehensive SQL tool - ULTRA DEBUG
+          console.log('🔥🔥🔥 AI SERVICE SQL TOOL CALLED - Input parameters:', JSON.stringify(parameters));
+          console.log('🔥🔥🔥 AI SERVICE SQL TOOL - User ID:', userId);
+          
+          const fixedParams = {
             ...parameters,
-            query: parameters.sql || parameters.query, // Fix parameter name
-            sql: parameters.sql || parameters.query    // Backward compatibility
-          }, userId);
-          console.log('🔧 SQL TOOL DEBUG - Result:', JSON.stringify(sqlResult, null, 2));
-          console.log('🔧 SQL TOOL DEBUG - Row data sample:', sqlResult.rows?.[0]);
+            query: parameters.sql || parameters.query,
+            sql: parameters.sql || parameters.query
+          };
+          console.log('🔥🔥🔥 AI SERVICE SQL TOOL - Fixed parameters:', JSON.stringify(fixedParams));
+          
+          const sqlResult = await executeTool('sql_query', fixedParams, userId);
+          console.log('🔥🔥🔥 AI SERVICE SQL TOOL - Result received:', JSON.stringify(sqlResult, null, 2));
+          console.log('🔥🔥🔥 AI SERVICE SQL TOOL - Has rows:', !!sqlResult?.rows);
+          console.log('🔥🔥🔥 AI SERVICE SQL TOOL - Row count:', sqlResult?.rows?.length);
+          console.log('🔥🔥🔥 AI SERVICE SQL TOOL - First row:', sqlResult?.rows?.[0]);
           return {
             result: sqlResult,
             citation: {

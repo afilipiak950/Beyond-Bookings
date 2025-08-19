@@ -31,7 +31,8 @@ export async function sql_query(input: SqlQueryInput | any): Promise<SqlQueryRes
   const startTime = Date.now();
   let executedQuery = '';
   
-  console.log('🚀 SQL_QUERY FUNCTION CALLED WITH:', JSON.stringify(input));
+  console.log('🚀🚀🚀 SQL_QUERY FUNCTION CALLED WITH:', JSON.stringify(input));
+  console.log('🚀🚀🚀 FUNCTION START TIME:', new Date().toISOString());
   
   try {
     // Handle both new format (query) and old format (sql) for backward compatibility
@@ -65,7 +66,7 @@ export async function sql_query(input: SqlQueryInput | any): Promise<SqlQueryRes
     }
     
     // Debug logging
-    console.log('🔍 SQL Tool Debug:', {
+    console.log('🔍🔍🔍 SQL Tool Debug:', {
       input,
       originalQuery: input.query || input.sql,
       correctedQuery: query,
@@ -257,7 +258,7 @@ export async function sql_query(input: SqlQueryInput | any): Promise<SqlQueryRes
       };
     }
 
-    console.log('🎯 FINAL SQL RESULT TO AI:', {
+    console.log('🎯🎯🎯 FINAL SQL RESULT TO AI:', {
       rowCount,
       hasRows: rows.length > 0,
       sampleRow: rows[0] || null,
