@@ -271,6 +271,15 @@ export default function AIHub() {
   const createThread = () => {
     setActiveThreadId(null);
     setMessage('');
+    setStreamingMessage('');
+    setCitations([]);
+    // Clear any search filters to see the new chat state
+    setSearchQuery('');
+    // Provide user feedback
+    toast({
+      title: "New Chat Created",
+      description: "Ready for your next conversation",
+    });
   };
 
   // Handle send
@@ -470,8 +479,14 @@ export default function AIHub() {
             {messages.length === 0 && !isStreaming && (
               <div className="text-center text-muted-foreground mt-12">
                 <Brain className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p className="text-lg">Start a conversation</p>
+                <p className="text-lg">{activeThreadId ? 'No messages yet' : 'New Chat Started'}</p>
                 <p className="text-sm">Ask about calculations, database queries, documents, or anything else...</p>
+                {!activeThreadId && (
+                  <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800 max-w-md mx-auto">
+                    <p className="text-xs text-blue-600 dark:text-blue-400 font-medium">💡 Ready for a new conversation</p>
+                    <p className="text-xs text-blue-500 dark:text-blue-500 mt-1">Type your message below to start</p>
+                  </div>
+                )}
               </div>
             )}
             {messages.map((msg, index) => (
