@@ -36,11 +36,30 @@ export async function sql_query(input: SqlQueryInput | any): Promise<SqlQueryRes
     let query = input.query || input.sql;
     let params = input.params || [];
     
-    // CRITICAL FIX: Auto-correct wrong table names that AI keeps using
+    // CRITICAL FIX: Auto-correct wrong table names and column names
     if (query && typeof query === 'string') {
+      // Fix common table name mistakes
       query = query.replace(/\bcalculations\b/g, 'pricing_calculations');
-      query = query.replace(/\bcustomers\b/g, 'users'); // Also fix this common mistake
+      query = query.replace(/\bhotel_calculations\b/g, 'pricing_calculations');
+      query = query.replace(/\bcustomers\b/g, 'users');
       query = query.replace(/\bapprovals\b/g, 'approval_requests');
+      
+      // Fix column name mistakes - hotels table
+      query = query.replace(/\brating\b/g, 'stars');
+      query = query.replace(/\bprice\b/g, 'average_price');
+      query = query.replace(/\bh\.hotel_name\b/g, 'h.name');
+      query = query.replace(/\bhotels\.hotel_name\b/g, 'hotels.name');
+      
+      // Fix column name mistakes - pricing_calculations table  
+      query = query.replace(/\bpc\.price\b/g, 'pc.voucher_price');
+      query = query.replace(/\bpc\.cost\b/g, 'pc.operational_costs');
+      
+      // Fix generic column assumptions
+      query = query.replace(/\bdetails\b/g, 'name, stars, city, location, amenities');
+      query = query.replace(/\bdescription\b/g, 'review_summary');
+      
+      // Fix common function mistakes
+      query = query.replace(/\btotal_calculations\b/g, 'COUNT(*)');
     }
     
     // Debug logging
