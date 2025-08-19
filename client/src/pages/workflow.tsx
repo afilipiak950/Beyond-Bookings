@@ -3844,11 +3844,23 @@ Beispiel:
                         </div>
                         <div className="md:col-span-2">
                           <Label htmlFor="booking-url">Booking.com URL</Label>
-                          <Input
-                            id="booking-url"
-                            placeholder="https://www.booking.com/hotel/..."
-                            className="mt-1"
-                          />
+                          <div className="flex gap-2">
+                            <Input
+                              id="booking-url"
+                              placeholder="https://www.booking.com/hotel/..."
+                              className="mt-1"
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="mt-1 px-3"
+                              onClick={() => window.open(`https://www.booking.com/searchresults.html?ss=${encodeURIComponent(extractedData.name)}`, '_blank')}
+                            >
+                              <Globe className="h-3 w-3 mr-1" />
+                              Search
+                            </Button>
+                          </div>
                         </div>
                         <div className="md:col-span-2">
                           <Label htmlFor="booking-summary">Review Summary</Label>
@@ -3893,11 +3905,23 @@ Beispiel:
                         </div>
                         <div className="md:col-span-2">
                           <Label htmlFor="google-url">Google Maps/Reviews URL</Label>
-                          <Input
-                            id="google-url"
-                            placeholder="https://goo.gl/maps/..."
-                            className="mt-1"
-                          />
+                          <div className="flex gap-2">
+                            <Input
+                              id="google-url"
+                              placeholder="https://goo.gl/maps/..."
+                              className="mt-1"
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="mt-1 px-3"
+                              onClick={() => window.open(`https://www.google.com/maps/search/${encodeURIComponent(extractedData.name + ' ' + (extractedData.location || ''))}`, '_blank')}
+                            >
+                              <Globe className="h-3 w-3 mr-1" />
+                              Search
+                            </Button>
+                          </div>
                         </div>
                         <div className="md:col-span-2">
                           <Label htmlFor="google-summary">Review Summary</Label>
@@ -3942,11 +3966,23 @@ Beispiel:
                         </div>
                         <div className="md:col-span-2">
                           <Label htmlFor="holidaycheck-url">HolidayCheck URL</Label>
-                          <Input
-                            id="holidaycheck-url"
-                            placeholder="https://www.holidaycheck.de/..."
-                            className="mt-1"
-                          />
+                          <div className="flex gap-2">
+                            <Input
+                              id="holidaycheck-url"
+                              placeholder="https://www.holidaycheck.de/..."
+                              className="mt-1"
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="mt-1 px-3"
+                              onClick={() => window.open(`https://www.holidaycheck.de/dcs/hotel-search?s=${encodeURIComponent(extractedData.name)}`, '_blank')}
+                            >
+                              <Globe className="h-3 w-3 mr-1" />
+                              Search
+                            </Button>
+                          </div>
                         </div>
                         <div className="md:col-span-2">
                           <Label htmlFor="holidaycheck-summary">Review Summary</Label>
@@ -3991,11 +4027,23 @@ Beispiel:
                         </div>
                         <div className="md:col-span-2">
                           <Label htmlFor="tripadvisor-url">TripAdvisor URL</Label>
-                          <Input
-                            id="tripadvisor-url"
-                            placeholder="https://www.tripadvisor.com/..."
-                            className="mt-1"
-                          />
+                          <div className="flex gap-2">
+                            <Input
+                              id="tripadvisor-url"
+                              placeholder="https://www.tripadvisor.com/..."
+                              className="mt-1"
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="mt-1 px-3"
+                              onClick={() => window.open(`https://www.tripadvisor.com/Search?q=${encodeURIComponent(extractedData.name)}`, '_blank')}
+                            >
+                              <Globe className="h-3 w-3 mr-1" />
+                              Search
+                            </Button>
+                          </div>
                         </div>
                         <div className="md:col-span-2">
                           <Label htmlFor="tripadvisor-summary">Review Summary</Label>
