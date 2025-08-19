@@ -1,4 +1,4 @@
-import { db } from '../../db';
+import { db } from '../../db.js';
 import { sql } from 'drizzle-orm';
 
 export interface SqlQueryInput {
@@ -152,8 +152,9 @@ export async function sql_query(input: SqlQueryInput | any): Promise<SqlQueryRes
 
     // Execute the query with timeout (30 seconds)
     console.log('🔥🔥🔥 EXECUTING PROCESSED SQL:', processedQuery);
-    // Try using a simple template literal instead of sql.raw
-    const queryPromise = db.execute(sql`${sql.raw(processedQuery)}`);
+    
+    // CRITICAL FIX: Use the correct Drizzle syntax for raw queries
+    const queryPromise = db.execute(sql.raw(processedQuery));
     console.log('🔥🔥🔥 QUERY PROMISE CREATED');
     const timeoutPromise = new Promise((_, reject) => 
       setTimeout(() => reject(new Error('Query timeout (30s)')), 30000)
@@ -166,14 +167,33 @@ export async function sql_query(input: SqlQueryInput | any): Promise<SqlQueryRes
     const took_ms = Date.now() - startTime;
     // Handle Drizzle ORM result format correctly
     let rows = [];
-    if (result?.rows) {
-      rows = result.rows;
-    } else if (Array.isArray(result)) {
+    
+    console.log('🔥🔥🔥 DRIZZLE RESULT STRUCTURE:', {
+      result: !!result,
+      hasRows: !!result?.rows,
+      isArray: Array.isArray(result),
+      resultType: typeof result,
+      resultKeys: result ? Object.keys(result) : []
+    });
+    
+    // For Neon/Drizzle, the result is typically an array directly
+    if (Array.isArray(result)) {
       rows = result;
+    } else if (result?.rows && Array.isArray(result.rows)) {
+      rows = result.rows;
     } else if (result && typeof result === 'object') {
-      rows = [result];
+      // Sometimes it's wrapped in a result object
+      if (result.data && Array.isArray(result.data)) {
+        rows = result.data;
+      } else if (result.results && Array.isArray(result.results)) {
+        rows = result.results;
+      } else {
+        rows = [result];
+      }
     }
+    
     const rowCount = rows.length;
+    console.log('🔥🔥🔥 FINAL ROWS:', { rowCount, sampleRow: rows[0] });
     
     console.log('🔍 SQL Result Debug:', { 
       hasResult: !!result,
@@ -209,7 +229,16 @@ export async function sql_query(input: SqlQueryInput | any): Promise<SqlQueryRes
 
     // If zero results, force comprehensive data retrieval
     if (rowCount === 0) {
-      console.log('🚨 Zero results - forcing comprehensive data retrieval');
+      console.log('🚨 Zero results detected - this should NOT happen!');
+      console.log('🚨 Database has 8 calculations, but query returned 0');
+      
+      // FORCE DEBUG: Try a simple count query to verify connection
+      try {
+        const countResult = await db.execute(sql.raw('SELECT COUNT(*) as count FROM pricing_calculations'));
+        console.log('🚨 COUNT QUERY RESULT:', countResult);
+      } catch (e) {
+        console.log('🚨 COUNT QUERY FAILED:', e);
+      }
       
       // Get comprehensive business data when specific query fails
       try {
