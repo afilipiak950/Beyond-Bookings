@@ -36,12 +36,21 @@ export async function sql_query(input: SqlQueryInput | any): Promise<SqlQueryRes
     let query = input.query || input.sql;
     let params = input.params || [];
     
+    // CRITICAL FIX: Auto-correct wrong table names that AI keeps using
+    if (query && typeof query === 'string') {
+      query = query.replace(/\bcalculations\b/g, 'pricing_calculations');
+      query = query.replace(/\bcustomers\b/g, 'users'); // Also fix this common mistake
+      query = query.replace(/\bapprovals\b/g, 'approval_requests');
+    }
+    
     // Debug logging
     console.log('🔍 SQL Tool Debug:', {
       input,
-      extractedQuery: query,
+      originalQuery: input.query || input.sql,
+      correctedQuery: query,
       queryType: typeof query,
-      params
+      params,
+      replacementApplied: (input.query || input.sql) !== query
     });
 
     // Validate and sanitize input
@@ -159,7 +168,7 @@ export async function sql_query(input: SqlQueryInput | any): Promise<SqlQueryRes
     return {
       rows,
       rowCount,
-      executedQuery,
+      executedQuery: query, // Show the corrected query
       took_ms
     };
     

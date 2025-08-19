@@ -87,7 +87,7 @@ export const sqlQueryToolDefinition = {
       properties: {
         sql: {
           type: 'string',
-          description: 'Die SQL SELECT-Abfrage zum Ausführen. Verfügbare Tabellen: hotels, customers, calculations, users, approvals, ai_threads, ai_messages'
+          description: 'Die SQL SELECT-Abfrage zum Ausführen. Verfügbare Tabellen: pricing_calculations, hotels, users, approval_requests, document_analyses, ai_threads, ai_messages'
         },
         params: {
           type: 'array',

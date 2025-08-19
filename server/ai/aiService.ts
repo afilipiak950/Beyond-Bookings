@@ -447,7 +447,14 @@ export class AIService {
       
       docs: `${basePrompt}\n\n**Dokument-Modus:** Durchsuche und analysiere hochgeladene Dokumente. Extrahiere relevante Daten, erstelle Zusammenfassungen und vergleiche Inhalte. Zitiere spezifische Dokumentenstellen.`,
       
-      sql: `${basePrompt}\n\n**Database-Modus:** Führe komplexe PostgreSQL-Abfragen durch. Analysiere Hotel-, Preis-, Kunden- und Kalkulationsdaten. Erstelle Business Intelligence Reports mit klaren Insights.`,
+      sql: `${basePrompt}\n\n**Database-Modus:** Führe komplexe PostgreSQL-Abfragen durch. Analysiere Hotel-, Preis-, Kunden- und Kalkulationsdaten. Erstelle Business Intelligence Reports mit klaren Insights. 
+
+**Wichtige Tabellennamen:**
+- pricing_calculations (NICHT calculations!) - Hotelpreiskalkulationen  
+- hotels - Hotelinformationen
+- users - Benutzerkonten
+- approval_requests - Genehmigungsworkflows
+- document_analyses - Dokumentanalysen`,
       
       sheets: `${basePrompt}\n\n**Tabellen-Modus:** Analysiere Spreadsheet-Daten und erstelle Excel-Reports. (Google Sheets Integration in Entwicklung)`,
       
@@ -461,28 +468,23 @@ export class AIService {
   }
 
   private getAvailableTools(mode: string): any[] {
-    const allTools = [
-      calcEvalToolDefinition,
-      sqlQueryToolDefinition,
-      docsSearchToolDefinition,
-      docsGetToolDefinition,
-      httpCallToolDefinition,
-    ];
+    // Use new comprehensive tool system
+    const newTools = toolDefinitions;
 
     // Filter tools based on mode
     switch (mode) {
       case 'calculation':
-        return [calcEvalToolDefinition];
+        return newTools.filter(t => t.function.name === 'calc_eval');
       case 'docs':
-        return [docsSearchToolDefinition, docsGetToolDefinition];
+        return newTools.filter(t => ['docs_search', 'docs_get'].includes(t.function.name));
       case 'sql':
-        return [sqlQueryToolDefinition];
+        return newTools.filter(t => t.function.name === 'sql_query');
       case 'api':
-        return [httpCallToolDefinition];
+        return newTools.filter(t => t.function.name === 'http_call');
       case 'sheets':
-        return []; // TODO: Add Google Sheets tools
+        return newTools.filter(t => t.function.name === 'sheets_read');
       default:
-        return allTools; // General mode has access to all tools
+        return newTools; // General mode has access to all tools
     }
   }
 
