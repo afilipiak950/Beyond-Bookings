@@ -129,6 +129,8 @@ export default function AIHub() {
       return response.json();
     },
     enabled: !!activeThreadId,
+    staleTime: 0,
+    gcTime: 0, // Immediately garbage collect when not in use
   });
 
   // Get user documents
@@ -141,17 +143,15 @@ export default function AIHub() {
   });
 
   const threads: Thread[] = threadsData?.threads || [];
+  // Only show messages if we have an active thread, otherwise empty array
   const messages: Message[] = activeThreadId ? (messagesData?.messages || []) : [];
   const docs: any[] = docsData?.docs || [];
   
-  // Minimal production debugging
-  if (process.env.NODE_ENV === 'development') {
-    console.log('AI Hub:', { 
-      activeThread: activeThreadId, 
-      messages: messages.length,
-      streaming: isStreaming
-    });
-  }
+  console.log('AI Hub:', { 
+    activeThread: activeThreadId, 
+    messages: messages.length, 
+    streaming: isStreaming 
+  });
 
   // Auto-refresh threads on mount or user navigation
   useEffect(() => {
@@ -291,18 +291,23 @@ export default function AIHub() {
   const createThread = () => {
     console.log('Creating new thread...');
     
-    // Clear current state
+    // Clear current state immediately
     setActiveThreadId(null);
     setMessage('');
     setStreamingMessage('');
     setCitations([]);
     setSearchQuery('');
     
-    // Clear specific cache entries that might interfere
+    // Clear ALL cached messages to ensure clean state
     queryClient.removeQueries({ 
       queryKey: ['/api/ai/threads'],
       exact: false 
     });
+    
+    // Force immediate re-render by clearing query data
+    queryClient.setQueryData(['/api/ai/threads', null, 'messages'], { messages: [] });
+    
+    console.log('New thread created - state cleared');
     
     // Provide user feedback
     toast({
@@ -329,7 +334,7 @@ export default function AIHub() {
         if (!response.ok) throw new Error('Failed to rename thread');
         
         // Refresh threads
-        await threadsQuery.refetch();
+        await refetchThreads();
         
         toast({
           title: "Thread Renamed",
@@ -361,7 +366,7 @@ export default function AIHub() {
       if (!response.ok) throw new Error('Failed to update thread');
       
       // Refresh threads
-      await threadsQuery.refetch();
+      await refetchThreads();
       
       toast({
         title: thread.isPinned ? "Thread Unpinned" : "Thread Pinned",
@@ -427,7 +432,7 @@ export default function AIHub() {
         }
         
         // Refresh threads
-        await threadsQuery.refetch();
+        await refetchThreads();
         
         toast({
           title: "Thread Deleted",
