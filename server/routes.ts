@@ -2040,6 +2040,35 @@ CRITICAL: You must always return a specific price number in EUR. If exact data u
   }
 
   // Enhanced hotel data extraction with reliable review data sources
+  // Get all hotels endpoint
+  app.get('/api/hotels', requireAuth, async (req: Request, res: Response) => {
+    try {
+      console.log('🏨 Getting all hotels from database...');
+      
+      const allHotels = await storage.getHotels();
+      console.log(`✅ Found ${allHotels.length} hotels in database`);
+      
+      // Return hotels with pagination structure expected by frontend
+      res.json({
+        data: allHotels,
+        pagination: {
+          page: 1,
+          limit: 50,
+          total: allHotels.length,
+          totalPages: 1,
+          hasNext: false,
+          hasPrev: false
+        }
+      });
+    } catch (error: any) {
+      console.error('❌ Failed to get hotels:', error);
+      res.status(500).json({ 
+        message: "Failed to fetch hotels", 
+        error: error?.message || 'Unknown error'
+      });
+    }
+  });
+
   app.post('/api/hotels/extract-with-reviews', requireAuth, async (req: Request, res: Response) => {
     try {
       const { name, url } = req.body;
