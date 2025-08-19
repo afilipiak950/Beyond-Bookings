@@ -958,7 +958,7 @@ Respond in JSON format with the following structure:
             content: prompt
           }
         ],
-        temperature: 0.1,
+        temperature: 1,
         maxTokens: 2000
       });
 
@@ -1308,7 +1308,7 @@ Provide strategic insights for hotel pricing in JSON format:
             content: prompt
           }
         ],
-        temperature: 0.2,
+        temperature: 1,
         maxTokens: 1500
       });
 

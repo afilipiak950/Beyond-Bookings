@@ -521,7 +521,7 @@ CRITICAL: You must always return a specific price number in EUR. Research 5-star
               }
             ],
             max_completion_tokens: 600,
-            temperature: 0.1
+            temperature: 1
           });
 
           const priceResponse = avgPriceCompletion.choices[0].message.content;
@@ -644,7 +644,7 @@ Return ONLY this JSON format:
             }
           ],
           max_completion_tokens: 600,
-          temperature: 0.1
+          temperature: 1
         });
 
         const priceResponse = priceCompletion.choices[0].message.content;
@@ -725,7 +725,7 @@ If you cannot find exact room count data, set roomCount to null and explain in d
             }
           ],
           max_completion_tokens: 1000,
-          temperature: 0.1
+          temperature: 1
         });
 
         const response = completion.choices[0].message.content;
@@ -923,7 +923,7 @@ CRITICAL: You must always return a specific price number in EUR. If exact data u
             }
           ],
           max_completion_tokens: 600,
-          temperature: 0.1
+          temperature: 1
         });
 
         const priceResponse = avgPriceCompletion.choices[0].message.content;
@@ -2215,7 +2215,7 @@ RETURN ONLY BASIC HOTEL DATA in valid JSON format:
           { role: "user", content: basicDataPrompt }
         ],
         max_completion_tokens: 800,
-        temperature: 0.1
+        temperature: 1
       });
 
       const response = completion.choices[0].message.content;
@@ -2438,7 +2438,7 @@ Only return hotel data if you can verify this is a real, existing hotel. Do not 
           }
         ],
         max_completion_tokens: 600,
-        temperature: 0.1
+        temperature: 1
       });
 
       const response = completion.choices[0].message.content;
@@ -2683,7 +2683,7 @@ CRITICAL REQUIREMENTS:
           }
         ],
         max_completion_tokens: 800,
-        temperature: 0.1
+        temperature: 1
       });
 
       const response = completion.choices[0].message.content;

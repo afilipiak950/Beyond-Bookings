@@ -291,7 +291,7 @@ export class AIService {
         tools: availableTools,
         tool_choice: 'auto',
         stream: true,
-        temperature: 0.1,
+        temperature: 1,
         max_completion_tokens: 4000,
         top_p: 0.9,
       });
@@ -404,7 +404,7 @@ Respond conversationally with proper formatting, explanations, and insights. Don
               { role: 'user', content: interpretationPrompt }
             ] as any,
             stream: true,
-            temperature: 0.2,
+            temperature: 1,
             max_completion_tokens: 1000,
           });
 

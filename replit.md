@@ -17,6 +17,11 @@ KI Pricing Agent, rebranded as "bebo convert", is a production-ready SaaS web ap
   - Security controls: SQL SELECT-only, HTTP endpoint whitelist, cost limits
   - Comprehensive system prompts and routing policy (Kalkulation > SQL > Sheets > Docs/RAG > HTTP > Calc)
   - **🚀 10x Enhanced Chat Management**: Advanced smart cleanup system with options to clear unpinned chats, old chats by date, or everything - includes real-time statistics dashboard and professional UI
+- **CRITICAL OPENAI API COMPATIBILITY FIX (August 19, 2025)**: 
+  - Fixed OpenAI API parameter compatibility issues for GPT-5 and newer models
+  - Replaced deprecated `max_tokens` with `max_completion_tokens` across entire codebase (17+ files)
+  - Fixed temperature parameter restrictions (newer models only support default value of 1)
+  - System now fully compatible with latest OpenAI API requirements
 - **🔥 ULTRA-INTELLIGENCE UPGRADE**: Full ChatGPT-like capabilities with intelligent query routing:
   - Fixed chat flow: User messages appear immediately, then AI thinking indicator
   - Weather API integration with wttr.in for real-time weather data
