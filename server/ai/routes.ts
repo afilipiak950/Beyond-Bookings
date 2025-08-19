@@ -77,9 +77,10 @@ router.post('/chat', async (req: AuthenticatedRequest, res: Response) => {
       return res.status(401).json({ error: 'Authentication required' });
     }
 
-    console.log('Raw request body:', req.body);
+    console.log('🎯🎯🎯 AI CHAT REQUEST - Raw body:', req.body);
     const { message, threadId, mode, model, title } = chatRequestSchema.parse(req.body);
-    console.log('Parsed request:', { message: message.substring(0, 50), threadId, mode, model });
+    console.log('🎯🎯🎯 AI CHAT REQUEST - Parsed:', { message: message.substring(0, 50), threadId, mode, model });
+    console.log('🎯🎯🎯 AI CHAT REQUEST - User ID:', req.user?.id);
 
     // Get or create thread
     const activeThreadId = await aiService.getOrCreateThread(

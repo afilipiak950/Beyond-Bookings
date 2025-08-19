@@ -276,7 +276,8 @@ export class AIService {
 
       // Analyze query for intelligent routing
       const queryAnalysis = QueryDetector.analyzeQuery(message);
-      console.log('🧠 Query Analysis:', queryAnalysis);
+      console.log('🎯🎯🎯 AI SERVICE - Query Analysis:', queryAnalysis);
+      console.log('🎯🎯🎯 AI SERVICE - Should use tools:', queryAnalysis.shouldUseTools);
 
       // Get recent messages for context
       const recentMessages = await this.getThreadMessages(threadId, userId);
@@ -354,7 +355,9 @@ export class AIService {
       }
 
       // Execute tool calls if any
+      console.log('🎯🎯🎯 AI SERVICE - Tool calls detected:', toolCalls.length);
       if (toolCalls.length > 0) {
+        console.log('🎯🎯🎯 AI SERVICE - Executing tools:', toolCalls.map(tc => tc.function?.name));
         yield {
           type: 'message',
           content: '\n\n*Executing tools...*\n\n',
@@ -363,10 +366,13 @@ export class AIService {
         for (const toolCall of toolCalls) {
           try {
             const parameters = JSON.parse(toolCall.function.arguments);
+            console.log('🎯🎯🎯 AI SERVICE - Executing tool:', toolCall.function.name, 'with params:', parameters);
+            
             const { result, citation } = await this.executeTool(
               { function: { name: toolCall.function.name, parameters } },
               userId
             );
+            console.log('🎯🎯🎯 AI SERVICE - Tool result received:', !!result, result?.rows?.length);
 
             yield {
               type: 'tool_call',
