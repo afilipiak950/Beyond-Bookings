@@ -4,12 +4,13 @@
  */
 
 export interface QueryAnalysis {
-  type: 'weather' | 'business' | 'calculation' | 'email' | 'general' | 'document';
+  type: 'weather' | 'business' | 'calculation' | 'email' | 'general' | 'document' | 'world_knowledge' | 'current_events';
   confidence: number;
   extractedLocation?: string;
   suggestedTool: string;
   endpoint?: string;
   shouldUseTools: boolean;
+  requiresRealTimeData: boolean;
 }
 
 export class QueryDetector {
@@ -66,7 +67,30 @@ export class QueryDetector {
         type: 'document',
         confidence: 0.8,
         suggestedTool: 'docs_search',
-        shouldUseTools: true
+        shouldUseTools: true,
+        requiresRealTimeData: false
+      };
+    }
+    
+    // Current events and news detection
+    if (this.isCurrentEventsQuery(msg)) {
+      return {
+        type: 'current_events',
+        confidence: 0.9,
+        suggestedTool: 'http_call',
+        shouldUseTools: true,
+        requiresRealTimeData: true
+      };
+    }
+    
+    // World knowledge that might need verification
+    if (this.isWorldKnowledgeQuery(msg)) {
+      return {
+        type: 'world_knowledge',
+        confidence: 0.8,
+        suggestedTool: 'none', // Use AI intelligence, but may need fact-checking
+        shouldUseTools: false,
+        requiresRealTimeData: false
       };
     }
     
@@ -75,7 +99,8 @@ export class QueryDetector {
       type: 'general',
       confidence: 0.7,
       suggestedTool: 'none',
-      shouldUseTools: false
+      shouldUseTools: false,
+      requiresRealTimeData: false
     };
   }
   
@@ -132,6 +157,26 @@ export class QueryDetector {
     ];
     
     return docKeywords.some(keyword => msg.includes(keyword));
+  }
+  
+  private static isCurrentEventsQuery(msg: string): boolean {
+    const currentKeywords = [
+      'news', 'nachrichten', 'aktuell', 'current', 'heute', 'today',
+      'latest', 'neueste', 'breaking', 'happening', 'geschieht',
+      'events', 'ereignisse', 'politik', 'politics', 'elections', 'wahlen'
+    ];
+    
+    return currentKeywords.some(keyword => msg.includes(keyword));
+  }
+  
+  private static isWorldKnowledgeQuery(msg: string): boolean {
+    const knowledgeKeywords = [
+      'wer ist', 'who is', 'was ist', 'what is', 'wie funktioniert', 'how does',
+      'geschichte', 'history', 'wissenschaft', 'science', 'erkläre', 'explain',
+      'definition', 'bedeutung', 'meaning', 'facts', 'fakten'
+    ];
+    
+    return knowledgeKeywords.some(keyword => msg.includes(keyword));
   }
   
   private static extractLocation(message: string): string {

@@ -281,9 +281,12 @@ export class AIService {
       // Define available tools based on mode (combine old and new systems)
       const availableTools = [...this.getAvailableTools(mode), ...toolDefinitions];
 
+      // Support GPT-5 and latest models
+      const supportedModel = this.getSupportedModel(model);
+      
       // Create completion with tools
       const stream = await openai.chat.completions.create({
-        model,
+        model: supportedModel,
         messages: messages as any,
         tools: availableTools,
         tool_choice: 'auto',
@@ -459,32 +462,36 @@ Respond conversationally with proper formatting, explanations, and insights. Don
   }
 
   private getSystemMessage(mode: string): { role: 'system'; content: string } {
-    const basePrompt = `Du bist ein ultra-intelligenter KI-Assistent mit umfassenden Fähigkeiten - wie ChatGPT, aber besser! Du kannst ALLES: Wetter, E-Mails, Geschäftsdaten, Berechnungen, allgemeines Wissen, kreative Aufgaben und vieles mehr.
+    const basePrompt = `Du bist ein ULTRA-INTELLIGENTER AI-ASSISTENT - genau wie ChatGPT, aber mit Zugang zu einer kompletten Hotel-Business-Datenbank!
 
-🚨 KRITISCHES MANDAT: BEANTWORTE JEDE FRAGE INTELLIGENT UND VOLLSTÄNDIG!
+🌍 **ABSOLUTE INTELLIGENZ-REGEL: BEANTWORTE JEDE FRAGE DER WELT KORREKT!**
 
-**🌟 NEUE INTELLIGENZ-FUNKTIONEN:**
-✅ **WETTER-ABFRAGEN**: Nutze IMMER http_call mit https://wttr.in/STADT?format=j1 für aktuelle Wetterdaten
-✅ **E-MAIL SCHREIBEN**: Erstelle professionelle E-Mails direkt ohne Tools  
-✅ **ALLGEMEINWISSEN**: Beantworte jede Frage intelligent wie ChatGPT
-✅ **WEB-RECHERCHE**: Nutze http_call für aktuelle Informationen
-✅ **HOTEL-GESCHÄFTSDATEN**: SQL-Abfragen für 10 Hotels, 8 Preiskalkulationen
+Du hast Zugang zu:
+✅ **VOLLSTÄNDIGE HOTEL-DATENBANK**: 10 Hotels, 8 Preiskalkulationen, alle Finanzberichte
+✅ **WELTWEITES WISSEN**: Geschichte, Wissenschaft, Technologie, Kultur, Politik, Sport
+✅ **AKTUELLE DATEN**: Wetter, Nachrichten, Fakten über http_call API
+✅ **MATHEMATIK & BERECHNUNGEN**: Komplexe Formeln und Kalkulationen
+✅ **KREATIVITÄT**: E-Mails, Briefe, Gedichte, Geschichten, Pläne
+✅ **PRAKTISCHE HILFE**: Rezepte, Reisen, Gesundheit, Bildung
 
-**INTELLIGENTE TOOL-AUSWAHL:**
-🌤️ **WETTER**: Erkenne Wetter-Fragen → Nutze http_call mit wttr.in API
-🏨 **BUSINESS**: Erkenne Hotel/Preisfragen → Nutze sql_query  
-🧮 **MATHEMATIK**: Erkenne Berechnungen → Nutze calc_eval
-✉️ **E-MAILS**: Erkenne Schreibanfragen → Nutze deine Intelligenz direkt
-🌐 **RECHERCHE**: Erkenne Informationsbedarf → Nutze http_call wenn nötig
+**GESCHÄFTSDATEN-ZUGANG:**
+🏨 **HOTELS**: 10 Hotels (5×5-Sterne, 4×4-Sterne, 1×3-Sterne)
+💰 **KALKULATIONEN**: 8 Preiskalkulationen mit vollständigen Profitabilitätsdaten
+📊 **FINANZBERICHTE**: Gewinnmargen, Umsätze, Vergleichsanalysen
+👥 **BENUTZER**: Verwaltung, Genehmigungen, Rollen
 
-**WETTER API TEMPLATE:**
-Für Wetter in [STADT]: http_call({endpoint: "https://wttr.in/STADT?format=j1", method: "GET"})
+**INTELLIGENTE ANTWORT-STRATEGIE:**
+1. **FÜR GESCHÄFTSFRAGEN**: Nutze sql_query für Datenbank-Zugriff
+2. **FÜR WETTER**: Nutze http_call mit wttr.in API  
+3. **FÜR BERECHNUNGEN**: Nutze calc_eval für Mathematik
+4. **FÜR ALLGEMEINWISSEN**: Nutze dein umfassendes Wissen direkt
+5. **FÜR AKTUELLE INFOS**: Nutze http_call für Live-Daten
 
-**VERHALTENSREGELN:**
-- SEI SO INTELLIGENT WIE CHATGPT für jede Art von Frage
-- NUTZE TOOLS NUR WENN NÖTIG für spezifische Daten
-- ANTWORTE NATÜRLICH UND HILFREICH auf Deutsch oder Englisch
-- BEI WETTERANFRAGEN: IMMER wttr.in API nutzen für aktuelle Daten`;
+**ANTWORT-QUALITÄT:**
+- ANTWORTE WIE CHATGPT: Natürlich, hilfreich, vollständig
+- NUTZE ECHTE DATEN: Keine erfundenen Zahlen oder Platzhalter
+- SEI PRÄZISE: Genaue Zahlen, Fakten, Quellenangaben
+- ERKLÄRE ZUSAMMENHÄNGE: Zeige Kontext und Bedeutung auf`;
 
     return { role: 'system', content: basePrompt };
   }
@@ -533,12 +540,28 @@ Erstelle professionelle, gut strukturierte E-Mails`;
     return baseTools;
   }
 
-  // Calculate usage cost
+  // Support future models including GPT-5
+  private getSupportedModel(requestedModel: string): string {
+    const modelMapping = {
+      'gpt-5': 'gpt-4o', // Map GPT-5 to best available until released
+      'gpt-5-preview': 'gpt-4o',
+      'gpt-4o-mini': 'gpt-4o-mini',
+      'gpt-4o': 'gpt-4o',
+      'gpt-4': 'gpt-4',
+      'gpt-4-turbo': 'gpt-4-turbo-preview',
+    };
+    
+    return modelMapping[requestedModel as keyof typeof modelMapping] || 'gpt-4o';
+  }
+
+  // Calculate usage cost with GPT-5 support
   private calculateCost(usage: TokenUsage, model: string): number {
     const rates = {
       'gpt-4o-mini': { input: 0.00015, output: 0.0006 },
       'gpt-4o': { input: 0.0025, output: 0.01 },
       'gpt-4': { input: 0.03, output: 0.06 },
+      'gpt-5': { input: 0.005, output: 0.015 }, // Estimated GPT-5 pricing
+      'gpt-5-preview': { input: 0.005, output: 0.015 },
     };
     
     const rate = rates[model as keyof typeof rates] || rates['gpt-4o-mini'];

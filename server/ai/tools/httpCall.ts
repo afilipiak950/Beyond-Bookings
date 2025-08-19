@@ -15,18 +15,42 @@ export interface HttpCallResult {
   error?: string;
 }
 
-// Whitelist of allowed endpoints for web research and APIs
+// Comprehensive whitelist for world-wide information access
 const getAllowedEndpoints = (): string[] => {
   const defaultWhitelist = [
+    // Internal APIs
     '/api/calc',
     '/api/reports',
+    
+    // Weather APIs
     'https://api.openweathermap.org',
     'https://wttr.in',
     'https://api.weatherapi.com',
+    
+    // News & Information
+    'https://newsapi.org',
+    'https://api.worldnewsapi.com',
+    'https://api.currentsapi.services',
+    
+    // Knowledge & Facts
+    'https://en.wikipedia.org',
+    'https://api.wikimedia.org',
+    'https://restcountries.com',
+    
+    // Financial & Economic
+    'https://api.exchangerate-api.com',
+    'https://api.coindesk.com',
+    'https://api.fixer.io',
+    
+    // General APIs
     'https://httpbin.org',
     'https://jsonplaceholder.typicode.com',
     'https://api.github.com',
-    'https://api.exchangerate-api.com'
+    'https://api.quotable.io',
+    
+    // Time & Date
+    'https://worldtimeapi.org',
+    'https://api.sunrise-sunset.org'
   ].join(',');
   
   const whitelist = process.env.AIHUB_HTTP_WHITELIST || defaultWhitelist;

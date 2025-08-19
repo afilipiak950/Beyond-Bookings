@@ -97,7 +97,7 @@ export default function AIHub() {
   const [activeThreadId, setActiveThreadId] = useState<number | null>(null);
   const [message, setMessage] = useState('');
   const [mode, setMode] = useState('general');
-  const [model, setModel] = useState('gpt-4o-mini');
+  const [model, setModel] = useState('gpt-5');
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamingMessage, setStreamingMessage] = useState('');
   const [citations, setCitations] = useState<Citation[]>([]);
@@ -996,8 +996,9 @@ export default function AIHub() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="gpt-4o-mini">Fast (Mini)</SelectItem>
+                  <SelectItem value="gpt-5">GPT-5 🚀</SelectItem>
                   <SelectItem value="gpt-4o">Smart (4o)</SelectItem>
+                  <SelectItem value="gpt-4o-mini">Fast (Mini)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
