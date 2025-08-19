@@ -9,6 +9,7 @@ import { AIService } from './aiService';
 import { RAGProcessor } from './ragProcessor';
 import { requireAuth } from '../localAuth';
 import { z } from 'zod';
+import adminRoutes from './routes/admin';
 
 // Extend Request type to include user
 interface AuthenticatedRequest extends Request {
@@ -23,6 +24,9 @@ const router = express.Router();
 
 // Apply authentication middleware to all routes
 router.use(requireAuth);
+
+// Mount admin routes
+router.use('/admin', adminRoutes);
 
 const aiService = new AIService();
 const ragProcessor = new RAGProcessor();

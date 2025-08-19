@@ -2,6 +2,7 @@ import OpenAI from 'openai';
 import { db } from '../db';
 import { aiThreads, aiMessages, aiLogs, InsertAiThread, InsertAiMessage, InsertAiLog } from '../../shared/schema';
 import { eq, desc } from 'drizzle-orm';
+import { tools, toolDefinitions, executeTool, type ToolName } from './tools/index';
 import { calcEval, calcEvalToolDefinition } from './tools/calcEval';
 import { sqlQuery, sqlQueryToolDefinition } from './tools/sqlQuery';
 import { docsSearch, docsSearchToolDefinition } from './tools/docsSearch';
@@ -95,11 +96,22 @@ export class AIService {
     );
   }
 
-  // Execute tool calls
+  // Execute tool calls using new comprehensive tool system
   private async executeTool(toolCall: any, userId: number): Promise<{ result: any; citation?: Citation }> {
     const { name, parameters } = toolCall.function;
 
     try {
+      // Use new comprehensive tool system first
+      if (tools[name as ToolName]) {
+        const result = await executeTool(name as ToolName, parameters, userId);
+        
+        // Generate citation based on tool type and result
+        const citation = this.generateCitation(name, parameters, result);
+        
+        return { result, citation };
+      }
+
+      // Fallback to existing tools for backward compatibility
       switch (name) {
         case 'calc_eval':
           const calcResult = await calcEval(parameters);
@@ -120,7 +132,7 @@ export class AIService {
             citation: {
               type: 'database',
               source: 'Database Query',
-              content: `Executed: ${parameters.sql}`,
+              content: `Executed: ${parameters.query || parameters.sql}`,
               reference: `${sqlResult.rows?.length || 0} rows returned`,
             },
           };
@@ -172,6 +184,62 @@ export class AIService {
     }
   }
 
+  // Generate citations for new tool system
+  private generateCitation(toolName: string, parameters: any, result: any): Citation | undefined {
+    switch (toolName) {
+      case 'calc_eval':
+        return {
+          type: 'calculation',
+          source: 'Calculation Engine',
+          content: `Expression: ${parameters.expression}`,
+          reference: result.steps?.join(' → ') || `Result: ${result.result}`,
+        };
+      
+      case 'sheets_read':
+        return {
+          type: 'api',
+          source: 'Google Sheets',
+          content: `Sheet: ${parameters.spreadsheetId}`,
+          reference: `Range: ${parameters.range} (${result.values?.length || 0} rows)`,
+        };
+      
+      case 'docs_search':
+        return {
+          type: 'document',
+          source: 'Document Search',
+          content: `Query: "${parameters.query}"`,
+          reference: `${result.hits?.length || 0} matches found`,
+        };
+      
+      case 'docs_get':
+        return {
+          type: 'document',
+          source: result.filename || 'Document',
+          content: 'Document content retrieved',
+          reference: result.sourceUrl,
+        };
+      
+      case 'http_call':
+        return {
+          type: 'api',
+          source: 'HTTP Request',
+          content: `${parameters.method} ${parameters.endpoint}`,
+          reference: `Status: ${result.status}`,
+        };
+      
+      case 'feedback_submit':
+        return {
+          type: 'api',
+          source: 'Feedback System',
+          content: `Rating: ${parameters.rating}`,
+          reference: result.feedbackId ? `ID: ${result.feedbackId}` : 'Feedback stored',
+        };
+      
+      default:
+        return undefined;
+    }
+  }
+
   // Stream chat completion
   async *streamChat(
     userId: number,
@@ -203,8 +271,8 @@ export class AIService {
       const systemMessage = this.getSystemMessage(mode);
       const messages = [systemMessage, ...contextMessages];
 
-      // Define available tools based on mode
-      const availableTools = this.getAvailableTools(mode);
+      // Define available tools based on mode (combine old and new systems)
+      const availableTools = [...this.getAvailableTools(mode), ...toolDefinitions];
 
       // Create completion with tools
       const stream = await openai.chat.completions.create({

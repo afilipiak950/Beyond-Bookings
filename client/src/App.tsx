@@ -50,6 +50,8 @@ function Router() {
           <Route path="/settings" component={Settings} />
           <Route path="/profile" component={Profile} />
           <Route path="/ai-hub" component={AIHub} />
+          <Route path="/ai" component={AIHub} />
+          <Route path="/ai/admin" component={AIHub} />
           <Route path="/debug-test" component={DebugTest} />
           <Route path="/403" component={AccessDenied} />
         </>

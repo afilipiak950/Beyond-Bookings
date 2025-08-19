@@ -31,6 +31,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { useRole } from '@/hooks/useRole';
 import AppLayout from '@/components/layout/app-layout';
 
 interface Thread {
@@ -84,6 +85,8 @@ const modeColors: Record<string, string> = {
 };
 
 export default function AIHub() {
+  const { isAdmin } = useRole();
+  
   // Component mount debugging
   useEffect(() => {
     console.log('🚀 AI Hub Component Mounted!');
