@@ -398,7 +398,7 @@ router.get('/metrics', async (req: AuthenticatedRequest, res: Response) => {
       period: '30 days',
       totalChats: totalChats.count,
       totalCost: parseFloat(String(totalCost.total || 0)),
-      averageLatency: avgLatency.avg ? Math.round(avgLatency.avg) : 0,
+      averageLatency: avgLatency.avg ? Math.round(Number(avgLatency.avg)) : 0,
       topTools: topTools.map(tool => ({
         name: tool.tool ? JSON.parse(tool.tool as string)?.[0]?.function?.name || 'unknown' : 'none',
         count: tool.count,

@@ -67,7 +67,7 @@ export class AIService {
   async getThreadMessages(threadId: number, userId: number): Promise<ChatMessage[]> {
     const messages = await db.query.aiMessages.findMany({
       where: (msgs, { eq }) => eq(msgs.threadId, threadId),
-      orderBy: [desc(aiMessages.createdAt)],
+      orderBy: [aiMessages.createdAt], // ASC order for natural conversation flow
       with: {
         thread: true,
       },
