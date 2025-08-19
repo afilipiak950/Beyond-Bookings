@@ -2,7 +2,8 @@ import { db } from '../../db';
 import { sql } from 'drizzle-orm';
 
 export interface SqlQueryInput {
-  query: string;
+  query?: string;
+  sql?: string;  // Backward compatibility
   params?: string[];
 }
 
@@ -26,21 +27,32 @@ interface TriageData {
   columns: { table: string; column: string; type: string }[];
 }
 
-export async function sql_query(input: SqlQueryInput): Promise<SqlQueryResult> {
+export async function sql_query(input: SqlQueryInput | any): Promise<SqlQueryResult> {
   const startTime = Date.now();
   let executedQuery = '';
   
   try {
-    let { query, params = [] } = input;
+    // Handle both new format (query) and old format (sql) for backward compatibility
+    let query = input.query || input.sql;
+    let params = input.params || [];
     
+    // Debug logging
+    console.log('🔍 SQL Tool Debug:', {
+      input,
+      extractedQuery: query,
+      queryType: typeof query,
+      params
+    });
+
     // Validate and sanitize input
     if (!query || typeof query !== 'string') {
+      console.log('❌ SQL validation failed:', { query, type: typeof query });
       return {
         rows: [],
         rowCount: 0,
         executedQuery: '',
         took_ms: Date.now() - startTime,
-        error: 'Query is required and must be a string',
+        error: `Query is required and must be a string. Received: ${typeof query} = ${query}`,
         errorCode: 'INVALID_INPUT'
       };
     }
