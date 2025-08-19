@@ -246,7 +246,7 @@ router.get('/docs', async (req: AuthenticatedRequest, res: Response) => {
     }
 
     const docs = await db.query.aiDocs.findMany({
-      where: (docs, { eq }) => eq(docs.userId, req.user.id),
+      where: (docs, { eq }) => eq(docs.userId, req.user!.id),
       orderBy: [desc(aiDocs.uploadedAt)],
       with: {
         chunks: {
@@ -293,7 +293,7 @@ router.delete('/docs/:id', async (req: AuthenticatedRequest, res: Response) => {
 
     // Get document info first
     const doc = await db.query.aiDocs.findFirst({
-      where: (docs, { eq, and }) => and(eq(docs.id, docId), eq(docs.userId, req.user.id)),
+      where: (docs, { eq, and }) => and(eq(docs.id, docId), eq(docs.userId, req.user!.id)),
     });
 
     if (!doc) {
@@ -393,7 +393,7 @@ router.get('/metrics', async (req: AuthenticatedRequest, res: Response) => {
     res.json({
       period: '30 days',
       totalChats: totalChats.count,
-      totalCost: parseFloat(totalCost.total || '0'),
+      totalCost: parseFloat(String(totalCost.total || 0)),
       averageLatency: avgLatency.avg ? Math.round(avgLatency.avg) : 0,
       topTools: topTools.map(tool => ({
         name: tool.tool ? JSON.parse(tool.tool as string)?.[0]?.function?.name || 'unknown' : 'none',

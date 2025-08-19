@@ -1,0 +1,208 @@
+REPLIT AGENT BUILD BRIEF — Internal AI Assistant v2.1
+
+(Always uses OpenAI • Clarifies when unclear • Self-learning)
+
+Role & Objective
+You are a senior Full-Stack/ML engineer. In this repo, implement a production-ready AI assistant at route /ai. The assistant must call OpenAI for every user message, ask ≤2 precise clarifying questions when ambiguity would change the result, and continuously improve via a feedback→knowledge→RAG loop. Deliver complete, runnable code, DB migrations, tests, and a concise README.
+
+Non-Negotiables
+
+OpenAI on every request (no heuristic-only replies).
+
+Clarify first (≤2 crisp questions) when inputs are ambiguous or missing.
+
+Citations whenever tools/RAG are used (file+range, table+query, pdf page, URL).
+
+Security: SQL read-only (SELECT only), HTTP whitelist, PII redaction in logs.
+
+Self-learning: store feedback; nightly job creates/improves “teachable snippets” and re-embeds.
+
+Streaming: SSE token streaming with robust back-pressure & reconnect.
+
+Ship now: working defaults, .env.example, migrations, tests, README. No TODO placeholders.
+
+Tech Stack (auto-detect; else use defaults)
+
+Frontend: Next.js 14 (App Router) + TypeScript + Tailwind + shadcn/ui + lucide-react.
+
+Server: Node 18+, Route Handlers, SSE streaming.
+
+DB: Postgres + pgvector (or Supabase pgvector).
+
+Queue/Jobs: Redis + BullMQ (cron/retry/DLQ).
+
+LLM: OpenAI Chat (gpt-4o-mini default, configurable), Embeddings text-embedding-3-large.
+
+Tools (server, typed & whitelisted)
+
+calc_eval(expression, variables?) -> { result, steps? } (mathjs; no eval).
+
+sql_query(sql, params?) -> { rows } (deny non-SELECT, paramized, timeout).
+
+sheets_read(spreadsheetId, range) -> { values } (Google SA creds).
+
+docs_search(query, topK?) -> { hits:[{docId,chunkId,score,preview}] }
+
+docs_get(docId, chunkId?) -> { content, sourceUrl? } (RAG chunks 800–1200 tokens, 150 overlap).
+
+http_call(endpoint, method, payload?) -> any (ENV whitelist AI_HTTP_WHITELIST).
+
+feedback_submit(threadId, rating: "up"|"down", comment?) -> { ok: true }.
+
+Routing Policy (deterministic):
+
+Mode priorities: Kalkulation > SQL > Sheets > Docs/RAG > HTTP > Calc; General = auto.
+
+If multiple tools are plausible and the answer would differ, ask 1 clarifying question first.
+
+UI/UX
+
+/ai
+
+Left: thread list (search, pin, rename, delete, export JSON/MD).
+
+Right: chat with streaming, Markdown, code blocks, tables.
+
+Mode switcher: General, Kalkulation, SQL, Sheets, Docs/RAG, API.
+
+Attachments: upload PDF/DOCX/MD/CSV/XLSX → ingest → available to RAG.
+
+Citations badges under answers (e.g., kalkulation.xlsx · 'Q3'!B14 / PDF p.3 / SQL revenue_by_month).
+
+Feedback: 👍/👎 with optional comment, “Improve answer” button.
+
+/ai/admin
+
+Docs index (re-chunk, re-embed, delete), KB review & merge, job monitor, costs/metrics.
+
+Self-Learning Loop
+
+Persist Q/A, tool calls, citations, feedback in ai_feedback & ai_training_examples.
+
+Nightly BullMQ job:
+
+Cluster 👎 cases → generate improved Q/A and “teachable snippets” (Markdown) via OpenAI.
+
+Store in ai_kb, re-embed; prefer fresh snippets in retrieval.
+
+Optional prompt patch proposal (e.g., “always show absolute & %”) saved as assistant.vN.md (admin toggle).
+
+Observability & Cost Control
+
+ai_logs: userId, threadId, model, tokens_in/out, cost, latency, toolCalls, citations, timestamp.
+
+/api/ai/metrics (admin): 30-day totals, avg latency, tool distribution, feedback ratio, top sources.
+
+Per-request max cost & max tokens from ENV; degrade gracefully with summary answers.
+
+Security & Governance
+
+Auth (NextAuth/JWT or minimal JWT middleware).
+
+RBAC: admin | manager | agent; only admin sees /ai/admin & KB edits.
+
+Rate-limit per user/IP; redact PII (email/IBAN/phone) before logs.
+
+Enforce SELECT-only SQL; timeout & param binding; HTTP endpoints whitelist via ENV.
+
+Data & Migrations (Postgres)
+
+ai_threads(id, user_id, title, created_at, updated_at)
+
+ai_messages(id, thread_id, role, content, tool_calls jsonb, citations jsonb, created_at)
+
+ai_docs(id, filename, mime, uploaded_by, created_at, meta jsonb)
+
+ai_chunks(id, doc_id, chunk_index, content, token_count, created_at)
+
+ai_embeddings(id, chunk_id, embedding vector(3072))
+
+ai_logs(id, user_id, thread_id, model, tokens_in, tokens_out, cost, latency_ms, created_at)
+
+ai_feedback(id, thread_id, message_id, rating, comment, created_at)
+
+ai_training_examples(id, question, answer, meta jsonb, created_at)
+
+ai_kb(id, title, markdown, tags text[], created_at, updated_at)
+
+ai_jobs(id, name, cron, payload jsonb, status, created_at, updated_at)
+
+API Endpoints
+
+POST /api/ai/chat → always calls OpenAI; SSE stream; tool routing; citations; logs cost.
+
+POST /api/ai/ingest → upload→extract→chunk→embed→index.
+
+POST /api/ai/feedback → store & trigger learning job.
+
+GET /api/ai/metrics → admin metrics.
+
+GET/POST/DELETE /api/ai/kb → admin KB CRUD.
+
+ENV (.env.example)
+OPENAI_API_KEY=
+DATABASE_URL=
+REDIS_URL=
+GOOGLE_PROJECT_ID=
+GOOGLE_CLIENT_EMAIL=
+GOOGLE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+AI_HTTP_WHITELIST=/api/calc,/api/reports
+AI_MAX_TOKENS=4096
+AI_MAX_COST_EUR_PER_REQUEST=0.05
+
+
+If missing, start with mock adapters so the app runs; print clear setup warnings.
+
+Implementation Order
+
+Initialize/verify Next.js 14 + Tailwind + shadcn; base layout /ai, /ai/admin.
+
+Migrations + pgvector; minimal seed & mock adapters.
+
+/api/ai/chat with deterministic router, mandatory OpenAI call, SSE.
+
+RAG pipeline (extract → chunk → embed → store) + citations.
+
+Tools (calc/sql/sheets/docs/http) with Zod validation & guards.
+
+Feedback flow + BullMQ nightly learning job + KB priority in retrieval.
+
+Logs, metrics, rate limits, PII redaction.
+
+Tests (unit for tools; E2E for chat/feedback; smoke for jobs).
+
+README + .env.example + package.json scripts.
+
+Acceptance Tests (Definition of Done)
+
+Clarify: When a question lacks a key parameter, the first streamed tokens include exactly one clarifying question; answer follows after user reply.
+
+Always-OpenAI: Every /api/ai/chat call logs model, tokens, and estimated € cost.
+
+RAG: Upload kalkulation.xlsx; ask “Marge Q3 vs Q2?” → answer includes sheet+range citation.
+
+SQL Guard: UPDATE/DELETE are rejected with safe error; SELECT $1 works parametrized.
+
+Self-learning: Submit 👎 with comment → within the nightly job, a new KB snippet is created; subsequent similar queries reference it.
+
+Admin: Metrics show last 30 days; KB edit screen works; job monitor lists cron and retries.
+
+SSE: Token stream begins ≤2s after request on local dev, auto-reconnect on drop.
+
+Deliverables (format required)
+
+Full file tree with complete file contents (no ellipses), including:
+
+app/ai/*, app/ai/admin/*, app/api/ai/*
+
+lib/ai/tools/*, lib/ai/rag/*, lib/ai/router.ts, lib/ai/system-prompts/assistant.v1.md
+
+db/migrations/*
+
+package.json, .env.example, README.md, test files
+
+How to run: exact commands (e.g., pnpm i && pnpm db:migrate && pnpm dev).
+
+Runtime System Prompt (embed as /lib/ai/system-prompts/assistant.v1.md)
+
+“You are the internal assistant. Call OpenAI for every user message. If the request is ambiguous and the result could change, ask ≤2 precise clarifying questions before answering. Use tools (SQL/Sheets/Docs/HTTP/Calc) via function calling; always return citations for tool/RAG outputs. State assumptions, show absolute and percentage values, and prefer structured tables when numeric. Be concise, correct, and safe.”

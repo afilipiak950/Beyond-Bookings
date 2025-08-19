@@ -285,30 +285,68 @@ export default function AIHub() {
   };
 
   // Rename thread
-  const handleRenameThread = (threadId: number) => {
+  const handleRenameThread = async (threadId: number) => {
     const thread = threads.find(t => t.id === threadId);
     if (!thread) return;
     
     const newTitle = prompt('Enter new thread title:', thread.title);
     if (newTitle && newTitle !== thread.title) {
-      // TODO: Implement rename API call
-      toast({
-        title: "Thread Renamed",
-        description: `Renamed to: ${newTitle}`,
-      });
+      try {
+        const response = await fetch(`/api/ai/threads/${threadId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title: newTitle }),
+          credentials: 'include',
+        });
+        
+        if (!response.ok) throw new Error('Failed to rename thread');
+        
+        // Refresh threads
+        await threadsQuery.refetch();
+        
+        toast({
+          title: "Thread Renamed",
+          description: `Renamed to: ${newTitle}`,
+        });
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to rename thread",
+          variant: "destructive"
+        });
+      }
     }
   };
 
   // Toggle pin thread
-  const handleTogglePin = (threadId: number) => {
+  const handleTogglePin = async (threadId: number) => {
     const thread = threads.find(t => t.id === threadId);
     if (!thread) return;
     
-    // TODO: Implement pin/unpin API call
-    toast({
-      title: thread.isPinned ? "Thread Unpinned" : "Thread Pinned",
-      description: thread.isPinned ? "Thread removed from favorites" : "Thread added to favorites",
-    });
+    try {
+      const response = await fetch(`/api/ai/threads/${threadId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isPinned: !thread.isPinned }),
+        credentials: 'include',
+      });
+      
+      if (!response.ok) throw new Error('Failed to update thread');
+      
+      // Refresh threads
+      await threadsQuery.refetch();
+      
+      toast({
+        title: thread.isPinned ? "Thread Unpinned" : "Thread Pinned",
+        description: thread.isPinned ? "Thread removed from favorites" : "Thread added to favorites",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update thread",
+        variant: "destructive"
+      });
+    }
   };
 
   // Export thread
@@ -343,20 +381,39 @@ export default function AIHub() {
   };
 
   // Delete thread
-  const handleDeleteThread = (threadId: number) => {
+  const handleDeleteThread = async (threadId: number) => {
     const thread = threads.find(t => t.id === threadId);
     if (!thread) return;
     
     if (confirm(`Delete thread "${thread.title}"? This action cannot be undone.`)) {
-      // TODO: Implement delete API call
-      if (activeThreadId === threadId) {
-        setActiveThreadId(null);
+      try {
+        const response = await fetch(`/api/ai/threads/${threadId}`, {
+          method: 'DELETE',
+          credentials: 'include',
+        });
+        
+        if (!response.ok) throw new Error('Failed to delete thread');
+        
+        // Clear active thread if it was deleted
+        if (activeThreadId === threadId) {
+          setActiveThreadId(null);
+        }
+        
+        // Refresh threads
+        await threadsQuery.refetch();
+        
+        toast({
+          title: "Thread Deleted",
+          description: "Thread has been permanently deleted",
+          variant: "destructive"
+        });
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to delete thread",
+          variant: "destructive"
+        });
       }
-      toast({
-        title: "Thread Deleted",
-        description: "Thread has been permanently deleted",
-        variant: "destructive"
-      });
     }
   };
 
@@ -365,17 +422,46 @@ export default function AIHub() {
     fileInputRef.current?.click();
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
     
-    // TODO: Implement file upload API call
-    const fileNames = Array.from(files).map(f => f.name).join(', ');
-    
-    toast({
-      title: "Files Uploaded",
-      description: `Uploaded: ${fileNames}`,
-    });
+    try {
+      const uploadPromises = Array.from(files).map(async (file) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        const response = await fetch('/api/ai/ingest', {
+          method: 'POST',
+          body: formData,
+          credentials: 'include',
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Failed to upload ${file.name}`);
+        }
+        
+        return await response.json();
+      });
+      
+      const results = await Promise.all(uploadPromises);
+      const fileNames = results.map(r => r.filename).join(', ');
+      
+      toast({
+        title: "Files Uploaded Successfully",
+        description: `Uploaded: ${fileNames}`,
+      });
+      
+      // Refresh documents list if available
+      // docsQuery?.refetch();
+      
+    } catch (error: any) {
+      toast({
+        title: "Upload Failed",
+        description: error.message || "Failed to upload files",
+        variant: "destructive"
+      });
+    }
     
     setIsUploadOpen(false);
     e.target.value = ''; // Reset input
