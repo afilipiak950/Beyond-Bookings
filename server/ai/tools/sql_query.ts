@@ -154,8 +154,25 @@ export async function sql_query(input: SqlQueryInput | any): Promise<SqlQueryRes
     const result = await Promise.race([queryPromise, timeoutPromise]) as any;
     
     const took_ms = Date.now() - startTime;
-    const rows = Array.isArray(result) ? result : result.rows || [result];
+    // Handle Drizzle ORM result format correctly
+    let rows = [];
+    if (result?.rows) {
+      rows = result.rows;
+    } else if (Array.isArray(result)) {
+      rows = result;
+    } else if (result && typeof result === 'object') {
+      rows = [result];
+    }
     const rowCount = rows.length;
+    
+    console.log('🔍 SQL Result Debug:', { 
+      hasResult: !!result,
+      hasRows: !!result?.rows,
+      isArray: Array.isArray(result),
+      rowCount,
+      resultType: typeof result,
+      keys: result ? Object.keys(result) : []
+    });
 
     // If zero results, force comprehensive data retrieval
     if (rowCount === 0) {
