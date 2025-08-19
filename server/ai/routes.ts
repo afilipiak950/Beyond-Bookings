@@ -206,7 +206,39 @@ router.delete('/threads/:id', async (req: AuthenticatedRequest, res: Response) =
   }
 });
 
-// DELETE /api/ai/threads - Clear all threads for current user
+// POST /api/ai/threads/clear - Smart clear threads with options
+router.post('/threads/clear', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    if (!req.user?.id) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const { type, days } = req.body;
+    
+    if (!['all', 'unpinned', 'older_than'].includes(type)) {
+      return res.status(400).json({ error: 'Invalid clear type' });
+    }
+
+    const result = await aiService.smartClearThreads(req.user.id, {
+      type,
+      days: days || 30
+    });
+
+    res.json({ 
+      success: true, 
+      deletedCount: result.deletedCount,
+      preservedCount: result.preservedCount,
+      message: `Cleared ${result.deletedCount} chat threads` +
+        (result.preservedCount > 0 ? `, preserved ${result.preservedCount}` : '')
+    });
+
+  } catch (error: any) {
+    console.error('Smart clear threads error:', error);
+    res.status(500).json({ error: error.message || 'Failed to clear threads' });
+  }
+});
+
+// DELETE /api/ai/threads - Legacy clear all threads (kept for backward compatibility)
 router.delete('/threads', async (req: AuthenticatedRequest, res: Response) => {
   try {
     if (!req.user?.id) {

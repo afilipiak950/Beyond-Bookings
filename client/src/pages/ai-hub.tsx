@@ -337,30 +337,47 @@ export default function AIHub() {
     });
   };
 
-  // Clear all chats
+  // Advanced clear all chats with multiple options
+  const [clearAllDialogOpen, setClearAllDialogOpen] = useState(false);
+  const [clearOption, setClearOption] = useState<'all' | 'unpinned' | 'older_than'>('all');
+  const [olderThanDays, setOlderThanDays] = useState(30);
+  
   const clearAllChats = useMutation({
-    mutationFn: () => apiRequest('/api/ai/threads', {
-      method: 'DELETE'
-    }),
+    mutationFn: (options: { type: 'all' | 'unpinned' | 'older_than', days?: number }) => 
+      apiRequest('/api/ai/threads/clear', 'POST', options),
     onSuccess: (result: any) => {
       queryClient.invalidateQueries({ queryKey: ['/api/ai/threads'] });
       setActiveThreadId(null);
-      setMessages([]);
-      messagesRef.current = [];
+      // Clear current messages display
+      setClearAllDialogOpen(false);
       
       toast({
-        title: "Success",
-        description: result.message || "All chats cleared successfully",
+        title: "🧹 Chats Cleared Successfully",
+        description: `${result.deletedCount} chat threads were cleared. ${result.preservedCount > 0 ? `${result.preservedCount} pinned chats preserved.` : ''}`,
       });
     },
     onError: (error: any) => {
       toast({
-        title: "Error", 
-        description: error.message || "Failed to clear chats",
+        title: "Clear Failed", 
+        description: error.message || "Unable to clear chats. Please try again.",
         variant: "destructive"
       });
     }
   });
+
+  const getThreadStats = () => {
+    const total = threads.length;
+    const pinned = threads.filter(t => t.isPinned).length;
+    const unpinned = total - pinned;
+    const oldChats = threads.filter(t => {
+      const threadDate = new Date(t.createdAt);
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - olderThanDays);
+      return threadDate < cutoffDate;
+    }).length;
+    
+    return { total, pinned, unpinned, oldChats };
+  };
 
   // Rename thread
   const handleRenameThread = async (threadId: number) => {
@@ -609,33 +626,173 @@ export default function AIHub() {
               <Button onClick={createThread} size="sm" variant="ghost" className="h-6 w-6 p-0 shrink-0">
                 <Plus className="h-3 w-3" />
               </Button>
-              <Dialog>
+              <Dialog open={clearAllDialogOpen} onOpenChange={setClearAllDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button size="sm" variant="ghost" className="h-6 w-6 p-0 shrink-0 text-destructive hover:text-destructive">
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    className="h-6 w-6 p-0 shrink-0 text-destructive hover:text-destructive hover:bg-destructive/10 transition-colors"
+                    title="Clear chats"
+                  >
                     <Trash2 className="h-3 w-3" />
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-md">
+                <DialogContent className="max-w-lg">
                   <DialogHeader>
-                    <DialogTitle>Clear All Chats</DialogTitle>
+                    <DialogTitle className="flex items-center gap-2">
+                      <Trash2 className="h-5 w-5 text-destructive" />
+                      Smart Chat Cleanup
+                    </DialogTitle>
                   </DialogHeader>
-                  <div className="space-y-4">
-                    <p className="text-sm text-muted-foreground">
-                      Are you sure you want to clear all chat threads? This action cannot be undone.
-                    </p>
-                    <div className="flex justify-end gap-2">
-                      <DialogTrigger asChild>
-                        <Button variant="outline">Cancel</Button>
-                      </DialogTrigger>
-                      <DialogTrigger asChild>
-                        <Button 
-                          variant="destructive" 
-                          onClick={() => clearAllChats.mutate()}
-                          disabled={clearAllChats.isPending}
-                        >
-                          {clearAllChats.isPending ? 'Clearing...' : 'Clear All'}
-                        </Button>
-                      </DialogTrigger>
+                  <div className="space-y-6">
+                    {/* Stats Overview */}
+                    <div className="bg-muted/30 rounded-lg p-4">
+                      <h4 className="font-medium text-sm mb-2">Current Overview</h4>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <span className="text-muted-foreground">Total Chats:</span>
+                          <span className="ml-2 font-medium">{getThreadStats().total}</span>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Pinned:</span>
+                          <span className="ml-2 font-medium text-blue-600">{getThreadStats().pinned}</span>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Unpinned:</span>
+                          <span className="ml-2 font-medium">{getThreadStats().unpinned}</span>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Older than {olderThanDays}d:</span>
+                          <span className="ml-2 font-medium">{getThreadStats().oldChats}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Cleanup Options */}
+                    <div className="space-y-3">
+                      <h4 className="font-medium text-sm">Cleanup Options</h4>
+                      
+                      <div className="space-y-2">
+                        <label className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer hover:bg-muted/30 transition-colors">
+                          <input
+                            type="radio"
+                            name="clearOption"
+                            value="unpinned"
+                            checked={clearOption === 'unpinned'}
+                            onChange={(e) => setClearOption(e.target.value as any)}
+                            className="w-4 h-4 text-blue-600"
+                          />
+                          <div className="flex-1">
+                            <div className="font-medium text-sm">📌 Clear Unpinned Chats Only</div>
+                            <div className="text-xs text-muted-foreground">Keep all pinned conversations safe - recommended option</div>
+                          </div>
+                          <Badge variant="secondary" className="text-xs">
+                            {getThreadStats().unpinned} chats
+                          </Badge>
+                        </label>
+
+                        <label className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer hover:bg-muted/30 transition-colors">
+                          <input
+                            type="radio"
+                            name="clearOption"
+                            value="older_than"
+                            checked={clearOption === 'older_than'}
+                            onChange={(e) => setClearOption(e.target.value as any)}
+                            className="w-4 h-4 text-blue-600"
+                          />
+                          <div className="flex-1">
+                            <div className="font-medium text-sm">Clear Old Chats</div>
+                            <div className="text-xs text-muted-foreground">Remove conversations older than specified days</div>
+                            {clearOption === 'older_than' && (
+                              <div className="mt-2">
+                                <Input
+                                  type="number"
+                                  min="1"
+                                  max="365"
+                                  value={olderThanDays}
+                                  onChange={(e) => setOlderThanDays(parseInt(e.target.value) || 30)}
+                                  className="w-20 h-8 text-xs"
+                                  placeholder="30"
+                                />
+                                <span className="text-xs text-muted-foreground ml-2">days</span>
+                              </div>
+                            )}
+                          </div>
+                          <Badge variant="secondary" className="text-xs">
+                            {getThreadStats().oldChats} chats
+                          </Badge>
+                        </label>
+
+                        <label className="flex items-center gap-3 p-3 rounded-lg border border-destructive/20 cursor-pointer hover:bg-destructive/5 transition-colors">
+                          <input
+                            type="radio"
+                            name="clearOption"
+                            value="all"
+                            checked={clearOption === 'all'}
+                            onChange={(e) => setClearOption(e.target.value as any)}
+                            className="w-4 h-4 text-destructive"
+                          />
+                          <div className="flex-1">
+                            <div className="font-medium text-sm text-destructive">Clear Everything</div>
+                            <div className="text-xs text-muted-foreground">Remove all conversations including pinned ones</div>
+                          </div>
+                          <Badge variant="destructive" className="text-xs">
+                            {getThreadStats().total} chats
+                          </Badge>
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Warning */}
+                    <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
+                      <div className="flex items-start gap-2">
+                        <div className="w-4 h-4 rounded-full bg-amber-400 flex items-center justify-center mt-0.5">
+                          <span className="text-white text-xs font-bold">!</span>
+                        </div>
+                        <div className="text-sm">
+                          <div className="font-medium text-amber-800 dark:text-amber-200">Action cannot be undone</div>
+                          <div className="text-amber-700 dark:text-amber-300 text-xs mt-1">
+                            Cleared conversations and their messages will be permanently deleted
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex justify-end gap-2 pt-2">
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setClearAllDialogOpen(false)}
+                        disabled={clearAllChats.isPending}
+                      >
+                        Cancel
+                      </Button>
+                      <Button 
+                        variant="destructive" 
+                        onClick={() => clearAllChats.mutate({ 
+                          type: clearOption, 
+                          days: clearOption === 'older_than' ? olderThanDays : undefined 
+                        })}
+                        disabled={clearAllChats.isPending || (
+                          clearOption === 'unpinned' && getThreadStats().unpinned === 0
+                        ) || (
+                          clearOption === 'older_than' && getThreadStats().oldChats === 0
+                        )}
+                        className="min-w-20"
+                      >
+                        {clearAllChats.isPending ? (
+                          <div className="flex items-center gap-2">
+                            <div className="animate-spin h-3 w-3 border border-white border-t-transparent rounded-full"></div>
+                            Clearing...
+                          </div>
+                        ) : (
+                          `Clear ${
+                            clearOption === 'all' ? getThreadStats().total :
+                            clearOption === 'unpinned' ? getThreadStats().unpinned :
+                            getThreadStats().oldChats
+                          } chats`
+                        )}
+                      </Button>
                     </div>
                   </div>
                 </DialogContent>

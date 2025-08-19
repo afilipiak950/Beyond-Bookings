@@ -1,7 +1,7 @@
 import OpenAI from 'openai';
 import { db } from '../db';
 import { aiThreads, aiMessages, aiLogs, InsertAiThread, InsertAiMessage, InsertAiLog } from '../../shared/schema';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, and, lt, count } from 'drizzle-orm';
 import { tools, toolDefinitions, executeTool, type ToolName } from './tools/index';
 import { calcEval, calcEvalToolDefinition } from './tools/calcEval';
 import { sqlQuery, sqlQueryToolDefinition } from './tools/sqlQuery';
@@ -580,12 +580,97 @@ HAUPT-BUSINESS-TABELLEN:
       .where(eq(aiThreads.id, threadId));
   }
 
-  // Clear all threads for a user
+  // Smart clear threads with advanced options
+  async smartClearThreads(userId: number, options: {
+    type: 'all' | 'unpinned' | 'older_than';
+    days?: number;
+  }): Promise<{ deletedCount: number; preservedCount: number }> {
+    
+    let threadsToDelete: any[] = [];
+    
+    if (options.type === 'all') {
+      // Delete all threads
+      threadsToDelete = await db.query.aiThreads.findMany({
+        where: (threads, { eq }) => eq(threads.userId, userId),
+        columns: { id: true }
+      });
+    } else if (options.type === 'unpinned') {
+      // Delete only unpinned threads
+      threadsToDelete = await db.query.aiThreads.findMany({
+        where: (threads, { eq, and }) => and(
+          eq(threads.userId, userId),
+          eq(threads.isPinned, false)
+        ),
+        columns: { id: true }
+      });
+    } else if (options.type === 'older_than') {
+      // Delete threads older than specified days
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - (options.days || 30));
+      
+      threadsToDelete = await db.query.aiThreads.findMany({
+        where: (threads, { eq, and, lt }) => and(
+          eq(threads.userId, userId),
+          lt(threads.createdAt, cutoffDate)
+        ),
+        columns: { id: true }
+      });
+    }
+
+    const threadIds = threadsToDelete.map(t => t.id);
+    
+    if (threadIds.length === 0) {
+      return { deletedCount: 0, preservedCount: 0 };
+    }
+
+    // Delete messages for these threads
+    if (threadIds.length > 0) {
+      await db
+        .delete(aiMessages)
+        .where(eq(aiMessages.threadId, threadIds[0]));
+      
+      // Delete messages for remaining threads
+      for (let i = 1; i < threadIds.length; i++) {
+        await db
+          .delete(aiMessages)
+          .where(eq(aiMessages.threadId, threadIds[i]));
+      }
+    }
+
+    // Delete the threads
+    let deletedCount = 0;
+    for (const threadId of threadIds) {
+      await db
+        .delete(aiThreads)
+        .where(eq(aiThreads.id, threadId));
+      deletedCount++;
+    }
+
+    // Count preserved threads
+    const [totalThreads] = await db
+      .select({ count: count() })
+      .from(aiThreads)
+      .where(eq(aiThreads.userId, userId));
+
+    const preservedCount = totalThreads.count;
+
+    return { deletedCount, preservedCount };
+  }
+
+  // Clear all threads for a user (legacy method)
   async clearAllThreads(userId: number): Promise<number> {
-    // First delete all messages (foreign key constraint)
-    await db
-      .delete(aiMessages)
-      .where(eq(aiMessages.userId, userId));
+    // Get all threads for the user first
+    const userThreads = await db.query.aiThreads.findMany({
+      where: (threads, { eq }) => eq(threads.userId, userId),
+      columns: { id: true }
+    });
+    
+    // Delete all messages for user's threads
+    for (const thread of userThreads) {
+      await db
+        .delete(aiMessages)
+        .where(eq(aiMessages.threadId, thread.id));
+    }
 
     // Then delete all threads and return count
     const result = await db
