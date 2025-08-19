@@ -1130,17 +1130,6 @@ export default function AIHub() {
                 </div>
               </div>
             )}
-            
-            {/* AI thinking indicator - shown only AFTER user message when processing */}
-            {pendingUserMessage && (
-              <div className="flex gap-3 justify-end mb-4">
-                <div className="max-w-[80%] bg-primary text-primary-foreground ml-12 rounded-lg p-4">
-                  <div className="whitespace-pre-wrap text-sm">
-                    {pendingUserMessage}
-                  </div>
-                </div>
-              </div>
-            )}
 
             {isStreaming && !streamingMessage && (
               <div className="flex gap-3 justify-start mb-4">
