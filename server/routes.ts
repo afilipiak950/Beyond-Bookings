@@ -1128,76 +1128,66 @@ CRITICAL: You must always return a specific price number in EUR. If exact data u
     }
   });
 
-  // Comprehensive AI search for ALL platforms simultaneously
+  // Real web scraping for ALL platforms simultaneously
   async function searchAllPlatformReviews(hotelName: string) {
     try {
-      console.log(`🔍 AI searching ALL platforms for reviews: ${hotelName}`);
+      console.log(`🔍 Real web scraping ALL platforms for reviews: ${hotelName}`);
       
-      const { default: OpenAI } = await import('openai');
-      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+      // Attempt real scraping for all platforms in parallel
+      const [bookingData, googleData, holidayCheckData, tripAdvisorData] = await Promise.allSettled([
+        scrapeBookingReviews(hotelName),
+        scrapeGoogleReviews(hotelName),
+        scrapeHolidayCheckReviews(hotelName),
+        scrapeTripAdvisorReviews(hotelName)
+      ]);
 
-      const searchPrompt = `Search for REAL review data for "${hotelName}" across ALL 4 platforms. Find actual ratings and review counts from these specific sources:
+      const result = {
+        booking: bookingData.status === 'fulfilled' && bookingData.value ? {
+          rating: bookingData.value.rating,
+          reviewCount: bookingData.value.reviewCount,
+          url: bookingData.value.url || `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(hotelName)}`
+        } : {
+          rating: null,
+          reviewCount: null,
+          url: `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(hotelName)}`
+        },
+        
+        google: googleData.status === 'fulfilled' && googleData.value ? {
+          rating: googleData.value.rating,
+          reviewCount: googleData.value.reviewCount,
+          url: googleData.value.url || `https://www.google.com/maps/search/${encodeURIComponent(hotelName + ' hotel')}`
+        } : {
+          rating: null,
+          reviewCount: null,
+          url: `https://www.google.com/maps/search/${encodeURIComponent(hotelName + ' hotel')}`
+        },
+        
+        holidayCheck: holidayCheckData.status === 'fulfilled' && holidayCheckData.value ? {
+          rating: holidayCheckData.value.rating,
+          reviewCount: holidayCheckData.value.reviewCount,
+          url: holidayCheckData.value.url || `https://www.holidaycheck.de/dcs/hotel-search?s=${encodeURIComponent(hotelName)}`
+        } : {
+          rating: null,
+          reviewCount: null,
+          url: `https://www.holidaycheck.de/dcs/hotel-search?s=${encodeURIComponent(hotelName)}`
+        },
+        
+        tripadvisor: tripAdvisorData.status === 'fulfilled' && tripAdvisorData.value ? {
+          rating: tripAdvisorData.value.rating,
+          reviewCount: tripAdvisorData.value.reviewCount,
+          url: tripAdvisorData.value.url || `https://www.tripadvisor.com/Search?q=${encodeURIComponent(hotelName + ' hotel')}`
+        } : {
+          rating: null,
+          reviewCount: null,
+          url: `https://www.tripadvisor.com/Search?q=${encodeURIComponent(hotelName + ' hotel')}`
+        }
+      };
 
-1. Booking.com - Find real rating (0-10 scale) and review count
-2. Google Reviews/Maps - Find real rating (0-5 scale) and review count  
-3. HolidayCheck - Find real rating (0-6 scale) and review count
-4. TripAdvisor - Find real rating (0-5 scale) and review count
-
-CRITICAL: Only return actual numbers you can verify. If you cannot find real data for a platform, set rating and reviewCount to null.
-
-Return ONLY this exact JSON format:
-{
-  "booking": {
-    "rating": exact_number_or_null,
-    "reviewCount": exact_number_or_null,
-    "url": "real_hotel_page_or_search_url"
-  },
-  "google": {
-    "rating": exact_number_or_null,
-    "reviewCount": exact_number_or_null,
-    "url": "google_maps_hotel_page_or_search_url"
-  },
-  "holidayCheck": {
-    "rating": exact_number_or_null,
-    "reviewCount": exact_number_or_null,
-    "url": "holidaycheck_hotel_page_or_search_url"
-  },
-  "tripadvisor": {
-    "rating": exact_number_or_null,
-    "reviewCount": exact_number_or_null,
-    "url": "tripadvisor_hotel_page_or_search_url"
-  }
-}
-
-EXAMPLE: If you find Booking.com has 8.1/10 rating with 1,243 reviews, Google has 4.2/5 with 567 reviews, but cannot find HolidayCheck or TripAdvisor data, return:
-{
-  "booking": {"rating": 8.1, "reviewCount": 1243, "url": "https://www.booking.com/hotel/..."},
-  "google": {"rating": 4.2, "reviewCount": 567, "url": "https://maps.google.com/..."},
-  "holidayCheck": {"rating": null, "reviewCount": null, "url": "https://www.holidaycheck.de/search?..."},
-  "tripadvisor": {"rating": null, "reviewCount": null, "url": "https://www.tripadvisor.com/search?..."}
-}`;
-
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o",
-        messages: [
-          { role: "system", content: "You are a hotel review researcher. Search ALL platforms and return only real data you can verify. Use null for any data you cannot find." },
-          { role: "user", content: searchPrompt }
-        ],
-        max_tokens: 800,
-        temperature: 0.1
-      });
-
-      let cleanResponse = response.choices[0].message.content?.trim() || '';
-      if (cleanResponse.startsWith('```json')) {
-        cleanResponse = cleanResponse.replace(/```json\n?/, '').replace(/\n?```$/, '');
-      }
-
-      const result = JSON.parse(cleanResponse);
-      console.log(`✅ AI found review data for ALL platforms:`, result);
+      console.log(`✅ Real scraping results for ALL platforms:`, result);
       return result;
 
     } catch (error) {
-      console.error(`❌ AI search failed for all platforms:`, error);
+      console.error(`❌ Web scraping failed for all platforms:`, error);
       // Return fallback structure with search URLs
       return {
         booking: { rating: null, reviewCount: null, url: `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(hotelName)}` },
@@ -1674,8 +1664,8 @@ RETURN ONLY BASIC HOTEL DATA in valid JSON format:
 
       // Step 3: Use comprehensive AI search for ALL hotels to get real review data
       let reviewPlatforms;
-      // Use comprehensive AI search for ALL hotels
-      console.log('🤖 AI searching ALL platforms for comprehensive review data...');
+      // Use real web scraping for ALL hotels
+      console.log('🕷️ Real web scraping ALL platforms for authentic review data...');
       const aiSearchResults = await searchAllPlatformReviews(name);
 
       // Process comprehensive AI search results
@@ -1684,28 +1674,28 @@ RETURN ONLY BASIC HOTEL DATA in valid JSON format:
             url: aiSearchResults.booking?.url || `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(name)}`,
             rating: aiSearchResults.booking?.rating || null,
             reviewCount: aiSearchResults.booking?.reviewCount || null,
-            summary: aiSearchResults.booking?.rating ? `AI found real data: ${aiSearchResults.booking.rating}/10 rating with ${aiSearchResults.booking.reviewCount} reviews` : "No real data found - use search link for manual verification"
+            summary: aiSearchResults.booking?.rating ? `Real scraping success: ${aiSearchResults.booking.rating}/10 rating with ${aiSearchResults.booking.reviewCount} reviews` : "Scraping failed - use search link for manual verification"
           },
           
           google: {
             url: aiSearchResults.google?.url || `https://www.google.com/maps/search/${encodeURIComponent(name + ' hotel')}`,
             rating: aiSearchResults.google?.rating || null,
             reviewCount: aiSearchResults.google?.reviewCount || null,
-            summary: aiSearchResults.google?.rating ? `AI found real data: ${aiSearchResults.google.rating}/5 rating with ${aiSearchResults.google.reviewCount} reviews` : "No real data found - use search link for manual verification"
+            summary: aiSearchResults.google?.rating ? `Real scraping success: ${aiSearchResults.google.rating}/5 rating with ${aiSearchResults.google.reviewCount} reviews` : "Scraping failed - use search link for manual verification"
           },
           
           holidayCheck: {
             url: aiSearchResults.holidayCheck?.url || `https://www.holidaycheck.de/dcs/hotel-search?s=${encodeURIComponent(name)}`,
             rating: aiSearchResults.holidayCheck?.rating || null,
             reviewCount: aiSearchResults.holidayCheck?.reviewCount || null,
-            summary: aiSearchResults.holidayCheck?.rating ? `AI found real data: ${aiSearchResults.holidayCheck.rating}/6 rating with ${aiSearchResults.holidayCheck.reviewCount} reviews` : "No real data found - use search link for manual verification"
+            summary: aiSearchResults.holidayCheck?.rating ? `Real scraping success: ${aiSearchResults.holidayCheck.rating}/6 rating with ${aiSearchResults.holidayCheck.reviewCount} reviews` : "Scraping failed - use search link for manual verification"
           },
           
           tripadvisor: {
             url: aiSearchResults.tripadvisor?.url || `https://www.tripadvisor.com/Search?q=${encodeURIComponent(name + ' hotel')}`,
             rating: aiSearchResults.tripadvisor?.rating || null,
             reviewCount: aiSearchResults.tripadvisor?.reviewCount || null,
-            summary: aiSearchResults.tripadvisor?.rating ? `AI found real data: ${aiSearchResults.tripadvisor.rating}/5 rating with ${aiSearchResults.tripadvisor.reviewCount} reviews` : "No real data found - use search link for manual verification"
+            summary: aiSearchResults.tripadvisor?.rating ? `Real scraping success: ${aiSearchResults.tripadvisor.rating}/5 rating with ${aiSearchResults.tripadvisor.reviewCount} reviews` : "Scraping failed - use search link for manual verification"
         }
       };
 
@@ -1723,7 +1713,7 @@ RETURN ONLY BASIC HOTEL DATA in valid JSON format:
         averagePrice: basicHotelData.averagePrice || null,
         // Review platform data with real or fallback structure
         reviewPlatforms,
-        overallReviewSummary: "AI-powered comprehensive review search across all major platforms completed",
+        overallReviewSummary: "Real web scraping attempted across all major platforms - only authentic data returned",
         lastReviewUpdate: new Date().toISOString()
       };
 
