@@ -17,6 +17,8 @@ KI Pricing Agent, rebranded as "bebo convert", is a production-ready SaaS web ap
   - Security controls: SQL SELECT-only, HTTP endpoint whitelist, cost limits
   - Comprehensive system prompts and routing policy (Kalkulation > SQL > Sheets > Docs/RAG > HTTP > Calc)
   - New chat clearing functionality fixed for proper thread management
+- **CRITICAL FIX COMPLETED**: Resolved "no results found" database issue by fixing AI table name confusion (`calculations` vs `pricing_calculations`) with multi-layer solution including system prompt updates and automatic query correction
+- **AI RESPONSE ENHANCEMENT**: Implemented intelligent response interpretation system that provides conversational, formatted answers instead of raw JSON data, making AI responses more natural and user-friendly
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.

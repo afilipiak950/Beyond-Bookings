@@ -290,6 +290,7 @@ export class AIService {
       let assistantMessage = '';
       let toolCalls: any[] = [];
       let citations: Citation[] = [];
+      let toolResults: any[] = [];
       let tokenUsage: TokenUsage = { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 };
 
       for await (const chunk of stream) {
@@ -361,17 +362,12 @@ export class AIService {
               };
             }
 
-            // Add result to context and continue conversation
-            // Format tool result for better German context
-            const toolNames = {
-              'calc_eval': 'Berechnung',
-              'sql_query': 'Datenbankabfrage', 
-              'docs_search': 'Dokumentensuche',
-              'docs_get': 'Dokumentenabruf',
-              'http_call': 'API-Aufruf'
-            };
-            const germanToolName = toolNames[toolCall.function.name as keyof typeof toolNames] || toolCall.function.name;
-            assistantMessage += `\n\nTool Result (${germanToolName}): ${JSON.stringify(result)}`;
+            // Format tool result for assistant context but don't add raw JSON
+            toolResults.push({
+              tool: toolCall.function.name,
+              result,
+              citation
+            });
 
           } catch (error: any) {
             yield {
@@ -379,6 +375,43 @@ export class AIService {
               error: `Tool execution failed: ${error?.message || 'Unknown error'}`,
             };
           }
+        }
+
+        // If tools were executed, get AI to interpret and respond
+        if (toolResults.length > 0) {
+          // Create a follow-up prompt with tool results for AI to interpret
+          const interpretationPrompt = `Based on the following tool results, provide a natural, conversational response in German. Format numbers clearly and provide insights:
+
+${toolResults.map(tr => `Tool: ${tr.tool}\nResult: ${JSON.stringify(tr.result)}`).join('\n\n')}
+
+Respond conversationally with proper formatting, explanations, and insights. Don't show raw JSON data.`;
+
+          const interpretationStream = await openai.chat.completions.create({
+            model,
+            messages: [
+              systemMessage,
+              { role: 'user', content: message },
+              { role: 'assistant', content: assistantMessage },
+              { role: 'user', content: interpretationPrompt }
+            ] as any,
+            stream: true,
+            temperature: 0.2,
+            max_tokens: 1000,
+          });
+
+          let interpretedResponse = '';
+          for await (const chunk of interpretationStream) {
+            const delta = chunk.choices[0]?.delta;
+            if (delta?.content) {
+              interpretedResponse += delta.content;
+              yield {
+                type: 'message',
+                content: delta.content,
+              };
+            }
+          }
+
+          assistantMessage += '\n\n' + interpretedResponse;
         }
       }
 
