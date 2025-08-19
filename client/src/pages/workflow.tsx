@@ -895,7 +895,7 @@ export default function Workflow() {
       hotelName: hotel.name,
       stars: hotel.stars || 0,
       roomCount: hotel.roomCount || 0,
-      averagePrice: hotel.averagePrice || 0,
+      averagePrice: Number(hotel.averagePrice) || 0,
       hotelUrl: hotel.url || ''
     }));
     setHotelSearchOpen(false);
@@ -1639,7 +1639,7 @@ export default function Workflow() {
                                   </div>
                                   <div className="text-right">
                                     <div className="text-sm font-medium text-blue-600">
-                                      {hotel.averagePrice ? `${hotel.averagePrice.toFixed(2)} ${getCurrencySymbol(workflowData.currency)}` : 'Kein Preis'}
+                                      {hotel.averagePrice ? `${Number(hotel.averagePrice).toFixed(2)} ${getCurrencySymbol(workflowData.currency)}` : 'Kein Preis'}
                                     </div>
                                     <div className="text-xs text-gray-400">
                                       {hotel.location || 'Keine Lage'}
@@ -1944,7 +1944,7 @@ export default function Workflow() {
                             <div className="space-y-4 pt-4">
                               <div className="bg-blue-50 p-3 rounded border-l-4 border-blue-400">
                                 <p className="text-sm text-blue-800">
-                                  <strong>KI-Vorschlag:</strong> {aiSuggestedPrice.toFixed(2)} {getCurrencySymbol(workflowData.currency)} ({aiConfidence}% von {workflowData.averagePrice.toFixed(2)} {getCurrencySymbol(workflowData.currency)})
+                                  <strong>KI-Vorschlag:</strong> {aiSuggestedPrice.toFixed(2)} {getCurrencySymbol(workflowData.currency)} ({aiConfidence}% von {Number(workflowData.averagePrice).toFixed(2)} {getCurrencySymbol(workflowData.currency)})
                                 </p>
                                 <p className="text-xs text-blue-600 mt-1">
                                   Ihre Anpassung hilft der KI beim Lernen und verbessert zukünftige Vorschläge.
@@ -2037,7 +2037,7 @@ export default function Workflow() {
                           </span>
                         </div>
                         <span className="text-xl font-black bg-gradient-to-r from-gray-700 to-gray-800 bg-clip-text text-transparent">
-                          {workflowData.averagePrice ? (workflowData.averagePrice * 0.65).toFixed(2) : '0.00'} {getCurrencySymbol(workflowData.currency)}
+                          {workflowData.averagePrice ? (Number(workflowData.averagePrice) * 0.65).toFixed(2) : '0.00'} {getCurrencySymbol(workflowData.currency)}
                         </span>
                       </div>
                     </div>
