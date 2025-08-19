@@ -155,11 +155,14 @@ export async function sql_query(input: SqlQueryInput | any): Promise<SqlQueryRes
     console.log('🔥🔥🔥 EXECUTING PROCESSED SQL:', processedQuery);
     
     // BYPASS DRIZZLE: Use direct PostgreSQL connection
+    console.log('🔥🔥🔥 ATTEMPTING DIRECT SQL EXECUTION...');
     try {
       const directResult = await executeDirectSQL(processedQuery);
       console.log('🔥🔥🔥 DIRECT RESULT:', directResult);
+      console.log('🔥🔥🔥 DIRECT RESULT ROWS:', directResult?.rows);
+      console.log('🔥🔥🔥 DIRECT RESULT COUNT:', directResult?.rowCount);
       
-      if (directResult.rows && directResult.rows.length > 0) {
+      if (directResult && directResult.rows && directResult.rows.length > 0) {
         console.log('✅ SUCCESS: Direct SQL returned data!');
         return {
           rows: directResult.rows,
@@ -167,9 +170,12 @@ export async function sql_query(input: SqlQueryInput | any): Promise<SqlQueryRes
           executedQuery: processedQuery,
           took_ms: Date.now() - startTime,
         };
+      } else {
+        console.log('🔥🔥🔥 Direct SQL returned but with no rows');
       }
-    } catch (directError) {
-      console.log('🔥 DIRECT SQL FAILED, falling back to Drizzle:', directError);
+    } catch (directError: any) {
+      console.log('🔥🔥🔥 DIRECT SQL FAILED:', directError?.message || directError);
+      console.log('🔥🔥🔥 DIRECT SQL ERROR STACK:', directError?.stack);
     }
     
     // Fallback to Drizzle if direct fails
