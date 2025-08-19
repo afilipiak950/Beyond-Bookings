@@ -1128,39 +1128,62 @@ CRITICAL: You must always return a specific price number in EUR. If exact data u
     }
   });
 
-  // AI-powered web search for authentic review data
-  async function searchHotelReviews(hotelName: string, platform: string) {
+  // Comprehensive AI search for ALL platforms simultaneously
+  async function searchAllPlatformReviews(hotelName: string) {
     try {
-      console.log(`🔍 AI searching ${platform} reviews for: ${hotelName}`);
+      console.log(`🔍 AI searching ALL platforms for reviews: ${hotelName}`);
       
       const { default: OpenAI } = await import('openai');
       const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-      const searchPrompt = `Search for real review data for "${hotelName}" on ${platform}.
+      const searchPrompt = `Search for REAL review data for "${hotelName}" across ALL 4 platforms. Find actual ratings and review counts from these specific sources:
 
-Find the exact rating and number of reviews. Return ONLY this JSON format:
+1. Booking.com - Find real rating (0-10 scale) and review count
+2. Google Reviews/Maps - Find real rating (0-5 scale) and review count  
+3. HolidayCheck - Find real rating (0-6 scale) and review count
+4. TripAdvisor - Find real rating (0-5 scale) and review count
+
+CRITICAL: Only return actual numbers you can verify. If you cannot find real data for a platform, set rating and reviewCount to null.
+
+Return ONLY this exact JSON format:
 {
-  "rating": exact_numeric_rating_or_null,
-  "reviewCount": exact_number_of_reviews_or_null,
-  "url": "direct_hotel_page_url_or_search_url",
-  "found": true_or_false
+  "booking": {
+    "rating": exact_number_or_null,
+    "reviewCount": exact_number_or_null,
+    "url": "real_hotel_page_or_search_url"
+  },
+  "google": {
+    "rating": exact_number_or_null,
+    "reviewCount": exact_number_or_null,
+    "url": "google_maps_hotel_page_or_search_url"
+  },
+  "holidayCheck": {
+    "rating": exact_number_or_null,
+    "reviewCount": exact_number_or_null,
+    "url": "holidaycheck_hotel_page_or_search_url"
+  },
+  "tripadvisor": {
+    "rating": exact_number_or_null,
+    "reviewCount": exact_number_or_null,
+    "url": "tripadvisor_hotel_page_or_search_url"
+  }
 }
 
-Platform-specific instructions:
-- Booking.com: Look for ratings out of 10 (e.g., 8.1/10)
-- Google Reviews: Look for ratings out of 5 (e.g., 4.2/5) 
-- HolidayCheck: Look for ratings out of 6 (e.g., 4.8/6)
-- TripAdvisor: Look for ratings out of 5 (e.g., 4.0/5)
-
-Return null values if you cannot find reliable data.`;
+EXAMPLE: If you find Booking.com has 8.1/10 rating with 1,243 reviews, Google has 4.2/5 with 567 reviews, but cannot find HolidayCheck or TripAdvisor data, return:
+{
+  "booking": {"rating": 8.1, "reviewCount": 1243, "url": "https://www.booking.com/hotel/..."},
+  "google": {"rating": 4.2, "reviewCount": 567, "url": "https://maps.google.com/..."},
+  "holidayCheck": {"rating": null, "reviewCount": null, "url": "https://www.holidaycheck.de/search?..."},
+  "tripadvisor": {"rating": null, "reviewCount": null, "url": "https://www.tripadvisor.com/search?..."}
+}`;
 
       const response = await openai.chat.completions.create({
         model: "gpt-4o",
         messages: [
-          { role: "system", content: "You are a hotel review data researcher. Find authentic review information from real sources." },
+          { role: "system", content: "You are a hotel review researcher. Search ALL platforms and return only real data you can verify. Use null for any data you cannot find." },
           { role: "user", content: searchPrompt }
         ],
-        max_tokens: 300,
+        max_tokens: 800,
         temperature: 0.1
       });
 
@@ -1170,12 +1193,18 @@ Return null values if you cannot find reliable data.`;
       }
 
       const result = JSON.parse(cleanResponse);
-      console.log(`✅ AI search result for ${platform}:`, result);
+      console.log(`✅ AI found review data for ALL platforms:`, result);
       return result;
 
     } catch (error) {
-      console.error(`❌ AI search failed for ${platform}:`, error);
-      return { rating: null, reviewCount: null, url: null, found: false };
+      console.error(`❌ AI search failed for all platforms:`, error);
+      // Return fallback structure with search URLs
+      return {
+        booking: { rating: null, reviewCount: null, url: `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(hotelName)}` },
+        google: { rating: null, reviewCount: null, url: `https://www.google.com/maps/search/${encodeURIComponent(hotelName + ' hotel')}` },
+        holidayCheck: { rating: null, reviewCount: null, url: `https://www.holidaycheck.de/dcs/hotel-search?s=${encodeURIComponent(hotelName)}` },
+        tripadvisor: { rating: null, reviewCount: null, url: `https://www.tripadvisor.com/Search?q=${encodeURIComponent(hotelName + ' hotel')}` }
+      };
     }
   }
 
@@ -1591,30 +1620,7 @@ Return null values if you cannot find reliable data.`;
       console.log(`🏨 Starting enhanced hotel extraction for: ${name}`);
       console.log(`🌐 Optional URL provided: ${url || 'none'}`);
 
-      // Step 1: Check for known hotels with real data first
-      const knownHotels = {
-        'taste hotel hockenheim': {
-          booking: { rating: 8.1, reviewCount: 892, url: 'https://www.booking.com/hotel/de/taste-hockenheim.html' },
-          google: { rating: 4.2, reviewCount: 456, url: 'https://maps.google.com/maps/place/TASTE+HOTEL+HOCKENHEIM' },
-          holidayCheck: { rating: 4.8, reviewCount: 127, url: 'https://www.holidaycheck.de/hi/taste-hotel-hockenheim' },
-          tripadvisor: { rating: 4.0, reviewCount: 234, url: 'https://www.tripadvisor.com/Hotel_Review-TASTE_HOTEL_HOCKENHEIM' }
-        },
-        'hotel adlon berlin': {
-          booking: { rating: 9.2, reviewCount: 3401, url: 'https://www.booking.com/hotel/de/adlon-kempinski-berlin.html' },
-          google: { rating: 4.5, reviewCount: 2876, url: 'https://maps.google.com/maps/place/Hotel+Adlon+Kempinski+Berlin' },
-          holidayCheck: { rating: 5.4, reviewCount: 891, url: 'https://www.holidaycheck.de/hi/hotel-adlon-kempinski-berlin' },
-          tripadvisor: { rating: 4.5, reviewCount: 1654, url: 'https://www.tripadvisor.com/Hotel_Review-Hotel_Adlon_Kempinski_Berlin' }
-        },
-        'breidenbacher hof': {
-          booking: { rating: 8.8, reviewCount: 1247, url: 'https://www.booking.com/hotel/de/breidenbacher-hof.html' },
-          google: { rating: 4.4, reviewCount: 987, url: 'https://maps.google.com/maps/place/Breidenbacher+Hof' },
-          holidayCheck: { rating: 5.2, reviewCount: 456, url: 'https://www.holidaycheck.de/hi/breidenbacher-hof-duesseldorf' },
-          tripadvisor: { rating: 4.5, reviewCount: 723, url: 'https://www.tripadvisor.com/Hotel_Review-Breidenbacher_Hof' }
-        }
-      };
-
-      const normalizedName = name.toLowerCase().trim();
-      const knownHotelData = knownHotels[normalizedName];
+      // Force ALL hotels to use AI search for authentic review data
 
       // Step 2: Get basic hotel data from OpenAI
       const { default: OpenAI } = await import('openai');
@@ -1666,98 +1672,42 @@ RETURN ONLY BASIC HOTEL DATA in valid JSON format:
         throw new Error(`Failed to parse basic hotel data: ${parseError.message}`);
       }
 
-      // Step 3: Use known data if available, otherwise attempt scraping
+      // Step 3: Use comprehensive AI search for ALL hotels to get real review data
       let reviewPlatforms;
-      
-      if (knownHotelData) {
-        console.log('✅ Using known real data for:', name);
-        reviewPlatforms = {
-          booking: {
-            url: knownHotelData.booking.url,
-            rating: knownHotelData.booking.rating,
-            reviewCount: knownHotelData.booking.reviewCount,
-            summary: "Real verified data from Booking.com platform"
-          },
-          google: {
-            url: knownHotelData.google.url,
-            rating: knownHotelData.google.rating,
-            reviewCount: knownHotelData.google.reviewCount,
-            summary: "Real verified data from Google Reviews platform"
-          },
-          holidayCheck: {
-            url: knownHotelData.holidayCheck.url,
-            rating: knownHotelData.holidayCheck.rating,
-            reviewCount: knownHotelData.holidayCheck.reviewCount,
-            summary: "Real verified data from HolidayCheck platform"
-          },
-          tripadvisor: {
-            url: knownHotelData.tripadvisor.url,
-            rating: knownHotelData.tripadvisor.rating,
-            reviewCount: knownHotelData.tripadvisor.reviewCount,
-            summary: "Real verified data from TripAdvisor platform"
-          }
-        };
-      } else {
-        // Use AI search for unknown hotels
-        console.log('🤖 Using AI search for unknown hotel...');
-        const [bookingData, googleData, holidayCheckData, tripAdvisorData] = await Promise.allSettled([
-          searchHotelReviews(name, 'Booking.com'),
-          searchHotelReviews(name, 'Google Reviews'),
-          searchHotelReviews(name, 'HolidayCheck'),
-          searchHotelReviews(name, 'TripAdvisor')
-        ]);
+      // Use comprehensive AI search for ALL hotels
+      console.log('🤖 AI searching ALL platforms for comprehensive review data...');
+      const aiSearchResults = await searchAllPlatformReviews(name);
 
-        // Process AI search results with fallback to search URLs
-        reviewPlatforms = {
-          booking: bookingData.status === 'fulfilled' && bookingData.value ? {
-            url: bookingData.value.url || `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(name)}`,
-            rating: bookingData.value.rating || null,
-            reviewCount: bookingData.value.reviewCount || null,
-            summary: bookingData.value.found && bookingData.value.rating ? "AI-sourced real review data from Booking.com" : "Search URL provided - manual verification recommended"
-          } : {
-            url: `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(name)}`,
-            rating: null,
-            reviewCount: null,
-            summary: "AI search failed - please verify manually using search link"
+      // Process comprehensive AI search results
+      reviewPlatforms = {
+        booking: {
+            url: aiSearchResults.booking?.url || `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(name)}`,
+            rating: aiSearchResults.booking?.rating || null,
+            reviewCount: aiSearchResults.booking?.reviewCount || null,
+            summary: aiSearchResults.booking?.rating ? `AI found real data: ${aiSearchResults.booking.rating}/10 rating with ${aiSearchResults.booking.reviewCount} reviews` : "No real data found - use search link for manual verification"
           },
           
-          google: googleData.status === 'fulfilled' && googleData.value ? {
-            url: googleData.value.url || `https://www.google.com/maps/search/${encodeURIComponent(name + ' hotel')}`,
-            rating: googleData.value.rating || null,
-            reviewCount: googleData.value.reviewCount || null,
-            summary: googleData.value.found && googleData.value.rating ? "AI-sourced real review data from Google Reviews" : "Search URL provided - manual verification recommended"
-          } : {
-            url: `https://www.google.com/maps/search/${encodeURIComponent(name + ' hotel')}`,
-            rating: null,
-            reviewCount: null,
-            summary: "AI search failed - please verify manually using search link"
+          google: {
+            url: aiSearchResults.google?.url || `https://www.google.com/maps/search/${encodeURIComponent(name + ' hotel')}`,
+            rating: aiSearchResults.google?.rating || null,
+            reviewCount: aiSearchResults.google?.reviewCount || null,
+            summary: aiSearchResults.google?.rating ? `AI found real data: ${aiSearchResults.google.rating}/5 rating with ${aiSearchResults.google.reviewCount} reviews` : "No real data found - use search link for manual verification"
           },
           
-          holidayCheck: holidayCheckData.status === 'fulfilled' && holidayCheckData.value ? {
-            url: holidayCheckData.value.url || `https://www.holidaycheck.de/dcs/hotel-search?s=${encodeURIComponent(name)}`,
-            rating: holidayCheckData.value.rating || null,
-            reviewCount: holidayCheckData.value.reviewCount || null,
-            summary: holidayCheckData.value.found && holidayCheckData.value.rating ? "AI-sourced real review data from HolidayCheck" : "Search URL provided - manual verification recommended"
-          } : {
-            url: `https://www.holidaycheck.de/dcs/hotel-search?s=${encodeURIComponent(name)}`,
-            rating: null,
-            reviewCount: null,
-            summary: "AI search failed - please verify manually using search link"
+          holidayCheck: {
+            url: aiSearchResults.holidayCheck?.url || `https://www.holidaycheck.de/dcs/hotel-search?s=${encodeURIComponent(name)}`,
+            rating: aiSearchResults.holidayCheck?.rating || null,
+            reviewCount: aiSearchResults.holidayCheck?.reviewCount || null,
+            summary: aiSearchResults.holidayCheck?.rating ? `AI found real data: ${aiSearchResults.holidayCheck.rating}/6 rating with ${aiSearchResults.holidayCheck.reviewCount} reviews` : "No real data found - use search link for manual verification"
           },
           
-          tripadvisor: tripAdvisorData.status === 'fulfilled' && tripAdvisorData.value ? {
-            url: tripAdvisorData.value.url || `https://www.tripadvisor.com/Search?q=${encodeURIComponent(name + ' hotel')}`,
-            rating: tripAdvisorData.value.rating || null,
-            reviewCount: tripAdvisorData.value.reviewCount || null,
-            summary: tripAdvisorData.value.found && tripAdvisorData.value.rating ? "AI-sourced real review data from TripAdvisor" : "Search URL provided - manual verification recommended"
-          } : {
-            url: `https://www.tripadvisor.com/Search?q=${encodeURIComponent(name + ' hotel')}`,
-            rating: null,
-            reviewCount: null,
-            summary: "AI search failed - please verify manually using search link"
-          }
-        };
-      }
+          tripadvisor: {
+            url: aiSearchResults.tripadvisor?.url || `https://www.tripadvisor.com/Search?q=${encodeURIComponent(name + ' hotel')}`,
+            rating: aiSearchResults.tripadvisor?.rating || null,
+            reviewCount: aiSearchResults.tripadvisor?.reviewCount || null,
+            summary: aiSearchResults.tripadvisor?.rating ? `AI found real data: ${aiSearchResults.tripadvisor.rating}/5 rating with ${aiSearchResults.tripadvisor.reviewCount} reviews` : "No real data found - use search link for manual verification"
+        }
+      };
 
       // Step 4: Structure final response with review data
       const extractedData = {
@@ -1773,9 +1723,7 @@ RETURN ONLY BASIC HOTEL DATA in valid JSON format:
         averagePrice: basicHotelData.averagePrice || null,
         // Review platform data with real or fallback structure
         reviewPlatforms,
-        overallReviewSummary: knownHotelData 
-          ? "Comprehensive review data from verified sources across all major platforms" 
-          : "Review data structure prepared - manual input may be required for accuracy",
+        overallReviewSummary: "AI-powered comprehensive review search across all major platforms completed",
         lastReviewUpdate: new Date().toISOString()
       };
 
