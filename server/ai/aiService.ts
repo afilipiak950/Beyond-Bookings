@@ -293,8 +293,26 @@ export class AIService {
           content: msg.content,
         }));
 
-      // Add enhanced system message with routing guidance
-      const systemMessage = this.getEnhancedSystemMessage(mode, queryAnalysis, message);
+      // 🔥 CRITICAL: Extract hotel context from recent messages
+      let hotelContext = '';
+      for (const msg of recentMessages.slice(0, 5)) { // Check last 5 messages
+        const content = msg.content.toLowerCase();
+        // Check for specific hotel mentions
+        if (content.includes('mönchs waldhotel')) {
+          hotelContext = 'Mönchs Waldhotel';
+          break;
+        } else if (content.includes('vier jahreszeiten')) {
+          hotelContext = 'Vier Jahreszeiten Hamburg';
+          break;
+        } else if (content.includes('dolder grand') && !content.includes('email') && !content.includes('mail')) {
+          // Only set Dolder if explicitly discussing it, not in follow-up requests
+          hotelContext = 'The Dolder Grand';
+          break;
+        }
+      }
+
+      // Add enhanced system message with routing guidance and hotel context
+      const systemMessage = this.getEnhancedSystemMessage(mode, queryAnalysis, message, hotelContext);
       const messages = [systemMessage, ...contextMessages];
 
       // Define available tools based on mode (combine old and new systems)
@@ -547,11 +565,29 @@ SQL-QUERY KONSTRUKTION:
     return { role: 'system', content: basePrompt };
   }
 
-  private getEnhancedSystemMessage(mode: string, queryAnalysis: QueryAnalysis, message: string): { role: 'system'; content: string } {
+  private getEnhancedSystemMessage(mode: string, queryAnalysis: QueryAnalysis, message: string, hotelContext?: string): { role: 'system'; content: string } {
     const basePrompt = this.getSystemMessage(mode).content;
     
     // Add specific routing guidance based on query analysis
     let routingGuidance = '';
+    
+    // 🔥 CRITICAL: If we have hotel context from previous messages, ALWAYS use it!
+    let contextGuidance = '';
+    if (hotelContext) {
+      contextGuidance = `\n\n🔥🔥🔥 WICHTIGER KONTEXT AUS VORHERIGEN NACHRICHTEN 🔥🔥🔥
+      
+DIE UNTERHALTUNG BEHANDELT AKTUELL: "${hotelContext}"
+
+WENN DER NUTZER SICH AUF "DIE DATEN", "DIE KALKULATION", "DAS HOTEL" ODER ÄHNLICHES BEZIEHT,
+MUSS ES SICH UM "${hotelContext}" HANDELN!
+
+Beispiele:
+- "generiere eine E-Mail mit den Daten" → Verwende Daten von "${hotelContext}"
+- "schreibe einen Brief darüber" → Verwende Informationen von "${hotelContext}"
+- "fasse die Kalkulation zusammen" → Beziehe dich auf "${hotelContext}"
+
+⚠️ VERWENDE NIEMALS DATEN EINES ANDEREN HOTELS ES SEI DENN EXPLIZIT DANACH GEFRAGT!`;
+    }
     
     if (queryAnalysis.type === 'weather') {
       routingGuidance = `\n\n🌤️ WETTER-ANFRAGE ERKANNT! 
@@ -563,14 +599,19 @@ Provide current weather, temperature, and conditions in German.`;
       const lowerMsg = message.toLowerCase();
       let hotelSearchHint = '';
       
-      // Check for specific hotel mentions
-      const hotelKeywords = ['vier jahreszeiten', 'marriott', 'dolder', 'grand hotel', 'kempinski', 
-                             'frankfurt', 'hamburg', 'berlin', 'münchen', 'zürich'];
-      const foundHotel = hotelKeywords.find(keyword => lowerMsg.includes(keyword));
-      
-      if (foundHotel) {
-        hotelSearchHint = `\n\n🚨🚨🚨 KRITISCH - SPEZIFISCHES HOTEL ERKANNT: "${foundHotel}" 🚨🚨🚨
+      // If hotel context exists and no new hotel is mentioned, use context
+      if (hotelContext && !lowerMsg.includes('dolder') && !lowerMsg.includes('vier') && 
+          !lowerMsg.includes('marriott') && !lowerMsg.includes('kempinski')) {
+        hotelSearchHint = `\n\n🚨 VERWENDE DAS HOTEL AUS DEM KONTEXT: "${hotelContext}" 🚨`;
+      } else {
+        // Check for specific hotel mentions
+        const hotelKeywords = ['vier jahreszeiten', 'marriott', 'dolder', 'grand hotel', 'kempinski', 
+                               'frankfurt', 'hamburg', 'berlin', 'münchen', 'zürich'];
+        const foundHotel = hotelKeywords.find(keyword => lowerMsg.includes(keyword));
         
+        if (foundHotel) {
+          hotelSearchHint = `\n\n🚨🚨🚨 KRITISCH - SPEZIFISCHES HOTEL ERKANNT: "${foundHotel}" 🚨🚨🚨
+          
 DU MUSST NACH "${foundHotel}" SUCHEN, NICHT NACH "DOLDER GRAND"!
 
 KORREKTES SQL BEISPIEL:
@@ -581,6 +622,7 @@ FALSCHES SQL (NIEMALS VERWENDEN WENN NACH "${foundHotel}" GEFRAGT):
 SELECT * FROM pricing_calculations WHERE LOWER(hotel_name) LIKE '%dolder grand%'
 
 ⚠️ WARNUNG: Wenn du das falsche Hotel zurückgibst, ist das ein KRITISCHER FEHLER!`;
+        }
       }
       
       routingGuidance = `\n\n🏨 BUSINESS-ANFRAGE ERKANNT!
@@ -591,13 +633,14 @@ Verfügbare Daten: 10 Hotels, 8 Kalkulationen mit Profitabilitätsanalyse${hotel
 NUTZE: calc_eval für mathematische Operationen`;
     } else if (queryAnalysis.type === 'email') {
       routingGuidance = `\n\n✉️ E-MAIL ANFRAGE ERKANNT!
+${hotelContext ? `VERWENDE DATEN VON: "${hotelContext}"` : ''}
 NUTZE: Deine Intelligenz direkt - keine Tools nötig
 Erstelle professionelle, gut strukturierte E-Mails`;
     }
     
     return { 
       role: 'system', 
-      content: basePrompt + routingGuidance 
+      content: basePrompt + contextGuidance + routingGuidance 
     };
   }
 
