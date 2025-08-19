@@ -551,7 +551,7 @@ Erstelle professionelle, gut strukturierte E-Mails`;
       'gpt-4-turbo': 'gpt-4-turbo-preview',
     };
     
-    return modelMapping[requestedModel as keyof typeof modelMapping] || 'gpt-4o';
+    return modelMapping[requestedModel as keyof typeof modelMapping] || 'gpt-4o-mini';
   }
 
   // Calculate usage cost with GPT-5 support

@@ -22,6 +22,11 @@ KI Pricing Agent, rebranded as "bebo convert", is a production-ready SaaS web ap
   - Replaced deprecated `max_tokens` with `max_completion_tokens` across entire codebase (17+ files)
   - Fixed temperature parameter restrictions (newer models only support default value of 1)
   - System now fully compatible with latest OpenAI API requirements
+- **OPTIMIZED AI MODEL CONFIGURATION (August 19, 2025)**:
+  - Set GPT-4o-mini as default model for improved performance and cost efficiency
+  - Reordered model selector: Fast (Mini) ⚡ → Smart (4o) → GPT-5 🚀
+  - Fixed chat flow: User messages appear instantly, proper AI thinking indicators
+  - Enhanced UI feedback with "AI is researching and thinking..." state
 - **🔥 ULTRA-INTELLIGENCE UPGRADE**: Full ChatGPT-like capabilities with intelligent query routing:
   - Fixed chat flow: User messages appear immediately, then AI thinking indicator
   - Weather API integration with wttr.in for real-time weather data
