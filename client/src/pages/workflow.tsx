@@ -3668,14 +3668,22 @@ Beispiel:
               </Button>
             </div>
 
-            {/* Extracted Data Display - Editable */}
+            {/* Extracted Data Display - Editable with Tabs */}
             {extractedData && (
               <div className="mt-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200">
                 <h3 className="font-semibold text-green-800 mb-3 flex items-center">
                   <Star className="h-4 w-4 mr-2" />
-                  Hotel Information (Editable)
+                  Hotel Information & Reviews
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                
+                <Tabs defaultValue="hotel-info" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="hotel-info">Hotel Information</TabsTrigger>
+                    <TabsTrigger value="reviews">Reviews & Ratings</TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="hotel-info" className="mt-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="editName">Hotel Name</Label>
                     <Input
@@ -3787,19 +3795,17 @@ Beispiel:
                       </div>
                     </div>
                   )}
-                </div>
-              </div>
-            )}
-
-            {/* Hotel Reviews Input Section */}
-            {extractedData && (
-              <div className="mt-6 p-4 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg border border-purple-200">
-                <h3 className="font-semibold text-purple-800 mb-3 flex items-center">
-                  <MessageSquare className="h-4 w-4 mr-2" />
-                  Hotel Reviews & Ratings (Input)
-                </h3>
-                
-                <Tabs defaultValue="booking" className="w-full">
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="reviews" className="mt-4">
+                    <div className="space-y-4">
+                      <h4 className="font-semibold text-purple-800 mb-3 flex items-center">
+                        <MessageSquare className="h-4 w-4 mr-2" />
+                        Hotel Reviews & Ratings (Input)
+                      </h4>
+                      
+                      <Tabs defaultValue="booking" className="w-full">
                   <TabsList className="grid w-full grid-cols-4">
                     <TabsTrigger value="booking">Booking.com</TabsTrigger>
                     <TabsTrigger value="google">Google Reviews</TabsTrigger>
@@ -4001,15 +4007,18 @@ Beispiel:
                         </div>
                       </div>
                     </div>
+                      </TabsContent>
+                      </Tabs>
+                      
+                      <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                        <p className="text-sm text-blue-700">
+                          <strong>Hinweis:</strong> Diese Bewertungsdaten können manuell eingegeben werden und werden mit der Kalkulation gespeichert.
+                          Sie helfen bei der vollständigen Dokumentation der Hotelleistung für Kunden.
+                        </p>
+                      </div>
+                    </div>
                   </TabsContent>
                 </Tabs>
-                
-                <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                  <p className="text-sm text-blue-700">
-                    <strong>Hinweis:</strong> Diese Bewertungsdaten können manuell eingegeben werden und werden mit der Kalkulation gespeichert.
-                    Sie helfen bei der vollständigen Dokumentation der Hotelleistung für Kunden.
-                  </p>
-                </div>
               </div>
             )}
 
