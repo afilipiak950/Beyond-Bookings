@@ -368,8 +368,15 @@ export class AIService {
             const parameters = JSON.parse(toolCall.function.arguments);
             console.log('🎯🎯🎯 AI SERVICE - Executing tool:', toolCall.function.name, 'with params:', parameters);
             
+            // Pass the original user message as context for SQL query correction
+            const enhancedParams = {
+              ...parameters,
+              userId,
+              context: message  // Add original message for context
+            };
+            
             const { result, citation } = await this.executeTool(
-              { function: { name: toolCall.function.name, parameters } },
+              { function: { name: toolCall.function.name, parameters: enhancedParams } },
               userId
             );
             console.log('🎯🎯🎯 AI SERVICE - Tool result received:', !!result, result?.rows?.length);
@@ -500,16 +507,30 @@ Du hast Zugang zu:
 📊 **FINANZBERICHTE**: Gewinnmargen, Umsätze, Vergleichsanalysen
 👥 **BENUTZER**: Verwaltung, Genehmigungen, Rollen
 
-**KRITISCH - SQL HOTEL-SUCHE:**
-Wenn der Nutzer nach einem SPEZIFISCHEN Hotel fragt (z.B. "vier jahreszeiten", "marriott", "dolder grand"):
-1. EXTRAHIERE den Hotelnamen aus der Anfrage
-2. VERWENDE IMMER WHERE-Klausel mit ILIKE für case-insensitive Suche:
-   - Beispiel: SELECT * FROM pricing_calculations WHERE LOWER(hotel_name) LIKE '%vier jahreszeiten%'
-   - Beispiel: SELECT * FROM hotels WHERE LOWER(name) LIKE '%marriott%'
-3. NIEMALS Daten vom falschen Hotel zeigen!
-4. Wenn kein Hotel gefunden wird, zeige ALLE verfügbaren Hotels mit:
-   - SELECT DISTINCT hotel_name FROM pricing_calculations
-   - SELECT name FROM hotels
+**🚨 ABSOLUT KRITISCH - SQL HOTEL-SUCHE - IMMER DEN RICHTIGEN HOTELNAMEN VERWENDEN! 🚨**
+
+WICHTIGSTE REGEL: EXTRAHIERE IMMER DEN HOTELNAMEN AUS DER NUTZERANFRAGE!
+
+Wenn der Nutzer fragt:
+- "show me vier jahreszeiten hamburg" → SUCHE NACH: '%vier jahreszeiten%' ODER '%hamburg%'
+- "zeige mir marriott frankfurt" → SUCHE NACH: '%marriott%' ODER '%frankfurt%'  
+- "dolder grand details" → SUCHE NACH: '%dolder%'
+
+**NIEMALS STANDARDMÄSSIG DOLDER GRAND VERWENDEN!**
+
+SQL-QUERY KONSTRUKTION:
+1. PARSE die Nutzeranfrage für Hotelnamen/Stadt
+2. KONSTRUIERE SQL mit dem EXTRAHIERTEN Namen:
+   ```sql
+   -- Nutzer fragt nach "vier jahreszeiten hamburg"
+   SELECT * FROM pricing_calculations 
+   WHERE LOWER(hotel_name) LIKE '%vier jahreszeiten%' 
+      OR LOWER(hotel_name) LIKE '%hamburg%'
+   
+   -- NIEMALS: WHERE LOWER(hotel_name) LIKE '%dolder grand%' wenn nicht danach gefragt!
+   ```
+3. Wenn KEIN spezifisches Hotel erwähnt → zeige ALLE Hotels
+4. Wenn Hotel nicht gefunden → Liste verfügbare Hotels auf
 
 **INTELLIGENTE ANTWORT-STRATEGIE:**
 1. **FÜR GESCHÄFTSFRAGEN**: Nutze sql_query für Datenbank-Zugriff
@@ -549,10 +570,18 @@ Provide current weather, temperature, and conditions in German.`;
       const foundHotel = hotelKeywords.find(keyword => lowerMsg.includes(keyword));
       
       if (foundHotel) {
-        hotelSearchHint = `\n\n⚠️ SPEZIFISCHES HOTEL ERKANNT: "${foundHotel}"
-WICHTIG: Verwende WHERE-Klausel mit ILIKE oder LOWER()/LIKE:
-Beispiel: SELECT * FROM pricing_calculations WHERE LOWER(hotel_name) LIKE '%${foundHotel}%'
-NIEMALS Daten vom falschen Hotel zeigen!`;
+        hotelSearchHint = `\n\n🚨🚨🚨 KRITISCH - SPEZIFISCHES HOTEL ERKANNT: "${foundHotel}" 🚨🚨🚨
+        
+DU MUSST NACH "${foundHotel}" SUCHEN, NICHT NACH "DOLDER GRAND"!
+
+KORREKTES SQL BEISPIEL:
+SELECT * FROM pricing_calculations 
+WHERE LOWER(hotel_name) LIKE '%${foundHotel}%'
+
+FALSCHES SQL (NIEMALS VERWENDEN WENN NACH "${foundHotel}" GEFRAGT):
+SELECT * FROM pricing_calculations WHERE LOWER(hotel_name) LIKE '%dolder grand%'
+
+⚠️ WARNUNG: Wenn du das falsche Hotel zurückgibst, ist das ein KRITISCHER FEHLER!`;
       }
       
       routingGuidance = `\n\n🏨 BUSINESS-ANFRAGE ERKANNT!

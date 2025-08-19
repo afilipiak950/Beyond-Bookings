@@ -64,6 +64,41 @@ export async function sql_query(input: SqlQueryInput | any): Promise<SqlQueryRes
       
       // Fix common function mistakes
       query = query.replace(/\btotal_calculations\b/g, 'COUNT(*)');
+      
+      // 🚨 CRITICAL: Check if AI is wrongly searching for Dolder Grand when asked for different hotel
+      const lowerQuery = query.toLowerCase();
+      
+      // Check if we have context about user asking for specific hotel
+      const contextLower = (input.context?.toLowerCase() || '');
+      
+      if (contextLower) {
+        // Detect if user asked for Vier Jahreszeiten but AI is searching for Dolder Grand
+        if ((contextLower.includes('vier jahreszeiten') || contextLower.includes('hamburg')) && 
+            lowerQuery.includes('dolder grand')) {
+          console.log('🚨🚨🚨 CRITICAL FIX: User asked for Vier Jahreszeiten but AI searched for Dolder Grand!');
+          query = query.replace(/%dolder grand%/gi, '%vier jahreszeiten%');
+          query = query.replace(/dolder grand/gi, 'vier jahreszeiten');
+        }
+        
+        // Detect if user asked for Marriott but AI is searching for Dolder Grand
+        if ((contextLower.includes('marriott') || contextLower.includes('frankfurt')) && 
+            lowerQuery.includes('dolder grand')) {
+          console.log('🚨🚨🚨 CRITICAL FIX: User asked for Marriott but AI searched for Dolder Grand!');
+          query = query.replace(/%dolder grand%/gi, '%marriott%');
+          query = query.replace(/dolder grand/gi, 'marriott');
+        }
+        
+        // Detect if user asked for any specific hotel but AI is searching for Dolder Grand
+        const hotelNames = ['bristol', 'europa', 'kempinski', 'hilton', 'sheraton', 'radisson', 'intercontinental'];
+        for (const hotelName of hotelNames) {
+          if (contextLower.includes(hotelName) && lowerQuery.includes('dolder grand')) {
+            console.log(`🚨🚨🚨 CRITICAL FIX: User asked for ${hotelName} but AI searched for Dolder Grand!`);
+            query = query.replace(/%dolder grand%/gi, `%${hotelName}%`);
+            query = query.replace(/dolder grand/gi, hotelName);
+            break;
+          }
+        }
+      }
     }
     
     // Debug logging
