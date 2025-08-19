@@ -139,27 +139,14 @@ export default function AIHub() {
   const messages: Message[] = messagesData?.messages || [];
   const docs: any[] = docsData?.docs || [];
   
-  // Comprehensive debugging
-  console.log('=== AI HUB DEBUG ===');
-  console.log('1. State:', { 
-    activeThreadId, 
-    isStreaming, 
-    message: message.length + ' chars',
-    mode, 
-    model 
-  });
-  console.log('2. Data:', { 
-    threadsCount: threads.length, 
-    messagesCount: messages.length,
-    docsCount: docs.length
-  });
-  console.log('3. Loading:', { 
-    threadsLoading, 
-    threadsError: threadsError?.message 
-  });
-  console.log('4. Threads:', threads.slice(0, 3).map(t => ({ id: t.id, title: t.title })));
-  console.log('5. Messages:', messages.slice(0, 2).map(m => ({ role: m.role, content: m.content?.substring(0, 50) })));
-  console.log('==================');
+  // Minimal production debugging
+  if (process.env.NODE_ENV === 'development') {
+    console.log('AI Hub:', { 
+      activeThread: activeThreadId, 
+      messages: messages.length,
+      streaming: isStreaming
+    });
+  }
 
   // Auto-refresh threads on mount or user navigation
   useEffect(() => {
@@ -288,22 +275,9 @@ export default function AIHub() {
 
   // Handle send
   const handleSend = () => {
-    console.log('🚀 SEND MESSAGE DEBUG:', {
-      messageEmpty: !message.trim(),
-      isStreaming,
-      activeThreadId,
-      messageLength: message.length,
-      mode,
-      model
-    });
-    
-    if (!message.trim() || isStreaming) {
-      console.log('❌ Send blocked:', { emptyMessage: !message.trim(), isStreaming });
-      return;
-    }
+    if (!message.trim() || isStreaming) return;
 
     const title = activeThreadId ? undefined : message.substring(0, 50);
-    console.log('📤 Sending message:', { message, threadId: activeThreadId, mode, model, title });
     
     sendMessage.mutate({
       message,
@@ -340,16 +314,15 @@ export default function AIHub() {
   return (
     <AppLayout>
       <div className="flex h-[calc(100vh-8rem)] bg-background">
-        {/* Debug Panel - Temporary */}
-        <div className="fixed top-4 right-4 z-50 bg-black text-white p-2 rounded text-xs max-w-sm">
-          <div>🔍 AI Hub Status</div>
-          <div>Active Thread: {activeThreadId || 'none'}</div>
-          <div>Threads: {threads.length}</div>
-          <div>Messages: {messages.length}</div>
-          <div>Loading: {threadsLoading ? 'yes' : 'no'}</div>
-          <div>Streaming: {isStreaming ? 'yes' : 'no'}</div>
-          <div>Auth: {threadsError ? 'error' : 'ok'}</div>
-        </div>
+        {/* Debug Panel - Temporary (hide in production) */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="fixed top-4 right-4 z-50 bg-black text-white p-2 rounded text-xs max-w-sm opacity-50 hover:opacity-100 transition-opacity">
+            <div>🔍 Debug</div>
+            <div>Thread: {activeThreadId}</div>
+            <div>Messages: {messages.length}</div>
+            <div>Status: {isStreaming ? 'streaming' : 'ready'}</div>
+          </div>
+        )}
         
       {/* Sidebar */}
       <div className="w-80 border-r glass-card border-border/50 flex flex-col">
@@ -502,10 +475,17 @@ export default function AIHub() {
 
         {/* Messages */}
         <ScrollArea className="flex-1 p-4">
-          <div className="max-w-4xl mx-auto space-y-4">
+          <div className="max-w-4xl mx-auto">
+            {messages.length === 0 && !isStreaming && (
+              <div className="text-center text-muted-foreground mt-12">
+                <Brain className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p className="text-lg">Start a conversation</p>
+                <p className="text-sm">Ask about calculations, database queries, documents, or anything else...</p>
+              </div>
+            )}
             {messages.map((msg, index) => (
               <div key={index} className={cn(
-                "flex gap-3",
+                "flex gap-3 mb-4",
                 msg.role === 'user' ? 'justify-end' : 'justify-start'
               )}>
                 <div className={cn(
@@ -514,7 +494,79 @@ export default function AIHub() {
                     ? 'bg-primary text-primary-foreground ml-12' 
                     : 'glass-card border border-border/50'
                 )}>
-                  <div className="whitespace-pre-wrap text-sm">{msg.content}</div>
+                  <div className="whitespace-pre-wrap text-sm">
+                    {msg.content && msg.content.includes('Tool Result') ? (
+                      <div className="space-y-2">
+                        {/* Parse and format tool results */}
+                        {(() => {
+                          try {
+                            // Extract the JSON from Tool Result format
+                            const toolMatch = msg.content.match(/Tool Result \([^)]+\): ({.*})/);
+                            if (toolMatch) {
+                              const result = JSON.parse(toolMatch[1]);
+                              
+                              if (result.rows && Array.isArray(result.rows)) {
+                                return (
+                                  <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-3">
+                                    <div className="text-xs text-muted-foreground mb-2">Database Query Result</div>
+                                    {result.rows.length > 0 ? (
+                                      <div className="space-y-1">
+                                        {result.rows.slice(0, 3).map((row: any, idx: number) => (
+                                          <div key={idx} className="text-xs bg-white dark:bg-slate-700 rounded p-2 font-mono">
+                                            {typeof row === 'object' ? (
+                                              <div className="space-y-1">
+                                                {Object.entries(row).map(([key, value]) => (
+                                                  <div key={key} className="flex gap-2">
+                                                    <span className="font-semibold text-blue-600 dark:text-blue-400">{key}:</span>
+                                                    <span className="text-gray-700 dark:text-gray-300">{String(value)}</span>
+                                                  </div>
+                                                ))}
+                                              </div>
+                                            ) : String(row)}
+                                          </div>
+                                        ))}
+                                        {result.rows.length > 3 && (
+                                          <div className="text-xs text-muted-foreground">... and {result.rows.length - 3} more rows</div>
+                                        )}
+                                      </div>
+                                    ) : (
+                                      <div className="text-sm text-muted-foreground">No results found</div>
+                                    )}
+                                  </div>
+                                );
+                              } else if (result.result !== undefined) {
+                                return (
+                                  <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3">
+                                    <div className="text-xs text-muted-foreground mb-2">Calculation Result</div>
+                                    <div className="text-lg font-mono">{result.result}</div>
+                                    {result.steps && (
+                                      <div className="mt-2 text-xs text-muted-foreground">
+                                        {result.steps.join(' → ')}
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              } else if (result.error) {
+                                return (
+                                  <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-3">
+                                    <div className="text-xs text-muted-foreground mb-2">Error</div>
+                                    <div className="text-sm text-red-600 dark:text-red-400">{result.error}</div>
+                                  </div>
+                                );
+                              }
+                            }
+                            
+                            // Fallback to original content
+                            return <span>{msg.content}</span>;
+                          } catch (e) {
+                            return <span>{msg.content}</span>;
+                          }
+                        })()}
+                      </div>
+                    ) : (
+                      msg.content
+                    )}
+                  </div>
                   
                   {/* Citations */}
                   {msg.citations && msg.citations.length > 0 && (
