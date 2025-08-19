@@ -49,16 +49,16 @@ export async function sqlQuery(params: SqlQueryParams): Promise<SqlQueryResult> 
     if (!validateReadOnlyQuery(query)) {
       return {
         rows: [],
-        error: 'Only SELECT queries are allowed. DDL/DML operations are blocked for security.'
+        error: 'Sicherheitsrichtlinie: Nur SELECT-Abfragen sind erlaubt. DDL/DML-Operationen sind blockiert.'
       };
     }
     
     // Execute the query with timeout
     const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error('Query timeout (10s)')), 10000);
+      setTimeout(() => reject(new Error('Abfrage-Timeout (10s)')), 10000);
     });
     
-    const queryPromise = db.execute(sql.raw(query, queryParams));
+    const queryPromise = db.execute(sql.raw(query));
     
     const result = await Promise.race([queryPromise, timeoutPromise]);
     
@@ -67,31 +67,31 @@ export async function sqlQuery(params: SqlQueryParams): Promise<SqlQueryResult> 
       executedQuery: query
     };
     
-  } catch (error) {
+  } catch (error: any) {
     console.error('SQL Query error:', error);
     return {
       rows: [],
-      error: error.message || 'Unknown SQL error',
+      error: error?.message || 'Unbekannter SQL-Fehler',
       executedQuery: params.sql
     };
   }
 }
 
 export const sqlQueryToolDefinition = {
-  type: 'function',
+  type: 'function' as const,
   function: {
     name: 'sql_query',
-    description: 'Execute read-only SQL queries against the database. Only SELECT statements are allowed.',
+    description: 'Führe eine schreibgeschützte SQL-Abfrage gegen die PostgreSQL-Datenbank aus. Nur SELECT-Statements sind aus Sicherheitsgründen erlaubt. Analysiere Hotel-, Kunden-, Kalkulations- und Preisdaten.',
     parameters: {
       type: 'object',
       properties: {
         sql: {
           type: 'string',
-          description: 'SQL SELECT query to execute'
+          description: 'Die SQL SELECT-Abfrage zum Ausführen. Verfügbare Tabellen: hotels, customers, calculations, users, approvals, ai_threads, ai_messages'
         },
         params: {
           type: 'array',
-          description: 'Optional parameters for the SQL query',
+          description: 'Optionale Abfrageparameter für prepared statements',
           items: {
             oneOf: [
               { type: 'string' },

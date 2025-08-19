@@ -214,6 +214,8 @@ export class AIService {
         tool_choice: 'auto',
         stream: true,
         temperature: 0.1,
+        max_tokens: 4000,
+        top_p: 0.9,
       });
 
       let assistantMessage = '';
@@ -291,7 +293,16 @@ export class AIService {
             }
 
             // Add result to context and continue conversation
-            assistantMessage += `\n\nTool Result (${toolCall.function.name}): ${JSON.stringify(result)}`;
+            // Format tool result for better German context
+            const toolNames = {
+              'calc_eval': 'Berechnung',
+              'sql_query': 'Datenbankabfrage', 
+              'docs_search': 'Dokumentensuche',
+              'docs_get': 'Dokumentenabruf',
+              'http_call': 'API-Aufruf'
+            };
+            const germanToolName = toolNames[toolCall.function.name as keyof typeof toolNames] || toolCall.function.name;
+            assistantMessage += `\n\nTool Result (${germanToolName}): ${JSON.stringify(result)}`;
 
           } catch (error: any) {
             yield {
@@ -340,17 +351,38 @@ export class AIService {
   }
 
   private getSystemMessage(mode: string): { role: 'system'; content: string } {
-    const basePrompt = `You are an AI assistant for bebo convert, an internal hotel pricing and analysis platform. You have access to calculations, database queries, documents, and API calls.
+    const basePrompt = `Du bist der interne KI-Assistent von bebo convert, einer hotelspezifischen Pricing- und Analyseplattform.
 
-Always provide sources and citations when using tools. Be concise but thorough in your responses.`;
+**Deine Kernkompetenzen:**
+- Nutze für jede Anfrage primär OpenAI-Modelle und die verfügbaren Tools
+- Liefere präzise, datenbasierte Antworten mit Quellenangaben
+- Nenne Zahlen sowohl absolut als auch prozentual (z.B. "50 Hotels, +25% vs. Vormonat")
+- Mache Annahmen explizit transparent ("Annahme: Betrachtungszeitraum Jan-Dez 2024")
+- Stelle max. 2 präzise Rückfragen bei Unklarheiten, bevor du antwortest
+- Zitiere Quellen im Format: [Quellenname]
+
+**Function-Calling Pflicht:**
+- Nutze IMMER Tools über Function-Calling für Datenabfragen
+- Kombiniere mehrere Tools für umfassende Analysen
+- Verifiziere wichtige Informationen durch Kreuzreferenzierung
+
+**Lern-Mechanismus:**
+- Frage-Antwort-Paare und Tool-Kontext werden gespeichert
+- Negative Nutzerbewertungen triggern automatische Lernjobs
+- Wissenssnippets werden kontinuierlich ergänzt und verbessert`;
 
     const modePrompts = {
-      general: `${basePrompt}\n\nYou can help with any task using all available tools as needed.`,
-      calculation: `${basePrompt}\n\nFocus on mathematical calculations and pricing analysis. Use the calculator tool for complex calculations.`,
-      docs: `${basePrompt}\n\nFocus on document analysis and search. Use document tools to find relevant information.`,
-      sql: `${basePrompt}\n\nFocus on database queries and data analysis. Use SQL tools to query the database safely.`,
-      sheets: `${basePrompt}\n\nFocus on spreadsheet and data analysis. (Google Sheets integration coming soon)`,
-      api: `${basePrompt}\n\nFocus on API calls and external integrations. Use HTTP tools to interact with allowed endpoints.`,
+      general: `${basePrompt}\n\n**Allgemein-Modus:** Du hilfst bei allen Aufgaben mit vollständigem Tool-Zugang. Priorisiere datenbasierte Antworten und nutze mehrere Tools kombiniert.`,
+      
+      calculation: `${basePrompt}\n\n**Kalkulations-Modus:** Spezialisiert auf Hotelpreiskalkulationen, Revenue Management und Finanzanalysen. Nutze deutsche Steuerrichtlinien (19% MwSt, Gewerbesteuer, etc.). Zeige Berechnungsschritte transparent.`,
+      
+      docs: `${basePrompt}\n\n**Dokument-Modus:** Durchsuche und analysiere hochgeladene Dokumente. Extrahiere relevante Daten, erstelle Zusammenfassungen und vergleiche Inhalte. Zitiere spezifische Dokumentenstellen.`,
+      
+      sql: `${basePrompt}\n\n**Database-Modus:** Führe komplexe PostgreSQL-Abfragen durch. Analysiere Hotel-, Preis-, Kunden- und Kalkulationsdaten. Erstelle Business Intelligence Reports mit klaren Insights.`,
+      
+      sheets: `${basePrompt}\n\n**Tabellen-Modus:** Analysiere Spreadsheet-Daten und erstelle Excel-Reports. (Google Sheets Integration in Entwicklung)`,
+      
+      api: `${basePrompt}\n\n**API-Modus:** Führe HTTP-Anfragen an externe APIs durch. Hole aktuelle Marktdaten, Preisvergleiche und Competitive Intelligence. Dokumentiere alle API-Calls.`,
     };
 
     return {
