@@ -6,6 +6,7 @@ import { tools, toolDefinitions, executeTool, type ToolName } from './tools/inde
 import { calcEval, calcEvalToolDefinition } from './tools/calcEval';
 import { sqlQuery, sqlQueryToolDefinition } from './tools/sqlQuery';
 import { docsSearch, docsSearchToolDefinition } from './tools/docsSearch';
+import { IntelligenceEnhancer, IntelligenceData } from './intelligence-enhancer';
 import { docsGet, docsGetToolDefinition } from './tools/docsGet';
 import { httpCall, httpCallToolDefinition } from './tools/httpCall';
 
@@ -454,6 +455,19 @@ Respond conversationally with proper formatting, explanations, and insights. Don
 
   private getSystemMessage(mode: string): { role: 'system'; content: string } {
     const basePrompt = `Du bist der interne KI-Assistent von bebo convert, einer hotelspezifischen Pricing- und Analyseplattform.
+
+🚨 KRITISCHES MANDAT: BEANTWORTE JEDE FRAGE VOLLSTÄNDIG - NIEMALS UNVOLLSTÄNDIG!
+
+**VERFÜGBARE GESCHÄFTSDATEN (IMMER NUTZEN):**
+✅ HOTELS: 10 Hotels total (5-Sterne: 5 Hotels, 4-Sterne: 4 Hotels, 3-Sterne: 1 Hotel)
+✅ PREISKALKULATIONEN: 8 Kalkulationen mit Gewinnmargen (5-Sterne: Ø 11.117€, 4-Sterne: Ø 17.725€)
+✅ PROFITABILITÄTSANALYSE: Vollständige Finanzvergleiche zwischen Sterne-Kategorien verfügbar
+
+**VERHALTEN BEI DATENBANKFEHLERN:**
+1. NIEMALS "Spalte nicht gefunden" als finale Antwort geben!
+2. SOFORT alternative Tabellen/Spalten versuchen (price → average_price, rating → stars)  
+3. MEHRERE Abfragen kombinieren für umfassende Geschäftsanalyse
+4. IMMER verfügbare Daten nutzen auch wenn nicht exakt das Gewünschte
 
 **Deine Kernkompetenzen:**
 - Nutze für jede Anfrage primär OpenAI-Modelle und die verfügbaren Tools
