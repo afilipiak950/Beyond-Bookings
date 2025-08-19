@@ -135,7 +135,8 @@ export class AIService {
             query: parameters.sql || parameters.query, // Fix parameter name
             sql: parameters.sql || parameters.query    // Backward compatibility
           }, userId);
-          console.log('🔧 SQL TOOL DEBUG - Result:', sqlResult);
+          console.log('🔧 SQL TOOL DEBUG - Result:', JSON.stringify(sqlResult, null, 2));
+          console.log('🔧 SQL TOOL DEBUG - Row data sample:', sqlResult.rows?.[0]);
           return {
             result: sqlResult,
             citation: {

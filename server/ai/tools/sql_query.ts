@@ -186,9 +186,18 @@ export async function sql_query(input: SqlQueryInput | any): Promise<SqlQueryRes
         resultRowsExists: 'rows' in (result || {}),
         resultRowsLength: result?.rows?.length || 'N/A',
         resultRowsType: typeof result?.rows,
-        resultRowsSample: result?.rows?.[0] || 'N/A'
+        resultRowsSample: result?.rows?.[0] || 'N/A',
+        fullResult: JSON.stringify(result, null, 2)
       });
     }
+    
+    console.log('🔬 ULTRA DEBUG - Row processing:', {
+      rowsFromResult: result?.rows,
+      rowsFromResultLength: result?.rows?.length,
+      rowsVariableAssigned: rows,
+      rowsVariableLength: rows.length,
+      finalRowCount: rowCount
+    });
 
     // If zero results, force comprehensive data retrieval
     if (rowCount === 0) {
