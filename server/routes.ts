@@ -2190,7 +2190,7 @@ RETURN ONLY BASIC HOTEL DATA in valid JSON format:
         // Review platform data with real or fallback structure
         reviewPlatforms,
         overallReviewSummary: `Real OpenAI-powered search completed in ${searchDuration}ms - authentic data extraction attempted across all platforms`,
-        lastReviewUpdate: new Date().toISOString()
+        lastReviewUpdate: new Date()
       };
 
       console.log('🏁 Final hotel data with enhanced review system:', extractedData);
@@ -2265,8 +2265,7 @@ RETURN ONLY BASIC HOTEL DATA in valid JSON format:
         holidaycheckRating: holidaycheckRating ? parseFloat(holidaycheckRating) : null,
         holidaycheckReviewCount: holidaycheckReviewCount ? parseInt(holidaycheckReviewCount) : null,
         holidaycheckUrl: holidaycheckUrl?.trim() || null,
-        createdAt: new Date().toISOString(),
-        lastReviewUpdate: new Date().toISOString()
+        // Remove createdAt and lastReviewUpdate - let the storage layer handle these
       };
 
       console.log('💾 Saving hotel to database:', hotelData);
@@ -2402,7 +2401,7 @@ Only return hotel data if you can verify this is a real, existing hotel. Do not 
             summary: "Ranked #39 of 283 hotels in Frankfurt. Recent guests highlight impressive 34th floor views and describe it as 'restorative retreat' with very friendly staff."
           },
           reviewSummary: "Frankfurt Marriott Hotel stands out as Germany's tallest hotel, offering spectacular city views from floors 26-44. Guests consistently praise the friendly staff and unique elevated experience, though some recent concerns about unexpected breakfast charges. The hotel maintains strong ratings across all platforms with particular strength in location and service quality.",
-          lastReviewUpdate: new Date().toISOString()
+          lastReviewUpdate: new Date()
         };
       } else if (lowerHotelName.includes('adlon') && lowerHotelName.includes('berlin')) {
         console.log('🏨 Found Hotel Adlon Berlin - providing REAL review data');
@@ -2432,7 +2431,7 @@ Only return hotel data if you can verify this is a real, existing hotel. Do not 
             summary: "World-renowned luxury hotel with exceptional service and historical charm."
           },
           reviewSummary: "Hotel Adlon Kempinski Berlin represents the pinnacle of luxury hospitality in Berlin, with consistently exceptional ratings across all platforms. Guests praise the legendary service, prime Brandenburg Gate location, and world-class amenities.",
-          lastReviewUpdate: new Date().toISOString()
+          lastReviewUpdate: new Date()
         };
       } else {
         // For other hotels, generate authentic search URLs
