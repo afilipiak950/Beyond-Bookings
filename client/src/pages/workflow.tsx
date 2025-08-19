@@ -7,7 +7,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ChevronRight, Calculator, BarChart3, FileText, Check, ArrowLeft, ArrowRight, Edit3, Brain, Gift, TrendingDown, Star, Download, Plus, Eye, Trash2, Copy, Move, Image, Type, BarChart, PieChart, Presentation, Loader2, Save, Building2, Globe } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ChevronRight, Calculator, BarChart3, FileText, Check, ArrowLeft, ArrowRight, Edit3, Brain, Gift, TrendingDown, Star, Download, Plus, Eye, Trash2, Copy, Move, Image, Type, BarChart, PieChart, Presentation, Loader2, Save, Building2, Globe, MessageSquare } from "lucide-react";
 import { useLocation, useRoute } from "wouter";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -3786,6 +3787,228 @@ Beispiel:
                       </div>
                     </div>
                   )}
+                </div>
+              </div>
+            )}
+
+            {/* Hotel Reviews Input Section */}
+            {extractedData && (
+              <div className="mt-6 p-4 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg border border-purple-200">
+                <h3 className="font-semibold text-purple-800 mb-3 flex items-center">
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Hotel Reviews & Ratings (Input)
+                </h3>
+                
+                <Tabs defaultValue="booking" className="w-full">
+                  <TabsList className="grid w-full grid-cols-4">
+                    <TabsTrigger value="booking">Booking.com</TabsTrigger>
+                    <TabsTrigger value="google">Google Reviews</TabsTrigger>
+                    <TabsTrigger value="holidaycheck">HolidayCheck</TabsTrigger>
+                    <TabsTrigger value="tripadvisor">TripAdvisor</TabsTrigger>
+                  </TabsList>
+                  
+                  {/* Booking.com Tab */}
+                  <TabsContent value="booking" className="mt-4">
+                    <div className="space-y-4 p-4 border border-blue-200 rounded-lg bg-gradient-to-r from-blue-50 to-blue-100">
+                      <h4 className="font-medium text-blue-800 flex items-center">
+                        <Globe className="h-4 w-4 mr-2" />
+                        Booking.com Reviews
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="booking-rating">Rating (0-10)</Label>
+                          <Input
+                            id="booking-rating"
+                            type="number"
+                            min="0"
+                            max="10"
+                            step="0.1"
+                            placeholder="8.5"
+                            className="mt-1"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="booking-reviews">Number of Reviews</Label>
+                          <Input
+                            id="booking-reviews"
+                            type="number"
+                            placeholder="1,234"
+                            className="mt-1"
+                          />
+                        </div>
+                        <div className="md:col-span-2">
+                          <Label htmlFor="booking-url">Booking.com URL</Label>
+                          <Input
+                            id="booking-url"
+                            placeholder="https://www.booking.com/hotel/..."
+                            className="mt-1"
+                          />
+                        </div>
+                        <div className="md:col-span-2">
+                          <Label htmlFor="booking-summary">Review Summary</Label>
+                          <Textarea
+                            id="booking-summary"
+                            placeholder="Brief summary of guest feedback and key points from reviews..."
+                            className="mt-1 h-20"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </TabsContent>
+                  
+                  {/* Google Reviews Tab */}
+                  <TabsContent value="google" className="mt-4">
+                    <div className="space-y-4 p-4 border border-green-200 rounded-lg bg-gradient-to-r from-green-50 to-green-100">
+                      <h4 className="font-medium text-green-800 flex items-center">
+                        <Globe className="h-4 w-4 mr-2" />
+                        Google Reviews
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="google-rating">Rating (0-5)</Label>
+                          <Input
+                            id="google-rating"
+                            type="number"
+                            min="0"
+                            max="5"
+                            step="0.1"
+                            placeholder="4.2"
+                            className="mt-1"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="google-reviews">Number of Reviews</Label>
+                          <Input
+                            id="google-reviews"
+                            type="number"
+                            placeholder="567"
+                            className="mt-1"
+                          />
+                        </div>
+                        <div className="md:col-span-2">
+                          <Label htmlFor="google-url">Google Maps/Reviews URL</Label>
+                          <Input
+                            id="google-url"
+                            placeholder="https://goo.gl/maps/..."
+                            className="mt-1"
+                          />
+                        </div>
+                        <div className="md:col-span-2">
+                          <Label htmlFor="google-summary">Review Summary</Label>
+                          <Textarea
+                            id="google-summary"
+                            placeholder="Brief summary of guest feedback and key points from reviews..."
+                            className="mt-1 h-20"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </TabsContent>
+                  
+                  {/* HolidayCheck Tab */}
+                  <TabsContent value="holidaycheck" className="mt-4">
+                    <div className="space-y-4 p-4 border border-orange-200 rounded-lg bg-gradient-to-r from-orange-50 to-orange-100">
+                      <h4 className="font-medium text-orange-800 flex items-center">
+                        <Globe className="h-4 w-4 mr-2" />
+                        HolidayCheck Reviews
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="holidaycheck-rating">Rating (0-6)</Label>
+                          <Input
+                            id="holidaycheck-rating"
+                            type="number"
+                            min="0"
+                            max="6"
+                            step="0.1"
+                            placeholder="5.2"
+                            className="mt-1"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="holidaycheck-reviews">Number of Reviews</Label>
+                          <Input
+                            id="holidaycheck-reviews"
+                            type="number"
+                            placeholder="89"
+                            className="mt-1"
+                          />
+                        </div>
+                        <div className="md:col-span-2">
+                          <Label htmlFor="holidaycheck-url">HolidayCheck URL</Label>
+                          <Input
+                            id="holidaycheck-url"
+                            placeholder="https://www.holidaycheck.de/..."
+                            className="mt-1"
+                          />
+                        </div>
+                        <div className="md:col-span-2">
+                          <Label htmlFor="holidaycheck-summary">Review Summary</Label>
+                          <Textarea
+                            id="holidaycheck-summary"
+                            placeholder="Brief summary of guest feedback and key points from reviews..."
+                            className="mt-1 h-20"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </TabsContent>
+                  
+                  {/* TripAdvisor Tab */}
+                  <TabsContent value="tripadvisor" className="mt-4">
+                    <div className="space-y-4 p-4 border border-red-200 rounded-lg bg-gradient-to-r from-red-50 to-red-100">
+                      <h4 className="font-medium text-red-800 flex items-center">
+                        <Globe className="h-4 w-4 mr-2" />
+                        TripAdvisor Reviews
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="tripadvisor-rating">Rating (0-5)</Label>
+                          <Input
+                            id="tripadvisor-rating"
+                            type="number"
+                            min="0"
+                            max="5"
+                            step="0.1"
+                            placeholder="4.0"
+                            className="mt-1"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="tripadvisor-reviews">Number of Reviews</Label>
+                          <Input
+                            id="tripadvisor-reviews"
+                            type="number"
+                            placeholder="345"
+                            className="mt-1"
+                          />
+                        </div>
+                        <div className="md:col-span-2">
+                          <Label htmlFor="tripadvisor-url">TripAdvisor URL</Label>
+                          <Input
+                            id="tripadvisor-url"
+                            placeholder="https://www.tripadvisor.com/..."
+                            className="mt-1"
+                          />
+                        </div>
+                        <div className="md:col-span-2">
+                          <Label htmlFor="tripadvisor-summary">Review Summary</Label>
+                          <Textarea
+                            id="tripadvisor-summary"
+                            placeholder="Brief summary of guest feedback and key points from reviews..."
+                            className="mt-1 h-20"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </TabsContent>
+                </Tabs>
+                
+                <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <p className="text-sm text-blue-700">
+                    <strong>Hinweis:</strong> Diese Bewertungsdaten können manuell eingegeben werden und werden mit der Kalkulation gespeichert.
+                    Sie helfen bei der vollständigen Dokumentation der Hotelleistung für Kunden.
+                  </p>
                 </div>
               </div>
             )}
