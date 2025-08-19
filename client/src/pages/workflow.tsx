@@ -2632,7 +2632,27 @@ export default function Workflow() {
                         <span className="text-xs font-bold text-blue-800 break-words">Zielpreis (in Roomnights) über Gesamtzeit</span>
                       </div>
                       <div className="text-2xl font-black text-blue-900">
-                        891
+                        {(() => {
+                          const projectCosts = workflowData.projectCosts || 0;
+                          const stars = workflowData.stars || 0;
+                          const currentActualPrice = actualPrice || 0;
+                          
+                          if (projectCosts === 0 && currentActualPrice === 0) {
+                            return '-';
+                          }
+                          
+                          // Calculate hotel voucher value based on stars or use actual value
+                          const voucherValue = (workflowData.hotelVoucherValue && workflowData.hotelVoucherValue > 0) ? workflowData.hotelVoucherValue : (stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30);
+                          
+                          // Zielpreis (in Roomnights) über Gesamtzeit calculation:
+                          // This represents the total number of room nights over the contract period
+                          // Formula: (Project Costs / Hotel Voucher Value) × Contract Duration (3 years)
+                          const contractYears = 3;
+                          const roomNightsPerYear = projectCosts / voucherValue;
+                          const totalRoomNights = roomNightsPerYear * contractYears;
+                          
+                          return Math.round(totalRoomNights).toLocaleString('de-DE');
+                        })()}
                       </div>
                     </div>
                   </div>
