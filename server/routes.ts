@@ -1229,7 +1229,16 @@ Research authentic review data from actual platforms. If exact review counts una
 
       let hotelData;
       try {
-        hotelData = JSON.parse(response);
+        // Clean the response from markdown code blocks
+        let cleanResponse = response.trim();
+        if (cleanResponse.startsWith('```json')) {
+          cleanResponse = cleanResponse.replace(/^```json\s*/, '');
+        }
+        if (cleanResponse.endsWith('```')) {
+          cleanResponse = cleanResponse.replace(/\s*```$/, '');
+        }
+        
+        hotelData = JSON.parse(cleanResponse);
         console.log('✅ Extracted hotel data with reviews:', hotelData);
       } catch (parseError) {
         console.error('❌ JSON parsing failed:', parseError);
@@ -1237,7 +1246,7 @@ Research authentic review data from actual platforms. If exact review counts una
         throw new Error(`Failed to parse OpenAI response: ${parseError.message}`);
       }
 
-      // Structure the final response with review data
+      // Structure the final response with review data - MUST match frontend expectations
       const extractedData = {
         name: hotelData.name || name,
         location: hotelData.location || null,
@@ -1249,12 +1258,14 @@ Research authentic review data from actual platforms. If exact review counts una
         category: hotelData.category || null,
         amenities: Array.isArray(hotelData.amenities) ? hotelData.amenities : [],
         averagePrice: hotelData.averagePrice || null,
-        // Review data from multiple platforms
-        bookingReviews: hotelData.reviewPlatforms?.booking || null,
-        googleReviews: hotelData.reviewPlatforms?.google || null,
-        holidayCheckReviews: hotelData.reviewPlatforms?.holidayCheck || null,
-        tripadvisorReviews: hotelData.reviewPlatforms?.tripadvisor || null,
-        reviewSummary: hotelData.overallReviewSummary || null,
+        // CRITICAL: Match frontend expected structure for review platforms
+        reviewPlatforms: hotelData.reviewPlatforms || {
+          booking: null,
+          google: null,
+          holidayCheck: null,
+          tripadvisor: null
+        },
+        overallReviewSummary: hotelData.overallReviewSummary || null,
         lastReviewUpdate: new Date().toISOString()
       };
 
