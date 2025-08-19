@@ -1143,8 +1143,8 @@ CRITICAL: You must always return a specific price number in EUR. If exact data u
         searchSinglePlatform(hotelName, 'tripadvisor.com', 'TripAdvisor')
       ]);
       
-      const searchDuration = Date.now() - searchStartTime;
-      console.log(`⏱️ All platform searches completed in ${searchDuration}ms`);
+      const totalSearchTime = Date.now() - searchStartTime;
+      console.log(`⏱️ All platform searches completed in ${totalSearchTime}ms`);
 
       const [bookingResult, googleResult, holidayCheckResult, tripAdvisorResult] = searchResults;
 
@@ -1742,9 +1742,15 @@ RETURN ONLY BASIC HOTEL DATA in valid JSON format:
 
       // Step 3: Use comprehensive AI search for ALL hotels to get real review data
       let reviewPlatforms;
+      let searchDuration = 0;
+      
       // Use transparent review search with detailed logging
       console.log('🔍 Starting comprehensive review search with full debugging...');
+      const searchStartTime = Date.now();
+      console.log('⏱️ Search timer started for comprehensive review search...');
       const aiSearchResults = await searchAllPlatformReviews(name);
+      searchDuration = Date.now() - searchStartTime;
+      console.log(`⏱️ Main search completed in ${searchDuration}ms`);
 
       // Process comprehensive AI search results
       reviewPlatforms = {
