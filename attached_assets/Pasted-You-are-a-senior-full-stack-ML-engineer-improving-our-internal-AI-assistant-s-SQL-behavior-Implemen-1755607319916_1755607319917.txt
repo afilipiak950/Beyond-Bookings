@@ -1,0 +1,83 @@
+You are a senior full-stack/ML engineer improving our internal AI assistant’s SQL behavior. Implement and operate a read-only SQL tool that never masks real errors as “no results.” Follow these rules:
+
+Core behavior
+
+Always call OpenAI for every user message.
+
+If the user’s request is ambiguous (e.g., table or date range unclear), ask ≤1 crisp clarifying question before running SQL.
+
+When SQL is used, include citations in the answer (table name, query label, or sheet/range if relevant).
+
+SQL policy (strict read-only)
+
+Permit only WITH/SELECT/EXPLAIN. Deny DDL/DML (INSERT/UPDATE/DELETE/ALTER/...).
+
+Bind parameters safely. Support positional ($1,$2,…) and named (:from, :to) parameters; convert named to positional internally.
+
+Enforce a query timeout and parameterized inputs; no string concatenation.
+
+Before each query, set the schema search path:
+
+Use DB_SCHEMA env if provided, else public.
+
+Effectively: SET LOCAL search_path TO "<DB_SCHEMA>"; then the user query.
+
+Zero-results recovery (triage)
+
+If a query returns 0 rows, do not print “no results” directly. First compute a lightweight triage payload and hand it to the model:
+
+current_schema (via current_schema()),
+
+up to 50 tables in the current schema (information_schema.tables),
+
+up to 200 columns across those tables (information_schema.columns).
+
+Based on this triage, the assistant must either:
+
+Correct the query (e.g., adjust schema/table/column/filter), or
+
+Ask one precise clarifying question (e.g., “Which table: orders vs order_items? Date range?”), then retry once.
+
+Only if the retry still returns 0 rows, show a clear, helpful message with the triage summary (available tables/columns) so the user can decide next steps.
+
+Error handling
+
+Surface real SQL errors (auth, permissions/RLS, missing relation, type mismatch) to the model/UI with error code and message.
+
+Never translate exceptions into “no results.” Provide an actionable hint (e.g., “table not found; try schema <X>”).
+
+Logging & metrics
+
+Log per request: model, sql, rowCount, took_ms, tokens_in/out, estimated_cost, error_code/message if any.
+
+Show citations for any SQL-derived result.
+
+Respect PII redaction in logs (email/IBAN/phone).
+
+Security & limits
+
+Read-only database user credentials.
+
+Rate-limit SQL calls per user/IP.
+
+Enforce max rows (e.g., 5,000) and advise using filters if exceeded.
+
+Environment (must document and validate at startup)
+
+DATABASE_URL (Postgres), DB_SCHEMA (default public), DATABASE_SSL (true|false).
+
+If a required env is missing, the assistant must warn clearly and degrade gracefully (mock adapter), but not crash.
+
+Acceptance criteria
+
+Ambiguous requests trigger one clarifying question before execution.
+
+Non-SELECT statements are rejected with a clear safety error.
+
+Zero-row queries return a triage payload and either a corrected query attempt or a single clarifying question before retry.
+
+Real SQL errors are visible (with code/message), not masked.
+
+Answers based on SQL include table/query citations.
+
+Logs show rowCount and took_ms for every SQL call.

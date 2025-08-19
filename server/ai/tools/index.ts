@@ -39,15 +39,18 @@ export const toolDefinitions = [
     type: 'function' as const,
     function: {
       name: 'sql_query',
-      description: 'Execute SELECT queries against the database. Only SELECT statements are allowed for security.',
+      description: 'Execute read-only SQL queries (SELECT/WITH/EXPLAIN only). Returns comprehensive results with triage data for zero-row queries. Never masks real SQL errors.',
       parameters: {
         type: 'object',
         properties: {
-          query: { type: 'string', description: 'SQL SELECT query to execute' },
+          query: { 
+            type: 'string', 
+            description: 'SQL query to execute. Must be SELECT, WITH, or EXPLAIN statement. Supports both positional ($1, $2) and named (:param) parameters.' 
+          },
           params: { 
             type: 'array', 
             items: { type: 'string' },
-            description: 'Parameters for the query (optional)' 
+            description: 'Parameters for the query. Used with positional ($1, $2, ...) or named (:param) placeholders.' 
           }
         },
         required: ['query']
