@@ -101,6 +101,7 @@ export default function AIHub() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamingMessage, setStreamingMessage] = useState('');
   const [citations, setCitations] = useState<Citation[]>([]);
+  const [pendingUserMessage, setPendingUserMessage] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   
@@ -188,6 +189,7 @@ export default function AIHub() {
       setIsStreaming(true);
       setStreamingMessage('');
       setCitations([]);
+      setPendingUserMessage('');
 
       const response = await fetch('/api/ai/chat', {
         method: 'POST',
@@ -283,12 +285,13 @@ export default function AIHub() {
       }
       
       // Clear input state
-      setMessage('');
       setStreamingMessage('');
       setCitations([]);
+      setPendingUserMessage('');
     },
     onError: (error: any) => {
       setIsStreaming(false);
+      setPendingUserMessage('');
       toast({
         title: "Error",
         description: error.message,
@@ -310,6 +313,7 @@ export default function AIHub() {
     setMessage('');
     setStreamingMessage('');
     setCitations([]);
+    setPendingUserMessage('');
     setSearchQuery('');
     
     // Clear ALL message-related cached data
@@ -568,8 +572,15 @@ export default function AIHub() {
 
     const title = activeThreadId ? undefined : message.substring(0, 50);
     
+    // Immediately show user message in chat
+    setPendingUserMessage(message.trim());
+    
+    // Clear input immediately for better UX
+    const messageToSend = message.trim();
+    setMessage('');
+    
     sendMessage.mutate({
-      message,
+      message: messageToSend,
       threadId: activeThreadId || undefined, // Convert null to undefined
       mode,
       model,
@@ -1068,14 +1079,39 @@ export default function AIHub() {
               </div>
             ))}
             
-            {/* Streaming message */}
+            {/* Pending user message - shown immediately when user sends */}
+            {pendingUserMessage && (
+              <div className="flex gap-3 justify-end mb-4">
+                <div className="max-w-[80%] bg-primary text-primary-foreground ml-12 rounded-lg p-4">
+                  <div className="whitespace-pre-wrap text-sm">{pendingUserMessage}</div>
+                </div>
+              </div>
+            )}
+            
+            {/* AI thinking indicator - shown when processing but no response yet */}
+            {isStreaming && !streamingMessage && (
+              <div className="flex gap-3 justify-start mb-4">
+                <div className="max-w-[80%] glass-card border border-border/50 rounded-lg p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex gap-1">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                      <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    </div>
+                    <span className="text-sm text-muted-foreground">AI is thinking...</span>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* AI streaming response */}
             {isStreaming && streamingMessage && (
               <div className="flex gap-3 justify-start">
                 <div className="max-w-[80%] glass-card border border-border/50 rounded-lg p-4">
                   <div className="whitespace-pre-wrap text-sm">{streamingMessage}</div>
                   <div className="mt-2 flex items-center gap-2">
-                    <div className="animate-pulse h-2 w-2 bg-blue-500 rounded-full" />
-                    <span className="text-xs text-muted-foreground">AI is thinking...</span>
+                    <div className="animate-pulse h-2 w-2 bg-green-500 rounded-full" />
+                    <span className="text-xs text-muted-foreground">AI is responding...</span>
                   </div>
                   
                   {/* Live citations */}
