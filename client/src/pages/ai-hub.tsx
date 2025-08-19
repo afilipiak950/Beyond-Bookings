@@ -236,28 +236,43 @@ export default function AIHub() {
       }
     },
     onSuccess: (wasNewThread) => {
-      // Refresh threads first
+      console.log('Chat success callback, wasNewThread:', wasNewThread);
+      
+      // Always refresh threads to ensure we have the latest list
       queryClient.invalidateQueries({ queryKey: ['/api/ai/threads'] });
       
       // If this was a new thread, we need to switch to it
       if (wasNewThread) {
-        // Wait a bit for the threads query to update, then switch to the newest thread
+        // Wait for threads to refresh, then switch to the newest thread
         setTimeout(async () => {
-          await queryClient.refetchQueries({ queryKey: ['/api/ai/threads'] });
-          const updatedThreadsData = queryClient.getQueryData(['/api/ai/threads']) as any;
-          console.log('Switching to new thread:', updatedThreadsData);
-          if (updatedThreadsData?.threads?.length > 0) {
-            // Just take the first thread which should be the newest
-            const newestThread = updatedThreadsData.threads[0];
-            console.log('Setting active thread to:', newestThread.id);
-            setActiveThreadId(newestThread.id);
+          try {
+            await queryClient.refetchQueries({ queryKey: ['/api/ai/threads'] });
+            const updatedThreadsData = queryClient.getQueryData(['/api/ai/threads']) as any;
+            console.log('Updated threads data:', updatedThreadsData);
+            
+            if (updatedThreadsData?.threads?.length > 0) {
+              // Get the newest thread (first in the list)
+              const newestThread = updatedThreadsData.threads[0];
+              console.log('Setting active thread to:', newestThread.id);
+              setActiveThreadId(newestThread.id);
+              
+              // Invalidate messages cache for the new thread
+              queryClient.invalidateQueries({ 
+                queryKey: ['/api/ai/threads', newestThread.id, 'messages'] 
+              });
+            }
+          } catch (error) {
+            console.error('Error switching to new thread:', error);
           }
-        }, 300);
-      } else {
+        }, 500); // Increased timeout for better reliability
+      } else if (activeThreadId) {
         // Refresh messages for the current thread
-        queryClient.invalidateQueries({ queryKey: ['/api/ai/threads', activeThreadId, 'messages'] });
+        queryClient.invalidateQueries({ 
+          queryKey: ['/api/ai/threads', activeThreadId, 'messages'] 
+        });
       }
       
+      // Clear input state
       setMessage('');
       setStreamingMessage('');
       setCitations([]);
@@ -274,15 +289,20 @@ export default function AIHub() {
 
   // Create new thread
   const createThread = () => {
+    console.log('Creating new thread...');
+    
+    // Clear current state
     setActiveThreadId(null);
     setMessage('');
     setStreamingMessage('');
     setCitations([]);
-    // Clear any search filters to see the new chat state
     setSearchQuery('');
     
-    // Force clear messages query cache to ensure clean state
-    queryClient.removeQueries({ queryKey: ['/api/ai/threads', 'messages'] });
+    // Clear specific cache entries that might interfere
+    queryClient.removeQueries({ 
+      queryKey: ['/api/ai/threads'],
+      exact: false 
+    });
     
     // Provide user feedback
     toast({
@@ -698,12 +718,12 @@ export default function AIHub() {
             {messages.length === 0 && !isStreaming && (
               <div className="text-center text-muted-foreground mt-12">
                 <Brain className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p className="text-lg">{activeThreadId ? 'No messages yet' : 'New Chat Started'}</p>
+                <p className="text-lg">{activeThreadId ? 'No messages yet' : 'Ready for a new chat'}</p>
                 <p className="text-sm">Ask about calculations, database queries, documents, or anything else...</p>
                 {!activeThreadId && (
                   <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800 max-w-md mx-auto">
-                    <p className="text-xs text-blue-600 dark:text-blue-400 font-medium">💡 Ready for a new conversation</p>
-                    <p className="text-xs text-blue-500 dark:text-blue-500 mt-1">Type your message below to start</p>
+                    <p className="text-xs text-blue-600 dark:text-blue-400 font-medium">💡 New conversation ready</p>
+                    <p className="text-xs text-blue-500 dark:text-blue-500 mt-1">Type your message below to start chatting</p>
                   </div>
                 )}
               </div>
