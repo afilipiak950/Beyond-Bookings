@@ -280,13 +280,13 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
                   <div className="flex justify-between">
                     <span className="text-gray-600">Voucher Value:</span>
                     <span className="font-medium text-emerald-900">
-                      {convertFromEUR(workflowData.stars === 5 ? 50 : workflowData.stars === 4 ? 40 : workflowData.stars === 3 ? 30 : 30, workflowData.currency).toFixed(2)} {getCurrencySymbol(workflowData.currency)}
+                      {convertFromEUR(workflowData.stars === 5 ? 50 : workflowData.stars === 4 ? 40 : workflowData.stars === 3 ? 30 : workflowData.stars === 2 ? 25 : workflowData.stars === 1 ? 20 : 30, workflowData.currency).toFixed(2)} {getCurrencySymbol(workflowData.currency)}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Room Nights:</span>
                     <span className="font-medium text-emerald-900">
-                      {Math.round((workflowData.projectCosts || 0) / (workflowData.stars === 5 ? 50 : workflowData.stars === 4 ? 40 : workflowData.stars === 3 ? 30 : 30))}
+                      {Math.round((workflowData.projectCosts || 0) / (workflowData.stars === 5 ? 50 : workflowData.stars === 4 ? 40 : workflowData.stars === 3 ? 30 : workflowData.stars === 2 ? 25 : workflowData.stars === 1 ? 20 : 30))}
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -294,7 +294,7 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
                     <span className="font-medium text-emerald-900">
                       {(() => {
                         const projectCosts = workflowData.projectCosts || 0;
-                        const voucherValue = convertFromEUR(workflowData.stars === 5 ? 50 : workflowData.stars === 4 ? 40 : workflowData.stars === 3 ? 30 : 30, workflowData.currency);
+                        const voucherValue = convertFromEUR(workflowData.stars === 5 ? 50 : workflowData.stars === 4 ? 40 : workflowData.stars === 3 ? 30 : workflowData.stars === 2 ? 25 : workflowData.stars === 1 ? 20 : 30, workflowData.currency);
                         const roomnights = Math.round(projectCosts / voucherValue);
                         const beyondBookingsCosts = roomnights * convertFromEUR(17, workflowData.currency);
                         const steuerbelastung = convertFromEUR(1800.90, workflowData.currency);
@@ -320,7 +320,7 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
                     { label: "Project Costs", value: workflowData.projectCosts?.toLocaleString('de-DE') + " " + getCurrencySymbol(workflowData.currency) },
                     { label: "Cost Advantage", value: (() => {
                       const projectCosts = workflowData.projectCosts || 0;
-                      const voucherValue = convertFromEUR(workflowData.stars === 5 ? 50 : workflowData.stars === 4 ? 40 : workflowData.stars === 3 ? 30 : 30, workflowData.currency);
+                      const voucherValue = convertFromEUR(workflowData.stars === 5 ? 50 : workflowData.stars === 4 ? 40 : workflowData.stars === 3 ? 30 : workflowData.stars === 2 ? 25 : workflowData.stars === 1 ? 20 : 30, workflowData.currency);
                       const roomnights = Math.round(projectCosts / voucherValue);
                       const beyondBookingsCosts = roomnights * convertFromEUR(17, workflowData.currency);
                       const steuerbelastung = convertFromEUR(1800.90, workflowData.currency);
@@ -1411,7 +1411,7 @@ export default function Workflow() {
       // Calculate required fields based on workflow data
       const projectCosts = workflowData.projectCosts || 20000;
       const stars = workflowData.stars || 3;
-      const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : 30;
+      const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30;
       const roomCount = workflowData.roomCount || Math.round(projectCosts / voucherValue);
       const averagePrice = workflowData.averagePrice || 120;
       const occupancyRate = workflowData.occupancyRate || 70;
@@ -2843,7 +2843,7 @@ export default function Workflow() {
                         {(() => {
                           const projectCosts = workflowData.projectCosts || 0;
                           const stars = workflowData.stars || 0;
-                          const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : 30;
+                          const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30;
                           const roomnights = Math.round(projectCosts / voucherValue);
                           return roomnights > 0 ? roomnights.toLocaleString('de-DE') : '667';
                         })()}
@@ -2858,7 +2858,7 @@ export default function Workflow() {
                       {(() => {
                         const projectCosts = workflowData.projectCosts || 20000;
                         const stars = workflowData.stars || 3;
-                        const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : 30;
+                        const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30;
                         const roomnights = Math.round(projectCosts / voucherValue);
                         
                         // Beyond Bookings real costs calculation
