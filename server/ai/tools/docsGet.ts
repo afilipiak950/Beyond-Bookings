@@ -113,7 +113,24 @@ export async function docsGet(params: DocsGetParams, userId: number): Promise<Do
 }
 
 export const docsGetToolDefinition = {
-  name: 'docs_get',
-  description: 'Retrieve full content of a document or specific chunk by ID.',
-  parameters: docsGetSchema,
+  type: 'function',
+  function: {
+    name: 'docs_get',
+    description: 'Retrieve full content of a document or specific chunk by ID.',
+    parameters: {
+      type: 'object',
+      properties: {
+        docId: {
+          type: 'string',
+          description: 'ID of the document to retrieve'
+        },
+        chunkId: {
+          type: 'string',
+          description: 'Optional: ID of specific chunk to retrieve. If not provided, returns full document.',
+          nullable: true
+        }
+      },
+      required: ['docId']
+    }
+  }
 };

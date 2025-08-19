@@ -121,7 +121,24 @@ export async function docsSearch(params: DocsSearchParams, userId: number): Prom
 }
 
 export const docsSearchToolDefinition = {
-  name: 'docs_search',
-  description: 'Search uploaded documents using semantic similarity. Returns relevant document chunks.',
-  parameters: docsSearchSchema,
+  type: 'function',
+  function: {
+    name: 'docs_search',
+    description: 'Search uploaded documents using semantic similarity. Returns relevant document chunks.',
+    parameters: {
+      type: 'object',
+      properties: {
+        query: {
+          type: 'string',
+          description: 'Search query to find relevant documents'
+        },
+        topK: {
+          type: 'integer',
+          description: 'Maximum number of results to return',
+          default: 5
+        }
+      },
+      required: ['query']
+    }
+  }
 };

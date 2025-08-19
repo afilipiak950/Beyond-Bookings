@@ -1,0 +1,191 @@
+Rolle & Ziel
+Du bist Senior Full-Stack/ML Engineer. Implementiere in diesem Repo einen unternehmensinternen KI-Assistenten mit ChatGPT-ähnlicher Oberfläche unter /ai. Der Assistent beantwortet Fragen zu Kalkulationen, Datenbanken, Google Sheets, Dokumenten (PDF/Excel/CSV/MD/DOCX) und internen APIs, führt Tools via JSON Function-Calling aus und unterstützt zeitgesteuerte Aufgaben (Reports, Checks, Exporte). Liefere lauffähigen Code, DB-Migrationen, Tests und ein kurzes README.
+
+Stack (auto-erkennen, sonst Defaults setzen):
+
+Frontend: Next.js 14 (App Router) + TypeScript + Tailwind + shadcn/ui + lucide-react.
+
+Server: Node 18+, Route Handlers + SSE-Streaming für Token.
+
+Jobs: BullMQ + Redis (Cron/Delay/Retry).
+
+DB: Postgres + pgvector (oder Supabase pgvector).
+
+LLM: OpenAI (gpt-4o-mini Standard, UI umstellbar), Embeddings text-embedding-3-large.
+
+Hauptfähigkeiten (Tool-Plugins, sicher & whitelisted):
+
+calc_eval(expression, variables?) -> { result, steps? }
+
+Sicher mit mathjs, keine evals; Einheiten/Prozent.
+
+sql_query(sql, params?) -> { rows }
+
+Nur SELECT; Parametrisierung, Timeout, DDL/DML blocken.
+
+sheets_read(spreadsheetId, range) -> { values }
+
+Google Service Account.
+
+docs_search(query, topK?) -> { hits:[{docId,chunkId,score,preview}] }
+
+docs_get(docId, chunkId?) -> { content, sourceUrl? }
+
+RAG-Pipeline: Extraktion + Chunking (800–1200 Token, Overlap ~150) + Embedding + Vektorstore.
+
+http_call(endpoint, method, payload?) -> any
+
+Whitelist über ENV (AI_HTTP_WHITELIST).
+
+schedule_job(name, cron, payload?) -> { id } / cancel_job(id)
+
+Hinterlege wiederkehrende Reports/Checks, z. B. „Wöchentliche DB-KPI“.
+
+export_csv(query|sourceRef) -> { url }
+
+Export in /exports/*.csv, signierte URL antworten.
+
+Datei-Ingestion & Quellen
+
+Upload auf /ai (PDF, MD, DOCX, CSV, XLSX).
+
+Server extrahiert Text (pdf-parse, mammoth, xlsx, csv-parse), chunkt, embeded, speichert Metadaten (Uploader, Timestamp, MIME, Pfad).
+
+/ai/admin: Re-Index, Re-Chunk, Löschen, Neu-Embeddings.
+
+UI/UX (Qualitätskriterien)
+
+/ai mit Chat-Layout: links Threads (Suchfeld, Pinnen), rechts Chat mit Streaming, Markdown/Tabellen/Codeblocks.
+
+Quellen-Badges unter Antworten (z. B. „kalkulation.xlsx · Sheet ‘Q3’!B14“, „SQL: revenue_by_month“, „PDF S.3“).
+
+Modus-Switcher: General, Kalkulation, Docs/RAG, SQL, Sheets, API (beeinflusst Tool-Priorisierung).
+
+Model-Selector (Fast/Smart) + Token/Kosten-Anzeige.
+
+Attachments (Uploads werden ingestiert & dem Thread zugeordnet).
+
+Thread-Aktionen: umbenennen, pinnen, löschen, Export (Markdown/JSON).
+
+Sicherheit & Governance
+
+Auth: vorhandene Auth nutzen (NextAuth/JWT), sonst minimale JWT-Middleware.
+
+RBAC: Rollen admin | manager | agent. Nur admin sieht /ai/admin + Metriken.
+
+Rate-Limit pro User/IP, Secrets nur ENV.
+
+PII-Redaction vor Persistierung (E-Mail/IBAN/Tel via Regex).
+
+SQL-Safeguards (nur SELECT), Sheets nur Read, HTTP nur Whitelist.
+
+Observability, Kosten & Admin
+
+Tabelle ai_logs: userId, threadId, role, prompt, toolCalls, citations, tokenUsage, cost, latency, timestamp.
+
+/api/ai/metrics (admin): letzte 30 Tage, #Chats, Ø Latenz, Top-Tools, Gesamtkosten.
+
+Job-Monitor (admin): Liste geplanter/aktiver Jobs, Retry-Counts.
+
+Zeitgesteuerte Workflows (wichtig!)
+
+BullMQ Cron Jobs, Beispiele:
+
+„Mo 08:00“: KPI-Report (SQL + Sheets + Zusammenfassung im Chat-Thread „Weekly KPI“).
+
+„Täglich 18:00“: Delta-Re-Index für neu hochgeladene Dateien.
+
+„Monatlich 1.“: Kosten-Report (Token-Nutzung + €).
+
+Admin-UI: Create/Update/Delete Job mit Cron-Validator.
+
+DB-Schema & Migrationen (Postgres)
+
+ai_threads(id, user_id, title, created_at, updated_at)
+
+ai_messages(id, thread_id, role, content, tool_calls jsonb, citations jsonb, created_at)
+
+ai_docs(id, filename, mime, uploaded_by, created_at, meta jsonb)
+
+ai_chunks(id, doc_id, chunk_index, content, token_count, created_at)
+
+ai_embeddings(id, chunk_id, embedding vector(3072))
+
+ai_logs(id, user_id, thread_id, model, tokens_in, tokens_out, cost, latency_ms, created_at)
+
+ai_jobs(id, name, cron, payload jsonb, status, created_at, updated_at)
+
+ENV Variablen
+
+OPENAI_API_KEY=
+DATABASE_URL=                      # Postgres mit pgvector
+REDIS_URL=                         # für BullMQ
+SUPABASE_URL=                      # optional, falls Supabase genutzt
+SUPABASE_ANON_KEY=
+GOOGLE_PROJECT_ID=
+GOOGLE_CLIENT_EMAIL=
+GOOGLE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+AI_HTTP_WHITELIST=/api/calc,/api/reports
+
+
+API-Endpunkte
+
+POST /api/ai/chat → LLM Orchestrierung, SSE-Streaming, Tool-Routing, Citations.
+
+POST /api/ai/ingest → Upload & RAG-Index.
+
+GET /api/ai/metrics → Admin-Metriken.
+
+GET /api/ai/jobs / POST /api/ai/jobs / DELETE /api/ai/jobs/:id → Job-CRUD (admin).
+
+Implementierungsschritte
+
+Stack prüfen; bei Bedarf Next.js 14 + Tailwind initialisieren.
+
+/ai & /ai/admin UI bauen (shadcn installieren, Basisthema).
+
+Vektorstore & Migrationen (pgvector aktivieren).
+
+RAG-Pipeline (Extraktion → Chunking → Embedding → Persistenz).
+
+Tools (calc/sql/sheets/docs/http/schedule/export) mit Zod-Schemas + Guards.
+
+Chat-Controller (SSE) mit Tool-Priorisierung (abhängig vom Modus).
+
+BullMQ + Redis einrichten (Cron, Retry, Dead-Letter).
+
+Logging, Kostenberechnung (Model-Preise als Konstante), Admin-Metriken.
+
+Tests: Unit (Tools), E2E (/api/ai/chat mit Mock-LLM), Smoke-Tests für Jobs.
+
+README kurz: Setup, ENV, RBAC, Start, Kostenkontrolle, Grenzen.
+
+Akzeptanzkriterien (Demo-Cases)
+
+Kalkulation: Upload kalkulation.xlsx → Frage „Marge Q3 vs Q2?“ → Antwort mit Sheet/Range-Citation.
+
+SQL: SELECT funktioniert parametrisiert; UPDATE/DELETE werden geblockt.
+
+Sheets: Lese Sheet1!A1:D20, zeige Quellen-Badge.
+
+RAG: PDF-Upload → Frage „Welche Vertragsklauseln zu Kündigung?“ → Antwort referenziert Seiten.
+
+Jobs: Erstelle Cron „Mo 08:00 KPI-Report“, Job erscheint im Admin-Monitor und postet Resultate in Thread.
+
+Kosten/Metriken: Admin sieht Token/Kosten der letzten 30 Tage.
+
+Streaming läuft stabil, UI zeigt Code/Tabellen korrekt.
+
+Qualität & DX
+
+Saubere Struktur: app/ai/*, app/api/ai/*, lib/ai/tools/*, lib/ai/rag/*, lib/ai/jobs/*.
+
+Typisierung (TypeScript), Zod-Validierung, keine any.
+
+ESLint/Prettier clean, keine toten Imports.
+
+Wenn Info fehlt
+
+Sinnvolle Defaults nutzen, Dummy-Seeds bereitstellen, im README dokumentieren.
+
+Liefere jetzt: Code, Migrationen, Abhängigkeiten (package.json), Beispiel-.env.local, Tests und README.

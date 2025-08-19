@@ -63,7 +63,29 @@ export async function calcEval(params: CalcEvalParams): Promise<CalcEvalResult> 
 }
 
 export const calcEvalToolDefinition = {
-  name: 'calc_eval',
-  description: 'Safely evaluate mathematical expressions with optional variables. Supports basic arithmetic, percentages, and units.',
-  parameters: calcEvalSchema,
+  type: 'function',
+  function: {
+    name: 'calc_eval',
+    description: 'Safely evaluate mathematical expressions with optional variables. Supports basic arithmetic, percentages, and units.',
+    parameters: {
+      type: 'object',
+      properties: {
+        expression: {
+          type: 'string',
+          description: 'Mathematical expression to evaluate (e.g., "2 + 3 * 4", "sqrt(16)", "25% * 100")'
+        },
+        variables: {
+          type: 'object',
+          description: 'Optional variables to use in the expression',
+          additionalProperties: {
+            oneOf: [
+              { type: 'number' },
+              { type: 'string' }
+            ]
+          }
+        }
+      },
+      required: ['expression']
+    }
+  }
 };

@@ -60,7 +60,7 @@ const upload = multer({
 // Schema for chat request
 const chatRequestSchema = z.object({
   message: z.string().min(1),
-  threadId: z.number().optional(),
+  threadId: z.union([z.number(), z.null()]).optional().transform(val => val === null ? undefined : val),
   mode: z.enum(['general', 'calculation', 'docs', 'sql', 'sheets', 'api']).default('general'),
   model: z.enum(['gpt-4o', 'gpt-4o-mini']).default('gpt-4o-mini'),
   title: z.string().optional(),
@@ -73,8 +73,9 @@ router.post('/chat', async (req: AuthenticatedRequest, res: Response) => {
       return res.status(401).json({ error: 'Authentication required' });
     }
 
-    const body = chatRequestSchema.parse(req.body);
-    const { message, threadId, mode, model, title } = body;
+    console.log('Raw request body:', req.body);
+    const { message, threadId, mode, model, title } = chatRequestSchema.parse(req.body);
+    console.log('Parsed request:', { message: message.substring(0, 50), threadId, mode, model });
 
     // Get or create thread
     const activeThreadId = await aiService.getOrCreateThread(

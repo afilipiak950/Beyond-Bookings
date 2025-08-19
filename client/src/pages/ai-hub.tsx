@@ -139,7 +139,7 @@ export default function AIHub() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ message, threadId, mode, model, title }),
+        body: JSON.stringify({ message, threadId: threadId || undefined, mode, model, title }),
       });
 
       if (!response.ok) {
@@ -220,7 +220,7 @@ export default function AIHub() {
     const title = activeThreadId ? undefined : message.substring(0, 50);
     sendMessage.mutate({
       message,
-      threadId: activeThreadId,
+      threadId: activeThreadId || undefined, // Convert null to undefined
       mode,
       model,
       title,

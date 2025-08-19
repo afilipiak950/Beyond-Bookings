@@ -92,7 +92,30 @@ export async function httpCall(params: HttpCallParams): Promise<HttpCallResult> 
 }
 
 export const httpCallToolDefinition = {
-  name: 'http_call',
-  description: 'Make HTTP requests to whitelisted internal API endpoints.',
-  parameters: httpCallSchema,
+  type: 'function',
+  function: {
+    name: 'http_call',
+    description: 'Make HTTP requests to whitelisted internal API endpoints.',
+    parameters: {
+      type: 'object',
+      properties: {
+        endpoint: {
+          type: 'string',
+          description: 'API endpoint to call (must be whitelisted)'
+        },
+        method: {
+          type: 'string',
+          enum: ['GET', 'POST'],
+          description: 'HTTP method to use',
+          default: 'GET'
+        },
+        payload: {
+          type: 'object',
+          description: 'Request payload for POST requests',
+          nullable: true
+        }
+      },
+      required: ['endpoint']
+    }
+  }
 };

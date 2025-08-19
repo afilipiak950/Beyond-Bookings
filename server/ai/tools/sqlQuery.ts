@@ -78,7 +78,30 @@ export async function sqlQuery(params: SqlQueryParams): Promise<SqlQueryResult> 
 }
 
 export const sqlQueryToolDefinition = {
-  name: 'sql_query',
-  description: 'Execute read-only SQL queries against the database. Only SELECT statements are allowed.',
-  parameters: sqlQuerySchema,
+  type: 'function',
+  function: {
+    name: 'sql_query',
+    description: 'Execute read-only SQL queries against the database. Only SELECT statements are allowed.',
+    parameters: {
+      type: 'object',
+      properties: {
+        sql: {
+          type: 'string',
+          description: 'SQL SELECT query to execute'
+        },
+        params: {
+          type: 'array',
+          description: 'Optional parameters for the SQL query',
+          items: {
+            oneOf: [
+              { type: 'string' },
+              { type: 'number' },
+              { type: 'boolean' }
+            ]
+          }
+        }
+      },
+      required: ['sql']
+    }
+  }
 };
