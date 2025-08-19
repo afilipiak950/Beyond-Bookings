@@ -520,7 +520,7 @@ MANDATORY OUTPUT FORMAT (valid JSON only):
 CRITICAL: You must always return a specific price number in EUR. Research 5-star luxury boutique hotels in Düsseldorf if exact data unavailable.`
               }
             ],
-            max_tokens: 600,
+            max_completion_tokens: 600,
             temperature: 0.1
           });
 
@@ -643,7 +643,7 @@ Return ONLY this JSON format:
               content: priceSearchPrompt
             }
           ],
-          max_tokens: 600,
+          max_completion_tokens: 600,
           temperature: 0.1
         });
 
@@ -724,7 +724,7 @@ If you cannot find exact room count data, set roomCount to null and explain in d
               content: researchPrompt
             }
           ],
-          max_tokens: 1000,
+          max_completion_tokens: 1000,
           temperature: 0.1
         });
 
@@ -922,7 +922,7 @@ MANDATORY OUTPUT FORMAT (valid JSON only):
 CRITICAL: You must always return a specific price number in EUR. If exact data unavailable, research comparable ${cleanedData.stars || 3}-star hotels in the same area and provide informed estimate based on market standards.`
             }
           ],
-          max_tokens: 600,
+          max_completion_tokens: 600,
           temperature: 0.1
         });
 
@@ -1082,7 +1082,7 @@ CRITICAL: You must always return a specific price number in EUR. If exact data u
           testResponse = await mistral.chat.complete({
             model: model,
             messages: [{ role: "user", content: "Hello, respond with 'API working'" }],
-            max_tokens: 50
+            max_completion_tokens: 50
           });
           console.log(`Test successful with model: ${model}`);
           break;
@@ -2214,7 +2214,7 @@ RETURN ONLY BASIC HOTEL DATA in valid JSON format:
           { role: "system", content: "Extract basic hotel information only. Return valid JSON format." },
           { role: "user", content: basicDataPrompt }
         ],
-        max_tokens: 800,
+        max_completion_tokens: 800,
         temperature: 0.1
       });
 
@@ -2437,7 +2437,7 @@ Only return hotel data if you can verify this is a real, existing hotel. Do not 
             content: basicDataPrompt
           }
         ],
-        max_tokens: 600,
+        max_completion_tokens: 600,
         temperature: 0.1
       });
 
@@ -2682,7 +2682,7 @@ CRITICAL REQUIREMENTS:
             content: prompt
           }
         ],
-        max_tokens: 800,
+        max_completion_tokens: 800,
         temperature: 0.1
       });
 

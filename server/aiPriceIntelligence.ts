@@ -191,7 +191,7 @@ export class AIPriceIntelligence {
       const response = await anthropic.messages.create({
         // "claude-sonnet-4-20250514"
         model: DEFAULT_MODEL_STR,
-        max_tokens: 1000,
+        max_completion_tokens: 1000,
         messages: [{
           role: 'user',
           content: `Generate a semantic vector representation for this hotel:
@@ -317,7 +317,7 @@ export class AIPriceIntelligence {
       const response = await anthropic.messages.create({
         // "claude-sonnet-4-20250514"
         model: DEFAULT_MODEL_STR,
-        max_tokens: 300,
+        max_completion_tokens: 300,
         messages: [{
           role: 'user',
           content: `Provide a brief business reasoning for suggesting ${percentage}% of €${hotelData.averagePrice} (€${Math.ceil(hotelData.averagePrice * percentage / 100)}) as the realistic hotel voucher selling price for:

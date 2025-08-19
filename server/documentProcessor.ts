@@ -660,7 +660,7 @@ export class DocumentProcessor {
 ${ocrText}`
                 }
               ],
-              max_tokens: 4000
+              max_completion_tokens: 4000
             });
             
             enhancedText = response.choices[0]?.message?.content || ocrText;
@@ -811,7 +811,7 @@ ${ocrText}`
 ${rawPageText}`
                   }
                 ],
-                max_tokens: 4000
+                max_completion_tokens: 4000
               });
               
               enhancedText = response.choices[0]?.message?.content || rawPageText;
@@ -1062,7 +1062,7 @@ Please provide detailed insights in the following JSON format:
 }`
           }
           ],
-          max_tokens: 3000
+          max_completion_tokens: 3000
         });
         
         console.log(`Insights generation successful with model: ${model}`);

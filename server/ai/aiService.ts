@@ -405,7 +405,7 @@ Respond conversationally with proper formatting, explanations, and insights. Don
             ] as any,
             stream: true,
             temperature: 0.2,
-            max_tokens: 1000,
+            max_completion_tokens: 1000,
           });
 
           let interpretedResponse = '';

@@ -293,7 +293,7 @@ IMPORTANT: Extract ALL actual numbers from the document. Do not make up or estim
             content: prompt
           }
         ],
-        max_tokens: 4000,
+        max_completion_tokens: 4000,
         temperature: 0.2,
         response_format: { type: "json_object" }
       });
