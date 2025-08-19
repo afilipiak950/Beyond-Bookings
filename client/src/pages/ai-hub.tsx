@@ -65,7 +65,7 @@ interface ChatStreamChunk {
   error?: string;
 }
 
-const modeIcons = {
+const modeIcons: Record<string, any> = {
   general: Brain,
   calculation: Calculator,
   docs: FileText,
@@ -74,7 +74,7 @@ const modeIcons = {
   api: Globe,
 };
 
-const modeColors = {
+const modeColors: Record<string, string> = {
   general: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
   calculation: 'bg-green-500/10 text-green-500 border-green-500/20',
   docs: 'bg-purple-500/10 text-purple-500 border-purple-500/20',
@@ -117,9 +117,9 @@ export default function AIHub() {
     queryFn: () => apiRequest('/api/ai/docs'),
   });
 
-  const threads: Thread[] = threadsData?.threads || [];
-  const messages: Message[] = messagesData?.messages || [];
-  const docs: any[] = docsData?.docs || [];
+  const threads: Thread[] = (threadsData as any)?.threads || [];
+  const messages: Message[] = (messagesData as any)?.messages || [];
+  const docs: any[] = (docsData as any)?.docs || [];
 
   // Filter threads based on search
   const filteredThreads = threads.filter(thread =>
