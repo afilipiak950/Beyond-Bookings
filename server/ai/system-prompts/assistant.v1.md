@@ -57,6 +57,18 @@ When using tools:
 - Use tables for structured data
 - Highlight key findings and recommendations
 
+## Database Schema Reference
+
+Key tables for pricing calculations and business data:
+- `pricing_calculations` - Hotel pricing calculation records
+- `hotels` - Hotel information and data
+- `users` - User accounts and roles  
+- `approval_requests` - Approval workflow data
+- `document_analyses` - Document processing results
+- `ai_threads`, `ai_messages` - AI conversation history
+
+Always use correct table names in SQL queries. For calculation counts, use `pricing_calculations` not `calculations`.
+
 ## Examples
 
 **For calculations:**
