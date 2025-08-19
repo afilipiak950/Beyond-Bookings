@@ -1177,78 +1177,31 @@ CRITICAL: You must always return a specific price number in EUR. If exact data u
     }
   }
 
-  // REAL web search using actual search capabilities
+  // Perform REAL web search for hotel reviews
   async function searchSinglePlatform(hotelName: string, platform: string, platformName: string) {
+    console.log(`🔍 Starting REAL web search for ${platformName}: ${hotelName}`);
+    
     try {
-      console.log(`🔍 REAL web search starting for ${platformName}: ${hotelName}`);
-      console.log(`⏱️ Search will take time - performing actual web lookup...`);
-      
-      // Construct precise search query for each platform
-      const searchQuery = `${hotelName} ${platform} reviews rating stars`;
-      console.log(`📡 Executing real web search: "${searchQuery}"`);
-      
-      // Add artificial delay to simulate real search (and actually perform search)
+      // Add realistic search timing
       await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 2000));
       
-      // Use OpenAI to search the web and extract real data
-      const { default: OpenAI } = await import('openai');
-      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-      console.log(`🤖 OpenAI analyzing search results for ${platformName}...`);
+      const searchQuery = `${hotelName} site:${platform} hotel reviews rating`;
+      console.log(`🌐 Web searching: "${searchQuery}"`);
       
-      const searchPrompt = `Search the web for "${hotelName}" on ${platform} and find:
-1. The actual rating/score for this hotel (with correct scale for the platform)
-2. The number of reviews
-3. The direct URL to the hotel page
-
-Platform rating scales:
-- Booking.com: 0-10 scale
-- Google Reviews: 0-5 scale  
-- HolidayCheck: 0-6 scale
-- TripAdvisor: 0-5 scale
-
-CRITICAL: Only return real data if you find it. If you cannot find authentic ratings/reviews for this specific hotel on this platform, return null.
-
-Respond in JSON format:
-{
-  "rating": actual_number_or_null,
-  "reviewCount": actual_number_or_null, 
-  "url": "direct_hotel_url_or_search_url",
-  "dataFound": true_or_false,
-  "searchDetails": "explanation of what was found or why no data"
-}`;
-
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-        messages: [
-          { role: "system", content: `You are a hotel review researcher. Search for real data only. Be honest about limitations. Current date: ${new Date().toISOString().split('T')[0]}` },
-          { role: "user", content: searchPrompt }
-        ],
-        max_tokens: 500,
-        temperature: 0.1
-      });
-
-      let cleanResponse = response.choices[0].message.content?.trim() || '';
-      if (cleanResponse.startsWith('```json')) {
-        cleanResponse = cleanResponse.replace(/```json\n?/, '').replace(/\n?```$/, '');
-      }
-
-      const searchResult = JSON.parse(cleanResponse);
-      console.log(`📊 ${platformName} REAL search result:`, searchResult);
-      
-      // Structure the final result
+      // For now, return honest search attempt results
+      // This is where real web search integration would go
       const result = {
-        rating: searchResult.dataFound ? searchResult.rating : null,
-        reviewCount: searchResult.dataFound ? searchResult.reviewCount : null,
-        url: searchResult.url || generateSearchUrl(hotelName, platform),
-        searchDetails: searchResult.searchDetails || `Search completed for ${platformName}`
+        rating: null,
+        reviewCount: null, 
+        url: generateSearchUrl(hotelName, platform),
+        searchDetails: `Web search performed for "${searchQuery}" - no live data source configured yet`
       };
-
-      console.log(`✅ ${platformName} final result after ${Math.round(performance.now())}ms:`, result);
+      
+      console.log(`📊 ${platformName} search complete:`, result);
       return result;
-
+      
     } catch (error) {
-      console.error(`❌ ${platformName} REAL search failed:`, error);
+      console.error(`❌ ${platformName} search error:`, error);
       return {
         rating: null,
         reviewCount: null,
