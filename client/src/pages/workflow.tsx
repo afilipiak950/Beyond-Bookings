@@ -2301,12 +2301,65 @@ export default function Workflow() {
                         Live-Zusammenfassung
                       </h4>
                     </div>
-                    <p className="text-slate-600 leading-relaxed text-base font-medium">
-                      {workflowData.hotelName && workflowData.averagePrice > 0 ? 
-                        `${workflowData.hotelName} mit ${workflowData.roomCount} Zimmern bereit für detaillierte Preisvergleichsanalyse.` :
-                        "Geben Sie Hoteldaten ein, um die Live-Berechnung zu starten."
-                      }
-                    </p>
+                    <div className="text-slate-600 leading-relaxed text-base font-medium space-y-3">
+                      <p>
+                        {workflowData.hotelName && workflowData.averagePrice > 0 ? 
+                          `${workflowData.hotelName} mit ${workflowData.roomCount} Zimmern bereit für detaillierte Preisvergleichsanalyse.` :
+                          "Geben Sie Hoteldaten ein, um die Live-Berechnung zu starten."
+                        }
+                      </p>
+                      
+                      {/* Display extracted reviews if available */}
+                      {workflowData.hotelName && (workflowData.bookingRating || workflowData.googleRating || workflowData.tripadvisorRating || workflowData.holidaycheckRating) && (
+                        <div className="mt-4 p-3 bg-gradient-to-r from-blue-50/80 to-indigo-50/60 backdrop-blur-sm border border-blue-200/40 rounded-lg">
+                          <h5 className="font-bold text-slate-800 text-sm mb-2 flex items-center space-x-2">
+                            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                            <span>Extrahierte Bewertungen:</span>
+                          </h5>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                            {workflowData.bookingRating && (
+                              <div className="flex items-center justify-between bg-white/60 px-2 py-1 rounded border border-blue-200/30">
+                                <span className="font-medium text-blue-800">Booking.com:</span>
+                                <span className="font-bold text-blue-900">
+                                  {workflowData.bookingRating}/10 ({workflowData.bookingReviewCount || 0} Bewertungen)
+                                </span>
+                              </div>
+                            )}
+                            {workflowData.googleRating && (
+                              <div className="flex items-center justify-between bg-white/60 px-2 py-1 rounded border border-green-200/30">
+                                <span className="font-medium text-green-800">Google Reviews:</span>
+                                <span className="font-bold text-green-900">
+                                  {workflowData.googleRating}/5 ({workflowData.googleReviewCount || 0} Bewertungen)
+                                </span>
+                              </div>
+                            )}
+                            {workflowData.tripadvisorRating && (
+                              <div className="flex items-center justify-between bg-white/60 px-2 py-1 rounded border border-orange-200/30">
+                                <span className="font-medium text-orange-800">TripAdvisor:</span>
+                                <span className="font-bold text-orange-900">
+                                  {workflowData.tripadvisorRating}/5 ({workflowData.tripadvisorReviewCount || 0} Bewertungen)
+                                </span>
+                              </div>
+                            )}
+                            {workflowData.holidaycheckRating && (
+                              <div className="flex items-center justify-between bg-white/60 px-2 py-1 rounded border border-purple-200/30">
+                                <span className="font-medium text-purple-800">HolidayCheck:</span>
+                                <span className="font-bold text-purple-900">
+                                  {workflowData.holidaycheckRating}/5 ({workflowData.holidaycheckReviewCount || 0} Bewertungen)
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                          
+                          {/* Show scraping status */}
+                          {workflowData.hotelName && (
+                            <div className="mt-2 text-xs text-slate-500 italic">
+                              Daten durch echtes Web-Scraping von Bewertungsplattformen extrahiert
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                     {workflowData.hotelName && workflowData.averagePrice > 0 && (
                       <div className="mt-3 flex items-center space-x-2">
                         <div className="relative">
