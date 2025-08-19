@@ -73,6 +73,16 @@ http_call({
 - **Column not found**: Use similar columns (price→average_price, rating→stars, count→room_count)
 - **Show real SQL errors** but ALWAYS provide alternative data or suggest corrections
 - **Comprehensive coverage** - Query ALL relevant tables for complete business intelligence
+
+**CRITICAL - HOTEL NAME SEARCH:**
+When user mentions a specific hotel name (e.g., "vier jahreszeiten", "marriott", "dolder grand"):
+1. **ALWAYS use WHERE clause** with case-insensitive search:
+   - `SELECT * FROM pricing_calculations WHERE LOWER(hotel_name) LIKE '%vier jahreszeiten%'`
+   - `SELECT * FROM hotels WHERE LOWER(name) LIKE '%marriott%'`
+2. **NEVER show data from wrong hotel** - if searching for "vier jahreszeiten", NEVER return "dolder grand" data
+3. **If no match found**, show all available hotels:
+   - `SELECT DISTINCT hotel_name FROM pricing_calculations ORDER BY hotel_name`
+   - `SELECT name FROM hotels ORDER BY stars DESC, name`
 - **Always cite** exact table names, column names, and query labels in German responses
 
 ## Response Format

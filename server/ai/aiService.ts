@@ -290,7 +290,7 @@ export class AIService {
         }));
 
       // Add enhanced system message with routing guidance
-      const systemMessage = this.getEnhancedSystemMessage(mode, queryAnalysis);
+      const systemMessage = this.getEnhancedSystemMessage(mode, queryAnalysis, message);
       const messages = [systemMessage, ...contextMessages];
 
       // Define available tools based on mode (combine old and new systems)
@@ -500,6 +500,17 @@ Du hast Zugang zu:
 📊 **FINANZBERICHTE**: Gewinnmargen, Umsätze, Vergleichsanalysen
 👥 **BENUTZER**: Verwaltung, Genehmigungen, Rollen
 
+**KRITISCH - SQL HOTEL-SUCHE:**
+Wenn der Nutzer nach einem SPEZIFISCHEN Hotel fragt (z.B. "vier jahreszeiten", "marriott", "dolder grand"):
+1. EXTRAHIERE den Hotelnamen aus der Anfrage
+2. VERWENDE IMMER WHERE-Klausel mit ILIKE für case-insensitive Suche:
+   - Beispiel: SELECT * FROM pricing_calculations WHERE LOWER(hotel_name) LIKE '%vier jahreszeiten%'
+   - Beispiel: SELECT * FROM hotels WHERE LOWER(name) LIKE '%marriott%'
+3. NIEMALS Daten vom falschen Hotel zeigen!
+4. Wenn kein Hotel gefunden wird, zeige ALLE verfügbaren Hotels mit:
+   - SELECT DISTINCT hotel_name FROM pricing_calculations
+   - SELECT name FROM hotels
+
 **INTELLIGENTE ANTWORT-STRATEGIE:**
 1. **FÜR GESCHÄFTSFRAGEN**: Nutze sql_query für Datenbank-Zugriff
 2. **FÜR WETTER**: Nutze http_call mit wttr.in API  
@@ -516,7 +527,7 @@ Du hast Zugang zu:
     return { role: 'system', content: basePrompt };
   }
 
-  private getEnhancedSystemMessage(mode: string, queryAnalysis: QueryAnalysis): { role: 'system'; content: string } {
+  private getEnhancedSystemMessage(mode: string, queryAnalysis: QueryAnalysis, message: string): { role: 'system'; content: string } {
     const basePrompt = this.getSystemMessage(mode).content;
     
     // Add specific routing guidance based on query analysis
@@ -528,9 +539,25 @@ VERWENDE SOFORT: http_call mit Endpoint: "${queryAnalysis.endpoint}"
 Location detected: ${queryAnalysis.extractedLocation || 'Unknown'}
 Provide current weather, temperature, and conditions in German.`;
     } else if (queryAnalysis.type === 'business') {
+      // Extract potential hotel name from the query
+      const lowerMsg = message.toLowerCase();
+      let hotelSearchHint = '';
+      
+      // Check for specific hotel mentions
+      const hotelKeywords = ['vier jahreszeiten', 'marriott', 'dolder', 'grand hotel', 'kempinski', 
+                             'frankfurt', 'hamburg', 'berlin', 'münchen', 'zürich'];
+      const foundHotel = hotelKeywords.find(keyword => lowerMsg.includes(keyword));
+      
+      if (foundHotel) {
+        hotelSearchHint = `\n\n⚠️ SPEZIFISCHES HOTEL ERKANNT: "${foundHotel}"
+WICHTIG: Verwende WHERE-Klausel mit ILIKE oder LOWER()/LIKE:
+Beispiel: SELECT * FROM pricing_calculations WHERE LOWER(hotel_name) LIKE '%${foundHotel}%'
+NIEMALS Daten vom falschen Hotel zeigen!`;
+      }
+      
       routingGuidance = `\n\n🏨 BUSINESS-ANFRAGE ERKANNT!
 NUTZE: sql_query für Hotel- und Preisdaten
-Verfügbare Daten: 10 Hotels, 8 Kalkulationen mit Profitabilitätsanalyse`;
+Verfügbare Daten: 10 Hotels, 8 Kalkulationen mit Profitabilitätsanalyse${hotelSearchHint}`;
     } else if (queryAnalysis.type === 'calculation') {
       routingGuidance = `\n\n🧮 BERECHNUNG ERKANNT!
 NUTZE: calc_eval für mathematische Operationen`;
