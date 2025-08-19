@@ -15,23 +15,45 @@ export interface HttpCallResult {
   error?: string;
 }
 
-// Whitelist of allowed endpoints from environment
+// Whitelist of allowed endpoints for web research and APIs
 const getAllowedEndpoints = (): string[] => {
-  const whitelist = process.env.AIHUB_HTTP_WHITELIST || '/api/calc,/api/reports';
+  const defaultWhitelist = [
+    '/api/calc',
+    '/api/reports',
+    'https://api.openweathermap.org',
+    'https://wttr.in',
+    'https://api.weatherapi.com',
+    'https://httpbin.org',
+    'https://jsonplaceholder.typicode.com',
+    'https://api.github.com',
+    'https://api.exchangerate-api.com'
+  ].join(',');
+  
+  const whitelist = process.env.AIHUB_HTTP_WHITELIST || defaultWhitelist;
   return whitelist.split(',').map(endpoint => endpoint.trim());
 };
 
 function isEndpointAllowed(endpoint: string): boolean {
   const allowedEndpoints = getAllowedEndpoints();
   
-  // Check if the endpoint path is in the whitelist
+  // Check if the endpoint is in the whitelist
   try {
     const url = new URL(endpoint);
+    const fullUrl = `${url.protocol}//${url.hostname}`;
     const path = url.pathname;
     
-    return allowedEndpoints.some(allowed => 
+    // Check for full URL matches (e.g., https://api.openweathermap.org)
+    const urlMatches = allowedEndpoints.some(allowed => 
+      endpoint.startsWith(allowed) || fullUrl === allowed
+    );
+    
+    // Check for path matches (e.g., /api/calc)
+    const pathMatches = allowedEndpoints.some(allowed => 
       path === allowed || path.startsWith(allowed + '/')
     );
+    
+    return urlMatches || pathMatches;
+    
   } catch {
     // If it's not a full URL, check if it's a relative path
     return allowedEndpoints.some(allowed => 

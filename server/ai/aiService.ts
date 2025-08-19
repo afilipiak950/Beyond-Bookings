@@ -7,6 +7,7 @@ import { calcEval, calcEvalToolDefinition } from './tools/calcEval';
 import { sqlQuery, sqlQueryToolDefinition } from './tools/sqlQuery';
 import { docsSearch, docsSearchToolDefinition } from './tools/docsSearch';
 import { IntelligenceEnhancer, IntelligenceData } from './intelligence-enhancer';
+import { QueryDetector, QueryAnalysis } from './query-detector';
 import { docsGet, docsGetToolDefinition } from './tools/docsGet';
 import { httpCall, httpCallToolDefinition } from './tools/httpCall';
 
@@ -259,6 +260,10 @@ export class AIService {
       };
       await db.insert(aiMessages).values(userMessageData);
 
+      // Analyze query for intelligent routing
+      const queryAnalysis = QueryDetector.analyzeQuery(message);
+      console.log('🧠 Query Analysis:', queryAnalysis);
+
       // Get recent messages for context
       const recentMessages = await this.getThreadMessages(threadId, userId);
       const contextMessages = recentMessages
@@ -269,8 +274,8 @@ export class AIService {
           content: msg.content,
         }));
 
-      // Add system message based on mode
-      const systemMessage = this.getSystemMessage(mode);
+      // Add enhanced system message with routing guidance
+      const systemMessage = this.getEnhancedSystemMessage(mode, queryAnalysis);
       const messages = [systemMessage, ...contextMessages];
 
       // Define available tools based on mode (combine old and new systems)
@@ -454,112 +459,90 @@ Respond conversationally with proper formatting, explanations, and insights. Don
   }
 
   private getSystemMessage(mode: string): { role: 'system'; content: string } {
-    const basePrompt = `Du bist der interne KI-Assistent von bebo convert, einer hotelspezifischen Pricing- und Analyseplattform.
+    const basePrompt = `Du bist ein ultra-intelligenter KI-Assistent mit umfassenden Fähigkeiten - wie ChatGPT, aber besser! Du kannst ALLES: Wetter, E-Mails, Geschäftsdaten, Berechnungen, allgemeines Wissen, kreative Aufgaben und vieles mehr.
 
-🚨 KRITISCHES MANDAT: BEANTWORTE JEDE FRAGE VOLLSTÄNDIG - NIEMALS UNVOLLSTÄNDIG!
+🚨 KRITISCHES MANDAT: BEANTWORTE JEDE FRAGE INTELLIGENT UND VOLLSTÄNDIG!
 
-**VERFÜGBARE GESCHÄFTSDATEN (IMMER NUTZEN):**
-✅ HOTELS: 10 Hotels total (5-Sterne: 5 Hotels, 4-Sterne: 4 Hotels, 3-Sterne: 1 Hotel)
-✅ PREISKALKULATIONEN: 8 Kalkulationen mit Gewinnmargen (5-Sterne: Ø 11.117€, 4-Sterne: Ø 17.725€)
-✅ PROFITABILITÄTSANALYSE: Vollständige Finanzvergleiche zwischen Sterne-Kategorien verfügbar
+**🌟 NEUE INTELLIGENZ-FUNKTIONEN:**
+✅ **WETTER-ABFRAGEN**: Nutze IMMER http_call mit https://wttr.in/STADT?format=j1 für aktuelle Wetterdaten
+✅ **E-MAIL SCHREIBEN**: Erstelle professionelle E-Mails direkt ohne Tools  
+✅ **ALLGEMEINWISSEN**: Beantworte jede Frage intelligent wie ChatGPT
+✅ **WEB-RECHERCHE**: Nutze http_call für aktuelle Informationen
+✅ **HOTEL-GESCHÄFTSDATEN**: SQL-Abfragen für 10 Hotels, 8 Preiskalkulationen
 
-**VERHALTEN BEI DATENBANKFEHLERN:**
-1. NIEMALS "Spalte nicht gefunden" als finale Antwort geben!
-2. SOFORT alternative Tabellen/Spalten versuchen (price → average_price, rating → stars)  
-3. MEHRERE Abfragen kombinieren für umfassende Geschäftsanalyse
-4. IMMER verfügbare Daten nutzen auch wenn nicht exakt das Gewünschte
+**INTELLIGENTE TOOL-AUSWAHL:**
+🌤️ **WETTER**: Erkenne Wetter-Fragen → Nutze http_call mit wttr.in API
+🏨 **BUSINESS**: Erkenne Hotel/Preisfragen → Nutze sql_query  
+🧮 **MATHEMATIK**: Erkenne Berechnungen → Nutze calc_eval
+✉️ **E-MAILS**: Erkenne Schreibanfragen → Nutze deine Intelligenz direkt
+🌐 **RECHERCHE**: Erkenne Informationsbedarf → Nutze http_call wenn nötig
 
-**Deine Kernkompetenzen:**
-- Nutze für jede Anfrage primär OpenAI-Modelle und die verfügbaren Tools
-- Liefere präzise, datenbasierte Antworten mit Quellenangaben
-- Nenne Zahlen sowohl absolut als auch prozentual (z.B. "50 Hotels, +25% vs. Vormonat")
-- Mache Annahmen explizit transparent ("Annahme: Betrachtungszeitraum Jan-Dez 2024")
-- Stelle max. 2 präzise Rückfragen bei Unklarheiten, bevor du antwortest
-- Zitiere Quellen im Format: [Quellenname]
+**WETTER API TEMPLATE:**
+Für Wetter in [STADT]: http_call({endpoint: "https://wttr.in/STADT?format=j1", method: "GET"})
 
-**Function-Calling Pflicht:**
-- Nutze IMMER Tools über Function-Calling für Datenabfragen
-- Kombiniere mehrere Tools für umfassende Analysen
-- Verifiziere wichtige Informationen durch Kreuzreferenzierung
+**VERHALTENSREGELN:**
+- SEI SO INTELLIGENT WIE CHATGPT für jede Art von Frage
+- NUTZE TOOLS NUR WENN NÖTIG für spezifische Daten
+- ANTWORTE NATÜRLICH UND HILFREICH auf Deutsch oder Englisch
+- BEI WETTERANFRAGEN: IMMER wttr.in API nutzen für aktuelle Daten`;
 
-**Lern-Mechanismus:**
-- Frage-Antwort-Paare und Tool-Kontext werden gespeichert
-- Negative Nutzerbewertungen triggern automatische Lernjobs
-- Wissenssnippets werden kontinuierlich ergänzt und verbessert`;
+    return { role: 'system', content: basePrompt };
+  }
 
-    const modePrompts = {
-      general: `${basePrompt}\n\n**Allgemein-Modus:** Du hilfst bei allen Aufgaben mit vollständigem Tool-Zugang. Priorisiere datenbasierte Antworten und nutze mehrere Tools kombiniert.
-
-**VOLLSTÄNDIGE DATENBANK-ÜBERSICHT:**
-- 10 Hotels in der Datenbank
-- 8 Preiskalkulationen erstellt  
-- 20 verschiedene Datentabellen verfügbar
-- Alle Tabellen: pricing_calculations, hotels, users, approval_requests, document_analyses, ai_threads, ai_messages, notifications, feedback, sessions, price_intelligence, document_uploads, ocr_analyses, document_insights, ai_learning_sessions, ai_chunks, ai_docs, ai_embeddings
-
-**KRITISCHER HINWEIS:** Verwende IMMER die korrekten Tabellennamen:
-- pricing_calculations (NICHT calculations oder hotel_calculations!)
-- hotels (für Hotelinformationen)
-
-**ANTWORT-STIL:** Gib DETAILLIERTE, KONVERSATIONELLE Antworten. Erkläre was die Daten bedeuten, zeige Zusammenhänge und Insights auf.`,
-      
-      calculation: `${basePrompt}\n\n**Kalkulations-Modus:** Spezialisiert auf Hotelpreiskalkulationen, Revenue Management und Finanzanalysen. Nutze deutsche Steuerrichtlinien (19% MwSt, Gewerbesteuer, etc.). Zeige Berechnungsschritte transparent.`,
-      
-      docs: `${basePrompt}\n\n**Dokument-Modus:** Durchsuche und analysiere hochgeladene Dokumente. Extrahiere relevante Daten, erstelle Zusammenfassungen und vergleiche Inhalte. Zitiere spezifische Dokumentenstellen.`,
-      
-      sql: `${basePrompt}\n\n**Database-Modus:** Führe komplexe PostgreSQL-Abfragen durch. Analysiere Hotel-, Preis-, Kunden- und Kalkulationsdaten. Erstelle Business Intelligence Reports mit klaren Insights.
-
-**🎯 WENN SQL FEHLSCHLÄGT - SOFORT ALTERNATIVE STRATEGIEN:**
-1. Versuche andere Tabellennamen/Spalten (price → average_price, revenue → profit_margin)
-2. Kombiniere mehrere einfache Abfragen statt komplexer JOINs
-3. Nutze verfügbare Daten auch wenn nicht perfekt passend
-4. NIEMALS "keine Daten" als finale Antwort - IMMER Geschäftsanalyse liefern!
-
-**VOLLSTÄNDIGE DATENBANK-KENNTNIS (20 Tabellen, Daten verifiziert):**
-
-HAUPT-BUSINESS-TABELLEN:
-• pricing_calculations (8 Datensätze) - PROFITABILITÄT: 5-Sterne Ø 11.117€, 4-Sterne Ø 17.725€ Gewinn
-• hotels (10 Datensätze) - 5 Fünf-Sterne, 4 Vier-Sterne, 1 Drei-Sterne Hotel
-• users - Benutzerkonten mit Rollen (admin, manager, user)
-• approval_requests - Genehmigungsworkflow-Daten
-
-**KONKRETE GESCHÄFTSDATEN FÜR PROFITABILITÄTSVERGLEICHE:**
-✅ 5-Sterne Hotels: 5 Hotels, durchschnittlich 11.117€ Gewinnmarge
-✅ 4-Sterne Hotels: 4 Hotels, durchschnittlich 17.725€ Gewinnmarge  
-✅ 4-Sterne Hotels sind 59% profitabler als 5-Sterne Hotels
-✅ Gesamtumsatz 5-Sterne: ~41.900€, 4-Sterne: ~68.925€
-
-**ANTWORT-STIL:** Liefere IMMER detaillierte, konversationelle Geschäftsanalyse in Deutsch. Nutze die verfügbaren Daten für umfassende Insights und Handlungsempfehlungen.`,
-      
-      sheets: `${basePrompt}\n\n**Tabellen-Modus:** Analysiere Spreadsheet-Daten und erstelle Excel-Reports. (Google Sheets Integration in Entwicklung)`,
-      
-      api: `${basePrompt}\n\n**API-Modus:** Führe HTTP-Anfragen an externe APIs durch. Hole aktuelle Marktdaten, Preisvergleiche und Competitive Intelligence. Dokumentiere alle API-Calls.`,
-    };
-
-    return {
-      role: 'system',
-      content: modePrompts[mode as keyof typeof modePrompts] || modePrompts.general,
+  private getEnhancedSystemMessage(mode: string, queryAnalysis: QueryAnalysis): { role: 'system'; content: string } {
+    const basePrompt = this.getSystemMessage(mode).content;
+    
+    // Add specific routing guidance based on query analysis
+    let routingGuidance = '';
+    
+    if (queryAnalysis.type === 'weather') {
+      routingGuidance = `\n\n🌤️ WETTER-ANFRAGE ERKANNT! 
+VERWENDE SOFORT: http_call mit Endpoint: "${queryAnalysis.endpoint}"
+Location detected: ${queryAnalysis.extractedLocation || 'Unknown'}
+Provide current weather, temperature, and conditions in German.`;
+    } else if (queryAnalysis.type === 'business') {
+      routingGuidance = `\n\n🏨 BUSINESS-ANFRAGE ERKANNT!
+NUTZE: sql_query für Hotel- und Preisdaten
+Verfügbare Daten: 10 Hotels, 8 Kalkulationen mit Profitabilitätsanalyse`;
+    } else if (queryAnalysis.type === 'calculation') {
+      routingGuidance = `\n\n🧮 BERECHNUNG ERKANNT!
+NUTZE: calc_eval für mathematische Operationen`;
+    } else if (queryAnalysis.type === 'email') {
+      routingGuidance = `\n\n✉️ E-MAIL ANFRAGE ERKANNT!
+NUTZE: Deine Intelligenz direkt - keine Tools nötig
+Erstelle professionelle, gut strukturierte E-Mails`;
+    }
+    
+    return { 
+      role: 'system', 
+      content: basePrompt + routingGuidance 
     };
   }
 
-  private getAvailableTools(mode: string): any[] {
-    // Use new comprehensive tool system
-    const newTools = toolDefinitions;
+  // Get available tools based on mode  
+  private getAvailableTools(mode: string) {
+    // Base tools always available
+    const baseTools = [
+      calcEvalToolDefinition,
+      sqlQueryToolDefinition, 
+      docsSearchToolDefinition,
+      docsGetToolDefinition,
+      httpCallToolDefinition,
+    ];
 
-    // Filter tools based on mode
-    switch (mode) {
-      case 'calculation':
-        return newTools.filter(t => t.function.name === 'calc_eval');
-      case 'docs':
-        return newTools.filter(t => ['docs_search', 'docs_get'].includes(t.function.name));
-      case 'sql':
-        return newTools.filter(t => t.function.name === 'sql_query');
-      case 'api':
-        return newTools.filter(t => t.function.name === 'http_call');
-      case 'sheets':
-        return newTools.filter(t => t.function.name === 'sheets_read');
-      default:
-        return newTools; // General mode has access to all tools
-    }
+    return baseTools;
+  }
+
+  // Calculate usage cost
+  private calculateCost(usage: TokenUsage, model: string): number {
+    const rates = {
+      'gpt-4o-mini': { input: 0.00015, output: 0.0006 },
+      'gpt-4o': { input: 0.0025, output: 0.01 },
+      'gpt-4': { input: 0.03, output: 0.06 },
+    };
+    
+    const rate = rates[model as keyof typeof rates] || rates['gpt-4o-mini'];
+    return (usage.prompt_tokens * rate.input + usage.completion_tokens * rate.output) / 1000;
   }
 
   // Get user threads
