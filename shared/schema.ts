@@ -454,3 +454,179 @@ export const insertApprovalRequestSchema = createInsertSchema(approvalRequests).
 
 export type InsertApprovalRequest = z.infer<typeof insertApprovalRequestSchema>;
 export type ApprovalRequest = typeof approvalRequests.$inferSelect;
+
+// AI Hub Database Schema
+export const aiThreads = pgTable("ai_threads", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  title: varchar("title").notNull(),
+  mode: varchar("mode").default("general").notNull(), // general, calculation, docs, sql, sheets, api
+  isPinned: boolean("is_pinned").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("ai_threads_user_idx").on(table.userId),
+  index("ai_threads_created_at_idx").on(table.createdAt),
+]);
+
+export const aiMessages = pgTable("ai_messages", {
+  id: serial("id").primaryKey(),
+  threadId: integer("thread_id").notNull().references(() => aiThreads.id, { onDelete: "cascade" }),
+  role: varchar("role").notNull(), // user, assistant, system
+  content: text("content").notNull(),
+  tokenCount: integer("token_count"),
+  toolCalls: jsonb("tool_calls"), // Array of tool calls made
+  citations: jsonb("citations"), // Array of source citations
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("ai_messages_thread_idx").on(table.threadId),
+  index("ai_messages_created_at_idx").on(table.createdAt),
+]);
+
+export const aiDocs = pgTable("ai_docs", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  filename: varchar("filename").notNull(),
+  originalName: varchar("original_name").notNull(),
+  fileType: varchar("file_type").notNull(), // pdf, md, docx, csv, xlsx
+  filePath: varchar("file_path").notNull(),
+  fileSize: integer("file_size").notNull(),
+  uploadedAt: timestamp("uploaded_at").defaultNow(),
+}, (table) => [
+  index("ai_docs_user_idx").on(table.userId),
+  index("ai_docs_uploaded_at_idx").on(table.uploadedAt),
+]);
+
+export const aiChunks = pgTable("ai_chunks", {
+  id: serial("id").primaryKey(),
+  docId: integer("doc_id").notNull().references(() => aiDocs.id, { onDelete: "cascade" }),
+  chunkIndex: integer("chunk_index").notNull(),
+  content: text("content").notNull(),
+  tokenCount: integer("token_count").notNull(),
+  metadata: jsonb("metadata"), // page number, section, etc.
+}, (table) => [
+  index("ai_chunks_doc_idx").on(table.docId),
+  index("ai_chunks_chunk_idx").on(table.chunkIndex),
+]);
+
+export const aiEmbeddings = pgTable("ai_embeddings", {
+  id: serial("id").primaryKey(),
+  chunkId: integer("chunk_id").notNull().references(() => aiChunks.id, { onDelete: "cascade" }),
+  embedding: text("embedding").notNull(), // Stored as JSON string
+}, (table) => [
+  index("ai_embeddings_chunk_idx").on(table.chunkId),
+]);
+
+export const aiLogs = pgTable("ai_logs", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  threadId: integer("thread_id").references(() => aiThreads.id),
+  role: varchar("role").notNull(),
+  prompt: text("prompt"),
+  toolCalls: jsonb("tool_calls"),
+  tokenUsage: jsonb("token_usage"), // { prompt_tokens, completion_tokens, total_tokens }
+  cost: decimal("cost", { precision: 10, scale: 6 }), // USD cost
+  latency: integer("latency"), // milliseconds
+  citations: jsonb("citations"),
+  model: varchar("model"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("ai_logs_user_idx").on(table.userId),
+  index("ai_logs_thread_idx").on(table.threadId),
+  index("ai_logs_created_at_idx").on(table.createdAt),
+]);
+
+// AI Hub Relations
+export const aiThreadsRelations = relations(aiThreads, ({ one, many }) => ({
+  user: one(users, {
+    fields: [aiThreads.userId],
+    references: [users.id],
+  }),
+  messages: many(aiMessages),
+}));
+
+export const aiMessagesRelations = relations(aiMessages, ({ one }) => ({
+  thread: one(aiThreads, {
+    fields: [aiMessages.threadId],
+    references: [aiThreads.id],
+  }),
+}));
+
+export const aiDocsRelations = relations(aiDocs, ({ one, many }) => ({
+  user: one(users, {
+    fields: [aiDocs.userId],
+    references: [users.id],
+  }),
+  chunks: many(aiChunks),
+}));
+
+export const aiChunksRelations = relations(aiChunks, ({ one, many }) => ({
+  doc: one(aiDocs, {
+    fields: [aiChunks.docId],
+    references: [aiDocs.id],
+  }),
+  embeddings: many(aiEmbeddings),
+}));
+
+export const aiEmbeddingsRelations = relations(aiEmbeddings, ({ one }) => ({
+  chunk: one(aiChunks, {
+    fields: [aiEmbeddings.chunkId],
+    references: [aiChunks.id],
+  }),
+}));
+
+export const aiLogsRelations = relations(aiLogs, ({ one }) => ({
+  user: one(users, {
+    fields: [aiLogs.userId],
+    references: [users.id],
+  }),
+  thread: one(aiThreads, {
+    fields: [aiLogs.threadId],
+    references: [aiThreads.id],
+  }),
+}));
+
+// AI Hub Insert Schemas
+export const insertAiThreadSchema = createInsertSchema(aiThreads).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertAiMessageSchema = createInsertSchema(aiMessages).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertAiDocSchema = createInsertSchema(aiDocs).omit({
+  id: true,
+  uploadedAt: true,
+});
+
+export const insertAiChunkSchema = createInsertSchema(aiChunks).omit({
+  id: true,
+});
+
+export const insertAiEmbeddingSchema = createInsertSchema(aiEmbeddings).omit({
+  id: true,
+});
+
+export const insertAiLogSchema = createInsertSchema(aiLogs).omit({
+  id: true,
+  createdAt: true,
+});
+
+// AI Hub Types
+export type AiThread = typeof aiThreads.$inferSelect;
+export type AiMessage = typeof aiMessages.$inferSelect;
+export type AiDoc = typeof aiDocs.$inferSelect;
+export type AiChunk = typeof aiChunks.$inferSelect;
+export type AiEmbedding = typeof aiEmbeddings.$inferSelect;
+export type AiLog = typeof aiLogs.$inferSelect;
+
+export type InsertAiThread = z.infer<typeof insertAiThreadSchema>;
+export type InsertAiMessage = z.infer<typeof insertAiMessageSchema>;
+export type InsertAiDoc = z.infer<typeof insertAiDocSchema>;
+export type InsertAiChunk = z.infer<typeof insertAiChunkSchema>;
+export type InsertAiEmbedding = z.infer<typeof insertAiEmbeddingSchema>;
+export type InsertAiLog = z.infer<typeof insertAiLogSchema>;

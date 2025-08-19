@@ -100,6 +100,13 @@ const navigation = [
     adminOnly: true,
   },
   {
+    name: "AI Hub",
+    href: "/ai-hub",
+    icon: Zap,
+    description: "Advanced AI assistant with tools",
+    gradient: "from-violet-500 to-purple-500",
+  },
+  {
     name: "Settings & Users",
     href: "/settings",
     icon: Settings,

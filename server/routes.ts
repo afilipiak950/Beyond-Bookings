@@ -24,6 +24,7 @@ import { db } from "./db";
 import { documentAnalyses, hotels, users } from "@shared/schema";
 import { eq, desc, and, or, isNull, gte, lte, like, ilike, inArray, sql, count } from "drizzle-orm";
 import OpenAI from "openai";
+import aiRoutes from "./ai/routes";
 
 // Login/Register schemas
 const loginSchema = z.object({
@@ -2741,5 +2742,8 @@ CRITICAL REQUIREMENTS:
     });
   });
 
+  // Mount AI routes
+  app.use('/api/ai', aiRoutes);
+  
   return httpServer;
 }
