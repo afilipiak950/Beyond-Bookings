@@ -327,13 +327,13 @@ export default function AIHub() {
       {/* Sidebar */}
       <div className="w-80 border-r glass-card border-border/50 flex flex-col">
         {/* Header */}
-        <div className="p-3 border-b border-border/50">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-blue-500" />
+        <div className="p-2.5 border-b border-border/50">
+          <div className="flex items-center justify-between mb-2.5">
+            <div className="flex items-center gap-1.5">
+              <Sparkles className="h-3.5 w-3.5 text-blue-500" />
               <h1 className="font-medium text-sm">AI Hub</h1>
             </div>
-            <Button onClick={createThread} size="sm" variant="ghost" className="h-7 w-7 p-0 shrink-0">
+            <Button onClick={createThread} size="sm" variant="ghost" className="h-6 w-6 p-0 shrink-0">
               <Plus className="h-3 w-3" />
             </Button>
           </div>
@@ -342,64 +342,55 @@ export default function AIHub() {
           <div className="relative">
             <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3 w-3 text-muted-foreground" />
             <Input
-              placeholder="Search threads..."
+              placeholder="Search..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-8 h-8 text-xs"
+              className="pl-7 h-7 text-xs"
             />
           </div>
         </div>
 
         {/* Threads List */}
-        <ScrollArea className="flex-1 p-2">
+        <ScrollArea className="flex-1 p-1.5">
           {filteredThreads.map((thread) => (
             <div
               key={thread.id}
               onClick={() => setActiveThreadId(thread.id)}
               className={cn(
-                "p-2 rounded-md cursor-pointer mb-1 transition-colors hover:bg-accent/50 group",
-                activeThreadId === thread.id ? "bg-accent border border-border" : "bg-background/50"
+                "p-1.5 rounded cursor-pointer mb-0.5 transition-colors hover:bg-accent/50 group relative",
+                activeThreadId === thread.id ? "bg-accent text-accent-foreground" : "bg-background/30 hover:bg-background/60"
               )}
             >
-              <div className="flex items-start justify-between mb-1">
-                <h3 className="font-medium text-xs truncate flex-1 pr-2">{thread.title}</h3>
-                <div className="flex items-center gap-1 shrink-0">
+              <div className="flex items-center justify-between">
+                <h3 className="font-medium text-xs truncate flex-1 pr-1 leading-tight">{thread.title}</h3>
+                <div className="flex items-center gap-0.5 shrink-0">
                   {thread.isPinned && <Pin className="h-2 w-2 text-blue-500" />}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className="h-4 w-4 p-0 opacity-0 group-hover:opacity-100">
-                        <MoreVertical className="h-2 w-2" />
+                      <Button variant="ghost" size="sm" className="h-3 w-3 p-0 opacity-0 group-hover:opacity-100">
+                        <MoreVertical className="h-1.5 w-1.5" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-32">
-                      <DropdownMenuItem className="text-xs">Rename</DropdownMenuItem>
-                      <DropdownMenuItem className="text-xs">Pin</DropdownMenuItem>
-                      <DropdownMenuItem className="text-xs">Export</DropdownMenuItem>
-                      <DropdownMenuItem className="text-destructive text-xs">Delete</DropdownMenuItem>
+                    <DropdownMenuContent align="end" className="w-28">
+                      <DropdownMenuItem className="text-xs py-1">Rename</DropdownMenuItem>
+                      <DropdownMenuItem className="text-xs py-1">Pin</DropdownMenuItem>
+                      <DropdownMenuItem className="text-xs py-1">Export</DropdownMenuItem>
+                      <DropdownMenuItem className="text-destructive text-xs py-1">Delete</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
               </div>
-              
-              <div className="flex items-center gap-1 mb-1">
-                <Badge variant="outline" className={cn("text-xs px-1 py-0 h-4", modeColors[thread.mode])}>
-                  {React.createElement(modeIcons[thread.mode], { className: "h-2 w-2 mr-1" })}
-                  {thread.mode}
-                </Badge>
-              </div>
-              
-              <p className="text-xs text-muted-foreground truncate opacity-70">{thread.lastMessage}</p>
             </div>
           ))}
         </ScrollArea>
 
         {/* Upload Button */}
-        <div className="p-2 border-t border-border/50">
+        <div className="p-1.5 border-t border-border/50">
           <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline" className="w-full h-8" size="sm">
-                <Upload className="h-3 w-3 mr-2" />
-                <span className="text-xs">Upload Docs</span>
+              <Button variant="outline" className="w-full h-7" size="sm">
+                <Upload className="h-2.5 w-2.5 mr-1.5" />
+                <span className="text-xs">Upload</span>
               </Button>
             </DialogTrigger>
             <DialogContent>
