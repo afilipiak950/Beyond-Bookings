@@ -1243,19 +1243,56 @@ CRITICAL: You must always return a specific price number in EUR. If exact data u
         };
       }
       
-      // For unknown hotels, attempt generic scraping with realistic variation
-      const hasGoogleListing = Math.random() > 0.3; // 70% chance of finding a listing
-      
-      if (hasGoogleListing) {
-        // Generate realistic review data for hotels that have Google listings
-        const rating = Math.round((3.5 + Math.random() * 1.5) * 10) / 10; // 3.5-5.0 range
-        const reviewCount = Math.floor(10 + Math.random() * 200); // 10-210 reviews
+      // For unknown hotels, attempt REAL web scraping
+      try {
+        // Import axios for actual HTTP requests
+        const axios = await import('axios');
         
+        // Attempt to scrape Google Maps/Places data
+        const response = await axios.default.get(googleMapsUrl, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+          },
+          timeout: 10000
+        });
+        
+        // Use cheerio to parse the HTML response
+        const $ = cheerio.load(response.data);
+        
+        // Extract rating and review count from Google Maps HTML
+        const ratingElement = $('[data-value]').first();
+        const reviewElement = $('[aria-label*="reviews"]').first();
+        
+        if (ratingElement.length && reviewElement.length) {
+          const rating = parseFloat(ratingElement.attr('data-value') || '0');
+          const reviewText = reviewElement.text();
+          const reviewCount = parseInt(reviewText.match(/(\d+)/)?.[1] || '0');
+          
+          if (rating > 0 && reviewCount > 0) {
+            return {
+              rating,
+              reviewCount,
+              url: googleMapsUrl,
+              searchDetails: `Google Reviews REAL scraping: ${rating}/5 rating with ${reviewCount} reviews extracted from Google Maps`
+            };
+          }
+        }
+        
+        // If parsing failed, return no data found
         return {
-          rating,
-          reviewCount,
+          rating: null,
+          reviewCount: null,
           url: googleMapsUrl,
-          searchDetails: `Google Reviews scraped: ${rating}/5 rating with ${reviewCount} reviews from Google Maps`
+          searchDetails: `Google Maps REAL scraping attempted - hotel found but no extractable rating data`
+        };
+        
+      } catch (error) {
+        console.error('Real Google scraping failed:', error);
+        return {
+          rating: null,
+          reviewCount: null,
+          url: googleMapsUrl,
+          searchDetails: `Google Maps REAL scraping failed - ${error.message || 'network error'}`
         };
       }
       
@@ -1300,19 +1337,60 @@ CRITICAL: You must always return a specific price number in EUR. If exact data u
       return knownHotelData[hotelKey];
     }
     
-    // Generic scraping for unknown hotels
-    const hasBookingListing = Math.random() > 0.2; // 80% chance of finding a Booking.com listing
-    
-    if (hasBookingListing) {
-      // Generate realistic Booking.com data
-      const rating = Math.round((6.5 + Math.random() * 3.5) * 10) / 10; // 6.5-10.0 range
-      const reviewCount = Math.floor(50 + Math.random() * 500); // 50-550 reviews
+    // REAL web scraping for unknown hotels
+    try {
+      // Import axios for actual HTTP requests
+      const axios = await import('axios');
       
+      // Search Booking.com for the hotel
+      const searchUrl = `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(hotelName)}`;
+      const response = await axios.default.get(searchUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        },
+        timeout: 10000
+      });
+      
+      // Use cheerio to parse the HTML response
+      const $ = cheerio.load(response.data);
+      
+      // Look for hotel rating and review data in Booking.com structure
+      const ratingElement = $('[data-testid="review-score"]').first();
+      const reviewElement = $('[data-testid="review-score-word"]').first();
+      
+      if (ratingElement.length && reviewElement.length) {
+        const ratingText = ratingElement.text().trim();
+        const reviewText = reviewElement.text().trim();
+        
+        const rating = parseFloat(ratingText);
+        const reviewMatch = reviewText.match(/(\d+)/);
+        const reviewCount = reviewMatch ? parseInt(reviewMatch[1]) : 0;
+        
+        if (rating > 0 && reviewCount > 0) {
+          return {
+            rating,
+            reviewCount,
+            url: searchUrl,
+            searchDetails: `Booking.com REAL scraping: ${rating}/10 rating with ${reviewCount} verified reviews extracted`
+          };
+        }
+      }
+      
+      // If no specific data found, return search attempted
       return {
-        rating,
-        reviewCount,
+        rating: null,
+        reviewCount: null,
+        url: searchUrl,
+        searchDetails: `Booking.com REAL scraping attempted - hotel search completed but no extractable rating data`
+      };
+      
+    } catch (error) {
+      console.error('Real Booking.com scraping failed:', error);
+      return {
+        rating: null,
+        reviewCount: null,
         url: `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(hotelName)}`,
-        searchDetails: `Booking.com scraped: ${rating}/10 rating with ${reviewCount} verified reviews`
+        searchDetails: `Booking.com REAL scraping failed - ${error.message || 'network error'}`
       };
     }
     
@@ -1346,19 +1424,60 @@ CRITICAL: You must always return a specific price number in EUR. If exact data u
       return knownHotelData[hotelKey];
     }
     
-    // Generic scraping for unknown hotels
-    const hasTripAdvisorListing = Math.random() > 0.4; // 60% chance of finding a TripAdvisor listing
-    
-    if (hasTripAdvisorListing) {
-      // Generate realistic TripAdvisor data
-      const rating = Math.round((2.5 + Math.random() * 2.5) * 10) / 10; // 2.5-5.0 range
-      const reviewCount = Math.floor(20 + Math.random() * 300); // 20-320 reviews
+    // REAL web scraping for unknown hotels
+    try {
+      // Import axios for actual HTTP requests
+      const axios = await import('axios');
       
+      // Search TripAdvisor for the hotel
+      const searchUrl = `https://www.tripadvisor.com/Search?q=${encodeURIComponent(hotelName)}`;
+      const response = await axios.default.get(searchUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        },
+        timeout: 10000
+      });
+      
+      // Use cheerio to parse the HTML response
+      const $ = cheerio.load(response.data);
+      
+      // Look for hotel rating and review data in TripAdvisor structure
+      const ratingElement = $('[data-automation="reviewsRating"]').first();
+      const reviewElement = $('[data-automation="reviewsCount"]').first();
+      
+      if (ratingElement.length && reviewElement.length) {
+        const ratingText = ratingElement.text().trim();
+        const reviewText = reviewElement.text().trim();
+        
+        const rating = parseFloat(ratingText);
+        const reviewMatch = reviewText.match(/(\d+)/);
+        const reviewCount = reviewMatch ? parseInt(reviewMatch[1]) : 0;
+        
+        if (rating > 0 && reviewCount > 0) {
+          return {
+            rating,
+            reviewCount,
+            url: searchUrl,
+            searchDetails: `TripAdvisor REAL scraping: ${rating}/5 rating with ${reviewCount} reviews extracted`
+          };
+        }
+      }
+      
+      // If no specific data found, return search attempted
       return {
-        rating,
-        reviewCount,
+        rating: null,
+        reviewCount: null,
+        url: searchUrl,
+        searchDetails: `TripAdvisor REAL scraping attempted - hotel search completed but no extractable rating data`
+      };
+      
+    } catch (error) {
+      console.error('Real TripAdvisor scraping failed:', error);
+      return {
+        rating: null,
+        reviewCount: null,
         url: `https://www.tripadvisor.com/Search?q=${encodeURIComponent(hotelName)}`,
-        searchDetails: `TripAdvisor scraped: ${rating}/5 rating with ${reviewCount} reviews`
+        searchDetails: `TripAdvisor REAL scraping failed - ${error.message || 'network error'}`
       };
     }
     
@@ -1392,19 +1511,60 @@ CRITICAL: You must always return a specific price number in EUR. If exact data u
       return knownHotelData[hotelKey];
     }
     
-    // Generic scraping for unknown hotels
-    const hasHolidayCheckListing = Math.random() > 0.6; // 40% chance of finding HolidayCheck/HRS listing
-    
-    if (hasHolidayCheckListing) {
-      // Generate realistic HolidayCheck/HRS data
-      const rating = Math.round((3.0 + Math.random() * 2.0) * 10) / 10; // 3.0-5.0 range
-      const reviewCount = Math.floor(10 + Math.random() * 100); // 10-110 reviews
+    // REAL web scraping for unknown hotels
+    try {
+      // Import axios for actual HTTP requests
+      const axios = await import('axios');
       
+      // Search HolidayCheck for the hotel
+      const searchUrl = `https://www.holidaycheck.de/dcs/hotel-search?s=${encodeURIComponent(hotelName)}`;
+      const response = await axios.default.get(searchUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        },
+        timeout: 10000
+      });
+      
+      // Use cheerio to parse the HTML response
+      const $ = cheerio.load(response.data);
+      
+      // Look for hotel rating and review data in HolidayCheck structure
+      const ratingElement = $('.rating-score').first();
+      const reviewElement = $('.review-count').first();
+      
+      if (ratingElement.length && reviewElement.length) {
+        const ratingText = ratingElement.text().trim();
+        const reviewText = reviewElement.text().trim();
+        
+        const rating = parseFloat(ratingText);
+        const reviewMatch = reviewText.match(/(\d+)/);
+        const reviewCount = reviewMatch ? parseInt(reviewMatch[1]) : 0;
+        
+        if (rating > 0 && reviewCount > 0) {
+          return {
+            rating,
+            reviewCount,
+            url: searchUrl,
+            searchDetails: `HolidayCheck REAL scraping: ${rating}/5 rating with ${reviewCount} reviews extracted`
+          };
+        }
+      }
+      
+      // If no specific data found, return search attempted
       return {
-        rating,
-        reviewCount,
+        rating: null,
+        reviewCount: null,
+        url: searchUrl,
+        searchDetails: `HolidayCheck REAL scraping attempted - hotel search completed but no extractable rating data`
+      };
+      
+    } catch (error) {
+      console.error('Real HolidayCheck scraping failed:', error);
+      return {
+        rating: null,
+        reviewCount: null,
         url: `https://www.holidaycheck.de/dcs/hotel-search?s=${encodeURIComponent(hotelName)}`,
-        searchDetails: `HolidayCheck scraped: ${rating}/5 rating with ${reviewCount} reviews`
+        searchDetails: `HolidayCheck REAL scraping failed - ${error.message || 'network error'}`
       };
     }
     
