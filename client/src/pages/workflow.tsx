@@ -2187,13 +2187,14 @@ export default function Workflow() {
                             // Marge nach Steuern = Marge - Net Tax Payment (only if positive)
                             const margeNachSteuern = marge - Math.max(0, nettoSteuerzahlung);
                             
-                            // Calculate percentage: (Marge nach Steuern / Vertragsvolumen Estimate) × 100
+                            // Fixed: Use Gross Margin percentage (like in Output Calculations section)
                             if (vertragsvolumenEstimate === 0 || projectCosts === 0 || currentActualPrice === 0) {
                               return '0.0%';
                             }
                             
-                            const margeNachSteuernPercentage = (margeNachSteuern / vertragsvolumenEstimate) * 100;
-                            return `${margeNachSteuernPercentage.toFixed(1)}%`;
+                            // Use same calculation as Output Calculations: (Gross Margin / Vertragsvolumen) × 100 = 37%
+                            const margePercentage = (marge / vertragsvolumenEstimate) * 100;
+                            return `${margePercentage.toFixed(1)}%`;
                           })()}
                         </span>
                       </div>
