@@ -3007,7 +3007,14 @@ export default function Workflow() {
                         />
                         <span className="text-xs text-gray-600">%</span>
                       </div>
-                      <div className="text-lg font-semibold text-gray-900">0 {getCurrencySymbol(workflowData.currency)}</div>
+                      <div className="text-lg font-semibold text-gray-900">
+                        {(() => {
+                          const projectCosts = workflowData.projectCosts || 20000;
+                          const nettoKosten = projectCosts / (1 + editableCosts.vatRate19/100);
+                          const mwst7 = nettoKosten * (editableCosts.vatRate7/100);
+                          return mwst7.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' ' + getCurrencySymbol(workflowData.currency);
+                        })()}
+                      </div>
                     </div>
                     <div className="bg-gray-50 rounded-lg p-3">
                       <div className="flex items-center space-x-2 mb-2">
@@ -3095,7 +3102,17 @@ export default function Workflow() {
                         />
                         <span className="text-xs text-gray-600">%</span>
                       </div>
-                      <div className="text-lg font-semibold text-gray-900">0 {getCurrencySymbol(workflowData.currency)}</div>
+                      <div className="text-lg font-semibold text-gray-900">
+                        {(() => {
+                          const projectCosts = workflowData.projectCosts || 20000;
+                          const stars = workflowData.stars || 3;
+                          const voucherValue = (workflowData.hotelVoucherValue && workflowData.hotelVoucherValue > 0) ? workflowData.hotelVoucherValue : (stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30);
+                          const roomnights = Math.round(projectCosts / voucherValue);
+                          const totalVoucherValue = roomnights * voucherValue;
+                          const mwst7 = totalVoucherValue * (editableCosts.vatRate7/100) / (1 + editableCosts.vatRate7/100);
+                          return mwst7.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' ' + getCurrencySymbol(workflowData.currency);
+                        })()}
+                      </div>
                     </div>
                     <div className="bg-gray-50 rounded-lg p-3">
                       <div className="flex items-center space-x-2 mb-2">
