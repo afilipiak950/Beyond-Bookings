@@ -62,8 +62,11 @@ export async function sqlQuery(params: SqlQueryParams): Promise<SqlQueryResult> 
     
     const result = await Promise.race([queryPromise, timeoutPromise]);
     
+    // Extract rows from Drizzle result format
+    const rows = result.rows || result || [];
+    
     return {
-      rows: Array.isArray(result) ? result : [result],
+      rows: Array.isArray(rows) ? rows : [rows],
       executedQuery: query
     };
     

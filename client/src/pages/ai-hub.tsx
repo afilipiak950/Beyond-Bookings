@@ -282,14 +282,15 @@ export default function AIHub() {
         queryClient.invalidateQueries({ 
           queryKey: ['/api/ai/threads', activeThreadId, 'messages'] 
         });
-        // Clear pending message after messages refresh
-        setTimeout(() => setPendingUserMessage(''), 100);
+        // Clear pending message immediately since it's now saved
+        setPendingUserMessage('');
       }
       
-      // Clear streaming state but keep user message visible until messages refresh
+      // Clear streaming state and pending message since it's now saved  
+      setIsStreaming(false);
       setStreamingMessage('');
       setCitations([]);
-      // Keep pendingUserMessage until messages are refreshed
+      setPendingUserMessage('');
     },
     onError: (error: any) => {
       setIsStreaming(false);
