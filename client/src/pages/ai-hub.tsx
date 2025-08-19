@@ -130,6 +130,7 @@ export default function AIHub() {
   // Send message mutation
   const sendMessage = useMutation({
     mutationFn: async ({ message, threadId, mode, model, title }: any) => {
+      const isNewThread = !threadId;
       setIsStreaming(true);
       setStreamingMessage('');
       setCitations([]);
@@ -164,7 +165,7 @@ export default function AIHub() {
             const data = line.slice(6);
             if (data === '[DONE]') {
               setIsStreaming(false);
-              return;
+              return isNewThread; // Return flag to indicate if this was a new thread
             }
             
             try {
@@ -190,9 +191,29 @@ export default function AIHub() {
         }
       }
     },
-    onSuccess: () => {
+    onSuccess: (wasNewThread) => {
+      // Refresh threads first
       queryClient.invalidateQueries({ queryKey: ['/api/ai/threads'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/ai/threads', activeThreadId, 'messages'] });
+      
+      // If this was a new thread, we need to switch to it
+      if (wasNewThread) {
+        // Wait a bit for the threads query to update, then switch to the newest thread
+        setTimeout(async () => {
+          await queryClient.refetchQueries({ queryKey: ['/api/ai/threads'] });
+          const updatedThreadsData = queryClient.getQueryData(['/api/ai/threads']) as any;
+          if (updatedThreadsData?.threads?.length > 0) {
+            // Find the most recently created thread
+            const newestThread = updatedThreadsData.threads.reduce((newest: any, current: any) => {
+              return new Date(current.createdAt) > new Date(newest.createdAt) ? current : newest;
+            });
+            setActiveThreadId(newestThread.id);
+          }
+        }, 200);
+      } else {
+        // Refresh messages for the current thread
+        queryClient.invalidateQueries({ queryKey: ['/api/ai/threads', activeThreadId, 'messages'] });
+      }
+      
       setMessage('');
       setStreamingMessage('');
       setCitations([]);
