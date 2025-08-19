@@ -2258,22 +2258,7 @@ export default function Workflow() {
                             // Formula: Vertragsvolumen Estimate = (Project Costs / Hotel Voucher Value) × (Actual Price × tripzMultiplier) × 1.1
                             const vertragsvolumenEstimate = (projectCosts / voucherValue) * (currentActualPrice * tripzEstimateMultiplier) * 1.1;
                             
-                            // Debug logging with step-by-step calculation
-                            const step1 = projectCosts / voucherValue;
-                            const step2 = currentActualPrice * tripzEstimateMultiplier;
-                            const step3 = step1 * step2;
-                            const step4 = step3 * 1.1;
-                            
-                            console.log("🔍 DETAILED VERTRAGSVOLUMEN CALCULATION:", {
-                              inputs: { projectCosts, voucherValue, currentActualPrice, tripzEstimateMultiplier },
-                              step1_projectCostsVoucherRatio: `${projectCosts} / ${voucherValue} = ${step1}`,
-                              step2_adjustedPrice: `${currentActualPrice} * ${tripzEstimateMultiplier} = ${step2}`,
-                              step3_beforeMultiplier: `${step1} * ${step2} = ${step3}`,
-                              step4_final: `${step3} * 1.1 = ${step4}`,
-                              finalResult: vertragsvolumenEstimate,
-                              expectedFromScreenshot: 47586,
-                              difference: vertragsvolumenEstimate - 47586
-                            });
+                            // Calculation now correctly uses actual hotel voucher value instead of star-based value
                             
                             if (projectCosts === 0 && currentActualPrice === 0) {
                               return '0.00 ' + getCurrencySymbol(workflowData.currency);
@@ -2766,30 +2751,8 @@ export default function Workflow() {
                           const margeNachSteuernVsProjectCosts = (margeNachSteuern / projectCosts) * 100;
                           const margeVsRevenue = (marge / vertragsvolumenEstimate) * 100;
                           
-                          // Debug logging for all possible percentage calculations
-                          console.log("🔍 ALL PERCENTAGE METHODS DEBUG:", {
-                            projectCosts,
-                            vertragsvolumenEstimate,
-                            marge,
-                            margeNachSteuern,
-                            method1_margeNachSteuernVsVertrag: `(${margeNachSteuern} / ${vertragsvolumenEstimate}) * 100 = ${margeNachSteuernPercentage.toFixed(1)}%`,
-                            method2_margeVsProjectCosts: `(${marge} / ${projectCosts}) * 100 = ${margeVsProjectCosts.toFixed(1)}%`,
-                            method3_margeNachSteuernVsProjectCosts: `(${margeNachSteuern} / ${projectCosts}) * 100 = ${margeNachSteuernVsProjectCosts.toFixed(1)}%`,
-                            method4_margeVsRevenue: `(${marge} / ${vertragsvolumenEstimate}) * 100 = ${margeVsRevenue.toFixed(1)}%`,
-                            expectedFromScreenshot: "37%"
-                          });
-                          
-                          // Test which method gives 37% - the screenshot expectation
-                          if (Math.abs(margeVsProjectCosts - 37) < 1) {
-                            console.log("✅ Method 2 (Marge vs Project Costs) matches screenshot: 37%");
-                            return `${margeVsProjectCosts.toFixed(0)}%`;
-                          }
-                          if (Math.abs(margeNachSteuernVsProjectCosts - 37) < 1) {
-                            console.log("✅ Method 3 (Marge nach Steuern vs Project Costs) matches screenshot: 37%");
-                            return `${margeNachSteuernVsProjectCosts.toFixed(0)}%`;
-                          }
-                          
-                          return `${margeNachSteuernPercentage.toFixed(1)}%`;
+                          // Fixed: Use Gross Margin vs Revenue calculation (method4) for correct 37%
+                          return `${margeVsRevenue.toFixed(1)}%`;
                         })()}
                       </div>
                     </div>
