@@ -1125,167 +1125,370 @@ CRITICAL: You must always return a specific price number in EUR. If exact data u
     }
   });
 
-  // Real web scraping functions for authentic review data
+  // Real web scraping functions for authentic review data using HTTP requests
   async function scrapeBookingReviews(hotelName: string) {
     try {
-      console.log(`🔍 Scraping Booking.com for: ${hotelName}`);
-      const puppeteer = await import('puppeteer');
-      const browser = await puppeteer.default.launch({
-        headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
+      console.log(`🔍 HTTP scraping Booking.com for: ${hotelName}`);
+      const axios = await import('axios');
+      const cheerio = await import('cheerio');
+      
+      const searchUrl = `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(hotelName)}&nflt=ht_id%3D204`;
+      console.log(`📡 Fetching: ${searchUrl}`);
+      
+      const response = await axios.default.get(searchUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.5',
+          'Accept-Encoding': 'gzip, deflate',
+          'Connection': 'keep-alive',
+        },
+        timeout: 15000
       });
       
-      const page = await browser.newPage();
-      await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+      const $ = cheerio.load(response.data);
       
-      // Search for hotel on Booking.com
-      const searchUrl = `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(hotelName)}`;
-      await page.goto(searchUrl, { waitUntil: 'networkidle0', timeout: 10000 });
+      // Debug: log page content to understand structure
+      console.log('📄 Page title:', $('title').text());
       
-      // Extract first hotel result
-      const hotelData = await page.evaluate(() => {
-        const firstHotel = document.querySelector('[data-testid="property-card"]');
-        if (!firstHotel) return null;
-        
-        const ratingElement = firstHotel.querySelector('[data-testid="review-score"]');
-        const reviewCountElement = firstHotel.querySelector('[data-testid="review-score"] + div');
-        const linkElement = firstHotel.querySelector('a[data-testid="title-link"]');
-        
-        return {
-          rating: ratingElement ? parseFloat(ratingElement.textContent.trim()) : null,
-          reviewCount: reviewCountElement ? parseInt(reviewCountElement.textContent.replace(/\D/g, '')) : null,
-          url: linkElement ? `https://www.booking.com${linkElement.getAttribute('href')}` : null
-        };
-      });
+      // Try multiple selectors for rating and reviews
+      let rating = null;
+      let reviewCount = null;
+      let hotelUrl = null;
       
-      await browser.close();
-      console.log('✅ Booking.com scraping result:', hotelData);
-      return hotelData;
+      // Method 1: Look for rating in various elements
+      const ratingSelectors = [
+        '.bui-review-score__badge',
+        '[data-testid="review-score"]',
+        '.review-score-badge',
+        '.bui-u-sr-only:contains("Scored")',
+        '.scored_9',
+        '.scored_8',
+        '.scored_7'
+      ];
+      
+      for (const selector of ratingSelectors) {
+        const ratingEl = $(selector).first();
+        if (ratingEl.length) {
+          const ratingText = ratingEl.text().trim();
+          const ratingMatch = ratingText.match(/(\d+\.?\d*)/);
+          if (ratingMatch) {
+            rating = parseFloat(ratingMatch[1]);
+            console.log(`✅ Found rating with selector ${selector}: ${rating}`);
+            break;
+          }
+        }
+      }
+      
+      // Method 2: Look for review count
+      const reviewSelectors = [
+        '.bui-review-score__text',
+        '[data-testid="review-count"]',
+        '.review-score-link',
+        'span:contains("reviews")',
+        'span:contains("review")'
+      ];
+      
+      for (const selector of reviewSelectors) {
+        const reviewEl = $(selector).first();
+        if (reviewEl.length) {
+          const reviewText = reviewEl.text();
+          const reviewMatch = reviewText.match(/(\d+(?:,\d+)*)/);
+          if (reviewMatch) {
+            reviewCount = parseInt(reviewMatch[1].replace(/,/g, ''));
+            console.log(`✅ Found review count with selector ${selector}: ${reviewCount}`);
+            break;
+          }
+        }
+      }
+      
+      // Method 3: Find hotel URL
+      const urlSelectors = [
+        'a[data-testid="title-link"]',
+        '.sr-hotel__name a',
+        '.hotel_name a',
+        'h3 a'
+      ];
+      
+      for (const selector of urlSelectors) {
+        const urlEl = $(selector).first();
+        if (urlEl.length) {
+          const href = urlEl.attr('href');
+          if (href) {
+            hotelUrl = href.startsWith('http') ? href : `https://www.booking.com${href}`;
+            console.log(`✅ Found hotel URL with selector ${selector}: ${hotelUrl}`);
+            break;
+          }
+        }
+      }
+      
+      const result = {
+        rating,
+        reviewCount,
+        url: hotelUrl || `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(hotelName)}`
+      };
+      
+      console.log('✅ Booking.com HTTP scraping result:', result);
+      return result;
       
     } catch (error) {
-      console.error('❌ Booking.com scraping failed:', error);
+      console.error('❌ Booking.com HTTP scraping failed:', error.message);
       return null;
     }
   }
 
   async function scrapeGoogleReviews(hotelName: string) {
     try {
-      console.log(`🔍 Scraping Google Reviews for: ${hotelName}`);
-      const puppeteer = await import('puppeteer');
-      const browser = await puppeteer.default.launch({
-        headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
+      console.log(`🔍 Attempting alternate Google search for: ${hotelName}`);
+      
+      // Google Maps scraping is very difficult due to heavy JS requirements
+      // Instead, we'll use a search approach to find the establishment
+      const axios = await import('axios');
+      const cheerio = await import('cheerio');
+      
+      const searchQuery = `${hotelName} hotel reviews site:google.com`;
+      const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`;
+      
+      console.log(`📡 Searching Google for: ${searchUrl}`);
+      
+      const response = await axios.default.get(searchUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        },
+        timeout: 10000
       });
       
-      const page = await browser.newPage();
-      await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+      const $ = cheerio.load(response.data);
       
-      // Search on Google Maps
-      const searchUrl = `https://www.google.com/maps/search/${encodeURIComponent(hotelName + ' hotel')}`;
-      await page.goto(searchUrl, { waitUntil: 'networkidle0', timeout: 10000 });
-      
-      // Wait for results and extract data
-      await page.waitForSelector('[jsaction*="pane"]', { timeout: 5000 });
-      
-      const googleData = await page.evaluate(() => {
-        const ratingElement = document.querySelector('[data-value]');
-        const reviewElement = document.querySelector('[data-value] + span');
-        
-        return {
-          rating: ratingElement ? parseFloat(ratingElement.getAttribute('data-value')) : null,
-          reviewCount: reviewElement ? parseInt(reviewElement.textContent.replace(/\D/g, '')) : null,
-          url: window.location.href
-        };
+      // Look for Google Maps links in search results
+      let mapsUrl = null;
+      $('a[href*="maps.google.com"], a[href*="/maps/place/"]').each((i, el) => {
+        const href = $(el).attr('href');
+        if (href && href.includes('maps') && !mapsUrl) {
+          mapsUrl = href.startsWith('http') ? href : `https://www.google.com${href}`;
+        }
       });
       
-      await browser.close();
-      console.log('✅ Google Reviews scraping result:', googleData);
-      return googleData;
+      // Since we can't easily scrape live Google Maps data, we'll return search URL
+      const result = {
+        rating: null, // Cannot easily scrape Google Maps rating via HTTP
+        reviewCount: null, // Cannot easily scrape Google Maps review count via HTTP
+        url: mapsUrl || `https://www.google.com/maps/search/${encodeURIComponent(hotelName + ' hotel')}`
+      };
+      
+      console.log('✅ Google search result:', result);
+      return result;
       
     } catch (error) {
-      console.error('❌ Google Reviews scraping failed:', error);
+      console.error('❌ Google search failed:', error.message);
       return null;
     }
   }
 
   async function scrapeHolidayCheckReviews(hotelName: string) {
     try {
-      console.log(`🔍 Scraping HolidayCheck for: ${hotelName}`);
-      const puppeteer = await import('puppeteer');
-      const browser = await puppeteer.default.launch({
-        headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
-      });
+      console.log(`🔍 HTTP scraping HolidayCheck for: ${hotelName}`);
+      const axios = await import('axios');
+      const cheerio = await import('cheerio');
       
-      const page = await browser.newPage();
-      await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
-      
-      // Search on HolidayCheck
       const searchUrl = `https://www.holidaycheck.de/dcs/hotel-search?s=${encodeURIComponent(hotelName)}`;
-      await page.goto(searchUrl, { waitUntil: 'networkidle0', timeout: 10000 });
+      console.log(`📡 Fetching: ${searchUrl}`);
       
-      const holidayCheckData = await page.evaluate(() => {
-        const firstResult = document.querySelector('.hotel-list-item, .search-result-item');
-        if (!firstResult) return null;
-        
-        const ratingElement = firstResult.querySelector('.rating-value, .hc-rating');
-        const reviewElement = firstResult.querySelector('.review-count, .reviews-count');
-        const linkElement = firstResult.querySelector('a[href*="/hi/"]');
-        
-        return {
-          rating: ratingElement ? parseFloat(ratingElement.textContent.trim()) : null,
-          reviewCount: reviewElement ? parseInt(reviewElement.textContent.replace(/\D/g, '')) : null,
-          url: linkElement ? `https://www.holidaycheck.de${linkElement.getAttribute('href')}` : null
-        };
+      const response = await axios.default.get(searchUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Language': 'de-DE,de;q=0.9,en;q=0.8',
+        },
+        timeout: 15000
       });
       
-      await browser.close();
-      console.log('✅ HolidayCheck scraping result:', holidayCheckData);
-      return holidayCheckData;
+      const $ = cheerio.load(response.data);
+      console.log('📄 HolidayCheck page title:', $('title').text());
+      
+      let rating = null;
+      let reviewCount = null;
+      let hotelUrl = null;
+      
+      // Try multiple selectors for HolidayCheck rating (0-6 scale)
+      const ratingSelectors = [
+        '.rating-value',
+        '.hc-rating',
+        '.rating-number',
+        '.rating',
+        '[data-rating]'
+      ];
+      
+      for (const selector of ratingSelectors) {
+        const ratingEl = $(selector).first();
+        if (ratingEl.length) {
+          const ratingText = ratingEl.text().trim();
+          const ratingMatch = ratingText.match(/(\d+\.?\d*)/);
+          if (ratingMatch) {
+            rating = parseFloat(ratingMatch[1]);
+            console.log(`✅ Found HolidayCheck rating with selector ${selector}: ${rating}`);
+            break;
+          }
+        }
+      }
+      
+      // Try multiple selectors for review count
+      const reviewSelectors = [
+        '.review-count',
+        '.reviews-count',
+        '.reviewCount',
+        'span:contains("Bewertung")',
+        'span:contains("bewertung")'
+      ];
+      
+      for (const selector of reviewSelectors) {
+        const reviewEl = $(selector).first();
+        if (reviewEl.length) {
+          const reviewText = reviewEl.text();
+          const reviewMatch = reviewText.match(/(\d+)/);
+          if (reviewMatch) {
+            reviewCount = parseInt(reviewMatch[1]);
+            console.log(`✅ Found HolidayCheck review count with selector ${selector}: ${reviewCount}`);
+            break;
+          }
+        }
+      }
+      
+      // Find hotel URL
+      const urlSelectors = [
+        'a[href*="/hi/"]',
+        '.hotel-title a',
+        '.hotel-name a',
+        'h3 a'
+      ];
+      
+      for (const selector of urlSelectors) {
+        const urlEl = $(selector).first();
+        if (urlEl.length) {
+          const href = urlEl.attr('href');
+          if (href) {
+            hotelUrl = href.startsWith('http') ? href : `https://www.holidaycheck.de${href}`;
+            console.log(`✅ Found HolidayCheck URL with selector ${selector}: ${hotelUrl}`);
+            break;
+          }
+        }
+      }
+      
+      const result = {
+        rating,
+        reviewCount,
+        url: hotelUrl || `https://www.holidaycheck.de/dcs/hotel-search?s=${encodeURIComponent(hotelName)}`
+      };
+      
+      console.log('✅ HolidayCheck HTTP scraping result:', result);
+      return result;
       
     } catch (error) {
-      console.error('❌ HolidayCheck scraping failed:', error);
+      console.error('❌ HolidayCheck HTTP scraping failed:', error.message);
       return null;
     }
   }
 
   async function scrapeTripAdvisorReviews(hotelName: string) {
     try {
-      console.log(`🔍 Scraping TripAdvisor for: ${hotelName}`);
-      const puppeteer = await import('puppeteer');
-      const browser = await puppeteer.default.launch({
-        headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
-      });
+      console.log(`🔍 HTTP scraping TripAdvisor for: ${hotelName}`);
+      const axios = await import('axios');
+      const cheerio = await import('cheerio');
       
-      const page = await browser.newPage();
-      await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
-      
-      // Search on TripAdvisor
       const searchUrl = `https://www.tripadvisor.com/Search?q=${encodeURIComponent(hotelName + ' hotel')}`;
-      await page.goto(searchUrl, { waitUntil: 'networkidle0', timeout: 10000 });
+      console.log(`📡 Fetching: ${searchUrl}`);
       
-      const tripAdvisorData = await page.evaluate(() => {
-        const firstResult = document.querySelector('[data-automation="hotel-card"], .result-card');
-        if (!firstResult) return null;
-        
-        const ratingElement = firstResult.querySelector('.rating, [data-testid="rating"]');
-        const reviewElement = firstResult.querySelector('.review-count, [data-testid="review-count"]');
-        const linkElement = firstResult.querySelector('a[href*="/Hotel_Review"]');
-        
-        return {
-          rating: ratingElement ? parseFloat(ratingElement.textContent.replace(/[^\d.]/g, '')) : null,
-          reviewCount: reviewElement ? parseInt(reviewElement.textContent.replace(/\D/g, '')) : null,
-          url: linkElement ? `https://www.tripadvisor.com${linkElement.getAttribute('href')}` : null
-        };
+      const response = await axios.default.get(searchUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.9',
+        },
+        timeout: 15000
       });
       
-      await browser.close();
-      console.log('✅ TripAdvisor scraping result:', tripAdvisorData);
-      return tripAdvisorData;
+      const $ = cheerio.load(response.data);
+      console.log('📄 TripAdvisor page title:', $('title').text());
+      
+      let rating = null;
+      let reviewCount = null;
+      let hotelUrl = null;
+      
+      // Try multiple selectors for TripAdvisor rating (0-5 scale)
+      const ratingSelectors = [
+        '.rating',
+        '[data-testid="rating"]',
+        '.ui_star_rating',
+        '.overallRating'
+      ];
+      
+      for (const selector of ratingSelectors) {
+        const ratingEl = $(selector).first();
+        if (ratingEl.length) {
+          const ratingText = ratingEl.text().trim();
+          const ratingMatch = ratingText.match(/(\d+\.?\d*)/);
+          if (ratingMatch) {
+            rating = parseFloat(ratingMatch[1]);
+            console.log(`✅ Found TripAdvisor rating with selector ${selector}: ${rating}`);
+            break;
+          }
+        }
+      }
+      
+      // Try multiple selectors for review count
+      const reviewSelectors = [
+        '.review-count',
+        '[data-testid="review-count"]',
+        '.reviewCount',
+        'span:contains("review")',
+        'span:contains("Review")'
+      ];
+      
+      for (const selector of reviewSelectors) {
+        const reviewEl = $(selector).first();
+        if (reviewEl.length) {
+          const reviewText = reviewEl.text();
+          const reviewMatch = reviewText.match(/(\d+(?:,\d+)*)/);
+          if (reviewMatch) {
+            reviewCount = parseInt(reviewMatch[1].replace(/,/g, ''));
+            console.log(`✅ Found TripAdvisor review count with selector ${selector}: ${reviewCount}`);
+            break;
+          }
+        }
+      }
+      
+      // Find hotel URL
+      const urlSelectors = [
+        'a[href*="/Hotel_Review"]',
+        'a[href*="/hotel"]',
+        '.result-title a',
+        'h3 a'
+      ];
+      
+      for (const selector of urlSelectors) {
+        const urlEl = $(selector).first();
+        if (urlEl.length) {
+          const href = urlEl.attr('href');
+          if (href) {
+            hotelUrl = href.startsWith('http') ? href : `https://www.tripadvisor.com${href}`;
+            console.log(`✅ Found TripAdvisor URL with selector ${selector}: ${hotelUrl}`);
+            break;
+          }
+        }
+      }
+      
+      const result = {
+        rating,
+        reviewCount,
+        url: hotelUrl || `https://www.tripadvisor.com/Search?q=${encodeURIComponent(hotelName + ' hotel')}`
+      };
+      
+      console.log('✅ TripAdvisor HTTP scraping result:', result);
+      return result;
       
     } catch (error) {
-      console.error('❌ TripAdvisor scraping failed:', error);
+      console.error('❌ TripAdvisor HTTP scraping failed:', error.message);
       return null;
     }
   }
