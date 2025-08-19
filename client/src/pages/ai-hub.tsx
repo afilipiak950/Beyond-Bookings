@@ -323,8 +323,8 @@ export default function AIHub() {
   return (
     <AppLayout>
       <div className="flex h-[calc(100vh-8rem)] bg-background">
-        {/* Debug Panel - Temporary (hide in production) */}
-        {process.env.NODE_ENV === 'development' && (
+        {/* Debug Panel - Hidden */}
+        {false && (
           <div className="fixed top-4 right-4 z-50 bg-black text-white p-2 rounded text-xs max-w-sm opacity-50 hover:opacity-100 transition-opacity">
             <div>🔍 Debug</div>
             <div>Thread: {activeThreadId}</div>
