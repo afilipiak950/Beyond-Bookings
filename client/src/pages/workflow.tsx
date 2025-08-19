@@ -716,13 +716,7 @@ export default function Workflow() {
   const [editFeedback, setEditFeedback] = useState("");
   const [tempPrice, setTempPrice] = useState("");
 
-  // Review Input Fields State
-  const [reviewData, setReviewData] = useState({
-    bookingReviews: '',
-    googleReviews: '',
-    holidayCheckReviews: '',
-    tripAdvisorReviews: ''
-  });
+
   
   // AI Learning state
   const [aiConfidence, setAiConfidence] = useState(56);
@@ -777,6 +771,15 @@ export default function Workflow() {
   const [hotelExtractionOpen, setHotelExtractionOpen] = useState(false);
   const [extractionLoading, setExtractionLoading] = useState(false);
   const [extractedData, setExtractedData] = useState<any>(null);
+  
+  // Review data state for platforms
+  const [reviewData, setReviewData] = useState({
+    booking: { rating: '', reviewCount: '', url: '', summary: '' },
+    google: { rating: '', reviewCount: '', url: '', summary: '' },
+    holidaycheck: { rating: '', reviewCount: '', url: '', summary: '' },
+    tripadvisor: { rating: '', reviewCount: '', url: '', summary: '' }
+  });
+  
   const [extractHotelName, setExtractHotelName] = useState("");
   const [extractHotelUrl, setExtractHotelUrl] = useState("");
   
@@ -974,7 +977,7 @@ export default function Workflow() {
 
     setExtractionLoading(true);
     try {
-      const response = await fetch('/api/scrape-hotel', {
+      const response = await fetch('/api/hotels/extract-with-reviews', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -999,6 +1002,36 @@ export default function Workflow() {
           // AUTOMATICALLY POPULATE AVERAGE PRICE FROM EXTRACTION
           averagePrice: data.averagePrice || prev.averagePrice
         }));
+        
+        // CRITICAL: Populate review data from extraction response
+        if (data.reviewPlatforms) {
+          setReviewData({
+            booking: {
+              rating: data.reviewPlatforms.booking?.rating?.toString() || '',
+              reviewCount: data.reviewPlatforms.booking?.reviewCount?.toString() || '',
+              url: data.reviewPlatforms.booking?.url || '',
+              summary: data.reviewPlatforms.booking?.summary || ''
+            },
+            google: {
+              rating: data.reviewPlatforms.google?.rating?.toString() || '',
+              reviewCount: data.reviewPlatforms.google?.reviewCount?.toString() || '',
+              url: data.reviewPlatforms.google?.url || '',
+              summary: data.reviewPlatforms.google?.summary || ''
+            },
+            holidaycheck: {
+              rating: data.reviewPlatforms.holidayCheck?.rating?.toString() || '',
+              reviewCount: data.reviewPlatforms.holidayCheck?.reviewCount?.toString() || '',
+              url: data.reviewPlatforms.holidayCheck?.url || '',
+              summary: data.reviewPlatforms.holidayCheck?.summary || ''
+            },
+            tripadvisor: {
+              rating: data.reviewPlatforms.tripadvisor?.rating?.toString() || '',
+              reviewCount: data.reviewPlatforms.tripadvisor?.reviewCount?.toString() || '',
+              url: data.reviewPlatforms.tripadvisor?.url || '',
+              summary: data.reviewPlatforms.tripadvisor?.summary || ''
+            }
+          });
+        }
         
         // Display different messages based on data availability
         if (data.averagePrice && data.priceResearch) {
@@ -3831,6 +3864,11 @@ Beispiel:
                             step="0.1"
                             placeholder="8.5"
                             className="mt-1"
+                            value={reviewData.booking.rating}
+                            onChange={(e) => setReviewData(prev => ({
+                              ...prev,
+                              booking: { ...prev.booking, rating: e.target.value }
+                            }))}
                           />
                         </div>
                         <div>
@@ -3840,6 +3878,11 @@ Beispiel:
                             type="number"
                             placeholder="1,234"
                             className="mt-1"
+                            value={reviewData.booking.reviewCount}
+                            onChange={(e) => setReviewData(prev => ({
+                              ...prev,
+                              booking: { ...prev.booking, reviewCount: e.target.value }
+                            }))}
                           />
                         </div>
                         <div className="md:col-span-2">
@@ -3849,6 +3892,11 @@ Beispiel:
                               id="booking-url"
                               placeholder="https://www.booking.com/hotel/..."
                               className="mt-1"
+                              value={reviewData.booking.url}
+                              onChange={(e) => setReviewData(prev => ({
+                                ...prev,
+                                booking: { ...prev.booking, url: e.target.value }
+                              }))}
                             />
                             <Button
                               type="button"
@@ -3868,6 +3916,11 @@ Beispiel:
                             id="booking-summary"
                             placeholder="Brief summary of guest feedback and key points from reviews..."
                             className="mt-1 h-20"
+                            value={reviewData.booking.summary}
+                            onChange={(e) => setReviewData(prev => ({
+                              ...prev,
+                              booking: { ...prev.booking, summary: e.target.value }
+                            }))}
                           />
                         </div>
                       </div>
@@ -3892,6 +3945,11 @@ Beispiel:
                             step="0.1"
                             placeholder="4.2"
                             className="mt-1"
+                            value={reviewData.google.rating}
+                            onChange={(e) => setReviewData(prev => ({
+                              ...prev,
+                              google: { ...prev.google, rating: e.target.value }
+                            }))}
                           />
                         </div>
                         <div>
@@ -3901,6 +3959,11 @@ Beispiel:
                             type="number"
                             placeholder="567"
                             className="mt-1"
+                            value={reviewData.google.reviewCount}
+                            onChange={(e) => setReviewData(prev => ({
+                              ...prev,
+                              google: { ...prev.google, reviewCount: e.target.value }
+                            }))}
                           />
                         </div>
                         <div className="md:col-span-2">
@@ -3910,6 +3973,11 @@ Beispiel:
                               id="google-url"
                               placeholder="https://goo.gl/maps/..."
                               className="mt-1"
+                              value={reviewData.google.url}
+                              onChange={(e) => setReviewData(prev => ({
+                                ...prev,
+                                google: { ...prev.google, url: e.target.value }
+                              }))}
                             />
                             <Button
                               type="button"
@@ -3929,6 +3997,11 @@ Beispiel:
                             id="google-summary"
                             placeholder="Brief summary of guest feedback and key points from reviews..."
                             className="mt-1 h-20"
+                            value={reviewData.google.summary}
+                            onChange={(e) => setReviewData(prev => ({
+                              ...prev,
+                              google: { ...prev.google, summary: e.target.value }
+                            }))}
                           />
                         </div>
                       </div>
@@ -3953,6 +4026,11 @@ Beispiel:
                             step="0.1"
                             placeholder="5.2"
                             className="mt-1"
+                            value={reviewData.holidaycheck.rating}
+                            onChange={(e) => setReviewData(prev => ({
+                              ...prev,
+                              holidaycheck: { ...prev.holidaycheck, rating: e.target.value }
+                            }))}
                           />
                         </div>
                         <div>
@@ -3962,6 +4040,11 @@ Beispiel:
                             type="number"
                             placeholder="89"
                             className="mt-1"
+                            value={reviewData.holidaycheck.reviewCount}
+                            onChange={(e) => setReviewData(prev => ({
+                              ...prev,
+                              holidaycheck: { ...prev.holidaycheck, reviewCount: e.target.value }
+                            }))}
                           />
                         </div>
                         <div className="md:col-span-2">
@@ -3971,6 +4054,11 @@ Beispiel:
                               id="holidaycheck-url"
                               placeholder="https://www.holidaycheck.de/..."
                               className="mt-1"
+                              value={reviewData.holidaycheck.url}
+                              onChange={(e) => setReviewData(prev => ({
+                                ...prev,
+                                holidaycheck: { ...prev.holidaycheck, url: e.target.value }
+                              }))}
                             />
                             <Button
                               type="button"
@@ -3990,6 +4078,11 @@ Beispiel:
                             id="holidaycheck-summary"
                             placeholder="Brief summary of guest feedback and key points from reviews..."
                             className="mt-1 h-20"
+                            value={reviewData.holidaycheck.summary}
+                            onChange={(e) => setReviewData(prev => ({
+                              ...prev,
+                              holidaycheck: { ...prev.holidaycheck, summary: e.target.value }
+                            }))}
                           />
                         </div>
                       </div>
@@ -4014,6 +4107,11 @@ Beispiel:
                             step="0.1"
                             placeholder="4.0"
                             className="mt-1"
+                            value={reviewData.tripadvisor.rating}
+                            onChange={(e) => setReviewData(prev => ({
+                              ...prev,
+                              tripadvisor: { ...prev.tripadvisor, rating: e.target.value }
+                            }))}
                           />
                         </div>
                         <div>
@@ -4023,6 +4121,11 @@ Beispiel:
                             type="number"
                             placeholder="345"
                             className="mt-1"
+                            value={reviewData.tripadvisor.reviewCount}
+                            onChange={(e) => setReviewData(prev => ({
+                              ...prev,
+                              tripadvisor: { ...prev.tripadvisor, reviewCount: e.target.value }
+                            }))}
                           />
                         </div>
                         <div className="md:col-span-2">
@@ -4032,6 +4135,11 @@ Beispiel:
                               id="tripadvisor-url"
                               placeholder="https://www.tripadvisor.com/..."
                               className="mt-1"
+                              value={reviewData.tripadvisor.url}
+                              onChange={(e) => setReviewData(prev => ({
+                                ...prev,
+                                tripadvisor: { ...prev.tripadvisor, url: e.target.value }
+                              }))}
                             />
                             <Button
                               type="button"
@@ -4051,6 +4159,11 @@ Beispiel:
                             id="tripadvisor-summary"
                             placeholder="Brief summary of guest feedback and key points from reviews..."
                             className="mt-1 h-20"
+                            value={reviewData.tripadvisor.summary}
+                            onChange={(e) => setReviewData(prev => ({
+                              ...prev,
+                              tripadvisor: { ...prev.tripadvisor, summary: e.target.value }
+                            }))}
                           />
                         </div>
                       </div>
