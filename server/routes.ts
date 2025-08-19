@@ -1125,7 +1125,172 @@ CRITICAL: You must always return a specific price number in EUR. If exact data u
     }
   });
 
-  // Hotel data extraction with comprehensive reviews from multiple platforms
+  // Real web scraping functions for authentic review data
+  async function scrapeBookingReviews(hotelName: string) {
+    try {
+      console.log(`🔍 Scraping Booking.com for: ${hotelName}`);
+      const puppeteer = await import('puppeteer');
+      const browser = await puppeteer.default.launch({
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox']
+      });
+      
+      const page = await browser.newPage();
+      await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+      
+      // Search for hotel on Booking.com
+      const searchUrl = `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(hotelName)}`;
+      await page.goto(searchUrl, { waitUntil: 'networkidle0', timeout: 10000 });
+      
+      // Extract first hotel result
+      const hotelData = await page.evaluate(() => {
+        const firstHotel = document.querySelector('[data-testid="property-card"]');
+        if (!firstHotel) return null;
+        
+        const ratingElement = firstHotel.querySelector('[data-testid="review-score"]');
+        const reviewCountElement = firstHotel.querySelector('[data-testid="review-score"] + div');
+        const linkElement = firstHotel.querySelector('a[data-testid="title-link"]');
+        
+        return {
+          rating: ratingElement ? parseFloat(ratingElement.textContent.trim()) : null,
+          reviewCount: reviewCountElement ? parseInt(reviewCountElement.textContent.replace(/\D/g, '')) : null,
+          url: linkElement ? `https://www.booking.com${linkElement.getAttribute('href')}` : null
+        };
+      });
+      
+      await browser.close();
+      console.log('✅ Booking.com scraping result:', hotelData);
+      return hotelData;
+      
+    } catch (error) {
+      console.error('❌ Booking.com scraping failed:', error);
+      return null;
+    }
+  }
+
+  async function scrapeGoogleReviews(hotelName: string) {
+    try {
+      console.log(`🔍 Scraping Google Reviews for: ${hotelName}`);
+      const puppeteer = await import('puppeteer');
+      const browser = await puppeteer.default.launch({
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox']
+      });
+      
+      const page = await browser.newPage();
+      await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+      
+      // Search on Google Maps
+      const searchUrl = `https://www.google.com/maps/search/${encodeURIComponent(hotelName + ' hotel')}`;
+      await page.goto(searchUrl, { waitUntil: 'networkidle0', timeout: 10000 });
+      
+      // Wait for results and extract data
+      await page.waitForSelector('[jsaction*="pane"]', { timeout: 5000 });
+      
+      const googleData = await page.evaluate(() => {
+        const ratingElement = document.querySelector('[data-value]');
+        const reviewElement = document.querySelector('[data-value] + span');
+        
+        return {
+          rating: ratingElement ? parseFloat(ratingElement.getAttribute('data-value')) : null,
+          reviewCount: reviewElement ? parseInt(reviewElement.textContent.replace(/\D/g, '')) : null,
+          url: window.location.href
+        };
+      });
+      
+      await browser.close();
+      console.log('✅ Google Reviews scraping result:', googleData);
+      return googleData;
+      
+    } catch (error) {
+      console.error('❌ Google Reviews scraping failed:', error);
+      return null;
+    }
+  }
+
+  async function scrapeHolidayCheckReviews(hotelName: string) {
+    try {
+      console.log(`🔍 Scraping HolidayCheck for: ${hotelName}`);
+      const puppeteer = await import('puppeteer');
+      const browser = await puppeteer.default.launch({
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox']
+      });
+      
+      const page = await browser.newPage();
+      await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+      
+      // Search on HolidayCheck
+      const searchUrl = `https://www.holidaycheck.de/dcs/hotel-search?s=${encodeURIComponent(hotelName)}`;
+      await page.goto(searchUrl, { waitUntil: 'networkidle0', timeout: 10000 });
+      
+      const holidayCheckData = await page.evaluate(() => {
+        const firstResult = document.querySelector('.hotel-list-item, .search-result-item');
+        if (!firstResult) return null;
+        
+        const ratingElement = firstResult.querySelector('.rating-value, .hc-rating');
+        const reviewElement = firstResult.querySelector('.review-count, .reviews-count');
+        const linkElement = firstResult.querySelector('a[href*="/hi/"]');
+        
+        return {
+          rating: ratingElement ? parseFloat(ratingElement.textContent.trim()) : null,
+          reviewCount: reviewElement ? parseInt(reviewElement.textContent.replace(/\D/g, '')) : null,
+          url: linkElement ? `https://www.holidaycheck.de${linkElement.getAttribute('href')}` : null
+        };
+      });
+      
+      await browser.close();
+      console.log('✅ HolidayCheck scraping result:', holidayCheckData);
+      return holidayCheckData;
+      
+    } catch (error) {
+      console.error('❌ HolidayCheck scraping failed:', error);
+      return null;
+    }
+  }
+
+  async function scrapeTripAdvisorReviews(hotelName: string) {
+    try {
+      console.log(`🔍 Scraping TripAdvisor for: ${hotelName}`);
+      const puppeteer = await import('puppeteer');
+      const browser = await puppeteer.default.launch({
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox']
+      });
+      
+      const page = await browser.newPage();
+      await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+      
+      // Search on TripAdvisor
+      const searchUrl = `https://www.tripadvisor.com/Search?q=${encodeURIComponent(hotelName + ' hotel')}`;
+      await page.goto(searchUrl, { waitUntil: 'networkidle0', timeout: 10000 });
+      
+      const tripAdvisorData = await page.evaluate(() => {
+        const firstResult = document.querySelector('[data-automation="hotel-card"], .result-card');
+        if (!firstResult) return null;
+        
+        const ratingElement = firstResult.querySelector('.rating, [data-testid="rating"]');
+        const reviewElement = firstResult.querySelector('.review-count, [data-testid="review-count"]');
+        const linkElement = firstResult.querySelector('a[href*="/Hotel_Review"]');
+        
+        return {
+          rating: ratingElement ? parseFloat(ratingElement.textContent.replace(/[^\d.]/g, '')) : null,
+          reviewCount: reviewElement ? parseInt(reviewElement.textContent.replace(/\D/g, '')) : null,
+          url: linkElement ? `https://www.tripadvisor.com${linkElement.getAttribute('href')}` : null
+        };
+      });
+      
+      await browser.close();
+      console.log('✅ TripAdvisor scraping result:', tripAdvisorData);
+      return tripAdvisorData;
+      
+    } catch (error) {
+      console.error('❌ TripAdvisor scraping failed:', error);
+      return null;
+    }
+  }
+
+  // Hotel data extraction with REAL scraped reviews from multiple platforms
   app.post('/api/hotels/extract-with-reviews', requireAuth, async (req: Request, res: Response) => {
     try {
       const { name, url } = req.body;
@@ -1134,102 +1299,46 @@ CRITICAL: You must always return a specific price number in EUR. If exact data u
         return res.status(400).json({ message: "Hotel name is required" });
       }
 
-      console.log(`🏨 Starting comprehensive hotel extraction with reviews for: ${name}`);
+      console.log(`🏨 Starting REAL review scraping for: ${name}`);
       console.log(`🌐 Optional URL provided: ${url || 'none'}`);
 
+      // Step 1: Get basic hotel data from OpenAI (for name, location, etc.)
       const { default: OpenAI } = await import('openai');
       const openai = new OpenAI({
         apiKey: process.env.OPENAI_API_KEY
       });
 
-      // Step 1: Extract basic hotel data and review links
-      const extractionPrompt = `Research and extract comprehensive data for "${name}" hotel${url ? ` (website: ${url})` : ''}.
+      const basicDataPrompt = `Extract basic hotel information for "${name}" hotel${url ? ` (website: ${url})` : ''}.
 
-EXTRACT THE FOLLOWING DATA:
-1. Basic hotel information (name, location, stars, room count, amenities)
-2. Review platform links and ratings:
-   - Booking.com profile and review URL
-   - Google Reviews/Google Maps URL
-   - HolidayCheck profile URL
-   - TripAdvisor URL if available
-3. Average ratings from each platform
-4. Recent review summaries from each platform
-
-MANDATORY OUTPUT FORMAT (valid JSON only):
+RETURN ONLY BASIC HOTEL DATA in valid JSON format:
 {
   "name": "Exact hotel name",
   "location": "Full address",
-  "city": "City name",
+  "city": "City name", 
   "country": "Country",
   "stars": number,
   "roomCount": number,
   "url": "Official website",
   "category": "Hotel category/type",
   "amenities": ["amenity1", "amenity2"],
-  "averagePrice": number_in_EUR,
-  "reviewPlatforms": {
-    "booking": {
-      "url": "Booking.com hotel page URL",
-      "rating": number,
-      "reviewCount": number,
-      "summary": "Brief summary of recent reviews"
-    },
-    "google": {
-      "url": "Google Maps/Reviews URL",
-      "rating": number,
-      "reviewCount": number,
-      "summary": "Brief summary of recent reviews"
-    },
-    "holidayCheck": {
-      "url": "HolidayCheck profile URL",
-      "rating": number,
-      "reviewCount": number,
-      "summary": "Brief summary of recent reviews"
-    },
-    "tripadvisor": {
-      "url": "TripAdvisor URL if available",
-      "rating": number,
-      "reviewCount": number,
-      "summary": "Brief summary if available"
-    }
-  },
-  "overallReviewSummary": "AI-generated summary combining insights from all platforms"
-}
+  "averagePrice": number_in_EUR
+}`;
 
-Research authentic review data from actual platforms. If exact review counts unavailable, provide reasonable estimates based on hotel size and popularity.`;
-
-      console.log('🤖 Sending extraction request to OpenAI...');
-      
-      if (!process.env.OPENAI_API_KEY) {
-        throw new Error('OpenAI API key not configured');
-      }
-      
+      console.log('🤖 Getting basic hotel data from OpenAI...');
       const completion = await openai.chat.completions.create({
-        model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+        model: "gpt-4o",
         messages: [
-          {
-            role: "system",
-            content: "You are a comprehensive hotel data extraction specialist with access to review platforms. Extract authentic hotel data and review information from Booking.com, Google Reviews, HolidayCheck, and other platforms. Return your response as valid JSON format."
-          },
-          {
-            role: "user", 
-            content: extractionPrompt
-          }
+          { role: "system", content: "Extract basic hotel information only. Return valid JSON format." },
+          { role: "user", content: basicDataPrompt }
         ],
-        max_tokens: 1500,
+        max_tokens: 800,
         temperature: 0.1
       });
 
       const response = completion.choices[0].message.content;
-      console.log('🔍 Raw extraction response:', response);
+      let basicHotelData;
       
-      if (!response) {
-        throw new Error('No response from OpenAI');
-      }
-
-      let hotelData;
       try {
-        // Clean the response from markdown code blocks
         let cleanResponse = response.trim();
         if (cleanResponse.startsWith('```json')) {
           cleanResponse = cleanResponse.replace(/^```json\s*/, '');
@@ -1237,45 +1346,77 @@ Research authentic review data from actual platforms. If exact review counts una
         if (cleanResponse.endsWith('```')) {
           cleanResponse = cleanResponse.replace(/\s*```$/, '');
         }
-        
-        hotelData = JSON.parse(cleanResponse);
-        console.log('✅ Extracted hotel data with reviews:', hotelData);
+        basicHotelData = JSON.parse(cleanResponse);
       } catch (parseError) {
-        console.error('❌ JSON parsing failed:', parseError);
-        console.error('Raw response that failed to parse:', response);
-        throw new Error(`Failed to parse OpenAI response: ${parseError.message}`);
+        console.error('❌ Basic data parsing failed:', parseError);
+        throw new Error(`Failed to parse basic hotel data: ${parseError.message}`);
       }
 
-      // Structure the final response with review data - MUST match frontend expectations
+      // Step 2: Scrape REAL review data from all platforms in parallel
+      console.log('🕷️ Starting parallel review scraping from all platforms...');
+      const [bookingData, googleData, holidayCheckData, tripAdvisorData] = await Promise.allSettled([
+        scrapeBookingReviews(name),
+        scrapeGoogleReviews(name),
+        scrapeHolidayCheckReviews(name),
+        scrapeTripAdvisorReviews(name)
+      ]);
+
+      // Process scraped results
+      const reviewPlatforms = {
+        booking: bookingData.status === 'fulfilled' && bookingData.value ? {
+          url: bookingData.value.url || `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(name)}`,
+          rating: bookingData.value.rating || null,
+          reviewCount: bookingData.value.reviewCount || null,
+          summary: "Real data scraped from Booking.com"
+        } : null,
+        
+        google: googleData.status === 'fulfilled' && googleData.value ? {
+          url: googleData.value.url || `https://www.google.com/maps/search/${encodeURIComponent(name + ' hotel')}`,
+          rating: googleData.value.rating || null,
+          reviewCount: googleData.value.reviewCount || null,
+          summary: "Real data scraped from Google Reviews"
+        } : null,
+        
+        holidayCheck: holidayCheckData.status === 'fulfilled' && holidayCheckData.value ? {
+          url: holidayCheckData.value.url || `https://www.holidaycheck.de/dcs/hotel-search?s=${encodeURIComponent(name)}`,
+          rating: holidayCheckData.value.rating || null,
+          reviewCount: holidayCheckData.value.reviewCount || null,
+          summary: "Real data scraped from HolidayCheck"
+        } : null,
+        
+        tripadvisor: tripAdvisorData.status === 'fulfilled' && tripAdvisorData.value ? {
+          url: tripAdvisorData.value.url || `https://www.tripadvisor.com/Search?q=${encodeURIComponent(name + ' hotel')}`,
+          rating: tripAdvisorData.value.rating || null,
+          reviewCount: tripAdvisorData.value.reviewCount || null,
+          summary: "Real data scraped from TripAdvisor"
+        } : null
+      };
+
+      // Step 3: Structure final response with REAL scraped data
       const extractedData = {
-        name: hotelData.name || name,
-        location: hotelData.location || null,
-        city: hotelData.city || null,
-        country: hotelData.country || null,
-        stars: hotelData.stars ? parseInt(hotelData.stars.toString()) : null,
-        roomCount: hotelData.roomCount ? parseInt(hotelData.roomCount.toString()) : null,
-        url: hotelData.url || url || null,
-        category: hotelData.category || null,
-        amenities: Array.isArray(hotelData.amenities) ? hotelData.amenities : [],
-        averagePrice: hotelData.averagePrice || null,
-        // CRITICAL: Match frontend expected structure for review platforms
-        reviewPlatforms: hotelData.reviewPlatforms || {
-          booking: null,
-          google: null,
-          holidayCheck: null,
-          tripadvisor: null
-        },
-        overallReviewSummary: hotelData.overallReviewSummary || null,
+        name: basicHotelData.name || name,
+        location: basicHotelData.location || null,
+        city: basicHotelData.city || null,
+        country: basicHotelData.country || null,
+        stars: basicHotelData.stars ? parseInt(basicHotelData.stars.toString()) : null,
+        roomCount: basicHotelData.roomCount ? parseInt(basicHotelData.roomCount.toString()) : null,
+        url: basicHotelData.url || url || null,
+        category: basicHotelData.category || null,
+        amenities: Array.isArray(basicHotelData.amenities) ? basicHotelData.amenities : [],
+        averagePrice: basicHotelData.averagePrice || null,
+        // REAL SCRAPED REVIEW DATA
+        reviewPlatforms,
+        overallReviewSummary: "Review data sourced from real web scraping of all major platforms",
         lastReviewUpdate: new Date().toISOString()
       };
 
-      console.log('🏁 Final hotel data with comprehensive reviews:', extractedData);
+      console.log('🏁 Final hotel data with REAL scraped reviews:', extractedData);
       res.json(extractedData);
       
     } catch (error: any) {
-      console.error('Hotel extraction with reviews error:', error);
+      console.error('Hotel extraction with real reviews error:', error);
       res.status(500).json({ 
-        message: "Failed to extract hotel data with reviews", 
+        message: "Failed to extract hotel data with real reviews", 
         error: error?.message || 'Unknown error',
         details: error?.stack || 'No stack trace available'
       });
