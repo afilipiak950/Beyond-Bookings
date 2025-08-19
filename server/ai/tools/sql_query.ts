@@ -31,6 +31,8 @@ export async function sql_query(input: SqlQueryInput | any): Promise<SqlQueryRes
   const startTime = Date.now();
   let executedQuery = '';
   
+  console.log('🚀 SQL_QUERY FUNCTION CALLED WITH:', JSON.stringify(input));
+  
   try {
     // Handle both new format (query) and old format (sql) for backward compatibility
     let query = input.query || input.sql;
@@ -171,8 +173,22 @@ export async function sql_query(input: SqlQueryInput | any): Promise<SqlQueryRes
       isArray: Array.isArray(result),
       rowCount,
       resultType: typeof result,
-      keys: result ? Object.keys(result) : []
+      keys: result ? Object.keys(result) : [],
+      firstRowSample: rows.length > 0 ? rows[0] : null,
+      actualResult: result
     });
+    
+    // CRITICAL: Force debug the actual result structure
+    if (result) {
+      console.log('🔬 DEEP DEBUG - Raw result structure:', {
+        isResultArray: Array.isArray(result),
+        resultKeys: Object.keys(result || {}),
+        resultRowsExists: 'rows' in (result || {}),
+        resultRowsLength: result?.rows?.length || 'N/A',
+        resultRowsType: typeof result?.rows,
+        resultRowsSample: result?.rows?.[0] || 'N/A'
+      });
+    }
 
     // If zero results, force comprehensive data retrieval
     if (rowCount === 0) {
@@ -232,6 +248,13 @@ export async function sql_query(input: SqlQueryInput | any): Promise<SqlQueryRes
       };
     }
 
+    console.log('🎯 FINAL SQL RESULT TO AI:', {
+      rowCount,
+      hasRows: rows.length > 0,
+      sampleRow: rows[0] || null,
+      executedQuery: query
+    });
+    
     return {
       rows,
       rowCount,

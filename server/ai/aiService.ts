@@ -128,8 +128,14 @@ export class AIService {
           };
 
         case 'sql_query':
-          // Use new comprehensive SQL tool
-          const sqlResult = await executeTool('sql_query', parameters, userId);
+          // Use new comprehensive SQL tool - FIXED PARAMETERS
+          console.log('🔧 SQL TOOL DEBUG - Input parameters:', parameters);
+          const sqlResult = await executeTool('sql_query', {
+            ...parameters,
+            query: parameters.sql || parameters.query, // Fix parameter name
+            sql: parameters.sql || parameters.query    // Backward compatibility
+          }, userId);
+          console.log('🔧 SQL TOOL DEBUG - Result:', sqlResult);
           return {
             result: sqlResult,
             citation: {
