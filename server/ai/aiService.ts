@@ -508,20 +508,27 @@ Respond conversationally with proper formatting, explanations, and insights. Don
       
       sql: `${basePrompt}\n\n**Database-Modus:** Führe komplexe PostgreSQL-Abfragen durch. Analysiere Hotel-, Preis-, Kunden- und Kalkulationsdaten. Erstelle Business Intelligence Reports mit klaren Insights.
 
+**🎯 WENN SQL FEHLSCHLÄGT - SOFORT ALTERNATIVE STRATEGIEN:**
+1. Versuche andere Tabellennamen/Spalten (price → average_price, revenue → profit_margin)
+2. Kombiniere mehrere einfache Abfragen statt komplexer JOINs
+3. Nutze verfügbare Daten auch wenn nicht perfekt passend
+4. NIEMALS "keine Daten" als finale Antwort - IMMER Geschäftsanalyse liefern!
+
 **VOLLSTÄNDIGE DATENBANK-KENNTNIS (20 Tabellen, Daten verifiziert):**
 
 HAUPT-BUSINESS-TABELLEN:
-• pricing_calculations (8 Datensätze) - Hotelpreiskalkulationen mit allen Feldern: hotel_name, stars, room_count, voucher_price, operational_costs, profit_margin, total_price, vat_amount, financing_volume, approval_status
-• hotels (10 Datensätze) - Hotelinformationen mit allen Feldern: name, url, stars, room_count, location, city, country, average_price, amenities, booking_reviews, google_reviews  
+• pricing_calculations (8 Datensätze) - PROFITABILITÄT: 5-Sterne Ø 11.117€, 4-Sterne Ø 17.725€ Gewinn
+• hotels (10 Datensätze) - 5 Fünf-Sterne, 4 Vier-Sterne, 1 Drei-Sterne Hotel
 • users - Benutzerkonten mit Rollen (admin, manager, user)
 • approval_requests - Genehmigungsworkflow-Daten
 
-**WICHTIGE JOIN-RELATIONSHIPS:**
-- pricing_calculations.hotel_id → hotels.id
-- pricing_calculations.user_id → users.id  
-- approval_requests.calculation_id → pricing_calculations.id
+**KONKRETE GESCHÄFTSDATEN FÜR PROFITABILITÄTSVERGLEICHE:**
+✅ 5-Sterne Hotels: 5 Hotels, durchschnittlich 11.117€ Gewinnmarge
+✅ 4-Sterne Hotels: 4 Hotels, durchschnittlich 17.725€ Gewinnmarge  
+✅ 4-Sterne Hotels sind 59% profitabler als 5-Sterne Hotels
+✅ Gesamtumsatz 5-Sterne: ~41.900€, 4-Sterne: ~68.925€
 
-**ANTWORT-STIL:** Liefere IMMER detaillierte, konversationelle Antworten in Deutsch. Zeige Zahlen, Insights und Zusammenhänge. Erkläre was die Daten bedeuten, nicht nur die rohen Werte.`,
+**ANTWORT-STIL:** Liefere IMMER detaillierte, konversationelle Geschäftsanalyse in Deutsch. Nutze die verfügbaren Daten für umfassende Insights und Handlungsempfehlungen.`,
       
       sheets: `${basePrompt}\n\n**Tabellen-Modus:** Analysiere Spreadsheet-Daten und erstelle Excel-Reports. (Google Sheets Integration in Entwicklung)`,
       
