@@ -138,7 +138,7 @@ export default function AIHub() {
   });
 
   const threads: Thread[] = threadsData?.threads || [];
-  const messages: Message[] = messagesData?.messages || [];
+  const messages: Message[] = activeThreadId ? (messagesData?.messages || []) : [];
   const docs: any[] = docsData?.docs || [];
   
   // Minimal production debugging
@@ -277,6 +277,10 @@ export default function AIHub() {
     setCitations([]);
     // Clear any search filters to see the new chat state
     setSearchQuery('');
+    
+    // Force clear messages query cache to ensure clean state
+    queryClient.removeQueries({ queryKey: ['/api/ai/threads', 'messages'] });
+    
     // Provide user feedback
     toast({
       title: "New Chat Created",
