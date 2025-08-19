@@ -234,17 +234,19 @@ async function performTriage(): Promise<TriageData> {
           SELECT table_name, column_name, data_type
           FROM information_schema.columns 
           WHERE table_schema = '${currentSchema}'
-          AND table_name IN (${tables.map(t => `'${t}'`).join(', ')})
+          AND table_name IN (${tables.map((t: string) => `'${t}'`).join(', ')})
           ORDER BY table_name, ordinal_position 
           LIMIT 200
         `))
       : [];
     
-    const columns = (columnsResult as any).map((row: any) => ({
-      table: row.table_name,
-      column: row.column_name,
-      type: row.data_type
-    }));
+    const columns = Array.isArray(columnsResult) 
+      ? (columnsResult as any).map((row: any) => ({
+          table: row.table_name,
+          column: row.column_name,
+          type: row.data_type
+        }))
+      : [];
     
     return {
       schema: currentSchema,
