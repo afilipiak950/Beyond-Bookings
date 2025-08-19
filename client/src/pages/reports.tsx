@@ -78,7 +78,7 @@ export default function Reports() {
     retry: false,
   });
 
-  const calculationsData = calculations as PricingCalculation[] || [];
+  const calculationsData = (calculations?.data || []) as PricingCalculation[];
 
   // Extract unique values for filters
   const uniqueCities = useMemo(() => {
