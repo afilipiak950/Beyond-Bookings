@@ -99,27 +99,55 @@ export default function AIHub() {
   const { toast } = useToast();
 
   // Get threads
-  const { data: threadsData } = useQuery({
+  const { data: threadsData, error: threadsError, isLoading: threadsLoading, refetch: refetchThreads } = useQuery({
     queryKey: ['/api/ai/threads'],
-    queryFn: () => apiRequest('/api/ai/threads'),
+    queryFn: async () => {
+      const response = await apiRequest('/api/ai/threads');
+      return response.json();
+    },
+    staleTime: 0,
+    refetchOnMount: true,
   });
 
   // Get messages for active thread
   const { data: messagesData } = useQuery({
     queryKey: ['/api/ai/threads', activeThreadId, 'messages'],
-    queryFn: () => apiRequest(`/api/ai/threads/${activeThreadId}/messages`),
+    queryFn: async () => {
+      const response = await apiRequest(`/api/ai/threads/${activeThreadId}/messages`);
+      return response.json();
+    },
     enabled: !!activeThreadId,
   });
 
   // Get user documents
   const { data: docsData } = useQuery({
     queryKey: ['/api/ai/docs'],
-    queryFn: () => apiRequest('/api/ai/docs'),
+    queryFn: async () => {
+      const response = await apiRequest('/api/ai/docs');
+      return response.json();
+    },
   });
 
-  const threads: Thread[] = (threadsData as any)?.threads || [];
-  const messages: Message[] = (messagesData as any)?.messages || [];
-  const docs: any[] = (docsData as any)?.docs || [];
+  const threads: Thread[] = threadsData?.threads || [];
+  const messages: Message[] = messagesData?.messages || [];
+  const docs: any[] = docsData?.docs || [];
+  
+  // Debug logging (removing verbose logging now that it's working)
+  if (threadsLoading || threadsError) {
+    console.log('AI Hub Debug:', { activeThreadId, threadsCount: threads.length, threadsLoading, threadsError: threadsError?.message });
+  }
+
+  // Auto-refresh threads on mount or user navigation
+  useEffect(() => {
+    refetchThreads();
+  }, []);
+
+  // Auto-select first thread if none is selected
+  useEffect(() => {
+    if (!activeThreadId && threads.length > 0) {
+      setActiveThreadId(threads[0].id);
+    }
+  }, [threads, activeThreadId]);
 
   // Filter threads based on search
   const filteredThreads = threads.filter(thread =>
@@ -201,14 +229,14 @@ export default function AIHub() {
         setTimeout(async () => {
           await queryClient.refetchQueries({ queryKey: ['/api/ai/threads'] });
           const updatedThreadsData = queryClient.getQueryData(['/api/ai/threads']) as any;
+          console.log('Switching to new thread:', updatedThreadsData);
           if (updatedThreadsData?.threads?.length > 0) {
-            // Find the most recently created thread
-            const newestThread = updatedThreadsData.threads.reduce((newest: any, current: any) => {
-              return new Date(current.createdAt) > new Date(newest.createdAt) ? current : newest;
-            });
+            // Just take the first thread which should be the newest
+            const newestThread = updatedThreadsData.threads[0];
+            console.log('Setting active thread to:', newestThread.id);
             setActiveThreadId(newestThread.id);
           }
-        }, 200);
+        }, 300);
       } else {
         // Refresh messages for the current thread
         queryClient.invalidateQueries({ queryKey: ['/api/ai/threads', activeThreadId, 'messages'] });
