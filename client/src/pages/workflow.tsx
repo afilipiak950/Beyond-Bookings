@@ -711,6 +711,7 @@ export default function Workflow() {
   // AI Price Intelligence State
   const [aiSuggestedPrice, setAiSuggestedPrice] = useState(0);
   const [actualPrice, setActualPrice] = useState(0);
+  const [tripzEstimateMultiplier, setTripzEstimateMultiplier] = useState(0.75);
   const [isManualEdit, setIsManualEdit] = useState(false);
   const [manualEditOpen, setManualEditOpen] = useState(false);
   const [editFeedback, setEditFeedback] = useState("");
@@ -2173,7 +2174,7 @@ export default function Workflow() {
                             const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30;
                             
                             // Formula: Vertragsvolumen Estimate = (Project Costs / Hotel Voucher Value) × (Actual Price × 0.75) × 1.1
-                            const vertragsvolumenEstimate = (projectCosts / voucherValue) * (currentActualPrice * 0.75) * 1.1;
+                            const vertragsvolumenEstimate = (projectCosts / voucherValue) * (currentActualPrice * tripzEstimateMultiplier) * 1.1;
                             
                             // Marge = Vertragsvolumen Estimate - Projektkosten brutto
                             const marge = vertragsvolumenEstimate - projectCosts;
@@ -2209,9 +2210,26 @@ export default function Workflow() {
                             Zahlung von Tripz Estimate
                           </span>
                         </div>
-                        <span className="text-xl font-black bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                          {actualPrice ? (actualPrice * 0.75).toFixed(2) + ' ' + getCurrencySymbol(workflowData.currency) : '0.00 ' + getCurrencySymbol(workflowData.currency)}
-                        </span>
+                        <div className="relative w-32">
+                          <Input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            className="bg-white/60 backdrop-blur-sm border-indigo-300/50 focus:border-indigo-500 focus:ring-indigo-500/20 text-right font-black text-xl text-indigo-600 pr-8"
+                            value={actualPrice > 0 ? (actualPrice * tripzEstimateMultiplier).toFixed(2) : ''}
+                            onChange={(e) => {
+                              const newValue = parseFloat(e.target.value) || 0;
+                              if (actualPrice > 0) {
+                                const newMultiplier = newValue / actualPrice;
+                                setTripzEstimateMultiplier(newMultiplier);
+                              }
+                            }}
+                            placeholder="0.00"
+                          />
+                          <span className="absolute right-2 top-1/2 transform -translate-y-1/2 text-xs font-medium text-indigo-600 pointer-events-none">
+                            {getCurrencySymbol(workflowData.currency)}
+                          </span>
+                        </div>
                       </div>
                     </div>
                     
@@ -2227,10 +2245,23 @@ export default function Workflow() {
                           </span>
                         </div>
                         <span className="text-xl font-black bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">
-                          {workflowData.projectCosts && hotelVoucherValue && actualPrice ? 
-                            ((workflowData.projectCosts / hotelVoucherValue) * (actualPrice * 0.75) * 1.1).toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' ' + getCurrencySymbol(workflowData.currency) : 
-                            '0.00 ' + getCurrencySymbol(workflowData.currency)
-                          }
+                          {(() => {
+                            const projectCosts = workflowData.projectCosts || 0;
+                            const stars = workflowData.stars || 0;
+                            const currentActualPrice = actualPrice || 0;
+                            
+                            // Use the complete voucher value formula
+                            const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30;
+                            
+                            // Formula: Vertragsvolumen Estimate = (Project Costs / Hotel Voucher Value) × (Actual Price × tripzMultiplier) × 1.1
+                            const vertragsvolumenEstimate = (projectCosts / voucherValue) * (currentActualPrice * tripzEstimateMultiplier) * 1.1;
+                            
+                            if (projectCosts === 0 && currentActualPrice === 0) {
+                              return '0.00 ' + getCurrencySymbol(workflowData.currency);
+                            }
+                            
+                            return vertragsvolumenEstimate.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' ' + getCurrencySymbol(workflowData.currency);
+                          })()}
                         </span>
                       </div>
                     </div>
@@ -2472,7 +2503,7 @@ export default function Workflow() {
                           const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30;
                           
                           // Formula: Vertragsvolumen Estimate = (Project Costs / Hotel Voucher Value) × (Actual Price × 0.75) × 1.1
-                          const vertragsvolumenEstimate = (projectCosts / voucherValue) * (currentActualPrice * 0.75) * 1.1;
+                          const vertragsvolumenEstimate = (projectCosts / voucherValue) * (currentActualPrice * tripzEstimateMultiplier) * 1.1;
                           
                           // Result = Vertragsvolumen Estimate - Finanzierung: Projektkosten brutto
                           const result = vertragsvolumenEstimate - projectCosts;
@@ -2508,7 +2539,7 @@ export default function Workflow() {
                           const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30;
                           
                           // Formula: Vertragsvolumen Estimate = (Project Costs / Hotel Voucher Value) × (Actual Price × 0.75) × 1.1
-                          const vertragsvolumenEstimate = (projectCosts / voucherValue) * (currentActualPrice * 0.75) * 1.1;
+                          const vertragsvolumenEstimate = (projectCosts / voucherValue) * (currentActualPrice * tripzEstimateMultiplier) * 1.1;
                           
                           // Show 0 when no meaningful input data
                           if (projectCosts === 0 && currentActualPrice === 0) {
@@ -2550,7 +2581,7 @@ export default function Workflow() {
                           const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30;
                           
                           // Formula: Vertragsvolumen Estimate = (Project Costs / Hotel Voucher Value) × (Actual Price × 0.75) × 1.1
-                          const vertragsvolumenEstimate = (projectCosts / voucherValue) * (currentActualPrice * 0.75) * 1.1;
+                          const vertragsvolumenEstimate = (projectCosts / voucherValue) * (currentActualPrice * tripzEstimateMultiplier) * 1.1;
                           
                           // Marge = Vertragsvolumen Estimate - Projektkosten brutto (absolute difference)
                           const marge = vertragsvolumenEstimate - projectCosts;
@@ -2615,7 +2646,7 @@ export default function Workflow() {
                           const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30;
                           
                           // Formula: Vertragsvolumen Estimate = (Project Costs / Hotel Voucher Value) × (Actual Price × 0.75) × 1.1
-                          const vertragsvolumenEstimate = (projectCosts / voucherValue) * (currentActualPrice * 0.75) * 1.1;
+                          const vertragsvolumenEstimate = (projectCosts / voucherValue) * (currentActualPrice * tripzEstimateMultiplier) * 1.1;
                           
                           // Vorsteuer Tripz Provision = (Vertragsvolumen Estimate × 0.19) × 0.23
                           const vorsteuerTripz = (vertragsvolumenEstimate * 0.19) * 0.23;
@@ -2651,7 +2682,7 @@ export default function Workflow() {
                           const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30;
                           
                           // Formula: Vertragsvolumen Estimate = (Project Costs / Hotel Voucher Value) × (Actual Price × 0.75) × 1.1
-                          const vertragsvolumenEstimate = (projectCosts / voucherValue) * (currentActualPrice * 0.75) * 1.1;
+                          const vertragsvolumenEstimate = (projectCosts / voucherValue) * (currentActualPrice * tripzEstimateMultiplier) * 1.1;
                           
                           // Vorsteuer Produktkauf = Projektkosten × 0.19
                           const vorsteuerProdukt = projectCosts * 0.19;
@@ -2693,7 +2724,7 @@ export default function Workflow() {
                           const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30;
                           
                           // Formula: Vertragsvolumen Estimate = (Project Costs / Hotel Voucher Value) × (Actual Price × 0.75) × 1.1
-                          const vertragsvolumenEstimate = (projectCosts / voucherValue) * (currentActualPrice * 0.75) * 1.1;
+                          const vertragsvolumenEstimate = (projectCosts / voucherValue) * (currentActualPrice * tripzEstimateMultiplier) * 1.1;
                           
                           // Marge = Vertragsvolumen Estimate - Projektkosten brutto
                           const marge = vertragsvolumenEstimate - projectCosts;
