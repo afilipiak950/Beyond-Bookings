@@ -55,6 +55,18 @@ export interface WorkflowData {
   averagePrice: number;
   projectCosts: number;
   hotelVoucherValue: number;
+  contractYears?: number; // Added missing property for editable contract duration
+  
+  // Review platform ratings - Added missing review properties
+  bookingRating?: number;
+  bookingReviewCount?: number;
+  googleRating?: number;
+  googleReviewCount?: number;
+  tripadvisorRating?: number;
+  tripadvisorReviewCount?: number;
+  holidaycheckRating?: number;
+  holidaycheckReviewCount?: number;
+  
   calculationResult?: {
     vatAmount: number;
     profitMargin: number;
@@ -3219,13 +3231,13 @@ Beispiel:
 • 8.5/10 - 'Excellent location and friendly staff'
 • 9.2/10 - 'Great breakfast and clean rooms'
 • 7.8/10 - 'Good value for money'"
-                      value={reviewData.bookingReviews}
-                      onChange={(e) => setReviewData(prev => ({...prev, bookingReviews: e.target.value}))}
+                      value={reviewData.booking.summary}
+                      onChange={(e) => setReviewData(prev => ({...prev, booking: {...prev.booking, summary: e.target.value}}))}
                       className="min-h-[120px] bg-white/70 backdrop-blur-sm border-blue-300/50 focus:border-blue-500 focus:ring-blue-500/20 resize-none"
                       rows={6}
                     />
                     <div className="flex items-center justify-between mt-3 text-xs text-blue-600">
-                      <span>📊 Bewertungen: {reviewData.bookingReviews.split('\n').filter(line => line.trim()).length}</span>
+                      <span>📊 Bewertungen: {reviewData.booking.summary.split('\n').filter((line: string) => line.trim()).length}</span>
                       <span className="font-medium">Booking.com Platform</span>
                     </div>
                   </div>
@@ -3248,13 +3260,13 @@ Beispiel:
 • 4.2/5 ⭐ - 'Beautiful hotel with great service'
 • 4.5/5 ⭐ - 'Perfect location near city center'
 • 3.8/5 ⭐ - 'Nice rooms but expensive parking'"
-                      value={reviewData.googleReviews}
-                      onChange={(e) => setReviewData(prev => ({...prev, googleReviews: e.target.value}))}
+                      value={reviewData.google.summary}
+                      onChange={(e) => setReviewData(prev => ({...prev, google: {...prev.google, summary: e.target.value}}))}
                       className="min-h-[120px] bg-white/70 backdrop-blur-sm border-green-300/50 focus:border-green-500 focus:ring-green-500/20 resize-none"
                       rows={6}
                     />
                     <div className="flex items-center justify-between mt-3 text-xs text-green-600">
-                      <span>⭐ Bewertungen: {reviewData.googleReviews.split('\n').filter(line => line.trim()).length}</span>
+                      <span>⭐ Bewertungen: {reviewData.google.summary.split('\n').filter((line: string) => line.trim()).length}</span>
                       <span className="font-medium">Google Platform</span>
                     </div>
                   </div>
@@ -3277,13 +3289,13 @@ Beispiel:
 • 5.2/6 - 'Tolles Hotel für Familienurlaub'
 • 4.8/6 - 'Sehr freundliches Personal'
 • 5.0/6 - 'Ausgezeichnetes Frühstück'"
-                      value={reviewData.holidayCheckReviews}
-                      onChange={(e) => setReviewData(prev => ({...prev, holidayCheckReviews: e.target.value}))}
+                      value={reviewData.holidaycheck.summary}
+                      onChange={(e) => setReviewData(prev => ({...prev, holidaycheck: {...prev.holidaycheck, summary: e.target.value}}))}
                       className="min-h-[120px] bg-white/70 backdrop-blur-sm border-orange-300/50 focus:border-orange-500 focus:ring-orange-500/20 resize-none"
                       rows={6}
                     />
                     <div className="flex items-center justify-between mt-3 text-xs text-orange-600">
-                      <span>🏖️ Bewertungen: {reviewData.holidayCheckReviews.split('\n').filter(line => line.trim()).length}</span>
+                      <span>🏖️ Bewertungen: {reviewData.holidaycheck.summary.split('\n').filter((line: string) => line.trim()).length}</span>
                       <span className="font-medium">HolidayCheck Platform</span>
                     </div>
                   </div>
@@ -3306,13 +3318,13 @@ Beispiel:
 • 4/5 🔴🔴🔴🔴⚪ - 'Excellent service and location'
 • 5/5 🔴🔴🔴🔴🔴 - 'Perfect weekend getaway'
 • 3/5 🔴🔴🔴⚪⚪ - 'Good hotel but overpriced'"
-                      value={reviewData.tripAdvisorReviews}
-                      onChange={(e) => setReviewData(prev => ({...prev, tripAdvisorReviews: e.target.value}))}
+                      value={reviewData.tripadvisor.summary}
+                      onChange={(e) => setReviewData(prev => ({...prev, tripadvisor: {...prev.tripadvisor, summary: e.target.value}}))}
                       className="min-h-[120px] bg-white/70 backdrop-blur-sm border-red-300/50 focus:border-red-500 focus:ring-red-500/20 resize-none"
                       rows={6}
                     />
                     <div className="flex items-center justify-between mt-3 text-xs text-red-600">
-                      <span>✈️ Bewertungen: {reviewData.tripAdvisorReviews.split('\n').filter(line => line.trim()).length}</span>
+                      <span>✈️ Bewertungen: {reviewData.tripadvisor.summary.split('\n').filter((line: string) => line.trim()).length}</span>
                       <span className="font-medium">TripAdvisor Platform</span>
                     </div>
                   </div>
@@ -3334,25 +3346,25 @@ Beispiel:
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="bg-blue-50/70 rounded-lg p-3 text-center">
                       <div className="text-2xl font-bold text-blue-700">
-                        {reviewData.bookingReviews.split('\n').filter(line => line.trim()).length}
+                        {reviewData.booking.summary.split('\n').filter((line: string) => line.trim()).length}
                       </div>
                       <div className="text-xs text-blue-600 font-medium">Booking.com</div>
                     </div>
                     <div className="bg-green-50/70 rounded-lg p-3 text-center">
                       <div className="text-2xl font-bold text-green-700">
-                        {reviewData.googleReviews.split('\n').filter(line => line.trim()).length}
+                        {reviewData.google.summary.split('\n').filter((line: string) => line.trim()).length}
                       </div>
                       <div className="text-xs text-green-600 font-medium">Google</div>
                     </div>
                     <div className="bg-orange-50/70 rounded-lg p-3 text-center">
                       <div className="text-2xl font-bold text-orange-700">
-                        {reviewData.holidayCheckReviews.split('\n').filter(line => line.trim()).length}
+                        {reviewData.holidaycheck.summary.split('\n').filter((line: string) => line.trim()).length}
                       </div>
                       <div className="text-xs text-orange-600 font-medium">HolidayCheck</div>
                     </div>
                     <div className="bg-red-50/70 rounded-lg p-3 text-center">
                       <div className="text-2xl font-bold text-red-700">
-                        {reviewData.tripAdvisorReviews.split('\n').filter(line => line.trim()).length}
+                        {reviewData.tripadvisor.summary.split('\n').filter((line: string) => line.trim()).length}
                       </div>
                       <div className="text-xs text-red-600 font-medium">TripAdvisor</div>
                     </div>
@@ -3362,8 +3374,8 @@ Beispiel:
                     <div className="flex items-center justify-between">
                       <span className="font-semibold text-slate-700">Gesamt erfasste Bewertungen:</span>
                       <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                        {Object.values(reviewData).reduce((total, reviews) => 
-                          total + reviews.split('\n').filter(line => line.trim()).length, 0
+                        {[reviewData.booking.summary, reviewData.google.summary, reviewData.holidaycheck.summary, reviewData.tripadvisor.summary].reduce((total: number, reviews: string) => 
+                          total + reviews.split('\n').filter((line: string) => line.trim()).length, 0
                         )}
                       </span>
                     </div>
