@@ -24,6 +24,13 @@ KI Pricing Agent, rebranded as "bebo convert", is a production-ready SaaS web ap
   - Enhanced system prompts for natural language responses in German/English
   - Fixed dropdown menu interactions for thread management (rename, pin, export, delete)
   - HTTP whitelist expanded for weather APIs, research, and external data sources
+- **🚀 UNIVERSAL AI INTELLIGENCE**: ChatGPT-equivalent system with world knowledge:
+  - GPT-5 model support with intelligent fallback to GPT-4o
+  - Universal knowledge capabilities: history, science, culture, politics, facts
+  - Enhanced HTTP whitelist: Wikipedia, news APIs, financial data, knowledge sources
+  - Intelligent query detection for world knowledge, current events, and business data
+  - System prompts explicitly require answering every question in the world correctly
+  - Seamless integration of business database with global knowledge base
 - **ULTRA-COMPREHENSIVE DATABASE SOLUTION**: 
   - ✅ **CRITICAL MANDATE**: AI now answers EVERY question completely - never leaves questions unanswered or partially addressed
   - ✅ **Multi-query intelligence**: Automatically tries alternative table/column names when first query fails
