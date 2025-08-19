@@ -1412,7 +1412,7 @@ export default function Workflow() {
       // Calculate required fields based on workflow data
       const projectCosts = workflowData.projectCosts || 20000;
       const stars = workflowData.stars || 3;
-      const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30;
+      const voucherValue = (workflowData.hotelVoucherValue && workflowData.hotelVoucherValue > 0) ? workflowData.hotelVoucherValue : (stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30);
       const roomCount = workflowData.roomCount || Math.round(projectCosts / voucherValue);
       const averagePrice = workflowData.averagePrice || 120;
       const occupancyRate = workflowData.occupancyRate || 70;
@@ -2171,7 +2171,7 @@ export default function Workflow() {
                             const currentActualPrice = actualPrice || 0;
                             
                             // Calculate hotel voucher value based on stars
-                            const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30;
+                            const voucherValue = (workflowData.hotelVoucherValue && workflowData.hotelVoucherValue > 0) ? workflowData.hotelVoucherValue : (stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30);
                             
                             // Formula: Vertragsvolumen Estimate = (Project Costs / Hotel Voucher Value) × (Actual Price × 0.75) × 1.1
                             const vertragsvolumenEstimate = (projectCosts / voucherValue) * (currentActualPrice * tripzEstimateMultiplier) * 1.1;
@@ -2250,11 +2250,24 @@ export default function Workflow() {
                             const stars = workflowData.stars || 0;
                             const currentActualPrice = actualPrice || 0;
                             
-                            // Use the complete voucher value formula
-                            const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30;
+                            // Use actual hotel voucher value from the form, fallback to star-based calculation
+                            const voucherValue = (workflowData.hotelVoucherValue && workflowData.hotelVoucherValue > 0) 
+                              ? workflowData.hotelVoucherValue 
+                              : (stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30);
                             
                             // Formula: Vertragsvolumen Estimate = (Project Costs / Hotel Voucher Value) × (Actual Price × tripzMultiplier) × 1.1
                             const vertragsvolumenEstimate = (projectCosts / voucherValue) * (currentActualPrice * tripzEstimateMultiplier) * 1.1;
+                            
+                            // Debug logging
+                            console.log("🔍 MAIN VERTRAGSVOLUMEN DEBUG:", {
+                              projectCosts,
+                              stars,
+                              voucherValue,
+                              currentActualPrice,
+                              tripzEstimateMultiplier,
+                              calculation: `(${projectCosts} / ${voucherValue}) * (${currentActualPrice} * ${tripzEstimateMultiplier}) * 1.1`,
+                              result: vertragsvolumenEstimate
+                            });
                             
                             if (projectCosts === 0 && currentActualPrice === 0) {
                               return '0.00 ' + getCurrencySymbol(workflowData.currency);
@@ -2500,7 +2513,7 @@ export default function Workflow() {
                           const currentActualPrice = actualPrice || 0;
                           
                           // Calculate hotel voucher value based on stars
-                          const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30;
+                          const voucherValue = (workflowData.hotelVoucherValue && workflowData.hotelVoucherValue > 0) ? workflowData.hotelVoucherValue : (stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30);
                           
                           // Formula: Vertragsvolumen Estimate = (Project Costs / Hotel Voucher Value) × (Actual Price × 0.75) × 1.1
                           const vertragsvolumenEstimate = (projectCosts / voucherValue) * (currentActualPrice * tripzEstimateMultiplier) * 1.1;
@@ -2536,7 +2549,7 @@ export default function Workflow() {
                           const currentActualPrice = actualPrice || 0;
                           
                           // Calculate hotel voucher value based on stars
-                          const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30;
+                          const voucherValue = (workflowData.hotelVoucherValue && workflowData.hotelVoucherValue > 0) ? workflowData.hotelVoucherValue : (stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30);
                           
                           // Formula: Vertragsvolumen Estimate = (Project Costs / Hotel Voucher Value) × (Actual Price × 0.75) × 1.1
                           const vertragsvolumenEstimate = (projectCosts / voucherValue) * (currentActualPrice * tripzEstimateMultiplier) * 1.1;
@@ -2578,7 +2591,7 @@ export default function Workflow() {
                           const currentActualPrice = actualPrice || 0;
                           
                           // Calculate hotel voucher value based on stars
-                          const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30;
+                          const voucherValue = (workflowData.hotelVoucherValue && workflowData.hotelVoucherValue > 0) ? workflowData.hotelVoucherValue : (stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30);
                           
                           // Formula: Vertragsvolumen Estimate = (Project Costs / Hotel Voucher Value) × (Actual Price × 0.75) × 1.1
                           const vertragsvolumenEstimate = (projectCosts / voucherValue) * (currentActualPrice * tripzEstimateMultiplier) * 1.1;
@@ -2643,7 +2656,7 @@ export default function Workflow() {
                           const currentActualPrice = actualPrice || 0;
                           
                           // Calculate hotel voucher value based on stars
-                          const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30;
+                          const voucherValue = (workflowData.hotelVoucherValue && workflowData.hotelVoucherValue > 0) ? workflowData.hotelVoucherValue : (stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30);
                           
                           // Formula: Vertragsvolumen Estimate = (Project Costs / Hotel Voucher Value) × (Actual Price × 0.75) × 1.1
                           const vertragsvolumenEstimate = (projectCosts / voucherValue) * (currentActualPrice * tripzEstimateMultiplier) * 1.1;
@@ -2679,7 +2692,7 @@ export default function Workflow() {
                           const currentActualPrice = actualPrice || 0;
                           
                           // Calculate hotel voucher value based on stars
-                          const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30;
+                          const voucherValue = (workflowData.hotelVoucherValue && workflowData.hotelVoucherValue > 0) ? workflowData.hotelVoucherValue : (stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30);
                           
                           // Formula: Vertragsvolumen Estimate = (Project Costs / Hotel Voucher Value) × (Actual Price × 0.75) × 1.1
                           const vertragsvolumenEstimate = (projectCosts / voucherValue) * (currentActualPrice * tripzEstimateMultiplier) * 1.1;
@@ -2721,7 +2734,7 @@ export default function Workflow() {
                           const currentActualPrice = actualPrice || 0;
                           
                           // Calculate hotel voucher value based on stars
-                          const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30;
+                          const voucherValue = (workflowData.hotelVoucherValue && workflowData.hotelVoucherValue > 0) ? workflowData.hotelVoucherValue : (stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30);
                           
                           // Formula: Vertragsvolumen Estimate = (Project Costs / Hotel Voucher Value) × (Actual Price × 0.75) × 1.1
                           const vertragsvolumenEstimate = (projectCosts / voucherValue) * (currentActualPrice * tripzEstimateMultiplier) * 1.1;
@@ -2743,6 +2756,20 @@ export default function Workflow() {
                           }
                           
                           const margeNachSteuernPercentage = (margeNachSteuern / vertragsvolumenEstimate) * 100;
+                          
+                          // Debug logging for percentage calculation
+                          console.log("🔍 PERCENTAGE CALCULATION DEBUG:", {
+                            projectCosts,
+                            vertragsvolumenEstimate,
+                            marge,
+                            vorsteuerProdukt,
+                            vorsteuerTripz,
+                            nettoSteuerzahlung,
+                            margeNachSteuern,
+                            margeNachSteuernPercentage,
+                            calculation: `(${margeNachSteuern} / ${vertragsvolumenEstimate}) * 100 = ${margeNachSteuernPercentage}%`
+                          });
+                          
                           return `${margeNachSteuernPercentage.toFixed(1)}%`;
                         })()}
                       </div>
@@ -2874,7 +2901,7 @@ export default function Workflow() {
                         {(() => {
                           const projectCosts = workflowData.projectCosts || 0;
                           const stars = workflowData.stars || 0;
-                          const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30;
+                          const voucherValue = (workflowData.hotelVoucherValue && workflowData.hotelVoucherValue > 0) ? workflowData.hotelVoucherValue : (stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30);
                           const roomnights = Math.round(projectCosts / voucherValue);
                           return roomnights > 0 ? roomnights.toLocaleString('de-DE') : '667';
                         })()}
@@ -2889,7 +2916,7 @@ export default function Workflow() {
                       {(() => {
                         const projectCosts = workflowData.projectCosts || 20000;
                         const stars = workflowData.stars || 3;
-                        const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30;
+                        const voucherValue = (workflowData.hotelVoucherValue && workflowData.hotelVoucherValue > 0) ? workflowData.hotelVoucherValue : (stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30);
                         const roomnights = Math.round(projectCosts / voucherValue);
                         
                         // Beyond Bookings real costs calculation
@@ -3005,7 +3032,7 @@ export default function Workflow() {
                       {(() => {
                         const projectCosts = workflowData.projectCosts || 20000;
                         const stars = workflowData.stars || 3;
-                        const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30;
+                        const voucherValue = (workflowData.hotelVoucherValue && workflowData.hotelVoucherValue > 0) ? workflowData.hotelVoucherValue : (stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30);
                         const roomnights = Math.round(projectCosts / voucherValue);
                         return `${roomnights} Gutscheine × ${convertFromEUR(voucherValue, workflowData.currency, exchangeRates).toFixed(2)} ${getCurrencySymbol(workflowData.currency)}`;
                       })()}
@@ -3014,7 +3041,7 @@ export default function Workflow() {
                       {(() => {
                         const projectCosts = workflowData.projectCosts || 20000;
                         const stars = workflowData.stars || 3;
-                        const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30;
+                        const voucherValue = (workflowData.hotelVoucherValue && workflowData.hotelVoucherValue > 0) ? workflowData.hotelVoucherValue : (stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30);
                         const roomnights = Math.round(projectCosts / voucherValue);
                         const totalValue = roomnights * voucherValue;
                         return convertFromEUR(totalValue, workflowData.currency, exchangeRates).toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' ' + getCurrencySymbol(workflowData.currency);
@@ -3054,7 +3081,7 @@ export default function Workflow() {
                         {(() => {
                           const projectCosts = workflowData.projectCosts || 20000;
                           const stars = workflowData.stars || 3;
-                          const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30;
+                          const voucherValue = (workflowData.hotelVoucherValue && workflowData.hotelVoucherValue > 0) ? workflowData.hotelVoucherValue : (stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30);
                           const roomnights = Math.round(projectCosts / voucherValue);
                           const totalVoucherValue = roomnights * voucherValue;
                           const mwst19 = totalVoucherValue * (editableCosts.vatRate19/100) / (1 + editableCosts.vatRate19/100);
@@ -3072,7 +3099,7 @@ export default function Workflow() {
                         {convertFromEUR(editableCosts.realCostPerVoucher, workflowData.currency, exchangeRates).toFixed(2)}{getCurrencySymbol(workflowData.currency)} × {(() => {
                           const projectCosts = workflowData.projectCosts || 20000;
                           const stars = workflowData.stars || 3;
-                          const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30;
+                          const voucherValue = (workflowData.hotelVoucherValue && workflowData.hotelVoucherValue > 0) ? workflowData.hotelVoucherValue : (stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30);
                           return Math.round(projectCosts / voucherValue);
                         })()}
                       </span>
@@ -3112,7 +3139,7 @@ export default function Workflow() {
                       {(() => {
                         const projectCosts = workflowData.projectCosts || 20000;
                         const stars = workflowData.stars || 3;
-                        const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30;
+                        const voucherValue = (workflowData.hotelVoucherValue && workflowData.hotelVoucherValue > 0) ? workflowData.hotelVoucherValue : (stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30);
                         const roomnights = Math.round(projectCosts / voucherValue);
                         const costs = roomnights * editableCosts.realCostPerVoucher;
                         const steuerbelastung = editableCosts.taxBurden;
