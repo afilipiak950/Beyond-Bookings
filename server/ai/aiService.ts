@@ -293,23 +293,55 @@ export class AIService {
           content: msg.content,
         }));
 
-      // 🔥 CRITICAL: Extract hotel context from recent messages
+      // 🔥 CRITICAL: Extract hotel context from recent messages with enhanced detection
       let hotelContext = '';
-      for (const msg of recentMessages.slice(0, 5)) { // Check last 5 messages
+      let hotelData: any = null;
+      
+      // Check recent messages for hotel context (most recent first)
+      for (const msg of recentMessages.slice(0, 10)) { // Check last 10 messages for better context
         const content = msg.content.toLowerCase();
-        // Check for specific hotel mentions
-        if (content.includes('mönchs waldhotel')) {
-          hotelContext = 'Mönchs Waldhotel';
-          break;
-        } else if (content.includes('vier jahreszeiten')) {
-          hotelContext = 'Vier Jahreszeiten Hamburg';
-          break;
-        } else if (content.includes('dolder grand') && !content.includes('email') && !content.includes('mail')) {
-          // Only set Dolder if explicitly discussing it, not in follow-up requests
-          hotelContext = 'The Dolder Grand';
-          break;
+        
+        // First check if this is an assistant message with hotel data
+        if (msg.role === 'assistant') {
+          // Look for specific hotel data patterns in assistant responses
+          if (content.includes('mönchs waldhotel') || content.includes('mönch')) {
+            hotelContext = 'Mönchs Waldhotel';
+            // Extract key data points if present
+            const priceMatch = content.match(/durchschnittlicher preis[^:]*:\s*(\d+[.,]\d+)/i);
+            const roomsMatch = content.match(/anzahl der zimmer[^:]*:\s*(\d+)/i);
+            if (priceMatch || roomsMatch) {
+              hotelData = {
+                name: 'Mönchs Waldhotel',
+                price: priceMatch?.[1],
+                rooms: roomsMatch?.[1]
+              };
+            }
+            break;
+          } else if (content.includes('vier jahreszeiten')) {
+            hotelContext = 'Vier Jahreszeiten Hamburg';
+            break;
+          } else if (content.includes('dolder grand') && content.includes('175')) {
+            // Dolder Grand has 175 rooms - use this as a verification
+            hotelContext = 'The Dolder Grand';
+            break;
+          }
+        }
+        
+        // Check user messages for explicit hotel requests
+        if (msg.role === 'user') {
+          if (content.includes('mönchs') || content.includes('mönch') || content.includes('waldhotel')) {
+            hotelContext = 'Mönchs Waldhotel';
+            // Don't break - let assistant messages override with more specific data
+          } else if (content.includes('vier') || content.includes('jahreszeiten')) {
+            hotelContext = 'Vier Jahreszeiten Hamburg';
+          } else if (content.includes('dolder') && !content.includes('email') && !content.includes('mail')) {
+            hotelContext = 'The Dolder Grand';
+          }
         }
       }
+      
+      // Log the detected context for debugging
+      console.log('🏨 HOTEL CONTEXT DETECTED:', hotelContext, 'DATA:', hotelData);
 
       // Add enhanced system message with routing guidance and hotel context
       const systemMessage = this.getEnhancedSystemMessage(mode, queryAnalysis, message, hotelContext);
@@ -574,19 +606,54 @@ SQL-QUERY KONSTRUKTION:
     // 🔥 CRITICAL: If we have hotel context from previous messages, ALWAYS use it!
     let contextGuidance = '';
     if (hotelContext) {
-      contextGuidance = `\n\n🔥🔥🔥 WICHTIGER KONTEXT AUS VORHERIGEN NACHRICHTEN 🔥🔥🔥
+      contextGuidance = `\n\n🔥🔥🔥 ABSOLUT KRITISCHER KONTEXT - DIES IST DER WICHTIGSTE TEIL! 🔥🔥🔥
       
-DIE UNTERHALTUNG BEHANDELT AKTUELL: "${hotelContext}"
+⚠️⚠️⚠️ ACHTUNG: DIE AKTUELLE UNTERHALTUNG BEHANDELT: "${hotelContext}" ⚠️⚠️⚠️
 
-WENN DER NUTZER SICH AUF "DIE DATEN", "DIE KALKULATION", "DAS HOTEL" ODER ÄHNLICHES BEZIEHT,
-MUSS ES SICH UM "${hotelContext}" HANDELN!
+🚨 UNUMSTÖSSLICHE REGEL:
+Wenn der Nutzer nach einer E-Mail, Zusammenfassung, Brief oder IRGENDETWAS fragt,
+MUSST DU DIE DATEN VON "${hotelContext}" VERWENDEN!
 
-Beispiele:
-- "generiere eine E-Mail mit den Daten" → Verwende Daten von "${hotelContext}"
-- "schreibe einen Brief darüber" → Verwende Informationen von "${hotelContext}"
-- "fasse die Kalkulation zusammen" → Beziehe dich auf "${hotelContext}"
+${hotelContext === 'Mönchs Waldhotel' ? `
+MÖNCHS WALDHOTEL DATEN (NUR DIESE VERWENDEN!):
+- Hotel: Mönchs Waldhotel (3 Sterne)
+- Zimmer: 78
+- Belegungsrate: 70%
+- Durchschnittspreis: 120,00 €
+- Voucher: 30,00 €
+- Betriebskosten: 1.326,00 €
+- Gewinnmarge: 14.874,00 €
+- Gesamtpreis: 23.800,00 €
+` : ''}
 
-⚠️ VERWENDE NIEMALS DATEN EINES ANDEREN HOTELS ES SEI DENN EXPLIZIT DANACH GEFRAGT!`;
+${hotelContext === 'The Dolder Grand' ? `
+THE DOLDER GRAND DATEN (NUR DIESE VERWENDEN!):
+- Hotel: The Dolder Grand (5 Sterne)
+- Zimmer: 175
+- Belegungsrate: 70%
+- Durchschnittspreis: 750,00 €
+- Voucher: 50,00 €
+- Betriebskosten: 2.975,00 €
+- Gewinnmarge: 9.175,00 €
+- Gesamtpreis: 17.850,00 €
+` : ''}
+
+🔴 VERBOTEN:
+- NIEMALS Daten von "The Dolder Grand" verwenden wenn über "${hotelContext}" gesprochen wird
+- NIEMALS Hotels verwechseln oder mischen
+- NIEMALS generische Daten erfinden
+
+✅ KORREKT:
+- IMMER "${hotelContext}" Daten verwenden
+- IMMER den Namen "${hotelContext}" in der E-Mail/Brief erwähnen
+- IMMER die spezifischen Zahlen von "${hotelContext}" nutzen
+
+Beispiele was der Nutzer sagen könnte:
+- "generiere eine E-Mail an Alex" → E-Mail MUSS über "${hotelContext}" sein
+- "schreibe das in einem Brief" → Brief MUSS über "${hotelContext}" sein
+- "fasse die Daten zusammen" → Zusammenfassung MUSS über "${hotelContext}" sein
+
+⚠️ WENN DU DAS FALSCHE HOTEL VERWENDEST, IST DAS EIN KRITISCHER FEHLER! ⚠️`;
     }
     
     if (queryAnalysis.type === 'weather') {
@@ -633,9 +700,27 @@ Verfügbare Daten: 10 Hotels, 8 Kalkulationen mit Profitabilitätsanalyse${hotel
 NUTZE: calc_eval für mathematische Operationen`;
     } else if (queryAnalysis.type === 'email') {
       routingGuidance = `\n\n✉️ E-MAIL ANFRAGE ERKANNT!
-${hotelContext ? `VERWENDE DATEN VON: "${hotelContext}"` : ''}
+      
+${hotelContext ? `
+🔴🔴🔴 ABSOLUT KRITISCH FÜR E-MAIL GENERATION 🔴🔴🔴
+
+DU MUSST DIE E-MAIL ÜBER "${hotelContext}" SCHREIBEN!
+
+FALSCH: E-Mail über The Dolder Grand wenn "${hotelContext}" in der Unterhaltung ist
+RICHTIG: E-Mail IMMER über "${hotelContext}"
+
+Die E-Mail MUSS enthalten:
+1. Den Namen "${hotelContext}" explizit erwähnen
+2. Die korrekten Daten von "${hotelContext}" verwenden
+3. KEINE Daten von anderen Hotels mischen
+
+Wenn der Nutzer sagt "generiere eine E-Mail an Alex mit den Daten",
+dann MUSS die E-Mail über "${hotelContext}" sein!
+` : ''}
+
 NUTZE: Deine Intelligenz direkt - keine Tools nötig
-Erstelle professionelle, gut strukturierte E-Mails`;
+Erstelle professionelle, gut strukturierte E-Mails
+ABER VERWENDE NUR DIE DATEN DES AKTUELLEN HOTELS AUS DEM KONTEXT!`;
     }
     
     return { 

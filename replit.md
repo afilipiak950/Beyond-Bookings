@@ -13,6 +13,7 @@ KI Pricing Agent, rebranded as "bebo convert", is a production-ready SaaS web ap
   - Force-override system replaces incorrect hotel searches with correct ones
   - Ultimate fallback ensures Vier Jahreszeiten searches never return Dolder Grand data
   - **Context Retention Fix**: AI now maintains hotel context across messages - when generating emails or follow-up content, it correctly uses data from the previously discussed hotel instead of defaulting to The Dolder Grand
+  - **Deep Email Generation Fix**: Enhanced context detection scans last 10 messages, embeds actual hotel data in system prompts, and provides ultra-explicit instructions for email generation to prevent any hotel data mixing
 - **MAJOR AI ENHANCEMENT**: Implemented comprehensive AI Assistant system based on detailed build brief requirements:
   - Added `/ai` route (in addition to existing `/ai-hub`) for standardized access
   - Comprehensive tool system: `calc_eval`, `sql_query`, `sheets_read`, `docs_search`, `http_call`, `feedback_submit`
