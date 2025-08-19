@@ -189,7 +189,7 @@ export default function AIHub() {
       setIsStreaming(true);
       setStreamingMessage('');
       setCitations([]);
-      setPendingUserMessage('');
+      // Don't clear pendingUserMessage here - keep it visible during streaming
 
       const response = await fetch('/api/ai/chat', {
         method: 'POST',
@@ -278,16 +278,18 @@ export default function AIHub() {
           }
         }, 500); // Increased timeout for better reliability
       } else if (activeThreadId) {
-        // Refresh messages for the current thread
+        // Refresh messages for the current thread and clear pending message
         queryClient.invalidateQueries({ 
           queryKey: ['/api/ai/threads', activeThreadId, 'messages'] 
         });
+        // Clear pending message after messages refresh
+        setTimeout(() => setPendingUserMessage(''), 100);
       }
       
-      // Clear input state
+      // Clear streaming state but keep user message visible until messages refresh
       setStreamingMessage('');
       setCitations([]);
-      setPendingUserMessage('');
+      // Keep pendingUserMessage until messages are refreshed
     },
     onError: (error: any) => {
       setIsStreaming(false);
@@ -1130,7 +1132,17 @@ export default function AIHub() {
             )}
             
             {/* AI thinking indicator - shown only AFTER user message when processing */}
-            {pendingUserMessage && isStreaming && !streamingMessage && (
+            {pendingUserMessage && (
+              <div className="flex gap-3 justify-end mb-4">
+                <div className="max-w-[80%] bg-primary text-primary-foreground ml-12 rounded-lg p-4">
+                  <div className="whitespace-pre-wrap text-sm">
+                    {pendingUserMessage}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {isStreaming && !streamingMessage && (
               <div className="flex gap-3 justify-start mb-4">
                 <div className="max-w-[80%] glass-card border border-border/50 rounded-lg p-4">
                   <div className="flex items-center gap-3">
