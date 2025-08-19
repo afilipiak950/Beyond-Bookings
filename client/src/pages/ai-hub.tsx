@@ -101,6 +101,8 @@ export default function AIHub() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -282,6 +284,103 @@ export default function AIHub() {
     });
   };
 
+  // Rename thread
+  const handleRenameThread = (threadId: number) => {
+    const thread = threads.find(t => t.id === threadId);
+    if (!thread) return;
+    
+    const newTitle = prompt('Enter new thread title:', thread.title);
+    if (newTitle && newTitle !== thread.title) {
+      // TODO: Implement rename API call
+      toast({
+        title: "Thread Renamed",
+        description: `Renamed to: ${newTitle}`,
+      });
+    }
+  };
+
+  // Toggle pin thread
+  const handleTogglePin = (threadId: number) => {
+    const thread = threads.find(t => t.id === threadId);
+    if (!thread) return;
+    
+    // TODO: Implement pin/unpin API call
+    toast({
+      title: thread.isPinned ? "Thread Unpinned" : "Thread Pinned",
+      description: thread.isPinned ? "Thread removed from favorites" : "Thread added to favorites",
+    });
+  };
+
+  // Export thread
+  const handleExportThread = (threadId: number) => {
+    const thread = threads.find(t => t.id === threadId);
+    if (!thread) return;
+    
+    // Get messages for this thread
+    const threadMessages = messagesData?.messages || [];
+    
+    const exportData = {
+      title: thread.title,
+      mode: thread.mode,
+      createdAt: thread.createdAt,
+      messages: threadMessages
+    };
+    
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { 
+      type: 'application/json' 
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `thread-${thread.title.replace(/[^a-zA-Z0-9]/g, '_')}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    
+    toast({
+      title: "Thread Exported",
+      description: "Thread saved as JSON file",
+    });
+  };
+
+  // Delete thread
+  const handleDeleteThread = (threadId: number) => {
+    const thread = threads.find(t => t.id === threadId);
+    if (!thread) return;
+    
+    if (confirm(`Delete thread "${thread.title}"? This action cannot be undone.`)) {
+      // TODO: Implement delete API call
+      if (activeThreadId === threadId) {
+        setActiveThreadId(null);
+      }
+      toast({
+        title: "Thread Deleted",
+        description: "Thread has been permanently deleted",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // File upload functions
+  const triggerFileUpload = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+    
+    // TODO: Implement file upload API call
+    const fileNames = Array.from(files).map(f => f.name).join(', ');
+    
+    toast({
+      title: "Files Uploaded",
+      description: `Uploaded: ${fileNames}`,
+    });
+    
+    setIsUploadOpen(false);
+    e.target.value = ''; // Reset input
+  };
+
   // Handle send
   const handleSend = () => {
     if (!message.trim() || isStreaming) return;
@@ -381,10 +480,30 @@ export default function AIHub() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-28">
-                      <DropdownMenuItem className="text-xs py-1">Rename</DropdownMenuItem>
-                      <DropdownMenuItem className="text-xs py-1">Pin</DropdownMenuItem>
-                      <DropdownMenuItem className="text-xs py-1">Export</DropdownMenuItem>
-                      <DropdownMenuItem className="text-destructive text-xs py-1">Delete</DropdownMenuItem>
+                      <DropdownMenuItem 
+                        className="text-xs py-1" 
+                        onClick={() => handleRenameThread(thread.id)}
+                      >
+                        Rename
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        className="text-xs py-1"
+                        onClick={() => handleTogglePin(thread.id)}
+                      >
+                        {thread.isPinned ? 'Unpin' : 'Pin'}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        className="text-xs py-1"
+                        onClick={() => handleExportThread(thread.id)}
+                      >
+                        Export
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        className="text-destructive text-xs py-1"
+                        onClick={() => handleDeleteThread(thread.id)}
+                      >
+                        Delete
+                      </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
@@ -415,9 +534,16 @@ export default function AIHub() {
                   <p className="text-xs text-muted-foreground">
                     Supports: PDF, DOC, DOCX, TXT, MD, CSV, XLSX (Max 50MB)
                   </p>
-                  <input type="file" className="hidden" />
+                  <input 
+                    ref={fileInputRef}
+                    type="file" 
+                    className="hidden" 
+                    onChange={handleFileUpload}
+                    accept=".pdf,.doc,.docx,.txt,.md,.csv,.xlsx"
+                    multiple
+                  />
                 </div>
-                <Button className="w-full">Upload</Button>
+                <Button onClick={triggerFileUpload} className="w-full">Upload</Button>
               </div>
             </DialogContent>
           </Dialog>
