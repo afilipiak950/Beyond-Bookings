@@ -44,7 +44,11 @@ export const toolDefinitions = [
         type: 'object',
         properties: {
           query: { type: 'string', description: 'SQL SELECT query to execute' },
-          params: { type: 'array', description: 'Parameters for the query (optional)' }
+          params: { 
+            type: 'array', 
+            items: { type: 'string' },
+            description: 'Parameters for the query (optional)' 
+          }
         },
         required: ['query']
       }

@@ -150,7 +150,9 @@ export default function AIHub() {
   console.log('AI Hub:', { 
     activeThread: activeThreadId, 
     messages: messages.length, 
-    streaming: isStreaming 
+    streaming: isStreaming,
+    messagesData: messagesData?.messages?.length || 0,
+    rawMessages: JSON.stringify(messages.slice(0, 2)) // Debug first 2 messages
   });
 
   // Auto-refresh threads on mount or user navigation
@@ -158,10 +160,18 @@ export default function AIHub() {
     refetchThreads();
   }, []);
 
-  // Auto-select first thread if none is selected
+  // Auto-select first thread if none is selected (but NOT when we explicitly cleared it)
   useEffect(() => {
     if (!activeThreadId && threads.length > 0) {
-      setActiveThreadId(threads[0].id);
+      // Only auto-select if we haven't explicitly cleared the thread (new chat scenario)
+      // Check if this is a natural page load vs explicit clear
+      const isExplicitClear = sessionStorage.getItem('ai-hub-new-chat');
+      if (!isExplicitClear) {
+        setActiveThreadId(threads[0].id);
+      } else {
+        // Clear the flag after using it
+        sessionStorage.removeItem('ai-hub-new-chat');
+      }
     }
   }, [threads, activeThreadId]);
 
@@ -291,23 +301,34 @@ export default function AIHub() {
   const createThread = () => {
     console.log('Creating new thread...');
     
+    // Mark that this is an explicit new chat action
+    sessionStorage.setItem('ai-hub-new-chat', 'true');
+    
     // Clear current state immediately
+    const previousThreadId = activeThreadId;
     setActiveThreadId(null);
     setMessage('');
     setStreamingMessage('');
     setCitations([]);
     setSearchQuery('');
     
-    // Clear ALL cached messages to ensure clean state
+    // Clear ALL message-related cached data
     queryClient.removeQueries({ 
       queryKey: ['/api/ai/threads'],
       exact: false 
     });
     
-    // Force immediate re-render by clearing query data
+    // Specifically clear the previous thread's messages if it existed
+    if (previousThreadId) {
+      queryClient.removeQueries({
+        queryKey: ['/api/ai/threads', previousThreadId, 'messages']
+      });
+    }
+    
+    // Force immediate empty state
     queryClient.setQueryData(['/api/ai/threads', null, 'messages'], { messages: [] });
     
-    console.log('New thread created - state cleared');
+    console.log('New thread created - all state and cache cleared');
     
     // Provide user feedback
     toast({
