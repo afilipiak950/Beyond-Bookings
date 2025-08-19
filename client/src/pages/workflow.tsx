@@ -2974,7 +2974,7 @@ export default function Workflow() {
                       {(() => {
                         const projectCosts = workflowData.projectCosts || 20000;
                         const stars = workflowData.stars || 3;
-                        const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : 30;
+                        const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30;
                         const roomnights = Math.round(projectCosts / voucherValue);
                         return `${roomnights} Gutscheine × ${convertFromEUR(voucherValue, workflowData.currency, exchangeRates).toFixed(2)} ${getCurrencySymbol(workflowData.currency)}`;
                       })()}
@@ -2983,7 +2983,7 @@ export default function Workflow() {
                       {(() => {
                         const projectCosts = workflowData.projectCosts || 20000;
                         const stars = workflowData.stars || 3;
-                        const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : 30;
+                        const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30;
                         const roomnights = Math.round(projectCosts / voucherValue);
                         const totalValue = roomnights * voucherValue;
                         return convertFromEUR(totalValue, workflowData.currency, exchangeRates).toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' ' + getCurrencySymbol(workflowData.currency);
@@ -3023,7 +3023,7 @@ export default function Workflow() {
                         {(() => {
                           const projectCosts = workflowData.projectCosts || 20000;
                           const stars = workflowData.stars || 3;
-                          const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : 30;
+                          const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30;
                           const roomnights = Math.round(projectCosts / voucherValue);
                           const totalVoucherValue = roomnights * voucherValue;
                           const mwst19 = totalVoucherValue * (editableCosts.vatRate19/100) / (1 + editableCosts.vatRate19/100);
@@ -3041,7 +3041,7 @@ export default function Workflow() {
                         {convertFromEUR(editableCosts.realCostPerVoucher, workflowData.currency, exchangeRates).toFixed(2)}{getCurrencySymbol(workflowData.currency)} × {(() => {
                           const projectCosts = workflowData.projectCosts || 20000;
                           const stars = workflowData.stars || 3;
-                          const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : 30;
+                          const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30;
                           return Math.round(projectCosts / voucherValue);
                         })()}
                       </span>
@@ -3081,7 +3081,7 @@ export default function Workflow() {
                       {(() => {
                         const projectCosts = workflowData.projectCosts || 20000;
                         const stars = workflowData.stars || 3;
-                        const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : 30;
+                        const voucherValue = stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30;
                         const roomnights = Math.round(projectCosts / voucherValue);
                         const costs = roomnights * editableCosts.realCostPerVoucher;
                         const steuerbelastung = editableCosts.taxBurden;
