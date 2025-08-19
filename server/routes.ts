@@ -2177,6 +2177,86 @@ RETURN ONLY BASIC HOTEL DATA in valid JSON format:
     }
   });
 
+  // Standard hotel creation endpoint
+  app.post('/api/hotels', requireAuth, async (req: Request, res: Response) => {
+    try {
+      console.log('🏨 Creating hotel with data:', req.body);
+      
+      const {
+        name,
+        location,
+        city,
+        country,
+        stars,
+        roomCount,
+        url,
+        category,
+        amenities,
+        averagePrice,
+        bookingRating,
+        bookingReviewCount,
+        bookingUrl,
+        googleRating,
+        googleReviewCount,
+        googleUrl,
+        tripadvisorRating,
+        tripadvisorReviewCount,
+        tripadvisorUrl,
+        holidaycheckRating,
+        holidaycheckReviewCount,
+        holidaycheckUrl
+      } = req.body;
+
+      if (!name?.trim()) {
+        return res.status(400).json({ message: "Hotel name is required" });
+      }
+
+      // Create hotel object with all review data
+      const hotelData = {
+        name: name.trim(),
+        location: location?.trim() || '',
+        city: city?.trim() || '',
+        country: country?.trim() || '',
+        stars: parseInt(stars) || 0,
+        roomCount: parseInt(roomCount) || 0,
+        url: url?.trim() || '',
+        category: category?.trim() || '',
+        amenities: Array.isArray(amenities) ? amenities : [],
+        averagePrice: parseFloat(averagePrice) || 0,
+        // Review platform data
+        bookingRating: bookingRating ? parseFloat(bookingRating) : null,
+        bookingReviewCount: bookingReviewCount ? parseInt(bookingReviewCount) : null,
+        bookingUrl: bookingUrl?.trim() || null,
+        googleRating: googleRating ? parseFloat(googleRating) : null,
+        googleReviewCount: googleReviewCount ? parseInt(googleReviewCount) : null,
+        googleUrl: googleUrl?.trim() || null,
+        tripadvisorRating: tripadvisorRating ? parseFloat(tripadvisorRating) : null,
+        tripadvisorReviewCount: tripadvisorReviewCount ? parseInt(tripadvisorReviewCount) : null,
+        tripadvisorUrl: tripadvisorUrl?.trim() || null,
+        holidaycheckRating: holidaycheckRating ? parseFloat(holidaycheckRating) : null,
+        holidaycheckReviewCount: holidaycheckReviewCount ? parseInt(holidaycheckReviewCount) : null,
+        holidaycheckUrl: holidaycheckUrl?.trim() || null,
+        createdAt: new Date().toISOString(),
+        lastReviewUpdate: new Date().toISOString()
+      };
+
+      console.log('💾 Saving hotel to database:', hotelData);
+
+      // Save hotel to database
+      const createdHotel = await storage.createHotel(hotelData);
+      console.log('✅ Hotel created successfully:', createdHotel);
+
+      res.status(201).json(createdHotel);
+      
+    } catch (error: any) {
+      console.error('❌ Hotel creation failed:', error);
+      res.status(500).json({ 
+        message: "Failed to create hotel", 
+        error: error?.message || 'Unknown error'
+      });
+    }
+  });
+
   // NEW: Hotel extraction with AUTHENTIC review platform search URLs
   app.post('/api/hotels/extract-authentic', requireAuth, async (req: Request, res: Response) => {
     try {
