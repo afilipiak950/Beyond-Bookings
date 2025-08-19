@@ -84,6 +84,13 @@ const modeColors: Record<string, string> = {
 };
 
 export default function AIHub() {
+  // Component mount debugging
+  useEffect(() => {
+    console.log('🚀 AI Hub Component Mounted!');
+    console.log('🌍 Current URL:', window.location.href);
+    console.log('📍 Current pathname:', window.location.pathname);
+  }, []);
+
   const [activeThreadId, setActiveThreadId] = useState<number | null>(null);
   const [message, setMessage] = useState('');
   const [mode, setMode] = useState('general');
@@ -132,10 +139,27 @@ export default function AIHub() {
   const messages: Message[] = messagesData?.messages || [];
   const docs: any[] = docsData?.docs || [];
   
-  // Debug logging (removing verbose logging now that it's working)
-  if (threadsLoading || threadsError) {
-    console.log('AI Hub Debug:', { activeThreadId, threadsCount: threads.length, threadsLoading, threadsError: threadsError?.message });
-  }
+  // Comprehensive debugging
+  console.log('=== AI HUB DEBUG ===');
+  console.log('1. State:', { 
+    activeThreadId, 
+    isStreaming, 
+    message: message.length + ' chars',
+    mode, 
+    model 
+  });
+  console.log('2. Data:', { 
+    threadsCount: threads.length, 
+    messagesCount: messages.length,
+    docsCount: docs.length
+  });
+  console.log('3. Loading:', { 
+    threadsLoading, 
+    threadsError: threadsError?.message 
+  });
+  console.log('4. Threads:', threads.slice(0, 3).map(t => ({ id: t.id, title: t.title })));
+  console.log('5. Messages:', messages.slice(0, 2).map(m => ({ role: m.role, content: m.content?.substring(0, 50) })));
+  console.log('==================');
 
   // Auto-refresh threads on mount or user navigation
   useEffect(() => {
@@ -264,9 +288,23 @@ export default function AIHub() {
 
   // Handle send
   const handleSend = () => {
-    if (!message.trim() || isStreaming) return;
+    console.log('🚀 SEND MESSAGE DEBUG:', {
+      messageEmpty: !message.trim(),
+      isStreaming,
+      activeThreadId,
+      messageLength: message.length,
+      mode,
+      model
+    });
+    
+    if (!message.trim() || isStreaming) {
+      console.log('❌ Send blocked:', { emptyMessage: !message.trim(), isStreaming });
+      return;
+    }
 
     const title = activeThreadId ? undefined : message.substring(0, 50);
+    console.log('📤 Sending message:', { message, threadId: activeThreadId, mode, model, title });
+    
     sendMessage.mutate({
       message,
       threadId: activeThreadId || undefined, // Convert null to undefined
@@ -281,9 +319,38 @@ export default function AIHub() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, streamingMessage]);
 
+  // Show error page if routing or authentication is broken
+  if (threadsError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center p-8">
+          <h1 className="text-2xl font-bold text-red-600 mb-4">AI Hub Error</h1>
+          <p className="text-gray-600 mb-4">Error: {threadsError.message}</p>
+          <button 
+            onClick={() => window.location.href = '/'} 
+            className="bg-blue-500 text-white px-4 py-2 rounded"
+          >
+            Go to Dashboard
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <AppLayout>
       <div className="flex h-[calc(100vh-8rem)] bg-background">
+        {/* Debug Panel - Temporary */}
+        <div className="fixed top-4 right-4 z-50 bg-black text-white p-2 rounded text-xs max-w-sm">
+          <div>🔍 AI Hub Status</div>
+          <div>Active Thread: {activeThreadId || 'none'}</div>
+          <div>Threads: {threads.length}</div>
+          <div>Messages: {messages.length}</div>
+          <div>Loading: {threadsLoading ? 'yes' : 'no'}</div>
+          <div>Streaming: {isStreaming ? 'yes' : 'no'}</div>
+          <div>Auth: {threadsError ? 'error' : 'ok'}</div>
+        </div>
+        
       {/* Sidebar */}
       <div className="w-80 border-r glass-card border-border/50 flex flex-col">
         {/* Header */}

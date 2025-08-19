@@ -24,6 +24,7 @@ import { Approvals } from "@/pages/approvals";
 import UserManagement from "@/pages/user-management";
 import AccessDenied from "@/pages/403";
 import AIHub from "@/pages/ai-hub";
+import DebugTest from "@/pages/debug-test";
 
 
 function Router() {
@@ -49,6 +50,7 @@ function Router() {
           <Route path="/settings" component={Settings} />
           <Route path="/profile" component={Profile} />
           <Route path="/ai-hub" component={AIHub} />
+          <Route path="/debug-test" component={DebugTest} />
           <Route path="/403" component={AccessDenied} />
         </>
       )}
