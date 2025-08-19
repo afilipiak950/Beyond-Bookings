@@ -3689,8 +3689,8 @@ Beispiel:
               >
                 {extractionLoading ? (
                   <>
-                    <Loader2 className="h-4 w-4 mr-2" />
-                    Extracting Data...
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Searching Reviews & Data...
                   </>
                 ) : (
                   <>
@@ -3700,6 +3700,19 @@ Beispiel:
                 )}
               </Button>
             </div>
+
+            {/* Search Progress Indicator */}
+            {extractionLoading && (
+              <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
+                <div className="flex items-center justify-center space-x-3">
+                  <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
+                  <div className="text-center">
+                    <p className="font-semibold text-blue-800">Searching All Review Platforms</p>
+                    <p className="text-sm text-blue-600">AI is searching Booking.com, Google Reviews, HolidayCheck, and TripAdvisor...</p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Extracted Data Display - Editable with Tabs */}
             {extractedData && (
@@ -3911,7 +3924,14 @@ Beispiel:
                           </div>
                         </div>
                         <div className="md:col-span-2">
-                          <Label htmlFor="booking-summary">Review Summary</Label>
+                          <Label htmlFor="booking-summary" className="flex items-center gap-2">
+                            Review Summary
+                            {reviewData.booking.summary && reviewData.booking.summary.includes('Web search performed') && (
+                              <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-medium">
+                                AI Searched
+                              </span>
+                            )}
+                          </Label>
                           <Textarea
                             id="booking-summary"
                             placeholder="Brief summary of guest feedback and key points from reviews..."
@@ -3992,7 +4012,14 @@ Beispiel:
                           </div>
                         </div>
                         <div className="md:col-span-2">
-                          <Label htmlFor="google-summary">Review Summary</Label>
+                          <Label htmlFor="google-summary" className="flex items-center gap-2">
+                            Review Summary
+                            {reviewData.google.summary && reviewData.google.summary.includes('Web search performed') && (
+                              <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">
+                                AI Searched
+                              </span>
+                            )}
+                          </Label>
                           <Textarea
                             id="google-summary"
                             placeholder="Brief summary of guest feedback and key points from reviews..."
@@ -4073,7 +4100,14 @@ Beispiel:
                           </div>
                         </div>
                         <div className="md:col-span-2">
-                          <Label htmlFor="holidaycheck-summary">Review Summary</Label>
+                          <Label htmlFor="holidaycheck-summary" className="flex items-center gap-2">
+                            Review Summary
+                            {reviewData.holidaycheck.summary && reviewData.holidaycheck.summary.includes('Web search performed') && (
+                              <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full font-medium">
+                                AI Searched
+                              </span>
+                            )}
+                          </Label>
                           <Textarea
                             id="holidaycheck-summary"
                             placeholder="Brief summary of guest feedback and key points from reviews..."
@@ -4154,7 +4188,14 @@ Beispiel:
                           </div>
                         </div>
                         <div className="md:col-span-2">
-                          <Label htmlFor="tripadvisor-summary">Review Summary</Label>
+                          <Label htmlFor="tripadvisor-summary" className="flex items-center gap-2">
+                            Review Summary
+                            {reviewData.tripadvisor.summary && reviewData.tripadvisor.summary.includes('Web search performed') && (
+                              <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full font-medium">
+                                AI Searched
+                              </span>
+                            )}
+                          </Label>
                           <Textarea
                             id="tripadvisor-summary"
                             placeholder="Brief summary of guest feedback and key points from reviews..."
