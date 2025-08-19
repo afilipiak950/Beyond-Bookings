@@ -2172,6 +2172,28 @@ CRITICAL: You must always return a specific price number in EUR. If exact data u
     }
   });
 
+  // Get pricing calculations for the logged-in user
+  app.get('/api/pricing-calculations', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const userId = (req as any).user.id;
+      console.log(`📊 Getting pricing calculations for user ${userId}`);
+      
+      const calculations = await storage.getPricingCalculations(userId);
+      console.log(`✅ Found ${calculations.length} calculations for user`);
+      
+      res.json({
+        data: calculations,
+        success: true
+      });
+    } catch (error: any) {
+      console.error('❌ Failed to get pricing calculations:', error);
+      res.status(500).json({ 
+        message: "Failed to fetch pricing calculations", 
+        error: error?.message || 'Unknown error'
+      });
+    }
+  });
+
   app.post('/api/hotels/extract-with-reviews', requireAuth, async (req: Request, res: Response) => {
     try {
       const { name, url } = req.body;

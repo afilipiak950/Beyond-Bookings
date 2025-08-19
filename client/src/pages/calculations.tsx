@@ -113,12 +113,12 @@ export default function Calculations() {
     }
   });
 
-  const { data: calculations, isLoading } = useQuery({
+  const { data: response, isLoading } = useQuery<{ data: PricingCalculationWithCreator[], success: boolean }>({
     queryKey: ["/api/pricing-calculations"],
     retry: false,
   });
 
-  const calculationsData = calculations as PricingCalculationWithCreator[] || [];
+  const calculationsData = response?.data || [];
 
   // Delete mutation
   const deleteMutation = useMutation({
