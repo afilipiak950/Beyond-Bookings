@@ -10,6 +10,7 @@ import { IntelligenceEnhancer, IntelligenceData } from './intelligence-enhancer'
 import { QueryDetector, QueryAnalysis } from './query-detector';
 import { docsGet, docsGetToolDefinition } from './tools/docsGet';
 import { httpCall, httpCallToolDefinition } from './tools/httpCall';
+import { HotelContextManager } from './hotel-context-manager';
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -277,6 +278,9 @@ export class AIService {
         content: message,
       };
       await db.insert(aiMessages).values(userMessageData);
+      
+      // Track hotel context from user message
+      HotelContextManager.trackMessage('user', message);
 
       // Analyze query for intelligent routing
       const queryAnalysis = QueryDetector.analyzeQuery(message);
@@ -293,55 +297,17 @@ export class AIService {
           content: msg.content,
         }));
 
-      // 🔥 CRITICAL: Extract hotel context from recent messages with enhanced detection
-      let hotelContext = '';
-      let hotelData: any = null;
-      
-      // Check recent messages for hotel context (most recent first)
-      for (const msg of recentMessages.slice(0, 10)) { // Check last 10 messages for better context
-        const content = msg.content.toLowerCase();
-        
-        // First check if this is an assistant message with hotel data
-        if (msg.role === 'assistant') {
-          // Look for specific hotel data patterns in assistant responses
-          if (content.includes('mönchs waldhotel') || content.includes('mönch')) {
-            hotelContext = 'Mönchs Waldhotel';
-            // Extract key data points if present
-            const priceMatch = content.match(/durchschnittlicher preis[^:]*:\s*(\d+[.,]\d+)/i);
-            const roomsMatch = content.match(/anzahl der zimmer[^:]*:\s*(\d+)/i);
-            if (priceMatch || roomsMatch) {
-              hotelData = {
-                name: 'Mönchs Waldhotel',
-                price: priceMatch?.[1],
-                rooms: roomsMatch?.[1]
-              };
-            }
-            break;
-          } else if (content.includes('vier jahreszeiten')) {
-            hotelContext = 'Vier Jahreszeiten Hamburg';
-            break;
-          } else if (content.includes('dolder grand') && content.includes('175')) {
-            // Dolder Grand has 175 rooms - use this as a verification
-            hotelContext = 'The Dolder Grand';
-            break;
-          }
-        }
-        
-        // Check user messages for explicit hotel requests
-        if (msg.role === 'user') {
-          if (content.includes('mönchs') || content.includes('mönch') || content.includes('waldhotel')) {
-            hotelContext = 'Mönchs Waldhotel';
-            // Don't break - let assistant messages override with more specific data
-          } else if (content.includes('vier') || content.includes('jahreszeiten')) {
-            hotelContext = 'Vier Jahreszeiten Hamburg';
-          } else if (content.includes('dolder') && !content.includes('email') && !content.includes('mail')) {
-            hotelContext = 'The Dolder Grand';
-          }
-        }
+      // Track all messages in HotelContextManager for better context
+      for (const msg of recentMessages.slice(0, 10)) {
+        HotelContextManager.trackMessage(msg.role, msg.content);
       }
       
-      // Log the detected context for debugging
-      console.log('🏨 HOTEL CONTEXT DETECTED:', hotelContext, 'DATA:', hotelData);
+      // Get the current hotel context from the manager
+      const hotelContext = HotelContextManager.getCurrentHotel();
+      const hotelData = hotelContext ? HotelContextManager.getHotelData(hotelContext) : null;
+      
+      console.log('🏨 HOTEL CONTEXT FROM MANAGER:', hotelContext);
+      console.log('📊 HOTEL DATA:', hotelData);
 
       // Add enhanced system message with routing guidance and hotel context
       const systemMessage = this.getEnhancedSystemMessage(mode, queryAnalysis, message, hotelContext);
@@ -423,10 +389,15 @@ export class AIService {
             console.log('🎯🎯🎯 AI SERVICE - Executing tool:', toolCall.function.name, 'with params:', parameters);
             
             // Pass the original user message as context for SQL query correction
+            // 🔴 CRITICAL: Also pass the hotel context to ensure correct data retrieval
+            const currentHotel = HotelContextManager.getCurrentHotel();
+            const hotelData = currentHotel ? HotelContextManager.getHotelData(currentHotel) : null;
+            
             const enhancedParams = {
               ...parameters,
               userId,
-              context: message  // Add original message for context
+              context: `${hotelData ? `MUST use hotel: ${hotelData.name}. ` : ''}${message}`,
+              hotelContext: hotelData ? hotelData.name : null
             };
             
             const { result, citation } = await this.executeTool(
@@ -469,8 +440,27 @@ export class AIService {
 
         // If tools were executed, get AI to interpret and respond
         if (toolResults.length > 0) {
+          // 🔴 CRITICAL: Include hotel context in interpretation to prevent data mixing
+          const currentHotel = HotelContextManager.getCurrentHotel();
+          const hotelData = currentHotel ? HotelContextManager.getHotelData(currentHotel) : null;
+          
+          let hotelWarning = '';
+          if (hotelData) {
+            hotelWarning = `
+🔴🔴🔴 KRITISCHE ANWEISUNG: Du MUSST die Daten von "${hotelData.name}" verwenden! 🔴🔴🔴
+Wenn du eine E-Mail, Brief oder Zusammenfassung erstellst, verwende AUSSCHLIESSLICH diese Daten:
+- Hotel: ${hotelData.name} (${hotelData.stars} Sterne)
+- Zimmer: ${hotelData.rooms}
+- Durchschnittspreis: ${hotelData.averagePrice}
+- Gewinnmarge: ${hotelData.profitMargin}
+NIEMALS andere Hotels erwähnen oder deren Daten verwenden!
+`;
+          }
+          
           // Create a follow-up prompt with tool results for AI to interpret
-          const interpretationPrompt = `Based on the following tool results, provide a natural, conversational response in German. Format numbers clearly and provide insights:
+          const interpretationPrompt = `${hotelWarning}
+
+Based on the following tool results, provide a natural, conversational response in German. Format numbers clearly and provide insights:
 
 ${toolResults.map(tr => `Tool: ${tr.tool}\nResult: ${JSON.stringify(tr.result)}`).join('\n\n')}
 
@@ -606,54 +596,48 @@ SQL-QUERY KONSTRUKTION:
     // 🔥 CRITICAL: If we have hotel context from previous messages, ALWAYS use it!
     let contextGuidance = '';
     if (hotelContext) {
-      contextGuidance = `\n\n🔥🔥🔥 ABSOLUT KRITISCHER KONTEXT - DIES IST DER WICHTIGSTE TEIL! 🔥🔥🔥
+      // Get the actual hotel data from HotelContextManager
+      const hotelData = HotelContextManager.getHotelData(hotelContext);
       
-⚠️⚠️⚠️ ACHTUNG: DIE AKTUELLE UNTERHALTUNG BEHANDELT: "${hotelContext}" ⚠️⚠️⚠️
+      if (hotelData) {
+        contextGuidance = `\n\n🔥🔥🔥 ABSOLUT KRITISCHER KONTEXT - DIES IST DER WICHTIGSTE TEIL! 🔥🔥🔥
+      
+⚠️⚠️⚠️ ACHTUNG: DIE AKTUELLE UNTERHALTUNG BEHANDELT: "${hotelData.name}" ⚠️⚠️⚠️
 
 🚨 UNUMSTÖSSLICHE REGEL:
 Wenn der Nutzer nach einer E-Mail, Zusammenfassung, Brief oder IRGENDETWAS fragt,
-MUSST DU DIE DATEN VON "${hotelContext}" VERWENDEN!
+MUSST DU DIE DATEN VON "${hotelData.name}" VERWENDEN!
 
-${hotelContext === 'Mönchs Waldhotel' ? `
-MÖNCHS WALDHOTEL DATEN (NUR DIESE VERWENDEN!):
-- Hotel: Mönchs Waldhotel (3 Sterne)
-- Zimmer: 78
-- Belegungsrate: 70%
-- Durchschnittspreis: 120,00 €
-- Voucher: 30,00 €
-- Betriebskosten: 1.326,00 €
-- Gewinnmarge: 14.874,00 €
-- Gesamtpreis: 23.800,00 €
-` : ''}
-
-${hotelContext === 'The Dolder Grand' ? `
-THE DOLDER GRAND DATEN (NUR DIESE VERWENDEN!):
-- Hotel: The Dolder Grand (5 Sterne)
-- Zimmer: 175
-- Belegungsrate: 70%
-- Durchschnittspreis: 750,00 €
-- Voucher: 50,00 €
-- Betriebskosten: 2.975,00 €
-- Gewinnmarge: 9.175,00 €
-- Gesamtpreis: 17.850,00 €
-` : ''}
+EXAKTE HOTELDATEN (NUR DIESE VERWENDEN!):
+- Hotel: ${hotelData.name} (${hotelData.stars} Sterne)
+- Zimmer: ${hotelData.rooms}
+- Belegungsrate: ${hotelData.occupancyRate}
+- Durchschnittspreis: ${hotelData.averagePrice}
+- Voucher: ${hotelData.voucherPrice}
+- Betriebskosten: ${hotelData.operationalCosts}
+- MwSt: ${hotelData.vatRate} (Betrag: ${hotelData.vatAmount})
+- Gewinnmarge: ${hotelData.profitMargin}
+- Gesamtpreis: ${hotelData.totalPrice}
+- Rabatt: ${hotelData.discountVsMarket}
 
 🔴 VERBOTEN:
-- NIEMALS Daten von "The Dolder Grand" verwenden wenn über "${hotelContext}" gesprochen wird
+- NIEMALS Daten von anderen Hotels verwenden
 - NIEMALS Hotels verwechseln oder mischen
 - NIEMALS generische Daten erfinden
+- NIEMALS "The Dolder Grand" erwähnen wenn über "${hotelData.name}" gesprochen wird
 
 ✅ KORREKT:
-- IMMER "${hotelContext}" Daten verwenden
-- IMMER den Namen "${hotelContext}" in der E-Mail/Brief erwähnen
-- IMMER die spezifischen Zahlen von "${hotelContext}" nutzen
+- IMMER "${hotelData.name}" Daten verwenden
+- IMMER den Namen "${hotelData.name}" in der E-Mail/Brief erwähnen
+- IMMER die spezifischen Zahlen von "${hotelData.name}" nutzen
 
 Beispiele was der Nutzer sagen könnte:
-- "generiere eine E-Mail an Alex" → E-Mail MUSS über "${hotelContext}" sein
-- "schreibe das in einem Brief" → Brief MUSS über "${hotelContext}" sein
-- "fasse die Daten zusammen" → Zusammenfassung MUSS über "${hotelContext}" sein
+- "generiere eine E-Mail an Alex" → E-Mail MUSS über "${hotelData.name}" sein mit EXAKT DIESEN DATEN
+- "schreibe das in einem Brief" → Brief MUSS über "${hotelData.name}" sein mit EXAKT DIESEN DATEN
+- "fasse die Daten zusammen" → Zusammenfassung MUSS über "${hotelData.name}" sein mit EXAKT DIESEN DATEN
 
 ⚠️ WENN DU DAS FALSCHE HOTEL VERWENDEST, IST DAS EIN KRITISCHER FEHLER! ⚠️`;
+      }
     }
     
     if (queryAnalysis.type === 'weather') {

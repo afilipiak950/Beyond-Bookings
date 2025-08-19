@@ -1,11 +1,13 @@
 import { db } from '../../db.js';
 import { sql } from 'drizzle-orm';
 import { executeDirectSQL } from './direct_sql.js';
+import { HotelContextManager } from '../hotel-context-manager.js';
 
 export interface SqlQueryInput {
   query?: string;
   sql?: string;  // Backward compatibility
   params?: string[];
+  hotelContext?: string;  // Hotel context from AI service
 }
 
 export interface SqlQueryResult {
@@ -68,31 +70,65 @@ export async function sql_query(input: SqlQueryInput | any): Promise<SqlQueryRes
   console.log('🚀🚀🚀 SQL_QUERY FUNCTION CALLED WITH:', JSON.stringify(input));
   console.log('🚀🚀🚀 FUNCTION START TIME:', new Date().toISOString());
   
-  // 🚨🚨🚨 EMERGENCY FIX: Check context FIRST before processing query
+  // 🔴🔴🔴 ULTRA-CRITICAL: Use HotelContextManager for correct hotel
+  const managerHotel = HotelContextManager.getCurrentHotel();
+  const managerHotelData = managerHotel ? HotelContextManager.getHotelData(managerHotel) : null;
+  
+  // Check context from input OR from HotelContextManager
   const contextLower = (input.context?.toLowerCase() || '');
-  const forcedHotelName = extractHotelFromContext(contextLower);
+  const hotelFromInput = input.hotelContext?.toLowerCase() || '';
+  const forcedHotelName = managerHotelData?.name || hotelFromInput || extractHotelFromContext(contextLower);
+  
+  if (forcedHotelName) {
+    console.log(`🔴🔴🔴 FORCED HOTEL CONTEXT: "${forcedHotelName}" from HotelContextManager`);
   
   try {
     // Handle both new format (query) and old format (sql) for backward compatibility
     let query = input.query || input.sql;
     let params = input.params || [];
     
-    // 🔥🔥🔥 FORCE CORRECT HOTEL NAME IF DETECTED IN CONTEXT
+    // 🔥🔥🔥 ULTRA-AGGRESSIVE HOTEL FORCING - ALWAYS USE THE CORRECT HOTEL!
     if (forcedHotelName && query && typeof query === 'string') {
       const lowerQuery = query.toLowerCase();
+      console.log(`🔴🔴🔴 ULTRA-FORCE MODE: Ensuring query uses "${forcedHotelName}" ONLY!`);
       
-      // If query is searching for ANY hotel, replace it with the forced hotel
-      if (lowerQuery.includes('hotel_name') || lowerQuery.includes('pricing_calculations')) {
-        console.log(`🚨🚨🚨 FORCING HOTEL SEARCH: Replacing any hotel search with "${forcedHotelName}"`);
+      // For ANY query involving hotels or pricing, force the correct hotel
+      if (lowerQuery.includes('hotel') || lowerQuery.includes('pricing') || 
+          lowerQuery.includes('calculation') || lowerQuery.includes('select')) {
         
-        // Replace any LIKE pattern with the correct hotel
-        query = query.replace(/LIKE\s+'%[^%]+%'/gi, `LIKE '%${forcedHotelName}%'`);
-        query = query.replace(/=\s+'[^']+'/gi, `LIKE '%${forcedHotelName}%'`);
+        // Replace ANY hotel name with the forced one
+        const hotelNamesToReplace = [
+          'the dolder grand', 'dolder grand', 'dolder',
+          'vier jahreszeiten', 'hamburg',
+          'marriott', 'frankfurt',
+          'mönchs waldhotel', 'mönch', 'waldhotel',
+          'wessinger', 'neu isenburg',
+          'bristol', 'kempinski', 'hilton', 'sheraton'
+        ];
+        
+        let modifiedQuery = query;
+        for (const hotelName of hotelNamesToReplace) {
+          const regex = new RegExp(`'%${hotelName}%'`, 'gi');
+          modifiedQuery = modifiedQuery.replace(regex, `'%${forcedHotelName}%'`);
+        }
+        
+        // Also replace any LIKE patterns
+        modifiedQuery = modifiedQuery.replace(/LIKE\s+'%[^%]+%'/gi, `LIKE '%${forcedHotelName}%'`);
+        
+        // If searching by exact name, also replace
+        modifiedQuery = modifiedQuery.replace(/=\s+'[^']+'/gi, `LIKE '%${forcedHotelName}%'`);
         
         // If no WHERE clause exists, add one
-        if (!lowerQuery.includes('where')) {
-          query = query.replace(/FROM\s+pricing_calculations/gi, 
+        if (!modifiedQuery.toLowerCase().includes('where') && 
+            modifiedQuery.toLowerCase().includes('pricing_calculations')) {
+          modifiedQuery = modifiedQuery.replace(/FROM\s+pricing_calculations/gi, 
             `FROM pricing_calculations WHERE LOWER(hotel_name) LIKE '%${forcedHotelName}%'`);
+        }
+        
+        if (modifiedQuery !== query) {
+          console.log(`🔴 QUERY MODIFIED FROM:`, query);
+          console.log(`🔴 QUERY MODIFIED TO:`, modifiedQuery);
+          query = modifiedQuery;
         }
       }
     }
@@ -579,4 +615,5 @@ async function performTriage(): Promise<TriageData> {
       columns: []
     };
   }
+}
 }
