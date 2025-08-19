@@ -292,7 +292,7 @@ export class AIService {
         tool_choice: 'auto',
         stream: true,
         temperature: 0.1,
-        max_tokens: 4000,
+        max_completion_tokens: 4000,
         top_p: 0.9,
       });
 
