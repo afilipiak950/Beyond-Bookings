@@ -144,17 +144,24 @@ export async function sql_query(input: SqlQueryInput | any): Promise<SqlQueryRes
       processedQuery = processedQuery.replace(match[0], namedParams[paramName]);
     }
 
-    // Set schema search path
-    const dbSchema = process.env.DB_SCHEMA || 'public';
-    await db.execute(sql.raw(`SET LOCAL search_path TO "${dbSchema}"`));
+    // SKIP schema search path - might be causing issues
+    // const dbSchema = process.env.DB_SCHEMA || 'public';
+    // console.log('🔥🔥🔥 SETTING SCHEMA:', dbSchema);
+    // await db.execute(sql.raw(`SET LOCAL search_path TO "${dbSchema}"`));
+    // console.log('🔥🔥🔥 SCHEMA SET');
 
     // Execute the query with timeout (30 seconds)
-    const queryPromise = db.execute(sql.raw(processedQuery));
+    console.log('🔥🔥🔥 EXECUTING PROCESSED SQL:', processedQuery);
+    // Try using a simple template literal instead of sql.raw
+    const queryPromise = db.execute(sql`${sql.raw(processedQuery)}`);
+    console.log('🔥🔥🔥 QUERY PROMISE CREATED');
     const timeoutPromise = new Promise((_, reject) => 
       setTimeout(() => reject(new Error('Query timeout (30s)')), 30000)
     );
     
+    console.log('🔥🔥🔥 AWAITING QUERY RESULT...');
     const result = await Promise.race([queryPromise, timeoutPromise]) as any;
+    console.log('🔥🔥🔥 RAW DB RESULT:', JSON.stringify(result));
     
     const took_ms = Date.now() - startTime;
     // Handle Drizzle ORM result format correctly

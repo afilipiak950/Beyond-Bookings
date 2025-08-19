@@ -490,7 +490,7 @@ Du hast Zugang zu:
 ✅ **VOLLSTÄNDIGE HOTEL-DATENBANK**: 10 Hotels, 8 Preiskalkulationen, alle Finanzberichte
 ✅ **WELTWEITES WISSEN**: Geschichte, Wissenschaft, Technologie, Kultur, Politik, Sport
 ✅ **AKTUELLE DATEN**: Wetter, Nachrichten, Fakten über http_call API
-✅ **MATHEMATIK & BERECHNUNGEN**: Komplexe Formeln und Kalkulationen
+✅ **BERECHNUNGEN**: Mathematik, Finanzen, Statistik über calc_eval Tool
 ✅ **KREATIVITÄT**: E-Mails, Briefe, Gedichte, Geschichten, Pläne
 ✅ **PRAKTISCHE HILFE**: Rezepte, Reisen, Gesundheit, Bildung
 
