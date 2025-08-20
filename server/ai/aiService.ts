@@ -729,14 +729,30 @@ ABER VERWENDE NUR DIE DATEN DES AKTUELLEN HOTELS AUS DEM KONTEXT!`;
   // 🌤️ SIMPLE WEATHER DETECTION
   private isWeatherQuestion(message: string): boolean {
     const msg = message.toLowerCase();
-    const weatherWords = ['wetter', 'weather', 'temperatur', 'temperature', 'regen', 'rain', 'sonne', 'sunny'];
-    return weatherWords.some(word => msg.includes(word));
+    const weatherWords = [
+      'wetter', 'wette', 'weather', 'temperatur', 'temperature', 
+      'regen', 'rain', 'sonne', 'sunny', 'bewölkt', 'cloudy',
+      'grad', 'degrees', 'celsius', 'wie ist das', 'düsseldorf',
+      'berlin', 'münchen', 'hamburg', 'köln', 'wind', 'schnee'
+    ];
+    
+    // Auch nach "wie ist..." + Stadtname Pattern suchen
+    const cityPattern = /wie ist.*in.*(düsseldorf|berlin|münchen|hamburg|köln)/;
+    const hasWeatherWord = weatherWords.some(word => msg.includes(word));
+    const hasCityPattern = cityPattern.test(msg);
+    
+    return hasWeatherWord || hasCityPattern;
   }
 
   // 🏨 SIMPLE HOTEL DETECTION  
   private isHotelQuestion(message: string): boolean {
     const msg = message.toLowerCase();
-    const hotelWords = ['hotel', 'kalkulation', 'calculation', 'profit', 'gewinn', 'zimmer', 'rooms', 'sterne', 'stars'];
+    const hotelWords = [
+      'hotel', 'kalkulation', 'kalkaulation', 'kalkaultion', 'calculation', 
+      'profit', 'gewinn', 'zimmer', 'rooms', 'sterne', 'stars',
+      'letzte', 'last', 'alle', 'all', 'business', 'umsatz', 'revenue',
+      'marge', 'margin', 'preise', 'prices', 'booking', 'buchung'
+    ];
     return hotelWords.some(word => msg.includes(word));
   }
 
@@ -772,13 +788,24 @@ http_call({ endpoint: "https://wttr.in/Düsseldorf?format=j1", method: "GET" })`
 
     return {
       role: 'system',
-      content: `Du bist ein intelligenter AI-Assistent wie ChatGPT. Beantworte die Frage intelligent und hilfreich auf Deutsch.
+      content: `Du bist ein intelligenter AI-Assistent wie ChatGPT. Analysiere die Frage und verwende die richtigen Tools:
 
-🧠 GENERAL-MODUS AKTIV!
-- Nutze deine Intelligenz für allgemeine Fragen
-- Für Wetter: http_call mit wttr.in
-- Für Hotel-Business: sql_query  
-- Für Mathematik: calc_eval`
+🧠 INTELLIGENT MODE - AUTOMATISCHE TOOL-AUSWAHL:
+
+**FÜR WETTER-FRAGEN** (wetter, temperature, düsseldorf, etc.):
+- NUTZE: http_call Tool mit https://wttr.in/STADT?format=j1
+
+**FÜR HOTEL/BUSINESS-FRAGEN** (kalkulation, hotel, profit, letzte, alle, etc.):
+- NUTZE: sql_query Tool für Datenbank-Abfragen
+- Beispiele: "letzte kalkulation", "alle hotels", "profit margin"
+
+**FÜR MATHEMATIK**:
+- NUTZE: calc_eval Tool
+
+**FÜR ALLES ANDERE**:
+- Nutze deine Intelligenz direkt
+
+ERKENNE AUTOMATISCH DEN FRAGE-TYP UND VERWENDE DAS RICHTIGE TOOL!`
     };
   }
 
