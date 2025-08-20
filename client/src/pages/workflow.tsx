@@ -32,11 +32,6 @@ const getCurrencySymbol = (currency: string): string => {
   return symbols[currency] || currency;
 };
 
-const convertFromEUR = (eurAmount: number, targetCurrency: string, exchangeRates: { [key: string]: number }): number => {
-  if (targetCurrency === "EUR") return eurAmount;
-  const rate = exchangeRates[targetCurrency];
-  return rate ? eurAmount * rate : eurAmount;
-};
 
 // Import step components - temporarily creating inline to fix imports
 // import PricingCalculatorStep from "@/components/workflow/pricing-calculator-step";
@@ -348,7 +343,7 @@ const PowerPointEditor = ({ workflowData, onBack }: { workflowData: WorkflowData
                       className="p-3 bg-white/80 rounded-xl border border-purple-200/50 cursor-move hover:bg-purple-50/50 transition-colors"
                       draggable
                       onDragStart={(e) => {
-                        e.dataTransfer.setData('text/plain', field.value);
+                        e.dataTransfer.setData('text/plain', String(field.value));
                       }}
                     >
                       <div className="flex justify-between items-center">
@@ -2119,11 +2114,11 @@ export default function Workflow() {
                                   <div className="bg-red-50 p-3 rounded border-l-4 border-red-400">
                                     <p className="text-sm text-red-800">
                                       <strong>Standard für {workflowData.stars}-Sterne Hotels:</strong> {
-                                        workflowData.stars === 1 ? convertFromEUR(15, workflowData.currency, exchangeRates).toFixed(2) + ' ' + getCurrencySymbol(workflowData.currency) :
-                                        workflowData.stars === 2 ? convertFromEUR(20, workflowData.currency, exchangeRates).toFixed(2) + ' ' + getCurrencySymbol(workflowData.currency) :
-                                        workflowData.stars === 3 ? convertFromEUR(30, workflowData.currency, exchangeRates).toFixed(2) + ' ' + getCurrencySymbol(workflowData.currency) :
-                                        workflowData.stars === 4 ? convertFromEUR(35, workflowData.currency, exchangeRates).toFixed(2) + ' ' + getCurrencySymbol(workflowData.currency) :
-                                        workflowData.stars === 5 ? convertFromEUR(45, workflowData.currency, exchangeRates).toFixed(2) + ' ' + getCurrencySymbol(workflowData.currency) :
+                                        workflowData.stars === 1 ? convertFromEUR(15, workflowData.currency).toFixed(2) + ' ' + getCurrencySymbol(workflowData.currency) :
+                                        workflowData.stars === 2 ? convertFromEUR(20, workflowData.currency).toFixed(2) + ' ' + getCurrencySymbol(workflowData.currency) :
+                                        workflowData.stars === 3 ? convertFromEUR(30, workflowData.currency).toFixed(2) + ' ' + getCurrencySymbol(workflowData.currency) :
+                                        workflowData.stars === 4 ? convertFromEUR(35, workflowData.currency).toFixed(2) + ' ' + getCurrencySymbol(workflowData.currency) :
+                                        workflowData.stars === 5 ? convertFromEUR(45, workflowData.currency).toFixed(2) + ' ' + getCurrencySymbol(workflowData.currency) :
                                         'Individuell'
                                       }
                                     </p>
@@ -3095,7 +3090,7 @@ export default function Workflow() {
                         const stars = workflowData.stars || 3;
                         const voucherValue = (workflowData.hotelVoucherValue && workflowData.hotelVoucherValue > 0) ? workflowData.hotelVoucherValue : (stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30);
                         const roomnights = Math.round(projectCosts / voucherValue);
-                        return `${roomnights} Gutscheine × ${convertFromEUR(voucherValue, workflowData.currency, exchangeRates).toFixed(2)} ${getCurrencySymbol(workflowData.currency)}`;
+                        return `${roomnights} Gutscheine × ${convertFromEUR(voucherValue, workflowData.currency).toFixed(2)} ${getCurrencySymbol(workflowData.currency)}`;
                       })()}
                     </div>
                     <div className="text-lg font-semibold text-gray-900 mt-1">
@@ -3105,7 +3100,7 @@ export default function Workflow() {
                         const voucherValue = (workflowData.hotelVoucherValue && workflowData.hotelVoucherValue > 0) ? workflowData.hotelVoucherValue : (stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30);
                         const roomnights = Math.round(projectCosts / voucherValue);
                         const totalValue = roomnights * voucherValue;
-                        return convertFromEUR(totalValue, workflowData.currency, exchangeRates).toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' ' + getCurrencySymbol(workflowData.currency);
+                        return convertFromEUR(totalValue, workflowData.currency).toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' ' + getCurrencySymbol(workflowData.currency);
                       })()}
                     </div>
                   </div>
@@ -3167,7 +3162,7 @@ export default function Workflow() {
                     <div className="flex justify-between items-center p-3 bg-[#36B197]/10 rounded-lg">
                       <span className="text-sm font-medium text-[#36B197]">Reale Kosten pro Gutschein</span>
                       <span className="text-lg font-semibold text-[#36B197]">
-                        {convertFromEUR(editableCosts.realCostPerVoucher, workflowData.currency, exchangeRates).toFixed(2)}{getCurrencySymbol(workflowData.currency)} × {(() => {
+                        {convertFromEUR(editableCosts.realCostPerVoucher, workflowData.currency).toFixed(2)}{getCurrencySymbol(workflowData.currency)} × {(() => {
                           const projectCosts = workflowData.projectCosts || 20000;
                           const stars = workflowData.stars || 3;
                           const voucherValue = (workflowData.hotelVoucherValue && workflowData.hotelVoucherValue > 0) ? workflowData.hotelVoucherValue : (stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30);
