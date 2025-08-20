@@ -3626,18 +3626,23 @@ export default function Workflow() {
           <div className="w-full">
             {renderStepContent()}
           </div>
-        </div>
-      </div>
-      
-      {/* Hotel Extraction Dialog */}
-      <Dialog open={hotelExtractionOpen} onOpenChange={setHotelExtractionOpen}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>Extract Hotel Data</DialogTitle>
-            <DialogDescription>
-              Enter the hotel name and we'll automatically extract all the details
-            </DialogDescription>
-          </DialogHeader>
+
+          {/* Extracted Data Display - Editable with Tabs */}
+          {extractedData && (
+            <div className="mt-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200">
+              <h3 className="font-semibold text-green-800 mb-3 flex items-center">
+                <Star className="h-4 w-4 mr-2" />
+                Hotel Information & Reviews
+              </h3>
+                
+              <Tabs defaultValue="hotel-info" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="hotel-info">Hotel Information</TabsTrigger>
+                  <TabsTrigger value="reviews">Reviews & Ratings</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="hotel-info" className="mt-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           
           <div className="space-y-6">
             {/* Hotel Name Input */}
@@ -3697,14 +3702,17 @@ export default function Workflow() {
                 </div>
               </div>
             )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
-            {/* Extracted Data Display - Editable with Tabs */}
-            {extractedData && (
-              <div className="mt-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200">
-                <h3 className="font-semibold text-green-800 mb-3 flex items-center">
-                  <Star className="h-4 w-4 mr-2" />
-                  Hotel Information & Reviews
-                </h3>
+      {/* Extracted Data Display - Editable with Tabs */}
+      {extractedData && (
+        <div className="mt-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200">
+          <h3 className="font-semibold text-green-800 mb-3 flex items-center">
+            <Star className="h-4 w-4 mr-2" />
+            Hotel Information & Reviews
+          </h3>
                 
                 <Tabs defaultValue="hotel-info" className="w-full">
                   <TabsList className="grid w-full grid-cols-2">
@@ -3831,7 +3839,7 @@ export default function Workflow() {
                       <TabsContent value="reviews" className="mt-4">
                         {/* Comprehensive Review Data Section - EXACT COPY FROM CUSTOMER-MANAGEMENT.TSX */}
                         {(extractedData?.bookingReviews || extractedData?.googleReviews || extractedData?.holidayCheckReviews || extractedData?.tripadvisorReviews) && (
-                        <div className="md:col-span-2 mt-6">
+                          <div className="md:col-span-2 mt-6">
                           <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
                             <MessageSquare className="h-4 w-4 mr-2 text-blue-600" />
                             Hotel Reviews & Ratings
@@ -4020,16 +4028,12 @@ export default function Workflow() {
                               )}
                             </div>
                           )}
-                        </div>
+                          </div>
+                        )}
                       </TabsContent>
                     </Tabs>
                   </div>
                 )}
-
-              </div>
-            </DialogContent>
-          </Dialog>
-
         </div>
       </div>
     </AppLayout>
