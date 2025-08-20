@@ -70,58 +70,60 @@ interface ChatStreamChunk {
 function formatMessage(text: string) {
   if (!text) return text;
   
-  // Split by lines to handle line breaks and paragraphs
+  // Split by lines and preserve paragraph structure
   const lines = text.split('\n');
   const formattedLines: React.ReactNode[] = [];
   
   lines.forEach((line, lineIndex) => {
+    const trimmedLine = line.trim();
+    
     // Handle headers (####, ###, ##, #)
-    if (line.startsWith('####')) {
+    if (trimmedLine.startsWith('####')) {
       formattedLines.push(
-        <h4 key={lineIndex} className="text-sm font-bold mt-3 mb-1">
-          {formatInlineText(line.replace(/^####\s*/, ''))}
+        <h4 key={lineIndex} className="text-sm font-bold mt-4 mb-2 text-gray-900 dark:text-white">
+          {formatInlineText(trimmedLine.replace(/^####\s*/, ''))}
         </h4>
       );
-    } else if (line.startsWith('###')) {
+    } else if (trimmedLine.startsWith('###')) {
       formattedLines.push(
-        <h3 key={lineIndex} className="text-base font-bold mt-3 mb-1">
-          {formatInlineText(line.replace(/^###\s*/, ''))}
+        <h3 key={lineIndex} className="text-base font-bold mt-4 mb-2 text-gray-900 dark:text-white">
+          {formatInlineText(trimmedLine.replace(/^###\s*/, ''))}
         </h3>
       );
-    } else if (line.startsWith('##')) {
+    } else if (trimmedLine.startsWith('##')) {
       formattedLines.push(
-        <h2 key={lineIndex} className="text-lg font-bold mt-3 mb-2">
-          {formatInlineText(line.replace(/^##\s*/, ''))}
+        <h2 key={lineIndex} className="text-lg font-bold mt-4 mb-2 text-gray-900 dark:text-white">
+          {formatInlineText(trimmedLine.replace(/^##\s*/, ''))}
         </h2>
       );
-    } else if (line.startsWith('#')) {
+    } else if (trimmedLine.startsWith('#')) {
       formattedLines.push(
-        <h1 key={lineIndex} className="text-xl font-bold mt-3 mb-2">
-          {formatInlineText(line.replace(/^#\s*/, ''))}
+        <h1 key={lineIndex} className="text-xl font-bold mt-4 mb-3 text-gray-900 dark:text-white">
+          {formatInlineText(trimmedLine.replace(/^#\s*/, ''))}
         </h1>
       );
-    } else if (line.startsWith('- ') || line.startsWith('* ')) {
+    } else if (trimmedLine.startsWith('- ') || trimmedLine.startsWith('* ')) {
       // Handle list items
       formattedLines.push(
-        <li key={lineIndex} className="ml-4 list-disc">
-          {formatInlineText(line.replace(/^[-*]\s*/, ''))}
-        </li>
+        <div key={lineIndex} className="flex items-start gap-2 my-1">
+          <span className="text-gray-600 dark:text-gray-400 mt-0.5">•</span>
+          <span>{formatInlineText(trimmedLine.replace(/^[-*]\s*/, ''))}</span>
+        </div>
       );
-    } else if (line.trim() === '') {
+    } else if (trimmedLine === '') {
       // Handle empty lines as paragraph breaks
-      formattedLines.push(<br key={lineIndex} />);
+      formattedLines.push(<div key={lineIndex} className="h-3" />);
     } else {
-      // Handle regular text
+      // Handle regular text with proper line breaks
       formattedLines.push(
-        <span key={lineIndex}>
+        <div key={lineIndex} className="my-1 leading-relaxed">
           {formatInlineText(line)}
-          {lineIndex < lines.length - 1 && <br />}
-        </span>
+        </div>
       );
     }
   });
   
-  return <div className="space-y-1">{formattedLines}</div>;
+  return <div className="space-y-0">{formattedLines}</div>;
 }
 
 // Helper function to format inline markdown (bold, italic, links)
@@ -131,8 +133,8 @@ function formatInlineText(text: string): React.ReactNode {
   const parts: React.ReactNode[] = [];
   let lastIndex = 0;
   
-  // Combined regex for all inline formats
-  const regex = /\*\*([^*]+)\*\*|\*([^*]+)\*|__([^_]+)__|_([^_]+)_|\[([^\]]+)\]\(([^)]+)\)/g;
+  // Enhanced regex for better German text handling
+  const regex = /\*\*([^*\n]+?)\*\*|\*([^*\n]+?)\*|__([^_\n]+?)__|_([^_\n]+?)_|\[([^\]]+)\]\(([^)]+)\)/g;
   let match;
   
   while ((match = regex.exec(text)) !== null) {
@@ -143,16 +145,16 @@ function formatInlineText(text: string): React.ReactNode {
     
     if (match[1]) {
       // Bold with **
-      parts.push(<strong key={match.index} className="font-bold">{match[1]}</strong>);
+      parts.push(<strong key={match.index} className="font-bold text-gray-900 dark:text-white">{match[1]}</strong>);
     } else if (match[2]) {
       // Italic with *
-      parts.push(<em key={match.index} className="italic">{match[2]}</em>);
+      parts.push(<em key={match.index} className="italic text-gray-800 dark:text-gray-200">{match[2]}</em>);
     } else if (match[3]) {
       // Bold with __
-      parts.push(<strong key={match.index} className="font-bold">{match[3]}</strong>);
+      parts.push(<strong key={match.index} className="font-bold text-gray-900 dark:text-white">{match[3]}</strong>);
     } else if (match[4]) {
       // Italic with _
-      parts.push(<em key={match.index} className="italic">{match[4]}</em>);
+      parts.push(<em key={match.index} className="italic text-gray-800 dark:text-gray-200">{match[4]}</em>);
     } else if (match[5] && match[6]) {
       // Link [text](url)
       parts.push(

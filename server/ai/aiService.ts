@@ -537,7 +537,14 @@ export class AIService {
 Tool Results:
 ${toolSummary}
 
-Please provide a detailed, informative response in German that interprets and explains this data.`;
+IMPORTANT FORMATTING REQUIREMENTS:
+- Use **bold text** for headings and important sections
+- Use proper line breaks between paragraphs
+- Structure your response with clear sections
+- Use bullet points with "- " for lists
+- Format numbers and currencies clearly
+
+Please provide a detailed, informative response in German with proper markdown formatting that interprets and explains this data.`;
 
           // Generate follow-up response 
           const followUpStream = await openai.chat.completions.create({
@@ -545,7 +552,7 @@ Please provide a detailed, informative response in German that interprets and ex
             messages: [
               {
                 role: 'system',
-                content: 'You are a helpful assistant. Provide detailed responses in German based on data provided.'
+                content: 'You are a helpful German business assistant. Always format your responses with proper markdown: use **bold headings**, clear line breaks between paragraphs, and "- " for bullet points. Structure your analysis professionally.'
               },
               {
                 role: 'user', 
