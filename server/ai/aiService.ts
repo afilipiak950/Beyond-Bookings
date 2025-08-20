@@ -808,9 +808,18 @@ ABER VERWENDE NUR DIE DATEN DES AKTUELLEN HOTELS AUS DEM KONTEXT!`;
 🏨 HOTEL-MODUS AKTIV!
 - NUTZE: sql_query Tool für Hotel-Daten
 - TABELLE: pricing_calculations (NICHT kalkulationen!)
-- SPALTEN: hotel_name, stars, total_price, profit_margin, operational_costs, created_at
-- BEISPIEL: SELECT * FROM pricing_calculations WHERE LOWER(hotel_name) LIKE '%dolder%' ORDER BY created_at DESC LIMIT 1
-- Antworte mit professionellen Business-Analysen basierend auf ECHTEN Daten`
+- WICHTIGE SPALTEN: hotel_name, stars, total_price, profit_margin, operational_costs, voucher_price, room_count, occupancy_rate, average_price
+- BEISPIEL: SELECT hotel_name, stars, total_price, profit_margin, operational_costs FROM pricing_calculations WHERE hotel_name ILIKE '%dolder%' ORDER BY created_at DESC LIMIT 1
+
+KRITISCH: Wenn du Daten erhältst, ZEIGE ALLE DETAILS:
+- Hotelname und Sterne-Kategorie
+- Gesamtpreis (total_price) 
+- Profit-Margin (profit_margin)
+- Betriebskosten (operational_costs)
+- Zimmeranzahl (room_count) und Auslastung (occupancy_rate)
+- Durchschnittspreis pro Zimmer (average_price)
+
+Formatiere die Antwort professionell mit allen konkreten Zahlen!`
       };
     }
 
