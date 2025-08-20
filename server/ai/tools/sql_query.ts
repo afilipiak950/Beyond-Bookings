@@ -112,17 +112,18 @@ export async function sql_query(input: SqlQueryInput | any): Promise<SqlQueryRes
           modifiedQuery = modifiedQuery.replace(regex, `'%${forcedHotelName}%'`);
         }
         
-        // Also replace any LIKE patterns
-        modifiedQuery = modifiedQuery.replace(/LIKE\s+'%[^%]+%'/gi, `LIKE '%${forcedHotelName}%'`);
+        // Also replace any LIKE patterns - use ILIKE for case-insensitive
+        modifiedQuery = modifiedQuery.replace(/LIKE\s+'%[^%]+%'/gi, `ILIKE '%${forcedHotelName}%'`);
+        modifiedQuery = modifiedQuery.replace(/LOWER\([^)]+\)\s+LIKE/gi, `hotel_name ILIKE`);
         
         // If searching by exact name, also replace
-        modifiedQuery = modifiedQuery.replace(/=\s+'[^']+'/gi, `LIKE '%${forcedHotelName}%'`);
+        modifiedQuery = modifiedQuery.replace(/=\s+'[^']+'/gi, `ILIKE '%${forcedHotelName}%'`);
         
         // If no WHERE clause exists, add one
         if (!modifiedQuery.toLowerCase().includes('where') && 
             modifiedQuery.toLowerCase().includes('pricing_calculations')) {
           modifiedQuery = modifiedQuery.replace(/FROM\s+pricing_calculations/gi, 
-            `FROM pricing_calculations WHERE LOWER(hotel_name) LIKE '%${forcedHotelName}%'`);
+            `FROM pricing_calculations WHERE hotel_name ILIKE '%${forcedHotelName}%'`);
         }
         
         if (modifiedQuery !== query) {
