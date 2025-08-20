@@ -12,6 +12,7 @@ import { docsGet, docsGetToolDefinition } from './tools/docsGet';
 import { httpCall, httpCallToolDefinition } from './tools/httpCall';
 import { HotelContextManager } from './hotel-context-manager';
 import { IntelligentDetector } from './intelligent-detector';
+import { SemanticClassifier } from './semantic-classifier';
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -277,28 +278,32 @@ export class AIService {
       console.log('🔍 ANALYZING MESSAGE:', `"${message}"`);
       console.log('🔍 MESSAGE LOWERCASE:', `"${message.toLowerCase()}"`);
       
-      // 🌤️ WEATHER DETECTION - Ultra-simple and direct
-      const isWeatherQuery = this.isWeatherQuestion(message);
-      console.log('🌤️ IS WEATHER QUERY:', isWeatherQuery);
+      // 🧠 SEMANTIC AI CLASSIFICATION (replaces keyword-based detection)
+      console.log('🧠 SEMANTIC CLASSIFICATION - Using AI intelligence instead of keywords');
+      const classification = await SemanticClassifier.classifyMessage(message);
       
-      // 🏨 HOTEL DETECTION - Only for actual hotel/business questions
-      const isHotelQuery = await this.isHotelQuestion(message);
-      console.log('🏨 IS HOTEL QUERY:', isHotelQuery);
+      console.log('🔍 AI CLASSIFICATION RESULT:', {
+        type: classification.type,
+        confidence: classification.confidence,
+        reasoning: classification.reasoning,
+        shouldUseTools: classification.shouldUseTools
+      });
       
-      // 🚨 CRITICAL: Override for SQL mode - if user explicitly chose SQL mode, treat as hotel query
+      // Map classification to boolean flags
+      const isWeatherQuery = classification.type === 'weather';
+      const isHotelQuery = classification.type === 'hotel_business';
+      const isCalculationQuery = classification.type === 'calculation';
+      
+      // Override for SQL mode
       const forcedHotelMode = mode === 'sql';
-      if (forcedHotelMode) {
-        console.log('🔧 FORCED SQL MODE - Treating as hotel query');
-      }
-      
-      // 🚨 CRITICAL FIX: Hotel queries ALWAYS get tools, regardless of mode
-      // Only non-hotel queries respect general mode
       const finalIsHotelQuery = isHotelQuery || forcedHotelMode;
       
-      console.log('🔧 FINAL HOTEL QUERY DECISION:', {
-        original: isHotelQuery,
+      console.log('🔧 FINAL CLASSIFICATION DECISION:', {
+        weather: isWeatherQuery,
+        hotel: isHotelQuery,
+        calculation: isCalculationQuery,
+        finalHotel: finalIsHotelQuery,
         forced: forcedHotelMode,
-        final: finalIsHotelQuery,
         mode: mode
       });
       
@@ -336,7 +341,6 @@ export class AIService {
       // Hotel queries = OpenAI + SQL tools
       // Calculations = OpenAI + calc_eval tools  
       // General questions = OpenAI ONLY (no tools)
-      const isCalculationQuery = message.toLowerCase().includes('rechne') || /[\+\-\*\/=]/.test(message);
       const shouldUseTools = finalIsHotelQuery || isCalculationQuery;
       
       console.log('🔧 TOOL DECISION LOGIC:', {
