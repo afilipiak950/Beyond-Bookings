@@ -25,6 +25,8 @@ import { documentAnalyses, hotels, users } from "@shared/schema";
 import { eq, desc, and, or, isNull, gte, lte, like, ilike, inArray, sql, count } from "drizzle-orm";
 import OpenAI from "openai";
 import aiRoutes from "./ai/routes";
+// Temporarily commented out to fix import errors
+// import { UltraEnhancedAIService } from "./ai/aiService-enhanced";
 
 // Login/Register schemas
 const loginSchema = z.object({

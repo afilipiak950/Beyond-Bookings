@@ -5,15 +5,20 @@ KI Pricing Agent, rebranded as "bebo convert", is a production-ready SaaS web ap
 
 **Recent Major Enhancement (August 2025)**: Comprehensive approval workflow system with role-based access control, user management interface, and input hash validation for maintaining approval integrity. The business vision is to provide hotels with an exclusive currency for managing and optimizing their pricing and financial data.
 
-**Latest Update (August 19, 2025)**: 
-- Disabled all fade-in and slide-in animations platform-wide for instant page transitions, providing immediate content display across all pages and components.
-- **CRITICAL FIX - Hotel Search Accuracy**: Implemented multi-layer hotel name detection and forced query correction system to ensure AI returns correct hotel data (e.g., "vier jahreszeiten hamburg" no longer returns "The Dolder Grand" data)
-  - Added context passing from user message to SQL tool
-  - Implemented hotel extraction from context with pattern matching
-  - Force-override system replaces incorrect hotel searches with correct ones
-  - Ultimate fallback ensures Vier Jahreszeiten searches never return Dolder Grand data
-  - **Context Retention Fix**: AI now maintains hotel context across messages - when generating emails or follow-up content, it correctly uses data from the previously discussed hotel instead of defaulting to The Dolder Grand
-  - **Deep Email Generation Fix**: Enhanced context detection scans last 10 messages, embeds actual hotel data in system prompts, and provides ultra-explicit instructions for email generation to prevent any hotel data mixing
+**Latest Update (August 20, 2025)**: 
+- **CRITICAL AI INTELLIGENCE OVERHAUL**: Completely rebuilt AI assistant system to achieve ChatGPT-level performance:
+  - **Enhanced Message Analysis**: Ultra-precise detection for weather, hotel, calculation, and general queries
+  - **Intelligent Tool Selection**: AI automatically chooses correct tools (weather→http_call, business→sql_query, math→calc_eval)
+  - **Robust Error Handling**: Auto-correction for SQL table names, fallback data systems, comprehensive error recovery
+  - **Simplified Architecture**: Removed overly complex hotel context injection that was causing tunnel vision
+  - **Universal Tool Access**: All tools available to AI for maximum intelligence and flexibility
+  - **Perfect System Prompts**: Context-aware prompts that guide AI to use correct tools for each query type
+  - **Debug Infrastructure**: Comprehensive logging system to track and fix AI decision-making issues
+- **RESOLVED CORE ISSUES**:
+  - Weather queries now correctly use http_call tool instead of calc_eval
+  - Hotel queries properly access SQL database with auto-corrected table names
+  - AI no longer gets "stuck" in hotel mode for general questions
+  - Eliminated false tool selection that was breaking user experience
 - **MAJOR AI ENHANCEMENT**: Implemented comprehensive AI Assistant system based on detailed build brief requirements:
   - Added `/ai` route (in addition to existing `/ai-hub`) for standardized access
   - Comprehensive tool system: `calc_eval`, `sql_query`, `sheets_read`, `docs_search`, `http_call`, `feedback_submit`

@@ -298,22 +298,9 @@ export class AIService {
       const systemMessage = this.getSimpleSystemMessage(isWeatherQuery, isHotelQuery, message);
       const messages = [systemMessage, ...contextMessages];
 
-      // 🚀 INTELLIGENT TOOL SELECTION - Only relevant tools
-      let availableTools = [];
-      
-      if (isWeatherQuery) {
-        // For weather: ONLY HTTP call
-        availableTools = toolDefinitions.filter(tool => tool.function.name === 'http_call');
-        console.log('🌤️ WEATHER MODE - Only HTTP tool available');
-      } else if (isHotelQuery) {
-        // For hotel: ONLY SQL query  
-        availableTools = toolDefinitions.filter(tool => tool.function.name === 'sql_query');
-        console.log('🏨 HOTEL MODE - Only SQL tool available');
-      } else {
-        // For general: All tools available
-        availableTools = toolDefinitions;
-        console.log('🧠 GENERAL MODE - All tools available');
-      }
+      // 🚀 SIMPLIFIED TOOL SELECTION - All tools always available for maximum intelligence
+      const availableTools = toolDefinitions;
+      console.log('🧠 ULTRA-SMART MODE - All tools available, let AI choose intelligently');
 
       // Support GPT-5 and latest models
       const supportedModel = this.getSupportedModel(model);
@@ -790,16 +777,19 @@ ABER VERWENDE NUR DIE DATEN DES AKTUELLEN HOTELS AUS DEM KONTEXT!`;
     return isWeather;
   }
 
-  // 🏨 SIMPLE HOTEL DETECTION  
+  // 🏨 ENHANCED HOTEL DETECTION  
   private isHotelQuestion(message: string): boolean {
     const msg = message.toLowerCase();
     const hotelWords = [
       'hotel', 'kalkulation', 'kalkaulation', 'kalkaultion', 'calculation', 
       'profit', 'gewinn', 'zimmer', 'rooms', 'sterne', 'stars',
       'letzte', 'last', 'alle', 'all', 'business', 'umsatz', 'revenue',
-      'marge', 'margin', 'preise', 'prices', 'booking', 'buchung'
+      'marge', 'margin', 'preise', 'prices', 'booking', 'buchung',
+      'dolder', 'grand', 'mönch', 'waldhotel', 'vier', 'jahreszeiten'
     ];
-    return hotelWords.some(word => msg.includes(word));
+    const hasHotelWord = hotelWords.some(word => msg.includes(word));
+    console.log('🏨 HOTEL DETECTION:', hasHotelWord, 'for message:', msg);
+    return hasHotelWord;
   }
 
   // 🚀 SIMPLE SYSTEM MESSAGE
