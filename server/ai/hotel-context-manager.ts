@@ -62,43 +62,11 @@ export const HOTEL_DATA_MAP: Record<string, HotelData> = {
 
 export class HotelContextManager {
   private static currentHotel: string | null = null;
-  private static conversationHistory: { role: string; content: string; hotel?: string | null; isHotelRelated?: boolean }[] = [];
-  private static lastTopicWasHotel: boolean = false;
-
-  // Check if query is about weather, general knowledge, etc. (NOT hotel-related)
-  static isNonHotelQuery(text: string): boolean {
-    const lowerText = text.toLowerCase();
-    
-    // Non-hotel topics that should CLEAR hotel context
-    const nonHotelPatterns = [
-      'wetter', 'weather', 'temperatur', 'regen', 'sonne', 'schnee',
-      'hauptstadt', 'capital', 'geschichte', 'history',
-      'rezept', 'recipe', 'kochen', 'cooking',
-      'sport', 'fußball', 'football', 'basketball',
-      'wissenschaft', 'science', 'mathematik', 'math',
-      'musik', 'music', 'kunst', 'art',
-      'aktien', 'stocks', 'börse', 'market',
-      'nachrichten', 'news', 'politik', 'politics',
-      'gesundheit', 'health', 'medizin', 'medicine',
-      'technologie', 'technology', 'programmieren', 'coding'
-    ];
-    
-    // If query contains any non-hotel pattern and NO hotel keywords, it's not hotel-related
-    const hasNonHotelTopic = nonHotelPatterns.some(pattern => lowerText.includes(pattern));
-    const hasHotelKeywords = ['hotel', 'zimmer', 'übernachtung', 'kalkulation', 'belegung', 'mönchs', 'waldhotel', 'dolder', 'vier jahreszeiten'].some(keyword => lowerText.includes(keyword));
-    
-    return hasNonHotelTopic && !hasHotelKeywords;
-  }
+  private static conversationHistory: { role: string; content: string; hotel?: string }[] = [];
 
   // Detect hotel from any text
   static detectHotel(text: string): string | null {
     const lowerText = text.toLowerCase();
-    
-    // First check if this is a non-hotel query
-    if (this.isNonHotelQuery(text)) {
-      console.log('🌍 Non-hotel query detected, clearing hotel context');
-      return null;
-    }
     
     // Priority order - check most specific patterns first
     const patterns = [
@@ -119,26 +87,16 @@ export class HotelContextManager {
 
   // Track conversation and maintain hotel context
   static trackMessage(role: string, content: string): string | null {
-    // Check if this is a non-hotel query FIRST
-    if (role === 'user' && this.isNonHotelQuery(content)) {
-      console.log('🔄 Topic change detected! Clearing hotel context for non-hotel query');
-      this.currentHotel = null;
-      this.lastTopicWasHotel = false;
-      // Store in history with non-hotel flag
-      this.conversationHistory.push({ role, content, hotel: null, isHotelRelated: false });
-    } else {
-      const detectedHotel = this.detectHotel(content);
-      
-      // If user mentions a hotel, update context
-      if (role === 'user' && detectedHotel) {
-        this.currentHotel = detectedHotel;
-        this.lastTopicWasHotel = true;
-        console.log(`🏨 Updated current hotel context to: ${this.currentHotel}`);
-      }
-      
-      // Store in history
-      this.conversationHistory.push({ role, content, hotel: detectedHotel, isHotelRelated: detectedHotel !== null });
+    const detectedHotel = this.detectHotel(content);
+    
+    // If user mentions a hotel, update context
+    if (role === 'user' && detectedHotel) {
+      this.currentHotel = detectedHotel;
+      console.log(`🏨 Updated current hotel context to: ${this.currentHotel}`);
     }
+    
+    // Store in history
+    this.conversationHistory.push({ role, content, hotel: detectedHotel });
     
     // Keep only last 20 messages
     if (this.conversationHistory.length > 20) {

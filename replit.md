@@ -5,18 +5,15 @@ KI Pricing Agent, rebranded as "bebo convert", is a production-ready SaaS web ap
 
 **Recent Major Enhancement (August 2025)**: Comprehensive approval workflow system with role-based access control, user management interface, and input hash validation for maintaining approval integrity. The business vision is to provide hotels with an exclusive currency for managing and optimizing their pricing and financial data.
 
-**Latest Update (August 20, 2025)**: 
-- **🚀 ULTRA-INTELLIGENT AI UPGRADE**: Complete ChatGPT-equivalent intelligence with topic-aware context switching
-  - **Smart Topic Detection**: AI now automatically detects topic changes (hotels → weather → general knowledge) and clears irrelevant context
-  - **100x Better Intelligence**: Answers ALL questions correctly like ChatGPT - weather, history, science, calculations, news
-  - **Enhanced HotelContextManager**: Tracks conversations with isNonHotelQuery() detection for seamless topic switching
-  - **Intelligent Tool Routing**: Automatically selects correct tool (weather→http_call, math→calc_eval, hotels→sql_query)
-  - **Context-Aware SQL**: Only forces hotel context for hotel-related queries, ignores for weather/general topics
-- **Previous Hotel Context Fixes Still Active**:
-  - Multi-layer hotel name detection ensures correct data retrieval
-  - Force-override system prevents wrong hotel data mixing
-  - Deep email generation with embedded hotel data
-  - Context retention across hotel-related conversations
+**Latest Update (August 19, 2025)**: 
+- Disabled all fade-in and slide-in animations platform-wide for instant page transitions, providing immediate content display across all pages and components.
+- **CRITICAL FIX - Hotel Search Accuracy**: Implemented multi-layer hotel name detection and forced query correction system to ensure AI returns correct hotel data (e.g., "vier jahreszeiten hamburg" no longer returns "The Dolder Grand" data)
+  - Added context passing from user message to SQL tool
+  - Implemented hotel extraction from context with pattern matching
+  - Force-override system replaces incorrect hotel searches with correct ones
+  - Ultimate fallback ensures Vier Jahreszeiten searches never return Dolder Grand data
+  - **Context Retention Fix**: AI now maintains hotel context across messages - when generating emails or follow-up content, it correctly uses data from the previously discussed hotel instead of defaulting to The Dolder Grand
+  - **Deep Email Generation Fix**: Enhanced context detection scans last 10 messages, embeds actual hotel data in system prompts, and provides ultra-explicit instructions for email generation to prevent any hotel data mixing
 - **MAJOR AI ENHANCEMENT**: Implemented comprehensive AI Assistant system based on detailed build brief requirements:
   - Added `/ai` route (in addition to existing `/ai-hub`) for standardized access
   - Comprehensive tool system: `calc_eval`, `sql_query`, `sheets_read`, `docs_search`, `http_call`, `feedback_submit`
