@@ -269,11 +269,9 @@ export class AIService {
       // Track hotel context from user message
       HotelContextManager.trackMessage('user', message);
 
-      // Analyze query for intelligent routing
-      const queryAnalysis = QueryDetector.analyzeQuery(message);
-      console.log('🎯🎯🎯 AI SERVICE - Query Analysis:', queryAnalysis);
-      console.log('🎯🎯🎯 AI SERVICE - Should use tools:', queryAnalysis.shouldUseTools);
-
+      // 🚀 ULTRA-SIMPLE INTELLIGENT ROUTING
+      console.log('🎯 USER MESSAGE:', message);
+      
       // Get recent messages for context
       const recentMessages = await this.getThreadMessages(threadId, userId);
       const contextMessages = recentMessages
@@ -284,33 +282,34 @@ export class AIService {
           content: msg.content,
         }));
 
-      // Track all messages in HotelContextManager for better context
-      for (const msg of recentMessages.slice(0, 10)) {
-        HotelContextManager.trackMessage(msg.role, msg.content);
-      }
+      // 🌤️ WEATHER DETECTION - Ultra-simple and direct
+      const isWeatherQuery = this.isWeatherQuestion(message);
+      console.log('🌤️ IS WEATHER QUERY:', isWeatherQuery);
       
-      // 🎯 INTELLIGENT CONTEXT INJECTION: Only get hotel context for relevant queries
-      let hotelContext = null;
-      let hotelData = null;
-      
-      // Only inject hotel context for business, calculation, or email queries
-      const needsHotelContext = ['business', 'calculation', 'email'].includes(queryAnalysis.type);
-      
-      if (needsHotelContext) {
-        hotelContext = HotelContextManager.getCurrentHotel();
-        hotelData = hotelContext ? HotelContextManager.getHotelData(hotelContext) : null;
-        console.log('🏨 HOTEL CONTEXT INJECTION FOR:', queryAnalysis.type, hotelContext);
-        console.log('📊 HOTEL DATA:', hotelData);
-      } else {
-        console.log('🚀 NO HOTEL CONTEXT - Query type:', queryAnalysis.type, 'is non-business');
-      }
+      // 🏨 HOTEL DETECTION - Only for actual hotel/business questions
+      const isHotelQuery = this.isHotelQuestion(message);
+      console.log('🏨 IS HOTEL QUERY:', isHotelQuery);
 
-      // Add enhanced system message with routing guidance and conditional hotel context
-      const systemMessage = this.getEnhancedSystemMessage(mode, queryAnalysis, message, hotelContext || undefined);
+      // Create simple, focused system message
+      const systemMessage = this.getSimpleSystemMessage(isWeatherQuery, isHotelQuery, message);
       const messages = [systemMessage, ...contextMessages];
 
-      // Define available tools - use new tool system with correct types
-      const availableTools = toolDefinitions;
+      // 🚀 INTELLIGENT TOOL SELECTION - Only relevant tools
+      let availableTools = [];
+      
+      if (isWeatherQuery) {
+        // For weather: ONLY HTTP call
+        availableTools = toolDefinitions.filter(tool => tool.function.name === 'http_call');
+        console.log('🌤️ WEATHER MODE - Only HTTP tool available');
+      } else if (isHotelQuery) {
+        // For hotel: ONLY SQL query  
+        availableTools = toolDefinitions.filter(tool => tool.function.name === 'sql_query');
+        console.log('🏨 HOTEL MODE - Only SQL tool available');
+      } else {
+        // For general: All tools available
+        availableTools = toolDefinitions;
+        console.log('🧠 GENERAL MODE - All tools available');
+      }
 
       // Support GPT-5 and latest models
       const supportedModel = this.getSupportedModel(model);
@@ -384,18 +383,12 @@ export class AIService {
             const parameters = JSON.parse(toolCall.function.arguments);
             console.log('🎯🎯🎯 AI SERVICE - Executing tool:', toolCall.function.name, 'with params:', parameters);
             
-            // 🎯 INTELLIGENT TOOL CONTEXT: Only inject hotel context for relevant tools
-            let enhancedParams = {
+            // 🎯 SIMPLE TOOL CONTEXT
+            const enhancedParams = {
               ...parameters,
               userId,
               context: message
             };
-            
-            // Only inject hotel context for business-related tools when context exists
-            if (needsHotelContext && hotelData && ['sql_query'].includes(toolCall.function.name)) {
-              enhancedParams.context = `MUST use hotel: ${hotelData.name}. ${message}`;
-              enhancedParams.hotelContext = hotelData.name;
-            }
             
             const { result, citation } = await this.executeTool(
               { function: { name: toolCall.function.name, parameters: enhancedParams } },
@@ -437,24 +430,8 @@ export class AIService {
 
         // If tools were executed, get AI to interpret and respond
         if (toolResults.length > 0) {
-          // 🎯 INTELLIGENT INTERPRETATION: Only include hotel warnings for business queries
-          let hotelWarning = '';
-          if (needsHotelContext && hotelData) {
-            hotelWarning = `
-🔴🔴🔴 KRITISCHE ANWEISUNG: Du MUSST die Daten von "${hotelData.name}" verwenden! 🔴🔴🔴
-Wenn du eine E-Mail, Brief oder Zusammenfassung erstellst, verwende AUSSCHLIESSLICH diese Daten:
-- Hotel: ${hotelData.name} (${hotelData.stars} Sterne)
-- Zimmer: ${hotelData.rooms}
-- Durchschnittspreis: ${hotelData.averagePrice}
-- Gewinnmarge: ${hotelData.profitMargin}
-NIEMALS andere Hotels erwähnen oder deren Daten verwenden!
-`;
-          }
-          
           // Create a follow-up prompt with tool results for AI to interpret
-          const interpretationPrompt = `${hotelWarning}
-
-Based on the following tool results, provide a natural, conversational response in German. Format numbers clearly and provide insights:
+          const interpretationPrompt = `Based on the following tool results, provide a natural, conversational response in German. Format numbers clearly and provide insights:
 
 ${toolResults.map(tr => `Tool: ${tr.tool}\nResult: ${JSON.stringify(tr.result)}`).join('\n\n')}
 
@@ -747,6 +724,62 @@ ABER VERWENDE NUR DIE DATEN DES AKTUELLEN HOTELS AUS DEM KONTEXT!`;
     
     const rate = rates[model as keyof typeof rates] || rates['gpt-4o-mini'];
     return (usage.prompt_tokens * rate.input + usage.completion_tokens * rate.output) / 1000;
+  }
+
+  // 🌤️ SIMPLE WEATHER DETECTION
+  private isWeatherQuestion(message: string): boolean {
+    const msg = message.toLowerCase();
+    const weatherWords = ['wetter', 'weather', 'temperatur', 'temperature', 'regen', 'rain', 'sonne', 'sunny'];
+    return weatherWords.some(word => msg.includes(word));
+  }
+
+  // 🏨 SIMPLE HOTEL DETECTION  
+  private isHotelQuestion(message: string): boolean {
+    const msg = message.toLowerCase();
+    const hotelWords = ['hotel', 'kalkulation', 'calculation', 'profit', 'gewinn', 'zimmer', 'rooms', 'sterne', 'stars'];
+    return hotelWords.some(word => msg.includes(word));
+  }
+
+  // 🚀 SIMPLE SYSTEM MESSAGE
+  private getSimpleSystemMessage(isWeatherQuery: boolean, isHotelQuery: boolean, message: string): { role: 'system'; content: string } {
+    if (isWeatherQuery) {
+      return {
+        role: 'system',
+        content: `Du bist ein intelligenter AI-Assistent. Der Nutzer fragt nach dem WETTER.
+
+🌤️ WETTER-MODUS AKTIV!
+- NUTZE IMMER: http_call Tool mit wttr.in API
+- Format: https://wttr.in/STADT_NAME?format=j1
+- Antworte auf Deutsch mit aktuellen Wetter-Informationen
+- NIEMALS über Hotels oder Business-Daten sprechen!
+
+Beispiel: Für "Wetter in Düsseldorf" nutze: 
+http_call({ endpoint: "https://wttr.in/Düsseldorf?format=j1", method: "GET" })`
+      };
+    }
+
+    if (isHotelQuery) {
+      return {
+        role: 'system', 
+        content: `Du bist ein intelligenter Business-Analyst für Hotels.
+
+🏨 HOTEL-MODUS AKTIV!
+- NUTZE: sql_query Tool für Hotel-Daten
+- Antworte mit professionellen Business-Analysen
+- Zeige Kalkulationen, Profitabilität, Vergleiche`
+      };
+    }
+
+    return {
+      role: 'system',
+      content: `Du bist ein intelligenter AI-Assistent wie ChatGPT. Beantworte die Frage intelligent und hilfreich auf Deutsch.
+
+🧠 GENERAL-MODUS AKTIV!
+- Nutze deine Intelligenz für allgemeine Fragen
+- Für Wetter: http_call mit wttr.in
+- Für Hotel-Business: sql_query  
+- Für Mathematik: calc_eval`
+    };
   }
 
   // Get user threads
