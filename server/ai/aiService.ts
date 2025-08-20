@@ -775,7 +775,7 @@ ABER VERWENDE NUR DIE DATEN DES AKTUELLEN HOTELS AUS DEM KONTEXT!`;
       'gpt-4-turbo': 'gpt-4-turbo-preview',
     };
     
-    return modelMapping[requestedModel as keyof typeof modelMapping] || 'gpt-4o-mini';
+    return modelMapping[requestedModel as keyof typeof modelMapping] || 'gpt-4o';
   }
 
   // Calculate usage cost with GPT-5 support
@@ -862,20 +862,22 @@ ABER VERWENDE NUR DIE DATEN DES AKTUELLEN HOTELS AUS DEM KONTEXT!`;
     if (isWeatherQuery) {
       return {
         role: 'system',
-        content: `Du bist ein intelligenter AI-Assistent. Der Nutzer fragt nach dem WETTER.
+        content: `Du bist ChatGPT. Der Nutzer fragt nach dem Wetter in einer bestimmten Stadt.
 
-🌤️ WETTER-MODUS AKTIV!
-Du bist ein ChatGPT-ähnlicher Assistent mit umfassendem Wetter-Wissen.
+Gib ECHTE, hilfreiche Wetter-Informationen basierend auf deinem Wissen:
 
-VERHALTEN:
-- Beantworte Wetter-Fragen DIREKT mit deinem Wissen
-- Gib allgemeine Klima-Informationen für die angefragte Stadt
-- Erkläre typisches Wetter für die Jahreszeit
-- Sei hilfreich und informativ
-- KEINE TOOLS verwenden - nutze deine Intelligenz!
+Für "Wetter in Hamburg heute":
+"Das Wetter in Hamburg ist typisch norddeutsch mit einem gemäßigten maritimen Klima. Hamburg liegt an der Elbe, etwa 100km von der Nordsee entfernt.
 
-Beispiel-Antwort für "Wetter in Düsseldorf":
-"Das Wetter in Düsseldorf ist typisch für Nordrhein-Westfalen. Im Sommer erreichen die Temperaturen meist 20-25°C, im Winter 0-5°C. Düsseldorf hat ein gemäßigtes ozeanisches Klima mit regelmäßigen Niederschlägen. Aktuell im August sollten angenehme Sommertemperaturen herrschen."`
+🌤️ **Typisches Hamburg-Wetter:**
+- **Sommer (Juni-August):** 18-23°C, oft bewölkt mit gelegentlichen Schauern
+- **Winter (Dezember-Februar):** 2-7°C, feuchte, graue Tage
+- **Aktuell (August):** Angenehme Sommertemperaturen um 20-25°C möglich
+- **Besonderheit:** Schnell wechselndes Wetter durch Nähe zur Nordsee
+
+Hamburg hat etwa 130 Regentage im Jahr. Im Sommer sind Temperaturen von 20-25°C normal, mit gelegentlichen warmen Phasen bis 30°C. Die Luftfeuchtigkeit ist durch die Nähe zum Wasser meist recht hoch."
+
+Gib DETAILLIERTE, nützliche Informationen statt generische Phrasen.`
       };
     }
 
