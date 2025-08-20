@@ -84,20 +84,7 @@ export class AIService {
     }));
   }
 
-  // Calculate token usage cost (approximate)
-  private calculateCost(usage: TokenUsage, model: string): number {
-    const costs = {
-      'gpt-4o': { prompt: 0.00250, completion: 0.01000 },
-      'gpt-4o-mini': { prompt: 0.000150, completion: 0.000600 },
-    };
 
-    const modelCost = costs[model as keyof typeof costs] || costs['gpt-4o-mini'];
-    
-    return (
-      (usage.prompt_tokens / 1000) * modelCost.prompt +
-      (usage.completion_tokens / 1000) * modelCost.completion
-    );
-  }
 
   // Execute tool calls using new comprehensive tool system
   private async executeTool(toolCall: any, userId: number): Promise<{ result: any; citation?: Citation }> {
@@ -302,19 +289,28 @@ export class AIService {
         HotelContextManager.trackMessage(msg.role, msg.content);
       }
       
-      // Get the current hotel context from the manager
-      const hotelContext = HotelContextManager.getCurrentHotel();
-      const hotelData = hotelContext ? HotelContextManager.getHotelData(hotelContext) : null;
+      // 🎯 INTELLIGENT CONTEXT INJECTION: Only get hotel context for relevant queries
+      let hotelContext = null;
+      let hotelData = null;
       
-      console.log('🏨 HOTEL CONTEXT FROM MANAGER:', hotelContext);
-      console.log('📊 HOTEL DATA:', hotelData);
+      // Only inject hotel context for business, calculation, or email queries
+      const needsHotelContext = ['business', 'calculation', 'email'].includes(queryAnalysis.type);
+      
+      if (needsHotelContext) {
+        hotelContext = HotelContextManager.getCurrentHotel();
+        hotelData = hotelContext ? HotelContextManager.getHotelData(hotelContext) : null;
+        console.log('🏨 HOTEL CONTEXT INJECTION FOR:', queryAnalysis.type, hotelContext);
+        console.log('📊 HOTEL DATA:', hotelData);
+      } else {
+        console.log('🚀 NO HOTEL CONTEXT - Query type:', queryAnalysis.type, 'is non-business');
+      }
 
-      // Add enhanced system message with routing guidance and hotel context
-      const systemMessage = this.getEnhancedSystemMessage(mode, queryAnalysis, message, hotelContext);
+      // Add enhanced system message with routing guidance and conditional hotel context
+      const systemMessage = this.getEnhancedSystemMessage(mode, queryAnalysis, message, hotelContext || undefined);
       const messages = [systemMessage, ...contextMessages];
 
-      // Define available tools based on mode (combine old and new systems)
-      const availableTools = [...this.getAvailableTools(mode), ...toolDefinitions];
+      // Define available tools - use new tool system with correct types
+      const availableTools = toolDefinitions;
 
       // Support GPT-5 and latest models
       const supportedModel = this.getSupportedModel(model);
@@ -388,17 +384,18 @@ export class AIService {
             const parameters = JSON.parse(toolCall.function.arguments);
             console.log('🎯🎯🎯 AI SERVICE - Executing tool:', toolCall.function.name, 'with params:', parameters);
             
-            // Pass the original user message as context for SQL query correction
-            // 🔴 CRITICAL: Also pass the hotel context to ensure correct data retrieval
-            const currentHotel = HotelContextManager.getCurrentHotel();
-            const hotelData = currentHotel ? HotelContextManager.getHotelData(currentHotel) : null;
-            
-            const enhancedParams = {
+            // 🎯 INTELLIGENT TOOL CONTEXT: Only inject hotel context for relevant tools
+            let enhancedParams = {
               ...parameters,
               userId,
-              context: `${hotelData ? `MUST use hotel: ${hotelData.name}. ` : ''}${message}`,
-              hotelContext: hotelData ? hotelData.name : null
+              context: message
             };
+            
+            // Only inject hotel context for business-related tools when context exists
+            if (needsHotelContext && hotelData && ['sql_query'].includes(toolCall.function.name)) {
+              enhancedParams.context = `MUST use hotel: ${hotelData.name}. ${message}`;
+              enhancedParams.hotelContext = hotelData.name;
+            }
             
             const { result, citation } = await this.executeTool(
               { function: { name: toolCall.function.name, parameters: enhancedParams } },
@@ -440,12 +437,9 @@ export class AIService {
 
         // If tools were executed, get AI to interpret and respond
         if (toolResults.length > 0) {
-          // 🔴 CRITICAL: Include hotel context in interpretation to prevent data mixing
-          const currentHotel = HotelContextManager.getCurrentHotel();
-          const hotelData = currentHotel ? HotelContextManager.getHotelData(currentHotel) : null;
-          
+          // 🎯 INTELLIGENT INTERPRETATION: Only include hotel warnings for business queries
           let hotelWarning = '';
-          if (hotelData) {
+          if (needsHotelContext && hotelData) {
             hotelWarning = `
 🔴🔴🔴 KRITISCHE ANWEISUNG: Du MUSST die Daten von "${hotelData.name}" verwenden! 🔴🔴🔴
 Wenn du eine E-Mail, Brief oder Zusammenfassung erstellst, verwende AUSSCHLIESSLICH diese Daten:

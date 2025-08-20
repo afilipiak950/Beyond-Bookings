@@ -27,7 +27,8 @@ export class QueryDetector {
         extractedLocation: location,
         suggestedTool: 'http_call',
         endpoint: `https://wttr.in/${encodeURIComponent(location || 'Berlin')}?format=j1`,
-        shouldUseTools: true
+        shouldUseTools: true,
+        requiresRealTimeData: true
       };
     }
     
@@ -37,7 +38,8 @@ export class QueryDetector {
         type: 'business',
         confidence: 0.9,
         suggestedTool: 'sql_query',
-        shouldUseTools: true
+        shouldUseTools: true,
+        requiresRealTimeData: false
       };
     }
     
@@ -47,7 +49,8 @@ export class QueryDetector {
         type: 'calculation', 
         confidence: 0.85,
         suggestedTool: 'calc_eval',
-        shouldUseTools: true
+        shouldUseTools: true,
+        requiresRealTimeData: false
       };
     }
     
@@ -57,7 +60,8 @@ export class QueryDetector {
         type: 'email',
         confidence: 0.8,
         suggestedTool: 'none', // Use AI intelligence directly
-        shouldUseTools: false
+        shouldUseTools: false,
+        requiresRealTimeData: false
       };
     }
     
