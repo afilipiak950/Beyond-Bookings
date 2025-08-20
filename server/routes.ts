@@ -2178,15 +2178,21 @@ CRITICAL: You must always return a specific price number in EUR. If exact data u
   app.get('/api/pricing-calculations', requireAuth, async (req: Request, res: Response) => {
     try {
       const userId = (req as any).user.id;
-      console.log(`📊 Getting pricing calculations for user ${userId}`);
+      console.log(`📊 Getting pricing calculations for user ${userId} at ${new Date().toISOString()}`);
       
       const calculations = await storage.getPricingCalculations(userId);
       console.log(`✅ Found ${calculations.length} calculations for user`);
       
-      res.json({
+      // Log the IDs and names for debugging
+      const calculationSummary = calculations.map(calc => ({ id: calc.id, hotelName: calc.hotelName, createdAt: calc.createdAt }));
+      console.log(`📋 Calculation summary:`, JSON.stringify(calculationSummary, null, 2));
+      
+      const responseData = {
         data: calculations,
         success: true
-      });
+      };
+      
+      res.json(responseData);
     } catch (error: any) {
       console.error('❌ Failed to get pricing calculations:', error);
       res.status(500).json({ 
@@ -2201,6 +2207,7 @@ CRITICAL: You must always return a specific price number in EUR. If exact data u
     try {
       const userId = (req as any).user.id;
       console.log(`💾 Saving new pricing calculation for user ${userId}`);
+      console.log(`📋 Request body:`, JSON.stringify(req.body, null, 2));
       
       // Validate the pricing calculation data
       const calculationData = insertPricingCalculationSchema.parse({
@@ -2208,14 +2215,22 @@ CRITICAL: You must always return a specific price number in EUR. If exact data u
         userId: userId
       });
       
+      console.log(`🔍 Validated calculation data:`, JSON.stringify(calculationData, null, 2));
+      
       const calculation = await storage.createPricingCalculation(calculationData);
       console.log(`✅ Pricing calculation saved with ID: ${calculation.id}`);
+      console.log(`📊 Full saved calculation:`, JSON.stringify(calculation, null, 2));
       
-      res.json({
+      // Simulate the response that would be sent
+      const responseData = {
         data: calculation,
         success: true,
         message: "Pricing calculation saved successfully"
-      });
+      };
+      
+      console.log(`📤 Sending response:`, JSON.stringify(responseData, null, 2));
+      
+      res.json(responseData);
     } catch (error: any) {
       console.error('❌ Failed to save pricing calculation:', error);
       

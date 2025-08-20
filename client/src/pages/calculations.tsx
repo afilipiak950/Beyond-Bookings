@@ -113,9 +113,15 @@ export default function Calculations() {
     }
   });
 
-  const { data: response, isLoading } = useQuery<{ data: PricingCalculationWithCreator[], success: boolean }>({
+  const { data: response, isLoading, refetch } = useQuery<{ data: PricingCalculationWithCreator[], success: boolean }>({
     queryKey: ["/api/pricing-calculations"],
     retry: false,
+    onSuccess: (data) => {
+      console.log(`📋 Calculations page: Query success with ${data?.data?.length || 0} calculations`);
+    },
+    onError: (error) => {
+      console.error('📋 Calculations page: Query error:', error);
+    }
   });
 
   const calculationsData = response?.data || [];

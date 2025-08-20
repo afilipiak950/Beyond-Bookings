@@ -1436,15 +1436,23 @@ export default function Workflow() {
       return response.json();
     },
     onSuccess: (savedCalculation) => {
+      console.log(`🚀 Save mutation success - Starting cache invalidation process`);
+      console.log(`📊 Saved calculation data:`, savedCalculation);
+      
       // ✅ CRITICAL: Invalidate the calculations cache so the /calculations page updates instantly
       queryClient.invalidateQueries({ queryKey: ["/api/pricing-calculations"] });
+      
+      // Force refetch to ensure immediate update
+      queryClient.refetchQueries({ queryKey: ["/api/pricing-calculations"] });
+      
+      console.log(`🔄 Cache invalidation and refetch completed for key: ["/api/pricing-calculations"]`);
       
       toast({
         title: "Berechnung gespeichert",
         description: `Kalkulation für ${workflowData.hotelName} erfolgreich gespeichert! ID: ${savedCalculation.data?.id}`,
       });
       
-      console.log(`✅ Calculation saved with ID: ${savedCalculation.data?.id} - Cache invalidated`);
+      console.log(`✅ Calculation saved with ID: ${savedCalculation.data?.id} - Cache invalidated and refetched`);
     },
     onError: (error: any) => {
       toast({
