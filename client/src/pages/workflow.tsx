@@ -3432,13 +3432,13 @@ Beispiel:
                 </Button>
                 <Button
                   onClick={saveCalculation}
-                  disabled={isSaving || !workflowData.hotelName}
+                  disabled={saveMutation.isPending || !workflowData.hotelName}
                   variant="outline"
                   className="group relative overflow-hidden px-8 py-4 backdrop-blur-sm border-blue-300/50 hover:border-blue-400/60 transition-all duration-500 rounded-2xl"
                 >
-                  {isSaving ? (
+                  {saveMutation.isPending ? (
                     <>
-                      <Loader2 className="mr-2 h-5 w-5" />
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                       Saving...
                     </>
                   ) : (
@@ -3668,13 +3668,13 @@ Beispiel:
                   </Button>
                   <Button
                     onClick={saveCalculation}
-                    disabled={isSaving || !workflowData.hotelName}
+                    disabled={saveMutation.isPending || !workflowData.hotelName}
                     variant="outline"
                     className="group relative overflow-hidden px-8 py-4 backdrop-blur-sm border-blue-300/50 hover:border-blue-400/60 transition-all duration-500 rounded-2xl"
                   >
-                    {isSaving ? (
+                    {saveMutation.isPending ? (
                       <>
-                        <Loader2 className="mr-2 h-5 w-5" />
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                         Saving...
                       </>
                     ) : (
