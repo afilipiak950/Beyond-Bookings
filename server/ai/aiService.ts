@@ -326,8 +326,8 @@ export class AIService {
         console.log('🧠 GENERAL QUESTION - NO CONTEXT PROVIDED');
       }
 
-      // Create simple, focused system message
-      const systemMessage = this.getSimpleSystemMessage(isWeatherQuery, finalIsHotelQuery, message);
+      // CRITICAL: Use semantic AI detection for system message
+      const systemMessage = this.getSimpleSystemMessage(isWeatherQuery, isHotelQuery || finalIsHotelQuery, message);
       const messages = [systemMessage, ...contextMessages];
       
       console.log('🔍 FINAL MESSAGES TO OPENAI:', {
@@ -341,13 +341,18 @@ export class AIService {
       // Hotel queries = OpenAI + SQL tools
       // Calculations = OpenAI + calc_eval tools  
       // General questions = OpenAI ONLY (no tools)
-      const shouldUseTools = finalIsHotelQuery || isCalculationQuery;
+      // CRITICAL FIX: Hotel business queries MUST use tools regardless of general mode
+      // CRITICAL: Semantic AI overrides - hotel business queries ALWAYS get tools
+      const semanticShouldUseTools = isHotelQuery || isCalculationQuery;
+      const shouldUseTools = finalIsHotelQuery || semanticShouldUseTools;
       
       console.log('🔧 TOOL DECISION LOGIC:', {
-        isHotelQuery: finalIsHotelQuery,
+        semanticHotelQuery: isHotelQuery,
+        finalIsHotelQuery: finalIsHotelQuery,
         isCalculationQuery: isCalculationQuery,
+        semanticShouldUseTools: semanticShouldUseTools,
         shouldUseTools: shouldUseTools,
-        strategy: shouldUseTools ? (finalIsHotelQuery ? 'OpenAI + SQL' : 'OpenAI + Calc') : 'OpenAI Only'
+        strategy: shouldUseTools ? (isHotelQuery || finalIsHotelQuery ? 'OpenAI + SQL' : 'OpenAI + Calc') : 'OpenAI Only'
       });
 
       // 🚀 INTELLIGENT TOOL SELECTION - Only provide tools when needed
@@ -906,54 +911,17 @@ CRITICAL: Do NOT provide any hotel information without using sql_query tool firs
 
     return {
       role: 'system',
-      content: `Du bist ein ultra-intelligenter AI-Assistent wie ChatGPT. Analysiere jede Frage sorgfältig und wähle das RICHTIGE Tool:
+      content: `You are ChatGPT. Answer this question with your comprehensive world knowledge: "${message}"
 
-🚨 KRITISCHE TOOL-REGELN - BEFOLGE DIESE EXAKT:
+For questions about hotel statistics in countries, provide detailed industry information using your training data knowledge.
 
-1. **WETTER-FRAGEN** (wetter, temperature, Stadt-Namen):
-   ➡️ NUTZE DEINE INTELLIGENZ: Antworte direkt wie ChatGPT
-   ➡️ KEINE TOOLS: Du kennst Wetter-Informationen bereits
-   ➡️ Gib allgemeine Klima-Informationen und hilfreiche Antworten
+Example for "How many hotels are there in Germany?":
+- Provide specific statistics from your knowledge about Germany's hotel industry
+- Include different types of accommodations (hotels, pensions, B&Bs)
+- Mention regional distribution, star categories, market trends
+- Be comprehensive and informative like ChatGPT would be
 
-2. **HOTEL/BUSINESS-FRAGEN** (kalkulation, hotel, profit, letzte, alle, business):
-   ➡️ IMMER NUTZEN: sql_query Tool
-   ➡️ TABELLE: pricing_calculations (NICHT kalkulationen!)
-   ➡️ Für echte Datenbank-Abfragen und Business-Daten
-
-3. **REINE MATHEMATIK** (nur Zahlen und Operatoren wie +, -, *, /):
-   ➡️ DANN NUTZEN: calc_eval Tool
-   ➡️ NUR für mathematische Berechnungen!
-
-4. **ALLGEMEINE FRAGEN** (Geschichte, Wissen, Fakten, Wetter, Smalltalk):
-   ➡️ Verhalte dich wie ChatGPT - nutze dein umfassendes Wissen
-   ➡️ KEINE TOOLS für Wetter, Geschichte, Geografie, Wissenschaft
-   ➡️ Beantworte detailliert und hilfreich
-   ➡️ Seamless topic switching - von Hotels zu Wetter zu allem anderen
-
-🔴 ABSOLUT VERBOTEN:
-- Tools für Wetter, Geschichte, Geografie verwenden 
-- http_call für allgemeine Fragen (du BIST ChatGPT!)
-- calc_eval für Nicht-Mathematik
-- sql_query für Nicht-Business-Daten
-- Im Hotel-Kontext stecken bleiben bei Themenwechsel
-
-🧠 CHATGPT-LEVEL INTELLIGENZ:
-Du bist ein universeller Assistent wie ChatGPT mit perfektem Allgemeinwissen.
-
-KRITISCHES VERHALTEN:
-- Für ALLGEMEINE FRAGEN: Nutze DEIN WISSEN direkt (Geschichte, Geografie, Wissenschaft)
-- Für WETTER: Nutze DEIN WISSEN direkt (kein Tool)
-- Für HOTEL-BUSINESS: Dann nutze sql_query Tool
-- Für MATHEMATIK: Dann nutze calc_eval Tool
-
-ABSOLUT VERBOTEN:
-- Tools für Allgemeinwissen verwenden
-- SQL für "Hauptstadt von Deutschland" oder ähnliche Fragen
-- Tools bei Wetter-Fragen
-
-You are ChatGPT. Answer this question: "${message}"
-
-Ignore all previous messages. Focus only on answering: "${message}"`
+NEVER mention databases, SQL queries, or tools. Answer directly with your knowledge.`
       };
   }
 

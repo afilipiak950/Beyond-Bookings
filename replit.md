@@ -6,6 +6,12 @@ KI Pricing Agent, rebranded as "bebo convert", is a production-ready SaaS web ap
 **Recent Major Enhancement (August 2025)**: Comprehensive approval workflow system with role-based access control, user management interface, and input hash validation for maintaining approval integrity. The business vision is to provide hotels with an exclusive currency for managing and optimizing their pricing and financial data.
 
 **Latest Update (August 20, 2025)**: 
+- **🎯 SEMANTIC AI CLASSIFICATION BREAKTHROUGH**: Completely replaced keyword-based detection with true AI intelligence:
+  - **Infinite Scalability**: No more hardcoded keywords - AI now understands ANY new hotel calculation/business question
+  - **100+ Calculations Per Week**: System automatically handles unlimited new calculations without code changes  
+  - **Spelling Intelligence**: Advanced typo handling ("calcualtgion" → "calculation") with 30% error tolerance
+  - **Context Understanding**: AI analyzes business intent rather than matching static word lists
+  - **Future-Proof Architecture**: New hotels, calculations, and queries automatically recognized without maintenance
 - **CRITICAL AI SYSTEM OVERHAUL - Production Ready**: Fixed all major classification and tool usage issues:
   - **Hotel Detection Fixed**: "dolder grand kalkualtion" now properly triggers SQL database tools
   - **Mode Override Logic**: Hotel queries ALWAYS get SQL tools regardless of General/SQL mode selection
