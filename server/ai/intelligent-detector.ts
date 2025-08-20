@@ -145,11 +145,26 @@ export class IntelligentDetector {
   }
 
   static async detectHotelBusiness(msg: string): Promise<QueryAnalysis | null> {
-    // Core business words that always indicate hotel/business queries
-    const businessWords = ['kalkulation', 'kalkaulation', 'kalkaultion', 'calculation', 
-                          'profit', 'gewinn', 'business', 'letzte', 'alle', 'umsatz', 'revenue'];
+    // 🚨 CRITICAL: More specific business words to prevent false positives
+    const coreBusinessWords = ['kalkulation', 'kalkaulation', 'kalkaultion', 'calculation', 
+                              'profit', 'gewinn', 'umsatz', 'revenue', 'zimmer', 'auslastung'];
     
-    const hasCoreBusinessWord = businessWords.some(w => msg.includes(w));
+    // Context-dependent words that need hotel context
+    const hotelContextWords = ['letzte', 'alle', 'business'];
+    
+    // Political exclusions - if these words exist, it's NOT a hotel query
+    const politicalWords = ['bundeskanzler', 'budneskanzler', 'kanzler', 'präsident', 'minister', 
+                           'politik', 'regierung', 'deutschland', 'russland', 'usa', 'politiker'];
+    
+    // 🚨 CRITICAL FIX: Check for political exclusions FIRST
+    const isPoliticalQuery = politicalWords.some(w => msg.includes(w));
+    if (isPoliticalQuery) {
+      console.log('🚫 POLITICAL QUERY DETECTED - Not a hotel query:', msg.substring(0, 50));
+      return null;
+    }
+    
+    const hasCoreBusinessWord = coreBusinessWords.some(w => msg.includes(w));
+    const hasHotelContextWord = hotelContextWords.some(w => msg.includes(w));
     
     // Check for hotel names (exact matches)
     let detectedHotel = null;
@@ -182,7 +197,13 @@ export class IntelligentDetector {
     const hasHotelKeyword = this.hotelCache.keywords.some(keyword => msg.includes(keyword));
     
     // Determine if this is a hotel/business query
-    if (hasCoreBusinessWord || detectedHotel || hasHotelKeyword || msg.includes('hotel')) {
+    // Must have either: core business word + hotel context, OR hotel name detected, OR explicit hotel mention
+    const isHotelQuery = (hasCoreBusinessWord) || 
+                        (hasHotelContextWord && (detectedHotel || hasHotelKeyword || msg.includes('hotel'))) ||
+                        (detectedHotel) ||
+                        (msg.includes('hotel') && hasHotelKeyword);
+    
+    if (isHotelQuery) {
       console.log('🏨 HOTEL/BUSINESS DETECTED:', { 
         detectedHotel, 
         spellingCorrected, 
