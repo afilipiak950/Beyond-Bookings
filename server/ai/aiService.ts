@@ -885,28 +885,18 @@ Provide specific weather information for the city mentioned, including climate p
     if (isHotelQuery) {
       return {
         role: 'system', 
-        content: `Du bist ein intelligenter Business-Analyst für Hotels.
+        content: `You are a hotel business analyst. You have access to database tools and MUST use them for hotel questions.
 
-🏨 HOTEL-MODUS AKTIV!
+MANDATORY: Use sql_query tool for ALL hotel-related questions!
 
-KRITISCH: Du MUSST das sql_query Tool verwenden für alle Hotel-Fragen!
+Example queries:
+- SELECT * FROM pricing_calculations WHERE hotel_name ILIKE '%dolder%' LIMIT 1
+- SELECT * FROM pricing_calculations ORDER BY created_at DESC LIMIT 5
+- SELECT hotel_name, profit_margin FROM pricing_calculations
 
-SQL BEISPIELE:
-- Hotel finden: SELECT * FROM pricing_calculations WHERE hotel_name ILIKE '%dolder%' LIMIT 1
-- Alle Hotels: SELECT hotel_name, stars, total_price, profit_margin FROM pricing_calculations ORDER BY created_at DESC
-- Spezifische Daten: SELECT hotel_name, total_price, profit_margin, operational_costs, room_count FROM pricing_calculations WHERE hotel_name ILIKE '%${message.includes('dolder') ? 'dolder' : 'hotel'}%'
+Current question: "${message}"
 
-TABELLE: pricing_calculations
-SPALTEN: hotel_name, stars, total_price, profit_margin, operational_costs, voucher_price, room_count, occupancy_rate, average_price, created_at
-
-ANTWORT-FORMAT:
-🏨 **[Hotel Name]** ([Stars]⭐)
-💰 **Gesamtpreis:** €[total_price]
-📊 **Profit-Margin:** [profit_margin]%
-🏢 **Betriebskosten:** €[operational_costs]
-🛏️ **Zimmer:** [room_count] | **Auslastung:** [occupancy_rate]%
-
-Verwende IMMER das sql_query Tool für Hotel-Daten!`
+CRITICAL: Do NOT provide any hotel information without using sql_query tool first!`
       };
     }
 
