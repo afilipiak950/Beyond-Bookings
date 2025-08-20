@@ -282,6 +282,10 @@ export class AIService {
           content: msg.content,
         }));
 
+      // 🎯 DEBUG MESSAGE ANALYSIS
+      console.log('🔍 ANALYZING MESSAGE:', `"${message}"`);
+      console.log('🔍 MESSAGE LOWERCASE:', `"${message.toLowerCase()}"`);
+      
       // 🌤️ WEATHER DETECTION - Ultra-simple and direct
       const isWeatherQuery = this.isWeatherQuestion(message);
       console.log('🌤️ IS WEATHER QUERY:', isWeatherQuery);
@@ -371,8 +375,23 @@ export class AIService {
 
       // Execute tool calls if any
       console.log('🎯🎯🎯 AI SERVICE - Tool calls detected:', toolCalls.length);
+      console.log('🔍 TOOL CALLS DETAILS:', toolCalls.map(tc => ({
+        name: tc.function?.name,
+        args: tc.function?.arguments
+      })));
+      
       if (toolCalls.length > 0) {
         console.log('🎯🎯🎯 AI SERVICE - Executing tools:', toolCalls.map(tc => tc.function?.name));
+        
+        // 🚨 CRITICAL VALIDATION - Check for wrong tool usage
+        for (const toolCall of toolCalls) {
+          if (toolCall.function?.name === 'calc_eval' && (message.includes('wetter') || message.includes('weather') || message.includes('düsseldorf'))) {
+            console.error('🚨🚨🚨 CRITICAL ERROR: calc_eval chosen for weather question!');
+            console.error('🚨 Message:', message);
+            console.error('🚨 Tool:', toolCall.function.name);
+            console.error('🚨 Args:', toolCall.function.arguments);
+          }
+        }
         yield {
           type: 'message',
           content: '\n\n*Executing tools...*\n\n',
@@ -726,22 +745,49 @@ ABER VERWENDE NUR DIE DATEN DES AKTUELLEN HOTELS AUS DEM KONTEXT!`;
     return (usage.prompt_tokens * rate.input + usage.completion_tokens * rate.output) / 1000;
   }
 
-  // 🌤️ SIMPLE WEATHER DETECTION
+  // 🌤️ ROBUST WEATHER DETECTION
   private isWeatherQuestion(message: string): boolean {
-    const msg = message.toLowerCase();
-    const weatherWords = [
-      'wetter', 'wette', 'weather', 'temperatur', 'temperature', 
-      'regen', 'rain', 'sonne', 'sunny', 'bewölkt', 'cloudy',
-      'grad', 'degrees', 'celsius', 'wie ist das', 'düsseldorf',
-      'berlin', 'münchen', 'hamburg', 'köln', 'wind', 'schnee'
+    const msg = message.toLowerCase().trim();
+    console.log('🔍 WEATHER DETECTION - Checking message:', `"${msg}"`);
+    
+    // Core weather words
+    const weatherWords = ['wetter', 'weather', 'temperatur', 'temperature'];
+    
+    // City names
+    const cities = ['düsseldorf', 'berlin', 'münchen', 'hamburg', 'köln', 'frankfurt'];
+    
+    // Weather patterns
+    const weatherPatterns = [
+      /wie ist.*wetter/,
+      /wetter.*in/,
+      /temperatur.*in/,
+      /wetter.*düsseldorf|berlin|münchen|hamburg|köln/
     ];
     
-    // Auch nach "wie ist..." + Stadtname Pattern suchen
-    const cityPattern = /wie ist.*in.*(düsseldorf|berlin|münchen|hamburg|köln)/;
-    const hasWeatherWord = weatherWords.some(word => msg.includes(word));
-    const hasCityPattern = cityPattern.test(msg);
+    // Check for weather words
+    const hasWeatherWord = weatherWords.some(word => {
+      const found = msg.includes(word);
+      if (found) console.log(`🌤️ Found weather word: "${word}"`);
+      return found;
+    });
     
-    return hasWeatherWord || hasCityPattern;
+    // Check for cities (weather context)
+    const hasCity = cities.some(city => {
+      const found = msg.includes(city);
+      if (found) console.log(`🏙️ Found city: "${city}"`);
+      return found;
+    });
+    
+    // Check patterns
+    const hasPattern = weatherPatterns.some(pattern => {
+      const found = pattern.test(msg);
+      if (found) console.log(`🔍 Matched pattern: ${pattern}`);
+      return found;
+    });
+    
+    const isWeather = hasWeatherWord || (hasCity && /wie ist|was ist|wie wird/.test(msg)) || hasPattern;
+    console.log('🌤️ WEATHER RESULT:', isWeather);
+    return isWeather;
   }
 
   // 🏨 SIMPLE HOTEL DETECTION  
@@ -788,24 +834,34 @@ http_call({ endpoint: "https://wttr.in/Düsseldorf?format=j1", method: "GET" })`
 
     return {
       role: 'system',
-      content: `Du bist ein intelligenter AI-Assistent wie ChatGPT. Analysiere die Frage und verwende die richtigen Tools:
+      content: `Du bist ein ultra-intelligenter AI-Assistent wie ChatGPT. Analysiere jede Frage sorgfältig und wähle das RICHTIGE Tool:
 
-🧠 INTELLIGENT MODE - AUTOMATISCHE TOOL-AUSWAHL:
+🚨 KRITISCHE TOOL-REGELN - BEFOLGE DIESE EXAKT:
 
-**FÜR WETTER-FRAGEN** (wetter, temperature, düsseldorf, etc.):
-- NUTZE: http_call Tool mit https://wttr.in/STADT?format=j1
+1. **WETTER-FRAGEN** (wetter, temperature, Stadt-Namen wie düsseldorf, berlin, etc.):
+   ➡️ IMMER NUTZEN: http_call Tool
+   ➡️ Endpoint: https://wttr.in/STADT_NAME?format=j1
+   ➡️ NIEMALS calc_eval für Wetter verwenden!
 
-**FÜR HOTEL/BUSINESS-FRAGEN** (kalkulation, hotel, profit, letzte, alle, etc.):
-- NUTZE: sql_query Tool für Datenbank-Abfragen
-- Beispiele: "letzte kalkulation", "alle hotels", "profit margin"
+2. **HOTEL/BUSINESS-FRAGEN** (kalkulation, hotel, profit, letzte, alle, business):
+   ➡️ IMMER NUTZEN: sql_query Tool
+   ➡️ Für Datenbank-Abfragen und Business-Daten
 
-**FÜR MATHEMATIK**:
-- NUTZE: calc_eval Tool
+3. **REINE MATHEMATIK** (nur Zahlen und Operatoren wie +, -, *, /):
+   ➡️ DANN NUTZEN: calc_eval Tool
+   ➡️ NUR für mathematische Berechnungen!
 
-**FÜR ALLES ANDERE**:
-- Nutze deine Intelligenz direkt
+4. **ALLGEMEINE FRAGEN**:
+   ➡️ Nutze deine Intelligenz direkt ohne Tools
 
-ERKENNE AUTOMATISCH DEN FRAGE-TYP UND VERWENDE DAS RICHTIGE TOOL!`
+🔴 ABSOLUT VERBOTEN:
+- calc_eval für Wetter-Fragen verwenden
+- sql_query für Mathematik verwenden  
+- Falsche Tools auswählen
+
+ANALYSIERE DIE FRAGE UND WÄHLE DAS KORREKTE TOOL - SEI SO INTELLIGENT WIE CHATGPT!
+
+Aktuelle Frage: "${message}"`
     };
   }
 
