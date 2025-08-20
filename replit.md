@@ -19,6 +19,12 @@ KI Pricing Agent, rebranded as "bebo convert", is a production-ready SaaS web ap
   - Hotel queries properly access SQL database with auto-corrected table names
   - AI no longer gets "stuck" in hotel mode for general questions
   - Eliminated false tool selection that was breaking user experience
+- **DYNAMIC HOTEL DETECTION SYSTEM**:
+  - **Auto-Scaling**: New hotels automatically detected from database without code changes
+  - **Spelling Intelligence**: 30% error tolerance handles typos ("kalkaulation" → "kalkulation")
+  - **Database Integration**: 5-minute cache refresh loads all hotel names dynamically
+  - **Levenshtein Correction**: Advanced algorithm corrects hotel name misspellings
+  - **Zero Maintenance**: System adapts to new hotels, no manual keyword updates needed
 - **MAJOR AI ENHANCEMENT**: Implemented comprehensive AI Assistant system based on detailed build brief requirements:
   - Added `/ai` route (in addition to existing `/ai-hub`) for standardized access
   - Comprehensive tool system: `calc_eval`, `sql_query`, `sheets_read`, `docs_search`, `http_call`, `feedback_submit`

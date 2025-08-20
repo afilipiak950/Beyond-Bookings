@@ -11,6 +11,7 @@ import { QueryDetector, QueryAnalysis } from './query-detector';
 import { docsGet, docsGetToolDefinition } from './tools/docsGet';
 import { httpCall, httpCallToolDefinition } from './tools/httpCall';
 import { HotelContextManager } from './hotel-context-manager';
+import { IntelligentDetector } from './intelligent-detector';
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -777,19 +778,11 @@ ABER VERWENDE NUR DIE DATEN DES AKTUELLEN HOTELS AUS DEM KONTEXT!`;
     return isWeather;
   }
 
-  // 🏨 ENHANCED HOTEL DETECTION  
-  private isHotelQuestion(message: string): boolean {
-    const msg = message.toLowerCase();
-    const hotelWords = [
-      'hotel', 'kalkulation', 'kalkaulation', 'kalkaultion', 'calculation', 
-      'profit', 'gewinn', 'zimmer', 'rooms', 'sterne', 'stars',
-      'letzte', 'last', 'alle', 'all', 'business', 'umsatz', 'revenue',
-      'marge', 'margin', 'preise', 'prices', 'booking', 'buchung',
-      'dolder', 'grand', 'mönch', 'waldhotel', 'vier', 'jahreszeiten'
-    ];
-    const hasHotelWord = hotelWords.some(word => msg.includes(word));
-    console.log('🏨 HOTEL DETECTION:', hasHotelWord, 'for message:', msg);
-    return hasHotelWord;
+  // 🏨 DYNAMIC HOTEL DETECTION - Now uses database + spelling correction
+  private async isHotelQuestion(message: string): Promise<boolean> {
+    const analysis = await IntelligentDetector.analyzeMessage(message);
+    console.log('🏨 DYNAMIC HOTEL DETECTION:', analysis.type === 'hotel_business', 'for message:', message.substring(0, 50));
+    return analysis.type === 'hotel_business';
   }
 
   // 🚀 SIMPLE SYSTEM MESSAGE
