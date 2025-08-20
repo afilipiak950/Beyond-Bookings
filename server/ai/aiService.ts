@@ -337,7 +337,7 @@ export class AIService {
       let toolResults: any[] = [];
       let tokenUsage: TokenUsage = { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 };
 
-      for await (const chunk of stream) {
+      for await (const chunk of stream as any) {
         const delta = chunk.choices[0]?.delta;
         
         if (delta?.content) {
