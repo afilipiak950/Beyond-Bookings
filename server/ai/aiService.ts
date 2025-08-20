@@ -290,7 +290,14 @@ export class AIService {
       if (forcedHotelMode) {
         console.log('🔧 FORCED SQL MODE - Treating as hotel query');
       }
-      const finalIsHotelQuery = isHotelQuery || forcedHotelMode;
+      
+      // 🚨 CRITICAL: Override for general mode - if user explicitly chose general mode, treat as general query
+      const forcedGeneralMode = mode === 'general';
+      if (forcedGeneralMode && !isHotelQuery) {
+        console.log('🔧 FORCED GENERAL MODE - Treating as general query even if SQL was previous mode');
+      }
+      
+      const finalIsHotelQuery = forcedGeneralMode ? false : (isHotelQuery || forcedHotelMode);
       
       // 🚨 CRITICAL DEBUG: For general questions, NO CONTEXT
       let contextMessages: any[] = [];
