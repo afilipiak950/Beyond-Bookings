@@ -12,7 +12,7 @@ KI Pricing Agent, rebranded as "bebo convert", is a production-ready SaaS web ap
   - **Political Exclusions**: Political queries (bundeskanzler, präsident) properly excluded from hotel classification
   - **Enhanced System Prompts**: AI now gets explicit SQL examples and formatting instructions
   - **Comprehensive Debug Logging**: Full request/response tracking for troubleshooting
-  - **GPT-4o Default**: Upgraded from GPT-4o-mini for better performance and accuracy
+  - **GPT-5 UPGRADE**: System now uses GPT-5 and GPT-5 mini as primary models (no more GPT-4 variants)
 - **CRITICAL AI INTELLIGENCE OVERHAUL**: Completely rebuilt AI assistant system to achieve ChatGPT-level performance:
   - **Enhanced Message Analysis**: Ultra-precise detection for weather, hotel, calculation, and general queries
   - **Intelligent Tool Selection**: AI automatically chooses correct tools (weather→http_call, business→sql_query, math→calc_eval)

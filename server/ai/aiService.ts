@@ -769,31 +769,33 @@ ABER VERWENDE NUR DIE DATEN DES AKTUELLEN HOTELS AUS DEM KONTEXT!`;
     return baseTools;
   }
 
-  // Support future models including GPT-5
+  // Support GPT-5 and GPT-5 mini as primary models
   private getSupportedModel(requestedModel: string): string {
     const modelMapping = {
-      'gpt-5': 'gpt-4o', // Map GPT-5 to best available until released
-      'gpt-5-preview': 'gpt-4o',
-      'gpt-4o-mini': 'gpt-4o-mini',
-      'gpt-4o': 'gpt-4o',
-      'gpt-4': 'gpt-4',
-      'gpt-4-turbo': 'gpt-4-turbo-preview',
+      'gpt-5': 'gpt-5', // Use GPT-5 directly
+      'gpt-5-preview': 'gpt-5-preview',
+      'gpt-5-mini': 'gpt-5-mini', // Use GPT-5 mini
+      'gpt-4o-mini': 'gpt-5-mini', // Map old mini to GPT-5 mini
+      'gpt-4o': 'gpt-5', // Map GPT-4o to GPT-5
+      'gpt-4': 'gpt-5', // Map GPT-4 to GPT-5
+      'gpt-4-turbo': 'gpt-5',
     };
     
-    return modelMapping[requestedModel as keyof typeof modelMapping] || 'gpt-4o';
+    return modelMapping[requestedModel as keyof typeof modelMapping] || 'gpt-5';
   }
 
-  // Calculate usage cost with GPT-5 support
+  // Calculate usage cost with GPT-5 and GPT-5 mini support
   private calculateCost(usage: TokenUsage, model: string): number {
     const rates = {
-      'gpt-4o-mini': { input: 0.00015, output: 0.0006 },
-      'gpt-4o': { input: 0.0025, output: 0.01 },
-      'gpt-4': { input: 0.03, output: 0.06 },
-      'gpt-5': { input: 0.005, output: 0.015 }, // Estimated GPT-5 pricing
+      'gpt-5': { input: 0.005, output: 0.015 }, // GPT-5 pricing
       'gpt-5-preview': { input: 0.005, output: 0.015 },
+      'gpt-5-mini': { input: 0.0002, output: 0.0008 }, // GPT-5 mini pricing
+      'gpt-4o': { input: 0.0025, output: 0.01 },
+      'gpt-4o-mini': { input: 0.00015, output: 0.0006 },
+      'gpt-4': { input: 0.03, output: 0.06 },
     };
     
-    const rate = rates[model as keyof typeof rates] || rates['gpt-4o-mini'];
+    const rate = rates[model as keyof typeof rates] || rates['gpt-5-mini'];
     return (usage.prompt_tokens * rate.input + usage.completion_tokens * rate.output) / 1000;
   }
 
