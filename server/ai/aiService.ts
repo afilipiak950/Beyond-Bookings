@@ -285,22 +285,35 @@ export class AIService {
       const isHotelQuery = await this.isHotelQuestion(message);
       console.log('🏨 IS HOTEL QUERY:', isHotelQuery);
       
-      // Get recent messages for context (but limit for general questions)
-      const recentMessages = await this.getThreadMessages(threadId, userId);
+      // 🚨 CRITICAL DEBUG: For general questions, NO CONTEXT
+      let contextMessages: any[] = [];
       
-      // For general questions, use minimal context to avoid confusion
-      const contextLimit = isHotelQuery ? 10 : 2;
-      const contextMessages = recentMessages
-        .slice(0, contextLimit)
-        .reverse()
-        .map(msg => ({
-          role: msg.role,
-          content: msg.content,
-        }));
+      if (isHotelQuery) {
+        // Only hotel queries get context
+        const recentMessages = await this.getThreadMessages(threadId, userId);
+        contextMessages = recentMessages
+          .slice(0, 5)
+          .reverse()
+          .map(msg => ({
+            role: msg.role,
+            content: msg.content,
+          }));
+        console.log('🏨 HOTEL CONTEXT:', contextMessages.length, 'messages');
+      } else {
+        // General questions get ZERO context to prevent confusion
+        console.log('🧠 GENERAL QUESTION - NO CONTEXT PROVIDED');
+      }
 
       // Create simple, focused system message
       const systemMessage = this.getSimpleSystemMessage(isWeatherQuery, isHotelQuery, message);
       const messages = [systemMessage, ...contextMessages];
+      
+      console.log('🔍 FINAL MESSAGES TO OPENAI:', {
+        messageCount: messages.length,
+        systemPrompt: systemMessage.content.substring(0, 100) + '...',
+        contextCount: contextMessages.length,
+        currentQuestion: message
+      });
       
       // 🚨 CRITICAL FIX: For general questions, FORCE no tools
       const shouldUseTools = isHotelQuery || message.toLowerCase().includes('rechne') || /[\+\-\*\/=]/.test(message);
@@ -329,10 +342,19 @@ export class AIService {
         completionOptions.tool_choice = 'auto';
       }
       
+      console.log('🚀 CALLING OPENAI API with options:', {
+        model: completionOptions.model,
+        hasTools: !!completionOptions.tools,
+        toolCount: completionOptions.tools?.length || 0,
+        messageText: message.substring(0, 50)
+      });
+
       const stream = await openai.chat.completions.create(completionOptions);
 
       let assistantMessage = '';
       let toolCalls: any[] = [];
+      
+      console.log('✅ OPENAI STREAM CREATED for question:', message.substring(0, 50));
       let citations: Citation[] = [];
       let toolResults: any[] = [];
       let tokenUsage: TokenUsage = { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 };
@@ -380,6 +402,8 @@ export class AIService {
         name: tc.function?.name,
         args: tc.function?.arguments
       })));
+      console.log('📝 ASSISTANT MESSAGE PREVIEW:', assistantMessage.substring(0, 100) + '...');
+      console.log('❓ ORIGINAL QUESTION WAS:', message);
       
       if (toolCalls.length > 0) {
         console.log('🎯🎯🎯 AI SERVICE - Executing tools:', toolCalls.map(tc => tc.function?.name));
@@ -890,9 +914,9 @@ ABSOLUT VERBOTEN:
 - SQL für "Hauptstadt von Deutschland" oder ähnliche Fragen
 - Tools bei Wetter-Fragen
 
-CURRENT QUESTION: "${message}"
+You are ChatGPT. Answer this question: "${message}"
 
-Answer this specific question accurately using your knowledge. Do not reference previous conversation context.`
+Ignore all previous messages. Focus only on answering: "${message}"`
       };
   }
 
