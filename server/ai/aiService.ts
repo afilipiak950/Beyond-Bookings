@@ -1035,21 +1035,20 @@ Ignore all previous messages. Focus only on answering: "${message}"`
       return { deletedCount: 0, preservedCount: 0 };
     }
 
-    // Delete messages for these threads
-    if (threadIds.length > 0) {
+    // Delete related records in correct order to avoid foreign key constraints
+    for (const threadId of threadIds) {
+      // Delete logs first (they reference threads)
+      await db
+        .delete(aiLogs)
+        .where(eq(aiLogs.threadId, threadId));
+      
+      // Delete messages
       await db
         .delete(aiMessages)
-        .where(eq(aiMessages.threadId, threadIds[0]));
-      
-      // Delete messages for remaining threads
-      for (let i = 1; i < threadIds.length; i++) {
-        await db
-          .delete(aiMessages)
-          .where(eq(aiMessages.threadId, threadIds[i]));
-      }
+        .where(eq(aiMessages.threadId, threadId));
     }
 
-    // Delete the threads
+    // Finally delete the threads
     let deletedCount = 0;
     for (const threadId of threadIds) {
       await db
@@ -1077,14 +1076,20 @@ Ignore all previous messages. Focus only on answering: "${message}"`
       columns: { id: true }
     });
     
-    // Delete all messages for user's threads
+    // Delete all related records for user's threads
     for (const thread of userThreads) {
+      // Delete logs first (they reference threads)
+      await db
+        .delete(aiLogs)
+        .where(eq(aiLogs.threadId, thread.id));
+      
+      // Delete messages
       await db
         .delete(aiMessages)
         .where(eq(aiMessages.threadId, thread.id));
     }
 
-    // Then delete all threads and return count
+    // Finally delete all threads and return count
     const result = await db
       .delete(aiThreads)
       .where(eq(aiThreads.userId, userId))
