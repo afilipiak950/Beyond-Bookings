@@ -761,8 +761,7 @@ export default function Workflow() {
   // PowerPoint export state
   const [isExporting, setIsExporting] = useState(false);
 
-  // Save calculation state
-  const [isSaving, setIsSaving] = useState(false);
+
   
   // Editable cost breakdown fields for Step 2
   const [editableCosts, setEditableCosts] = useState({
@@ -1417,43 +1416,9 @@ export default function Workflow() {
     }
   };
 
-  // Save calculation function
-  const saveCalculation = async () => {
-    setIsSaving(true);
-    try {
-      // Calculate required fields based on workflow data
-      const projectCosts = workflowData.projectCosts || 20000;
-      const stars = workflowData.stars || 3;
-      const voucherValue = (workflowData.hotelVoucherValue && workflowData.hotelVoucherValue > 0) ? workflowData.hotelVoucherValue : (stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30);
-      const roomCount = workflowData.roomCount || Math.round(projectCosts / voucherValue);
-      const averagePrice = workflowData.averagePrice || 120;
-      const occupancyRate = workflowData.occupancyRate || 70;
-      
-      // Calculate pricing fields
-      const vatRate = 19.0; // 19% VAT
-      const vatAmount = (projectCosts * vatRate) / 100;
-      const operationalCosts = roomCount * 17; // 17€ per room operational cost
-      const profitMargin = projectCosts - operationalCosts - vatAmount;
-      const totalPrice = projectCosts + vatAmount;
-      const discountVsMarket = (averagePrice * roomCount) - totalPrice;
-
-      const calculationData = {
-        hotelName: workflowData.hotelName || 'Unnamed Hotel',
-        hotelUrl: workflowData.hotelUrl || '',
-        stars: stars,
-        roomCount: roomCount,
-        occupancyRate: occupancyRate.toString(),
-        averagePrice: averagePrice.toString(),
-        voucherPrice: voucherValue.toString(),
-        operationalCosts: operationalCosts.toString(),
-        vatRate: vatRate.toString(),
-        vatAmount: vatAmount.toString(),
-        profitMargin: profitMargin.toString(),
-        totalPrice: totalPrice.toString(),
-        discountVsMarket: discountVsMarket.toString(),
-        isDraft: false
-      };
-
+  // Save calculation mutation with automatic cache invalidation
+  const saveMutation = useMutation({
+    mutationFn: async (calculationData: any) => {
       const response = await fetch('/api/pricing-calculations', {
         method: 'POST',
         headers: {
@@ -1468,17 +1433,66 @@ export default function Workflow() {
         throw new Error(errorData.message || 'Failed to save calculation');
       }
 
-      const savedCalculation = await response.json();
+      return response.json();
+    },
+    onSuccess: (savedCalculation) => {
+      // ✅ CRITICAL: Invalidate the calculations cache so the /calculations page updates instantly
+      queryClient.invalidateQueries({ queryKey: ["/api/pricing-calculations"] });
       
-      // Show success message
-      alert(`Calculation saved successfully! ID: ${savedCalculation.id}`);
+      toast({
+        title: "Berechnung gespeichert",
+        description: `Kalkulation für ${workflowData.hotelName} erfolgreich gespeichert! ID: ${savedCalculation.data?.id}`,
+      });
       
-    } catch (error) {
+      console.log(`✅ Calculation saved with ID: ${savedCalculation.data?.id} - Cache invalidated`);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Speichern fehlgeschlagen",
+        description: error.message || 'Fehler beim Speichern der Berechnung',
+        variant: "destructive",
+      });
       console.error('Save calculation error:', error);
-      alert('Failed to save calculation. Please try again.');
-    } finally {
-      setIsSaving(false);
     }
+  });
+
+  // Save calculation function
+  const saveCalculation = async () => {
+    // Calculate required fields based on workflow data
+    const projectCosts = workflowData.projectCosts || 20000;
+    const stars = workflowData.stars || 3;
+    const voucherValue = (workflowData.hotelVoucherValue && workflowData.hotelVoucherValue > 0) ? workflowData.hotelVoucherValue : (stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30);
+    const roomCount = workflowData.roomCount || Math.round(projectCosts / voucherValue);
+    const averagePrice = workflowData.averagePrice || 120;
+    const occupancyRate = workflowData.occupancyRate || 70;
+    
+    // Calculate pricing fields
+    const vatRate = 19.0; // 19% VAT
+    const vatAmount = (projectCosts * vatRate) / 100;
+    const operationalCosts = roomCount * 17; // 17€ per room operational cost
+    const profitMargin = projectCosts - operationalCosts - vatAmount;
+    const totalPrice = projectCosts + vatAmount;
+    const discountVsMarket = (averagePrice * roomCount) - totalPrice;
+
+    const calculationData = {
+      hotelName: workflowData.hotelName || 'Unnamed Hotel',
+      hotelUrl: workflowData.hotelUrl || '',
+      stars: stars,
+      roomCount: roomCount,
+      occupancyRate: occupancyRate.toString(),
+      averagePrice: averagePrice.toString(),
+      voucherPrice: voucherValue.toString(),
+      operationalCosts: operationalCosts.toString(),
+      vatRate: vatRate.toString(),
+      vatAmount: vatAmount.toString(),
+      profitMargin: profitMargin.toString(),
+      totalPrice: totalPrice.toString(),
+      discountVsMarket: discountVsMarket.toString(),
+      isDraft: false
+    };
+
+    // Use the mutation instead of direct fetch
+    saveMutation.mutate(calculationData);
   };
 
   // PowerPoint export function
@@ -1839,13 +1853,13 @@ export default function Workflow() {
                 <div className="flex justify-between mt-6">
                   <Button
                     onClick={saveCalculation}
-                    disabled={isSaving || !workflowData.hotelName}
+                    disabled={saveMutation.isPending || !workflowData.hotelName}
                     variant="outline"
                     className="group relative overflow-hidden px-6 py-3 backdrop-blur-sm border-blue-300/50 hover:border-blue-400/60 transition-all duration-500 rounded-2xl"
                   >
-                    {isSaving ? (
+                    {saveMutation.isPending ? (
                       <>
-                        <Loader2 className="mr-2 h-4 w-4" />
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         Saving...
                       </>
                     ) : (
