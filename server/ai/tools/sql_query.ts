@@ -70,17 +70,30 @@ export async function sql_query(input: SqlQueryInput | any): Promise<SqlQueryRes
   console.log('🚀🚀🚀 SQL_QUERY FUNCTION CALLED WITH:', JSON.stringify(input));
   console.log('🚀🚀🚀 FUNCTION START TIME:', new Date().toISOString());
   
-  // 🔴🔴🔴 ULTRA-CRITICAL: Use HotelContextManager for correct hotel
-  const managerHotel = HotelContextManager.getCurrentHotel();
-  const managerHotelData = managerHotel ? HotelContextManager.getHotelData(managerHotel) : null;
-  
-  // Check context from input OR from HotelContextManager
+  // Check if this is a hotel-related query first
   const contextLower = (input.context?.toLowerCase() || '');
-  const hotelFromInput = input.hotelContext?.toLowerCase() || '';
-  const forcedHotelName = managerHotelData?.name || hotelFromInput || extractHotelFromContext(contextLower);
+  const queryLower = (input.query?.toLowerCase() || input.sql?.toLowerCase() || '');
   
-  if (forcedHotelName) {
-    console.log(`🔴🔴🔴 FORCED HOTEL CONTEXT: "${forcedHotelName}" from HotelContextManager`);
+  // Check if the query is NOT about hotels (weather, general knowledge, etc.)
+  const isNonHotelQuery = HotelContextManager.isNonHotelQuery(contextLower) || 
+                          HotelContextManager.isNonHotelQuery(queryLower);
+  
+  if (isNonHotelQuery) {
+    console.log('🌍 Non-hotel SQL query detected, NOT forcing any hotel context');
+  }
+  
+  // Only use hotel context if it's a hotel-related query
+  let forcedHotelName: string | null = null;
+  if (!isNonHotelQuery) {
+    const managerHotel = HotelContextManager.getCurrentHotel();
+    const managerHotelData = managerHotel ? HotelContextManager.getHotelData(managerHotel) : null;
+    const hotelFromInput = input.hotelContext?.toLowerCase() || '';
+    forcedHotelName = managerHotelData?.name || hotelFromInput || extractHotelFromContext(contextLower);
+    
+    if (forcedHotelName) {
+      console.log(`🔴🔴🔴 FORCED HOTEL CONTEXT: "${forcedHotelName}" from HotelContextManager`);
+    }
+  }
   
   try {
     // Handle both new format (query) and old format (sql) for backward compatibility
@@ -615,5 +628,4 @@ async function performTriage(): Promise<TriageData> {
       columns: []
     };
   }
-}
 }
