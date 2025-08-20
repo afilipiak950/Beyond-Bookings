@@ -3703,10 +3703,19 @@ export default function Workflow() {
               </div>
             )}
           </div>
-        </DialogContent>
-      </Dialog>
+                    </div>
+                  </TabsContent>
 
-      {/* Extracted Data Display - Editable with Tabs */}
+                  <TabsContent value="reviews" className="mt-4">
+                    <div className="space-y-4">
+                      {/* Reviews content will go here */}
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </div>
+            )}
+
+            {/* Extracted Data Display - Editable with Tabs */}
       {extractedData && (
         <div className="mt-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200">
           <h3 className="font-semibold text-green-800 mb-3 flex items-center">
