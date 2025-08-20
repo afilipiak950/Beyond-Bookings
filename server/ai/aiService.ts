@@ -272,16 +272,6 @@ export class AIService {
 
       // 🚀 ULTRA-SIMPLE INTELLIGENT ROUTING
       console.log('🎯 USER MESSAGE:', message);
-      
-      // Get recent messages for context
-      const recentMessages = await this.getThreadMessages(threadId, userId);
-      const contextMessages = recentMessages
-        .slice(0, 20) // Last 20 messages
-        .reverse()
-        .map(msg => ({
-          role: msg.role,
-          content: msg.content,
-        }));
 
       // 🎯 DEBUG MESSAGE ANALYSIS
       console.log('🔍 ANALYZING MESSAGE:', `"${message}"`);
@@ -294,6 +284,19 @@ export class AIService {
       // 🏨 HOTEL DETECTION - Only for actual hotel/business questions
       const isHotelQuery = await this.isHotelQuestion(message);
       console.log('🏨 IS HOTEL QUERY:', isHotelQuery);
+      
+      // Get recent messages for context (but limit for general questions)
+      const recentMessages = await this.getThreadMessages(threadId, userId);
+      
+      // For general questions, use minimal context to avoid confusion
+      const contextLimit = isHotelQuery ? 10 : 2;
+      const contextMessages = recentMessages
+        .slice(0, contextLimit)
+        .reverse()
+        .map(msg => ({
+          role: msg.role,
+          content: msg.content,
+        }));
 
       // Create simple, focused system message
       const systemMessage = this.getSimpleSystemMessage(isWeatherQuery, isHotelQuery, message);
@@ -887,10 +890,11 @@ ABSOLUT VERBOTEN:
 - SQL für "Hauptstadt von Deutschland" oder ähnliche Fragen
 - Tools bei Wetter-Fragen
 
-VERHALTE DICH WIE CHATGPT - beantworte Allgemeinwissen direkt!
-
-Aktuelle Frage: "${message}"`
-    };
+🎯 WICHTIG: Beantworte diese SPEZIFISCHE Frage: "${message}"
+- Ignoriere vorherige Antworten komplett
+- Analysiere nur die aktuelle Frage
+- Gib eine frische, korrekte Antwort`
+      };
   }
 
   // Get user threads
