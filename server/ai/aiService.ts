@@ -311,16 +311,23 @@ export class AIService {
       let contextMessages: any[] = [];
       
       if (finalIsHotelQuery) {
-        // Only hotel queries get context
+        // CRITICAL FIX: Only get HOTEL-RELATED context, filter out weather/general questions
         const recentMessages = await this.getThreadMessages(threadId, userId);
         contextMessages = recentMessages
           .slice(0, 5)
           .reverse()
+          .filter(msg => {
+            // Only include messages that are hotel/business related, exclude weather/general
+            const content = msg.content.toLowerCase();
+            const isWeatherMsg = content.includes('wetter') || content.includes('weather') || content.includes('düsseldorf');
+            const isHotelMsg = content.includes('hotel') || content.includes('dolder') || content.includes('kalkulation') || msg.role === 'user';
+            return !isWeatherMsg || isHotelMsg;
+          })
           .map(msg => ({
             role: msg.role,
             content: msg.content,
           }));
-        console.log('🏨 HOTEL CONTEXT:', contextMessages.length, 'messages');
+        console.log('🏨 HOTEL CONTEXT (filtered):', contextMessages.length, 'messages');
       } else {
         // General questions get ZERO context to prevent confusion
         console.log('🧠 GENERAL QUESTION - NO CONTEXT PROVIDED');
@@ -894,18 +901,20 @@ Provide specific weather information for the city mentioned, including climate p
     if (isHotelQuery) {
       return {
         role: 'system', 
-        content: `You are a hotel business analyst. You have access to database tools and MUST use them for hotel questions.
+        content: `You are a hotel business analyst with access to SQL database tools. You MUST use the sql_query tool for this hotel question.
 
-MANDATORY: Use sql_query tool for ALL hotel-related questions!
+CRITICAL INSTRUCTIONS:
+1. ALWAYS use sql_query tool first for hotel questions
+2. Do NOT provide weather information 
+3. Focus ONLY on hotel business data
+4. Ignore any previous weather context
 
-Example queries:
-- SELECT * FROM pricing_calculations WHERE hotel_name ILIKE '%dolder%' LIMIT 1
-- SELECT * FROM pricing_calculations ORDER BY created_at DESC LIMIT 5
-- SELECT hotel_name, profit_margin FROM pricing_calculations
+Current hotel question: "${message}"
 
-Current question: "${message}"
+Available tools: sql_query, calc_eval
+MANDATORY: Use sql_query tool to get hotel data from pricing_calculations table.
 
-CRITICAL: Do NOT provide any hotel information without using sql_query tool first!`
+Example: SELECT * FROM pricing_calculations WHERE hotel_name ILIKE '%dolder%' LIMIT 5`
       };
     }
 
