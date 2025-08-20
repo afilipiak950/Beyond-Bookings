@@ -285,10 +285,17 @@ export class AIService {
       const isHotelQuery = await this.isHotelQuestion(message);
       console.log('🏨 IS HOTEL QUERY:', isHotelQuery);
       
+      // 🚨 CRITICAL: Override for SQL mode - if user explicitly chose SQL mode, treat as hotel query
+      const forcedHotelMode = mode === 'sql';
+      if (forcedHotelMode) {
+        console.log('🔧 FORCED SQL MODE - Treating as hotel query');
+      }
+      const finalIsHotelQuery = isHotelQuery || forcedHotelMode;
+      
       // 🚨 CRITICAL DEBUG: For general questions, NO CONTEXT
       let contextMessages: any[] = [];
       
-      if (isHotelQuery) {
+      if (finalIsHotelQuery) {
         // Only hotel queries get context
         const recentMessages = await this.getThreadMessages(threadId, userId);
         contextMessages = recentMessages
@@ -305,7 +312,7 @@ export class AIService {
       }
 
       // Create simple, focused system message
-      const systemMessage = this.getSimpleSystemMessage(isWeatherQuery, isHotelQuery, message);
+      const systemMessage = this.getSimpleSystemMessage(isWeatherQuery, finalIsHotelQuery, message);
       const messages = [systemMessage, ...contextMessages];
       
       console.log('🔍 FINAL MESSAGES TO OPENAI:', {
@@ -316,7 +323,7 @@ export class AIService {
       });
       
       // 🚨 CRITICAL FIX: For general questions, FORCE no tools
-      const shouldUseTools = isHotelQuery || message.toLowerCase().includes('rechne') || /[\+\-\*\/=]/.test(message);
+      const shouldUseTools = finalIsHotelQuery || message.toLowerCase().includes('rechne') || /[\+\-\*\/=]/.test(message);
       console.log('🔧 SHOULD USE TOOLS:', shouldUseTools, 'for message:', message.substring(0, 50));
 
       // 🚀 INTELLIGENT TOOL SELECTION - Only provide tools when needed
@@ -817,9 +824,22 @@ ABER VERWENDE NUR DIE DATEN DES AKTUELLEN HOTELS AUS DEM KONTEXT!`;
 
   // 🏨 DYNAMIC HOTEL DETECTION - Now uses database + spelling correction
   private async isHotelQuestion(message: string): Promise<boolean> {
+    await IntelligentDetector.refreshHotelData();
     const analysis = await IntelligentDetector.detectHotelBusiness(message);
-    console.log('🏨 DYNAMIC HOTEL DETECTION:', analysis?.type === 'hotel_business', 'for message:', message.substring(0, 50));
-    return analysis?.type === 'hotel_business' || false;
+    const isHotel = analysis?.type === 'hotel_business' || false;
+    console.log('🏨 DYNAMIC HOTEL DETECTION:', isHotel, 'for message:', message.substring(0, 50));
+    
+    // Additional debug information
+    if (analysis) {
+      console.log('🏨 DETECTION DETAILS:', {
+        type: analysis.type,
+        confidence: analysis.confidence,
+        extractedHotel: analysis.extractedHotel,
+        suggestedTools: analysis.suggestedTools
+      });
+    }
+    
+    return isHotel;
   }
 
   // 🚀 SIMPLE SYSTEM MESSAGE

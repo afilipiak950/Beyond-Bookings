@@ -146,7 +146,7 @@ export class IntelligentDetector {
 
   static async detectHotelBusiness(msg: string): Promise<QueryAnalysis | null> {
     // 🚨 CRITICAL: More specific business words to prevent false positives
-    const coreBusinessWords = ['kalkulation', 'kalkaulation', 'kalkaultion', 'calculation', 
+    const coreBusinessWords = ['kalkulation', 'kalkaulation', 'kalkaultion', 'kalkualtion', 'calculation', 
                               'profit', 'gewinn', 'umsatz', 'revenue', 'zimmer', 'auslastung'];
     
     // Context-dependent words that need hotel context
@@ -197,11 +197,20 @@ export class IntelligentDetector {
     const hasHotelKeyword = this.hotelCache.keywords.some(keyword => msg.includes(keyword));
     
     // Determine if this is a hotel/business query
-    // Must have either: core business word + hotel context, OR hotel name detected, OR explicit hotel mention
-    const isHotelQuery = (hasCoreBusinessWord) || 
-                        (hasHotelContextWord && (detectedHotel || hasHotelKeyword || msg.includes('hotel'))) ||
-                        (detectedHotel) ||
+    // Logic: Core business word OR (hotel name + context word) OR explicit hotel mention
+    const isHotelQuery = hasCoreBusinessWord || 
+                        detectedHotel || 
+                        (hasHotelContextWord && (hasHotelKeyword || msg.includes('hotel'))) ||
                         (msg.includes('hotel') && hasHotelKeyword);
+    
+    console.log('🔍 HOTEL QUERY LOGIC DEBUG:', {
+      hasCoreBusinessWord,
+      detectedHotel,
+      hasHotelContextWord,
+      hasHotelKeyword,
+      finalResult: isHotelQuery,
+      message: msg.substring(0, 50)
+    });
     
     if (isHotelQuery) {
       console.log('🏨 HOTEL/BUSINESS DETECTED:', { 
