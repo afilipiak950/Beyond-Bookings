@@ -298,25 +298,35 @@ export class AIService {
       // Create simple, focused system message
       const systemMessage = this.getSimpleSystemMessage(isWeatherQuery, isHotelQuery, message);
       const messages = [systemMessage, ...contextMessages];
+      
+      // 🚨 CRITICAL FIX: For general questions, FORCE no tools
+      const shouldUseTools = isHotelQuery || message.toLowerCase().includes('rechne') || /[\+\-\*\/=]/.test(message);
+      console.log('🔧 SHOULD USE TOOLS:', shouldUseTools, 'for message:', message.substring(0, 50));
 
-      // 🚀 SIMPLIFIED TOOL SELECTION - All tools always available for maximum intelligence
-      const availableTools = toolDefinitions;
-      console.log('🧠 ULTRA-SMART MODE - All tools available, let AI choose intelligently');
+      // 🚀 INTELLIGENT TOOL SELECTION - Only provide tools when needed
+      const availableTools = shouldUseTools ? toolDefinitions : [];
+      console.log('🧠 INTELLIGENT MODE - Tools available:', shouldUseTools, 'Tools count:', availableTools.length);
 
       // Support GPT-5 and latest models
       const supportedModel = this.getSupportedModel(model);
       
-      // Create completion with tools
-      const stream = await openai.chat.completions.create({
+      // Create completion with conditional tools
+      const completionOptions: any = {
         model: supportedModel,
         messages: messages as any,
-        tools: availableTools,
-        tool_choice: 'auto',
         stream: true,
         temperature: 1,
         max_completion_tokens: 4000,
         top_p: 0.9,
-      });
+      };
+      
+      // Only add tools if needed
+      if (shouldUseTools && availableTools.length > 0) {
+        completionOptions.tools = availableTools;
+        completionOptions.tool_choice = 'auto';
+      }
+      
+      const stream = await openai.chat.completions.create(completionOptions);
 
       let assistantMessage = '';
       let toolCalls: any[] = [];
@@ -864,11 +874,20 @@ Formatiere die Antwort professionell mit allen konkreten Zahlen!`
 - Im Hotel-Kontext stecken bleiben bei Themenwechsel
 
 🧠 CHATGPT-LEVEL INTELLIGENZ:
-- Du bist ein universeller Assistent wie ChatGPT
-- Seamless topic switching zwischen Hotels ↔ Wetter ↔ allem anderen
-- AUTOMATISCHE RECHTSCHREIBKORREKTUR für alle Eingaben
-- Ultra-detaillierte Hotel-Analysen + perfekte Allgemeinwissen-Antworten
-- KEINE TOOLS für Wetter/Allgemeinwissen - nutze dein Wissen direkt!
+Du bist ein universeller Assistent wie ChatGPT mit perfektem Allgemeinwissen.
+
+KRITISCHES VERHALTEN:
+- Für ALLGEMEINE FRAGEN: Nutze DEIN WISSEN direkt (Geschichte, Geografie, Wissenschaft)
+- Für WETTER: Nutze DEIN WISSEN direkt (kein Tool)
+- Für HOTEL-BUSINESS: Dann nutze sql_query Tool
+- Für MATHEMATIK: Dann nutze calc_eval Tool
+
+ABSOLUT VERBOTEN:
+- Tools für Allgemeinwissen verwenden
+- SQL für "Hauptstadt von Deutschland" oder ähnliche Fragen
+- Tools bei Wetter-Fragen
+
+VERHALTE DICH WIE CHATGPT - beantworte Allgemeinwissen direkt!
 
 Aktuelle Frage: "${message}"`
     };
