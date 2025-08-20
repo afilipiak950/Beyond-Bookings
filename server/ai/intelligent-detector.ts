@@ -4,7 +4,7 @@
  */
 
 import { db } from '../db.js';
-import { hotels } from '../shared/schema.js';
+import { hotels } from '../../shared/schema.js';
 
 export interface QueryAnalysis {
   type: 'weather' | 'hotel_business' | 'calculation' | 'general';

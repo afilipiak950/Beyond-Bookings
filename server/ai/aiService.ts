@@ -810,8 +810,10 @@ http_call({ endpoint: "https://wttr.in/Düsseldorf?format=j1", method: "GET" })`
 
 🏨 HOTEL-MODUS AKTIV!
 - NUTZE: sql_query Tool für Hotel-Daten
-- Antworte mit professionellen Business-Analysen
-- Zeige Kalkulationen, Profitabilität, Vergleiche`
+- TABELLE: pricing_calculations (NICHT kalkulationen!)
+- SPALTEN: hotel_name, stars, total_price, profit_margin, operational_costs, created_at
+- BEISPIEL: SELECT * FROM pricing_calculations WHERE LOWER(hotel_name) LIKE '%dolder%' ORDER BY created_at DESC LIMIT 1
+- Antworte mit professionellen Business-Analysen basierend auf ECHTEN Daten`
       };
     }
 
@@ -828,7 +830,8 @@ http_call({ endpoint: "https://wttr.in/Düsseldorf?format=j1", method: "GET" })`
 
 2. **HOTEL/BUSINESS-FRAGEN** (kalkulation, hotel, profit, letzte, alle, business):
    ➡️ IMMER NUTZEN: sql_query Tool
-   ➡️ Für Datenbank-Abfragen und Business-Daten
+   ➡️ TABELLE: pricing_calculations (NICHT kalkulationen!)
+   ➡️ Für echte Datenbank-Abfragen und Business-Daten
 
 3. **REINE MATHEMATIK** (nur Zahlen und Operatoren wie +, -, *, /):
    ➡️ DANN NUTZEN: calc_eval Tool

@@ -149,11 +149,13 @@ export async function sql_query(input: SqlQueryInput | any): Promise<SqlQueryRes
     
     // CRITICAL FIX: Auto-correct wrong table names and column names
     if (query && typeof query === 'string') {
-      // Fix common table name mistakes
-      query = query.replace(/\bcalculations\b/g, 'pricing_calculations');
-      query = query.replace(/\bhotel_calculations\b/g, 'pricing_calculations');
-      query = query.replace(/\bcustomers\b/g, 'users');
-      query = query.replace(/\bapprovals\b/g, 'approval_requests');
+      // Fix common table name mistakes - ESPECIALLY German ones
+      query = query.replace(/\bkalkulationen\b/gi, 'pricing_calculations');
+      query = query.replace(/\bcalculations\b/gi, 'pricing_calculations');
+      query = query.replace(/\bhotel_calculations\b/gi, 'pricing_calculations');
+      query = query.replace(/\bberechnungen\b/gi, 'pricing_calculations');
+      query = query.replace(/\bcustomers\b/gi, 'users');
+      query = query.replace(/\bapprovals\b/gi, 'approval_requests');
       
       // Fix column name mistakes - hotels table
       query = query.replace(/\brating\b/g, 'stars');
@@ -396,8 +398,8 @@ export async function sql_query(input: SqlQueryInput | any): Promise<SqlQueryRes
 
     // If zero results, force comprehensive data retrieval
     if (rowCount === 0) {
-      console.log('🚨 Zero results detected - this should NOT happen!');
-      console.log('🚨 Database has 8 calculations, but query returned 0');
+      console.log('🚨 Zero results detected - providing fallback data!');
+      console.log('🚨 Database has calculations, but specific query returned 0');
       
       // FORCE DEBUG: Try a simple count query to verify connection
       try {
