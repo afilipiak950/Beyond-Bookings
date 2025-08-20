@@ -358,10 +358,15 @@ export class AIService {
         model: supportedModel,
         messages: messages as any,
         stream: true,
-        temperature: 1,
         max_completion_tokens: 4000,
-        top_p: 0.9,
       };
+      
+      // Only add parameters that are supported by the model
+      if (!supportedModel.startsWith('gpt-5')) {
+        // GPT-4 models support these parameters
+        completionOptions.temperature = 1;
+        completionOptions.top_p = 0.9;
+      }
       
       // Only add tools if needed
       if (shouldUseTools && availableTools.length > 0) {
