@@ -2196,6 +2196,43 @@ CRITICAL: You must always return a specific price number in EUR. If exact data u
     }
   });
 
+  // Create new pricing calculation
+  app.post('/api/pricing-calculations', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const userId = (req as any).user.id;
+      console.log(`💾 Saving new pricing calculation for user ${userId}`);
+      
+      // Validate the pricing calculation data
+      const calculationData = insertPricingCalculationSchema.parse({
+        ...req.body,
+        userId: userId
+      });
+      
+      const calculation = await storage.createPricingCalculation(calculationData);
+      console.log(`✅ Pricing calculation saved with ID: ${calculation.id}`);
+      
+      res.json({
+        data: calculation,
+        success: true,
+        message: "Pricing calculation saved successfully"
+      });
+    } catch (error: any) {
+      console.error('❌ Failed to save pricing calculation:', error);
+      
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ 
+          message: "Invalid pricing calculation data", 
+          error: error.errors?.[0]?.message || 'Validation failed'
+        });
+      }
+      
+      res.status(500).json({ 
+        message: "Failed to save pricing calculation", 
+        error: error?.message || 'Unknown error'
+      });
+    }
+  });
+
   app.post('/api/hotels/extract-with-reviews', requireAuth, async (req: Request, res: Response) => {
     try {
       const { name, url } = req.body;
