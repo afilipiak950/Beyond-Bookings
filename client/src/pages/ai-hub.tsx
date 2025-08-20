@@ -1148,7 +1148,7 @@ export default function AIHub() {
                     ? 'bg-primary text-primary-foreground ml-12' 
                     : 'glass-card border border-border/50'
                 )}>
-                  <div className="whitespace-pre-wrap text-sm">
+                  <div className="text-sm">
                     {msg.content && msg.content.includes('Tool Result') ? (
                       <div className="space-y-2">
                         {/* Parse and format tool results */}

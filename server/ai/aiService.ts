@@ -598,7 +598,7 @@ Respond conversationally with proper formatting, explanations, and insights. Don
             }
           }
 
-          assistantMessage += '\n\n' + interpretedResponse;
+          assistantMessage += interpretedResponse;
         }
       }
 
