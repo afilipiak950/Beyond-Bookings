@@ -890,10 +890,9 @@ ABSOLUT VERBOTEN:
 - SQL für "Hauptstadt von Deutschland" oder ähnliche Fragen
 - Tools bei Wetter-Fragen
 
-🎯 WICHTIG: Beantworte diese SPEZIFISCHE Frage: "${message}"
-- Ignoriere vorherige Antworten komplett
-- Analysiere nur die aktuelle Frage
-- Gib eine frische, korrekte Antwort`
+CURRENT QUESTION: "${message}"
+
+Answer this specific question accurately using your knowledge. Do not reference previous conversation context.`
       };
   }
 
