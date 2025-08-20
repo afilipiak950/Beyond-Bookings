@@ -332,13 +332,18 @@ export class AIService {
         currentQuestion: message
       });
       
-      // 🚨 CRITICAL FIX: Hotel queries ALWAYS get tools
-      const shouldUseTools = finalIsHotelQuery || message.toLowerCase().includes('rechne') || /[\+\-\*\/=]/.test(message);
-      console.log('🔧 SHOULD USE TOOLS:', shouldUseTools, 'for message:', message.substring(0, 50));
+      // 🚨 CRITICAL: CLEAR TOOL LOGIC
+      // Hotel queries = OpenAI + SQL tools
+      // Calculations = OpenAI + calc_eval tools  
+      // General questions = OpenAI ONLY (no tools)
+      const isCalculationQuery = message.toLowerCase().includes('rechne') || /[\+\-\*\/=]/.test(message);
+      const shouldUseTools = finalIsHotelQuery || isCalculationQuery;
+      
       console.log('🔧 TOOL DECISION LOGIC:', {
         isHotelQuery: finalIsHotelQuery,
-        hasCalculation: message.toLowerCase().includes('rechne') || /[\+\-\*\/=]/.test(message),
-        finalDecision: shouldUseTools
+        isCalculationQuery: isCalculationQuery,
+        shouldUseTools: shouldUseTools,
+        strategy: shouldUseTools ? (finalIsHotelQuery ? 'OpenAI + SQL' : 'OpenAI + Calc') : 'OpenAI Only'
       });
 
       // 🚀 INTELLIGENT TOOL SELECTION - Only provide tools when needed
@@ -862,22 +867,11 @@ ABER VERWENDE NUR DIE DATEN DES AKTUELLEN HOTELS AUS DEM KONTEXT!`;
     if (isWeatherQuery) {
       return {
         role: 'system',
-        content: `Du bist ChatGPT. Der Nutzer fragt nach dem Wetter in einer bestimmten Stadt.
+        content: `You are ChatGPT. Answer this weather question with detailed, helpful information using your knowledge.
 
-Gib ECHTE, hilfreiche Wetter-Informationen basierend auf deinem Wissen:
+Current question: "${message}"
 
-Für "Wetter in Hamburg heute":
-"Das Wetter in Hamburg ist typisch norddeutsch mit einem gemäßigten maritimen Klima. Hamburg liegt an der Elbe, etwa 100km von der Nordsee entfernt.
-
-🌤️ **Typisches Hamburg-Wetter:**
-- **Sommer (Juni-August):** 18-23°C, oft bewölkt mit gelegentlichen Schauern
-- **Winter (Dezember-Februar):** 2-7°C, feuchte, graue Tage
-- **Aktuell (August):** Angenehme Sommertemperaturen um 20-25°C möglich
-- **Besonderheit:** Schnell wechselndes Wetter durch Nähe zur Nordsee
-
-Hamburg hat etwa 130 Regentage im Jahr. Im Sommer sind Temperaturen von 20-25°C normal, mit gelegentlichen warmen Phasen bis 30°C. Die Luftfeuchtigkeit ist durch die Nähe zum Wasser meist recht hoch."
-
-Gib DETAILLIERTE, nützliche Informationen statt generische Phrasen.`
+Provide specific weather information for the city mentioned, including climate patterns, typical temperatures, and seasonal information. Be detailed and informative.`
       };
     }
 
