@@ -291,13 +291,16 @@ export class AIService {
         console.log('🔧 FORCED SQL MODE - Treating as hotel query');
       }
       
-      // 🚨 CRITICAL: Override for general mode - if user explicitly chose general mode, treat as general query
-      const forcedGeneralMode = mode === 'general';
-      if (forcedGeneralMode && !isHotelQuery) {
-        console.log('🔧 FORCED GENERAL MODE - Treating as general query even if SQL was previous mode');
-      }
+      // 🚨 CRITICAL FIX: Hotel queries ALWAYS get tools, regardless of mode
+      // Only non-hotel queries respect general mode
+      const finalIsHotelQuery = isHotelQuery || forcedHotelMode;
       
-      const finalIsHotelQuery = forcedGeneralMode ? false : (isHotelQuery || forcedHotelMode);
+      console.log('🔧 FINAL HOTEL QUERY DECISION:', {
+        original: isHotelQuery,
+        forced: forcedHotelMode,
+        final: finalIsHotelQuery,
+        mode: mode
+      });
       
       // 🚨 CRITICAL DEBUG: For general questions, NO CONTEXT
       let contextMessages: any[] = [];
@@ -329,9 +332,14 @@ export class AIService {
         currentQuestion: message
       });
       
-      // 🚨 CRITICAL FIX: For general questions, FORCE no tools
+      // 🚨 CRITICAL FIX: Hotel queries ALWAYS get tools
       const shouldUseTools = finalIsHotelQuery || message.toLowerCase().includes('rechne') || /[\+\-\*\/=]/.test(message);
       console.log('🔧 SHOULD USE TOOLS:', shouldUseTools, 'for message:', message.substring(0, 50));
+      console.log('🔧 TOOL DECISION LOGIC:', {
+        isHotelQuery: finalIsHotelQuery,
+        hasCalculation: message.toLowerCase().includes('rechne') || /[\+\-\*\/=]/.test(message),
+        finalDecision: shouldUseTools
+      });
 
       // 🚀 INTELLIGENT TOOL SELECTION - Only provide tools when needed
       const availableTools = shouldUseTools ? toolDefinitions : [];
@@ -877,20 +885,25 @@ Beispiel-Antwort für "Wetter in Düsseldorf":
         content: `Du bist ein intelligenter Business-Analyst für Hotels.
 
 🏨 HOTEL-MODUS AKTIV!
-- NUTZE: sql_query Tool für Hotel-Daten
-- TABELLE: pricing_calculations (NICHT kalkulationen!)
-- WICHTIGE SPALTEN: hotel_name, stars, total_price, profit_margin, operational_costs, voucher_price, room_count, occupancy_rate, average_price
-- BEISPIEL: SELECT hotel_name, stars, total_price, profit_margin, operational_costs FROM pricing_calculations WHERE hotel_name ILIKE '%dolder%' ORDER BY created_at DESC LIMIT 1
 
-KRITISCH: Wenn du Daten erhältst, ZEIGE ALLE DETAILS:
-- Hotelname und Sterne-Kategorie
-- Gesamtpreis (total_price) 
-- Profit-Margin (profit_margin)
-- Betriebskosten (operational_costs)
-- Zimmeranzahl (room_count) und Auslastung (occupancy_rate)
-- Durchschnittspreis pro Zimmer (average_price)
+KRITISCH: Du MUSST das sql_query Tool verwenden für alle Hotel-Fragen!
 
-Formatiere die Antwort professionell mit allen konkreten Zahlen!`
+SQL BEISPIELE:
+- Hotel finden: SELECT * FROM pricing_calculations WHERE hotel_name ILIKE '%dolder%' LIMIT 1
+- Alle Hotels: SELECT hotel_name, stars, total_price, profit_margin FROM pricing_calculations ORDER BY created_at DESC
+- Spezifische Daten: SELECT hotel_name, total_price, profit_margin, operational_costs, room_count FROM pricing_calculations WHERE hotel_name ILIKE '%${message.includes('dolder') ? 'dolder' : 'hotel'}%'
+
+TABELLE: pricing_calculations
+SPALTEN: hotel_name, stars, total_price, profit_margin, operational_costs, voucher_price, room_count, occupancy_rate, average_price, created_at
+
+ANTWORT-FORMAT:
+🏨 **[Hotel Name]** ([Stars]⭐)
+💰 **Gesamtpreis:** €[total_price]
+📊 **Profit-Margin:** [profit_margin]%
+🏢 **Betriebskosten:** €[operational_costs]
+🛏️ **Zimmer:** [room_count] | **Auslastung:** [occupancy_rate]%
+
+Verwende IMMER das sql_query Tool für Hotel-Daten!`
       };
     }
 
