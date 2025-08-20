@@ -144,7 +144,7 @@ export class IntelligentDetector {
     return null;
   }
 
-  private static async detectHotelBusiness(msg: string): Promise<QueryAnalysis | null> {
+  static async detectHotelBusiness(msg: string): Promise<QueryAnalysis | null> {
     // Core business words that always indicate hotel/business queries
     const businessWords = ['kalkulation', 'kalkaulation', 'kalkaultion', 'calculation', 
                           'profit', 'gewinn', 'business', 'letzte', 'alle', 'umsatz', 'revenue'];
@@ -193,7 +193,7 @@ export class IntelligentDetector {
       return {
         type: 'hotel_business',
         confidence: detectedHotel ? 0.95 : 0.85,
-        extractedHotel: detectedHotel,
+        extractedHotel: detectedHotel || undefined,
         suggestedTools: ['sql_query'],
         spellingCorrected
       };

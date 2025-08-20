@@ -292,7 +292,7 @@ export class AIService {
       console.log('🌤️ IS WEATHER QUERY:', isWeatherQuery);
       
       // 🏨 HOTEL DETECTION - Only for actual hotel/business questions
-      const isHotelQuery = this.isHotelQuestion(message);
+      const isHotelQuery = await this.isHotelQuestion(message);
       console.log('🏨 IS HOTEL QUERY:', isHotelQuery);
 
       // Create simple, focused system message
@@ -780,9 +780,9 @@ ABER VERWENDE NUR DIE DATEN DES AKTUELLEN HOTELS AUS DEM KONTEXT!`;
 
   // 🏨 DYNAMIC HOTEL DETECTION - Now uses database + spelling correction
   private async isHotelQuestion(message: string): Promise<boolean> {
-    const analysis = await IntelligentDetector.analyzeMessage(message);
-    console.log('🏨 DYNAMIC HOTEL DETECTION:', analysis.type === 'hotel_business', 'for message:', message.substring(0, 50));
-    return analysis.type === 'hotel_business';
+    const analysis = await IntelligentDetector.detectHotelBusiness(message);
+    console.log('🏨 DYNAMIC HOTEL DETECTION:', analysis?.type === 'hotel_business', 'for message:', message.substring(0, 50));
+    return analysis?.type === 'hotel_business' || false;
   }
 
   // 🚀 SIMPLE SYSTEM MESSAGE
@@ -793,10 +793,17 @@ ABER VERWENDE NUR DIE DATEN DES AKTUELLEN HOTELS AUS DEM KONTEXT!`;
         content: `Du bist ein intelligenter AI-Assistent. Der Nutzer fragt nach dem WETTER.
 
 🌤️ WETTER-MODUS AKTIV!
-- NUTZE DEINE INTELLIGENZ: Beantworte Wetter-Fragen direkt wie ChatGPT
-- KEINE TOOLS NÖTIG: Du hast umfassendes Wetter-Wissen
-- Gib allgemeine Informationen über Klima, Jahreszeiten, typisches Wetter
-- Antworte natürlich und hilfreich auf Deutsch`
+Du bist ein ChatGPT-ähnlicher Assistent mit umfassendem Wetter-Wissen.
+
+VERHALTEN:
+- Beantworte Wetter-Fragen DIREKT mit deinem Wissen
+- Gib allgemeine Klima-Informationen für die angefragte Stadt
+- Erkläre typisches Wetter für die Jahreszeit
+- Sei hilfreich und informativ
+- KEINE TOOLS verwenden - nutze deine Intelligenz!
+
+Beispiel-Antwort für "Wetter in Düsseldorf":
+"Das Wetter in Düsseldorf ist typisch für Nordrhein-Westfalen. Im Sommer erreichen die Temperaturen meist 20-25°C, im Winter 0-5°C. Düsseldorf hat ein gemäßigtes ozeanisches Klima mit regelmäßigen Niederschlägen. Aktuell im August sollten angenehme Sommertemperaturen herrschen."`
       };
     }
 
@@ -843,18 +850,25 @@ Formatiere die Antwort professionell mit allen konkreten Zahlen!`
    ➡️ DANN NUTZEN: calc_eval Tool
    ➡️ NUR für mathematische Berechnungen!
 
-4. **ALLGEMEINE FRAGEN** (Geschichte, Wissen, Fakten, Wetter):
-   ➡️ Nutze deine ChatGPT-Level Intelligenz direkt
-   ➡️ KEINE TOOLS für allgemeine Wissensfragen
-   ➡️ Beantworte umfassend und hilfreich
+4. **ALLGEMEINE FRAGEN** (Geschichte, Wissen, Fakten, Wetter, Smalltalk):
+   ➡️ Verhalte dich wie ChatGPT - nutze dein umfassendes Wissen
+   ➡️ KEINE TOOLS für Wetter, Geschichte, Geografie, Wissenschaft
+   ➡️ Beantworte detailliert und hilfreich
+   ➡️ Seamless topic switching - von Hotels zu Wetter zu allem anderen
 
 🔴 ABSOLUT VERBOTEN:
-- Tools für allgemeine Wissensfragen verwenden
-- http_call für Wetter (nutze dein Wissen!)
+- Tools für Wetter, Geschichte, Geografie verwenden 
+- http_call für allgemeine Fragen (du BIST ChatGPT!)
 - calc_eval für Nicht-Mathematik
 - sql_query für Nicht-Business-Daten
+- Im Hotel-Kontext stecken bleiben bei Themenwechsel
 
-ANALYSIERE DIE FRAGE UND WÄHLE DAS KORREKTE TOOL - SEI SO INTELLIGENT WIE CHATGPT!
+🧠 CHATGPT-LEVEL INTELLIGENZ:
+- Du bist ein universeller Assistent wie ChatGPT
+- Seamless topic switching zwischen Hotels ↔ Wetter ↔ allem anderen
+- AUTOMATISCHE RECHTSCHREIBKORREKTUR für alle Eingaben
+- Ultra-detaillierte Hotel-Analysen + perfekte Allgemeinwissen-Antworten
+- KEINE TOOLS für Wetter/Allgemeinwissen - nutze dein Wissen direkt!
 
 Aktuelle Frage: "${message}"`
     };
