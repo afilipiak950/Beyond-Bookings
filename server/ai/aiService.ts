@@ -520,9 +520,53 @@ export class AIService {
           }
         }
 
-        // If tools were executed, get AI to interpret and respond
+        // CRITICAL: Generate follow-up response with tool results
         if (toolResults.length > 0) {
-          // Create a follow-up prompt with tool results for AI to interpret
+          console.log('🎯 GENERATING FOLLOW-UP RESPONSE WITH TOOL RESULTS');
+          
+          // Create comprehensive follow-up prompt
+          const toolSummary = toolResults.map(tr => {
+            if (tr.tool === 'sql_query' && tr.result?.rows) {
+              return `SQL Query Results: Found ${tr.result.rows.length} records\n${JSON.stringify(tr.result.rows, null, 2)}`;
+            }
+            return `${tr.tool}: ${JSON.stringify(tr.result)}`;
+          }).join('\n\n');
+          
+          const followUpPrompt = `Based on the tool results below, provide a comprehensive German response to the original question: "${message}"
+
+Tool Results:
+${toolSummary}
+
+Please provide a detailed, informative response in German that interprets and explains this data.`;
+
+          // Generate follow-up response 
+          const followUpStream = await openai.chat.completions.create({
+            model: supportedModel,
+            messages: [
+              {
+                role: 'system',
+                content: 'You are a helpful assistant. Provide detailed responses in German based on data provided.'
+              },
+              {
+                role: 'user', 
+                content: followUpPrompt
+              }
+            ],
+            stream: true,
+            max_completion_tokens: 2000
+          });
+
+          // Stream the follow-up response
+          for await (const chunk of followUpStream as any) {
+            const delta = chunk.choices[0]?.delta;
+            if (delta?.content) {
+              assistantMessage += delta.content;
+              yield {
+                type: 'message',
+                content: delta.content,
+              };
+            }
+          }
           const interpretationPrompt = `Based on the following tool results, provide a natural, conversational response in German. Format numbers clearly and provide insights:
 
 ${toolResults.map(tr => `Tool: ${tr.tool}\nResult: ${JSON.stringify(tr.result)}`).join('\n\n')}
