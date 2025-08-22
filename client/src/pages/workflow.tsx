@@ -4056,6 +4056,112 @@ export default function Workflow() {
                 )}
         </div>
       </div>
+
+      {/* Hotel Extraction Dialog */}
+      <Dialog open={hotelExtractionOpen} onOpenChange={setHotelExtractionOpen}>
+        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Globe className="h-5 w-5 text-blue-600" />
+              Hotel Daten Extrahieren & Erstellen
+            </DialogTitle>
+            <DialogDescription>
+              Extrahieren Sie automatisch Hoteldaten und erstellen Sie einen neuen Hotel-Eintrag
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="extract-hotel-name">Hotel Name</Label>
+                <Input
+                  id="extract-hotel-name"
+                  value={extractHotelName}
+                  onChange={(e) => setExtractHotelName(e.target.value)}
+                  placeholder="Hotel name eingeben..."
+                />
+              </div>
+              <div>
+                <Label htmlFor="extract-hotel-url">Hotel URL (optional)</Label>
+                <Input
+                  id="extract-hotel-url"
+                  value={extractHotelUrl}
+                  onChange={(e) => setExtractHotelUrl(e.target.value)}
+                  placeholder="https://www.hotel-website.de"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <Button 
+                onClick={handleExtractData}
+                disabled={extractionLoading || !extractHotelName.trim()}
+                className="flex-1"
+              >
+                {extractionLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Extrahiere Daten...
+                  </>
+                ) : (
+                  <>
+                    <Search className="mr-2 h-4 w-4" />
+                    Hotel Daten Extrahieren
+                  </>
+                )}
+              </Button>
+              
+              {extractedData && (
+                <Button 
+                  onClick={handleCreateHotelFromExtraction}
+                  variant="outline"
+                  className="flex-1 bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
+                >
+                  <Building2 className="mr-2 h-4 w-4" />
+                  Hotel Erstellen & Verwenden
+                </Button>
+              )}
+            </div>
+
+            {extractedData && (
+              <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                <h4 className="font-semibold text-gray-800 mb-3">Extrahierte Hotel Daten:</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div>
+                    <span className="text-sm font-medium text-gray-600">Name:</span>
+                    <p className="text-sm text-gray-900">{extractedData.name || 'Nicht gefunden'}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-gray-600">Sterne:</span>
+                    <p className="text-sm text-gray-900">{extractedData.stars || 'Nicht gefunden'}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-gray-600">Zimmer:</span>
+                    <p className="text-sm text-gray-900">{extractedData.roomCount || 'Nicht gefunden'}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-gray-600">Lage:</span>
+                    <p className="text-sm text-gray-900">{extractedData.location || 'Nicht gefunden'}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-gray-600">Durchschnittspreis:</span>
+                    <p className="text-sm text-gray-900">
+                      {extractedData.averagePrice ? 
+                        `${Number(extractedData.averagePrice).toFixed(2)} ${getCurrencySymbol(workflowData.currency)}` : 
+                        'Nicht gefunden'
+                      }
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-gray-600">Website:</span>
+                    <p className="text-sm text-gray-900">{extractedData.url || 'Nicht gefunden'}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }
