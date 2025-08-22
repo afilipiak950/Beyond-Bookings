@@ -115,16 +115,10 @@ export default function Calculations() {
 
   const { data: response, isLoading, refetch } = useQuery<{ data: PricingCalculationWithCreator[], success: boolean }>({
     queryKey: ["/api/pricing-calculations"],
-    retry: false,
-    onSuccess: (data) => {
-      console.log(`📋 Calculations page: Query success with ${data?.data?.length || 0} calculations`);
-    },
-    onError: (error) => {
-      console.error('📋 Calculations page: Query error:', error);
-    }
+    retry: false
   });
 
-  const calculationsData = response?.data || [];
+  const calculationsData: PricingCalculationWithCreator[] = response?.data || [];
 
   // Delete mutation
   const deleteMutation = useMutation({
@@ -138,7 +132,7 @@ export default function Calculations() {
         description: "Calculation deleted successfully",
       });
     },
-    onError: (error) => {
+    onError: () => {
       toast({
         title: "Error",
         description: "Failed to delete calculation",
@@ -167,7 +161,7 @@ export default function Calculations() {
       
       return response.blob();
     },
-    onSuccess: (blob) => {
+    onSuccess: (blob: Blob) => {
       // Create download link
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -183,8 +177,7 @@ export default function Calculations() {
         description: `Exported ${filteredCalculations.length > 0 ? filteredCalculations.length : calculationsData.length} calculations to Excel`,
       });
     },
-    onError: (error) => {
-      console.error("Export error:", error);
+    onError: () => {
       toast({
         title: "Export Failed",
         description: "Failed to export calculations to Excel",

@@ -2425,6 +2425,40 @@ Return only valid JSON, no markdown or explanations.`;
     }
   });
 
+  // Delete pricing calculation
+  app.delete('/api/pricing-calculations/:id', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const calculationId = parseInt(req.params.id);
+      const userId = (req as any).user.id;
+      
+      if (!calculationId) {
+        return res.status(400).json({ message: "Calculation ID is required" });
+      }
+
+      console.log(`🗑️ Deleting pricing calculation ID: ${calculationId} for user: ${userId}`);
+      
+      const deleted = await storage.deletePricingCalculation(calculationId, userId);
+      
+      if (!deleted) {
+        return res.status(404).json({ message: "Calculation not found or unauthorized" });
+      }
+
+      console.log(`✅ Pricing calculation ${calculationId} deleted successfully`);
+
+      res.json({ 
+        success: true,
+        message: "Calculation deleted successfully" 
+      });
+      
+    } catch (error: any) {
+      console.error('❌ Pricing calculation deletion failed:', error);
+      res.status(500).json({ 
+        message: "Failed to delete calculation", 
+        error: error?.message || 'Unknown error'
+      });
+    }
+  });
+
   // Create new pricing calculation
   app.post('/api/pricing-calculations', requireAuth, async (req: Request, res: Response) => {
     try {
@@ -2784,10 +2818,6 @@ RETURN ONLY BASIC HOTEL DATA in valid JSON format:
         return res.status(400).json({ message: "Hotel ID is required" });
       }
 
-      console.log('🗑️ Route: Starting hotel deletion for ID:', hotelId);
-      console.log('🔍 Route: Storage object type:', typeof storage);
-      console.log('🔍 Route: deleteHotel method type:', typeof storage.deleteHotel);
-      
       const deleted = await storage.deleteHotel(hotelId);
       
       if (!deleted) {

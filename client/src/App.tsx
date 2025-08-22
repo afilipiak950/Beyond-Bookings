@@ -30,11 +30,23 @@ import DebugTest from "@/pages/debug-test";
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
 
+  // Show loading spinner during authentication check
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
   return (
     <Switch>
       <Route path="/login" component={Login} />
-      {isLoading || !isAuthenticated ? (
-        <Route path="/" component={Landing} />
+      {!isAuthenticated ? (
+        <>
+          <Route path="/" component={Landing} />
+          <Route path="*" component={Landing} />
+        </>
       ) : (
         <>
           <Route path="/" component={Dashboard} />

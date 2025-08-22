@@ -214,10 +214,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteHotel(id: number): Promise<boolean> {
-    console.log(`🚨 DELETE HOTEL METHOD CALLED WITH ID: ${id}`);
     try {
-      console.log(`🗑️ Attempting to delete hotel with ID: ${id}`);
-      
       // First check if hotel exists
       const existingHotel = await this.getHotel(id);
       if (!existingHotel) {
@@ -385,13 +382,23 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deletePricingCalculation(id: number, userId: number): Promise<boolean> {
-    const result = await db
-      .delete(pricingCalculations)
-      .where(and(
-        eq(pricingCalculations.id, id),
-        eq(pricingCalculations.userId, userId)
-      ));
-    return (result.rowCount ?? 0) > 0;
+    try {
+      // Also delete any associated approval requests
+      await db
+        .delete(approvalRequests)
+        .where(eq(approvalRequests.calculationId, id));
+      
+      const result = await db
+        .delete(pricingCalculations)
+        .where(and(
+          eq(pricingCalculations.id, id),
+          eq(pricingCalculations.userId, userId)
+        ));
+      return (result.rowCount ?? 0) > 0;
+    } catch (error) {
+      console.error('Error deleting pricing calculation:', error);
+      return false;
+    }
   }
 
   // Feedback operations
