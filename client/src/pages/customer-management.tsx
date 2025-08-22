@@ -1751,7 +1751,7 @@ export default function CustomerManagement() {
                         </div>
                         
                         {/* Review Data Display */}
-                        {(hotel.bookingReviews || hotel.googleReviews || hotel.tripadvisorReviews || hotel.holidayCheckReviews) && (
+                        {(hotel.bookingReviews?.rating || hotel.googleReviews?.rating || hotel.tripadvisorReviews?.rating || hotel.holidayCheckReviews?.rating) && (
                           <div className="border-t pt-2 mt-2">
                             <div className="text-xs text-muted-foreground mb-2 font-medium">Reviews</div>
                             <div className="space-y-1">
