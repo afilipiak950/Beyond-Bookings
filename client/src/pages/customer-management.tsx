@@ -1942,7 +1942,8 @@ export default function CustomerManagement() {
                   </div>
                   
                   {(selectedHotel.bookingReviews || selectedHotel.googleReviews || selectedHotel.tripadvisorReviews || selectedHotel.holidayCheckReviews) ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {/* Booking.com Reviews */}
                       {selectedHotel.bookingReviews && (
                         <div className="p-3 border border-blue-200 rounded-lg bg-gradient-to-r from-blue-50 to-blue-100">
@@ -2082,23 +2083,24 @@ export default function CustomerManagement() {
                           <p className="text-xs text-gray-700">{selectedHotel.holidayCheckReviews.summary}</p>
                         </div>
                       )}
-                    </div>
-
-                    {/* Overall Review Summary */}
-                    {selectedHotel.reviewSummary && (
-                      <div className="mt-4 p-3 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg border border-purple-200">
-                        <h5 className="font-medium text-purple-800 mb-2 flex items-center">
-                          <Brain className="h-4 w-4 mr-2" />
-                          AI Review Summary
-                        </h5>
-                        <p className="text-sm text-purple-700">{selectedHotel.reviewSummary}</p>
-                        {selectedHotel.lastReviewUpdate && (
-                          <p className="text-xs text-purple-600 mt-2">
-                            Last updated: {new Date(selectedHotel.lastReviewUpdate).toLocaleDateString()}
-                          </p>
-                        )}
                       </div>
-                    )}
+
+                      {/* Overall Review Summary */}
+                      {selectedHotel.reviewSummary && (
+                        <div className="p-3 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg border border-purple-200">
+                          <h5 className="font-medium text-purple-800 mb-2 flex items-center">
+                            <Brain className="h-4 w-4 mr-2" />
+                            AI Review Summary
+                          </h5>
+                          <p className="text-sm text-purple-700">{selectedHotel.reviewSummary}</p>
+                          {selectedHotel.lastReviewUpdate && (
+                            <p className="text-xs text-purple-600 mt-2">
+                              Last updated: {new Date(selectedHotel.lastReviewUpdate).toLocaleDateString()}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   ) : (
                     <div className="text-center py-8 text-gray-500">
                       <MessageSquare className="h-12 w-12 mx-auto mb-3 text-gray-400" />
