@@ -2354,7 +2354,7 @@ RETURN ONLY BASIC HOTEL DATA in valid JSON format:
         }
       };
 
-      // Step 4: Structure final response with review data
+      // Step 4: Structure final response with review data (JSONB format for database)
       const extractedData = {
         name: basicHotelData.name || name,
         location: basicHotelData.location || null,
@@ -2366,9 +2366,32 @@ RETURN ONLY BASIC HOTEL DATA in valid JSON format:
         category: basicHotelData.category || null,
         amenities: Array.isArray(basicHotelData.amenities) ? basicHotelData.amenities : [],
         averagePrice: basicHotelData.averagePrice || null,
-        // Review platform data with real or fallback structure
-        reviewPlatforms,
-        overallReviewSummary: `Real OpenAI-powered search completed in ${searchDuration}ms - authentic data extraction attempted across all platforms`,
+        // JSONB Review data (database format)
+        bookingReviews: reviewPlatforms.booking && (reviewPlatforms.booking.rating || reviewPlatforms.booking.reviewCount) ? {
+          rating: reviewPlatforms.booking.rating,
+          count: reviewPlatforms.booking.reviewCount, 
+          url: reviewPlatforms.booking.url,
+          summary: reviewPlatforms.booking.summary
+        } : null,
+        googleReviews: reviewPlatforms.google && (reviewPlatforms.google.rating || reviewPlatforms.google.reviewCount) ? {
+          rating: reviewPlatforms.google.rating,
+          count: reviewPlatforms.google.reviewCount,
+          url: reviewPlatforms.google.url, 
+          summary: reviewPlatforms.google.summary
+        } : null,
+        tripadvisorReviews: reviewPlatforms.tripadvisor && (reviewPlatforms.tripadvisor.rating || reviewPlatforms.tripadvisor.reviewCount) ? {
+          rating: reviewPlatforms.tripadvisor.rating,
+          count: reviewPlatforms.tripadvisor.reviewCount,
+          url: reviewPlatforms.tripadvisor.url,
+          summary: reviewPlatforms.tripadvisor.summary
+        } : null,
+        holidayCheckReviews: reviewPlatforms.holidayCheck && (reviewPlatforms.holidayCheck.rating || reviewPlatforms.holidayCheck.reviewCount) ? {
+          rating: reviewPlatforms.holidayCheck.rating,
+          count: reviewPlatforms.holidayCheck.reviewCount,
+          url: reviewPlatforms.holidayCheck.url,
+          summary: reviewPlatforms.holidayCheck.summary
+        } : null,
+        reviewSummary: `Real OpenAI-powered search completed in ${searchDuration}ms - authentic data extraction attempted across all platforms`,
         lastReviewUpdate: new Date()
       };
 
@@ -2401,6 +2424,13 @@ RETURN ONLY BASIC HOTEL DATA in valid JSON format:
         category,
         amenities,
         averagePrice,
+        // JSONB review objects (new format)
+        bookingReviews,
+        googleReviews,
+        tripadvisorReviews,
+        holidayCheckReviews,
+        reviewSummary,
+        // Individual review platform fields for backward compatibility
         bookingRating,
         bookingReviewCount,
         bookingUrl,
@@ -2419,7 +2449,14 @@ RETURN ONLY BASIC HOTEL DATA in valid JSON format:
         return res.status(400).json({ message: "Hotel name is required" });
       }
 
-      // Create hotel object with all review data
+      console.log('📥 Received review data:', {
+        bookingReviews: bookingReviews ? 'Present' : 'Missing',
+        googleReviews: googleReviews ? 'Present' : 'Missing',
+        tripadvisorReviews: tripadvisorReviews ? 'Present' : 'Missing',
+        holidayCheckReviews: holidayCheckReviews ? 'Present' : 'Missing'
+      });
+
+      // Create hotel object with JSONB review data
       const hotelData = {
         name: name.trim(),
         location: location?.trim() || '',
@@ -2431,23 +2468,16 @@ RETURN ONLY BASIC HOTEL DATA in valid JSON format:
         category: category?.trim() || '',
         amenities: Array.isArray(amenities) ? amenities : [],
         averagePrice: parseFloat(averagePrice) || 0,
-        // Review platform data
-        bookingRating: bookingRating ? parseFloat(bookingRating) : null,
-        bookingReviewCount: bookingReviewCount ? parseInt(bookingReviewCount) : null,
-        bookingUrl: bookingUrl?.trim() || null,
-        googleRating: googleRating ? parseFloat(googleRating) : null,
-        googleReviewCount: googleReviewCount ? parseInt(googleReviewCount) : null,
-        googleUrl: googleUrl?.trim() || null,
-        tripadvisorRating: tripadvisorRating ? parseFloat(tripadvisorRating) : null,
-        tripadvisorReviewCount: tripadvisorReviewCount ? parseInt(tripadvisorReviewCount) : null,
-        tripadvisorUrl: tripadvisorUrl?.trim() || null,
-        holidaycheckRating: holidaycheckRating ? parseFloat(holidaycheckRating) : null,
-        holidaycheckReviewCount: holidaycheckReviewCount ? parseInt(holidaycheckReviewCount) : null,
-        holidaycheckUrl: holidaycheckUrl?.trim() || null,
-        // Remove createdAt and lastReviewUpdate - let the storage layer handle these
+        // JSONB Review data (primary format)
+        bookingReviews: bookingReviews || null,
+        googleReviews: googleReviews || null,
+        tripadvisorReviews: tripadvisorReviews || null,
+        holidayCheckReviews: holidayCheckReviews || null,
+        reviewSummary: reviewSummary || null,
+        lastReviewUpdate: (bookingReviews || googleReviews || tripadvisorReviews || holidayCheckReviews) ? new Date().toISOString() : null
       };
 
-      console.log('💾 Saving hotel to database:', hotelData);
+      console.log('💾 Saving hotel to database with review data:', hotelData);
 
       // Save hotel to database
       const createdHotel = await storage.createHotel(hotelData);
