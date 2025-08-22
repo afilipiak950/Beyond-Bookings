@@ -56,6 +56,11 @@ export default function CustomerManagement() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
+
+  // Batch Review Extraction States
+  const [batchExtractionOpen, setBatchExtractionOpen] = useState(false);
+  const [batchExtractionLoading, setBatchExtractionLoading] = useState(false);
+  const [batchExtractionResults, setBatchExtractionResults] = useState<any>(null);
   
   // Comprehensive filter state
   const [filterOpen, setFilterOpen] = useState(false);
@@ -486,6 +491,31 @@ export default function CustomerManagement() {
     },
   });
 
+  // Comprehensive Batch Review Extraction Mutation
+  const batchReviewExtractionMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest('/api/hotels/batch-review-extraction', 'POST');
+      return await response.json();
+    },
+    onSuccess: (data) => {
+      setBatchExtractionResults(data);
+      queryClient.invalidateQueries({ queryKey: ["/api/hotels"] });
+      
+      const { summary } = data;
+      toast({
+        title: "🎉 Batch Review Extraction Completed!",
+        description: `Successfully processed ${summary.totalHotels} hotels: ${summary.processed} updated, ${summary.skipped} skipped, ${summary.failed} failed. Duration: ${summary.duration}`,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "❌ Batch Review Extraction Failed",
+        description: error.message || "Could not complete batch review extraction",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Handle hotel data extraction
   const handleExtractData = async () => {
     if (!hotelName.trim()) {
@@ -508,6 +538,21 @@ export default function CustomerManagement() {
       // Error is already handled by the mutation's onError callback
     } finally {
       setExtractionLoading(false);
+    }
+  };
+
+  // Handle comprehensive batch review extraction
+  const handleBatchReviewExtraction = async () => {
+    setBatchExtractionLoading(true);
+    setBatchExtractionResults(null);
+    
+    try {
+      await batchReviewExtractionMutation.mutateAsync();
+    } catch (error) {
+      console.error('Error during batch review extraction:', error);
+      // Error is already handled by the mutation's onError callback
+    } finally {
+      setBatchExtractionLoading(false);
     }
   };
 
@@ -650,14 +695,166 @@ export default function CustomerManagement() {
               Manage your hotel clients and their pricing strategies
             </p>
           </div>
-          <Dialog open={addHotelOpen} onOpenChange={setAddHotelOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Hotel
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px]">
+          <div className="flex gap-3">
+            <Dialog open={batchExtractionOpen} onOpenChange={setBatchExtractionOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white border-none hover:from-purple-600 hover:to-indigo-700">
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Extract All Reviews
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <RefreshCw className="h-5 w-5 text-purple-600" />
+                    Comprehensive Review Extraction
+                  </DialogTitle>
+                  <DialogDescription>
+                    Extract detailed reviews and ratings from all 4 major platforms (Booking.com, Google Reviews, TripAdvisor, HolidayCheck) for every hotel in your database.
+                  </DialogDescription>
+                </DialogHeader>
+                
+                <div className="space-y-6">
+                  {!batchExtractionLoading && !batchExtractionResults && (
+                    <div className="space-y-4">
+                      <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
+                        <h4 className="font-semibold text-blue-900 mb-2">What This Will Do:</h4>
+                        <ul className="text-sm text-blue-800 space-y-1">
+                          <li>• Research authentic ratings and review counts for each hotel</li>
+                          <li>• Extract real guest feedback summaries from all 4 platforms</li>
+                          <li>• Generate working links to review pages</li>
+                          <li>• Create AI-powered comprehensive review analysis</li>
+                          <li>• Skip hotels that already have complete review data</li>
+                        </ul>
+                      </div>
+                      
+                      <div className="p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg border border-amber-200">
+                        <h4 className="font-semibold text-amber-900 mb-2">⚠️ Important Notes:</h4>
+                        <ul className="text-sm text-amber-800 space-y-1">
+                          <li>• This process may take several minutes depending on hotel count</li>
+                          <li>• Each hotel requires ~2-3 seconds for comprehensive research</li>
+                          <li>• Uses OpenAI GPT-4o for authentic data extraction</li>
+                          <li>• Results are immediately saved to your database</li>
+                        </ul>
+                      </div>
+                      
+                      <Button 
+                        onClick={handleBatchReviewExtraction}
+                        className="w-full bg-gradient-to-r from-purple-600 to-indigo-700 hover:from-purple-700 hover:to-indigo-800"
+                        size="lg"
+                      >
+                        <RefreshCw className="h-4 w-4 mr-2" />
+                        Start Comprehensive Review Extraction
+                      </Button>
+                    </div>
+                  )}
+
+                  {batchExtractionLoading && (
+                    <div className="space-y-4">
+                      <div className="text-center py-8">
+                        <RefreshCw className="h-12 w-12 animate-spin mx-auto text-purple-600 mb-4" />
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">Extracting Reviews...</h3>
+                        <p className="text-gray-600">
+                          Researching comprehensive review data from all 4 platforms for every hotel in your database.
+                        </p>
+                        <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                          <p className="text-sm text-gray-700">
+                            This process analyzes each hotel individually for authentic ratings, review counts, and guest feedback summaries.
+                            Please wait while we complete the comprehensive extraction...
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {batchExtractionResults && (
+                    <div className="space-y-4">
+                      <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
+                        <h3 className="font-semibold text-green-900 mb-3 flex items-center">
+                          <CheckCircle className="h-5 w-5 mr-2" />
+                          Batch Extraction Completed Successfully!
+                        </h3>
+                        
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                          <div className="text-center">
+                            <div className="text-2xl font-bold text-blue-600">{batchExtractionResults.summary.totalHotels}</div>
+                            <div className="text-sm text-gray-600">Total Hotels</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-2xl font-bold text-green-600">{batchExtractionResults.summary.processed}</div>
+                            <div className="text-sm text-gray-600">Updated</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-2xl font-bold text-yellow-600">{batchExtractionResults.summary.skipped}</div>
+                            <div className="text-sm text-gray-600">Skipped</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-2xl font-bold text-red-600">{batchExtractionResults.summary.failed}</div>
+                            <div className="text-sm text-gray-600">Failed</div>
+                          </div>
+                        </div>
+                        
+                        <p className="text-sm text-green-800">
+                          Duration: {batchExtractionResults.summary.duration} | 
+                          Completed: {new Date(batchExtractionResults.summary.completedAt).toLocaleString()}
+                        </p>
+                      </div>
+
+                      {batchExtractionResults.results && batchExtractionResults.results.length > 0 && (
+                        <div className="space-y-2 max-h-60 overflow-y-auto">
+                          <h4 className="font-semibold text-gray-900">Detailed Results:</h4>
+                          {batchExtractionResults.results.map((result: any, index: number) => (
+                            <div key={index} className={`p-3 rounded-lg border ${
+                              result.status === 'updated' ? 'bg-green-50 border-green-200' :
+                              result.status === 'skipped' ? 'bg-yellow-50 border-yellow-200' :
+                              'bg-red-50 border-red-200'
+                            }`}>
+                              <div className="flex items-center justify-between">
+                                <span className="font-medium">{result.hotelName}</span>
+                                <Badge variant={
+                                  result.status === 'updated' ? 'default' :
+                                  result.status === 'skipped' ? 'secondary' : 'destructive'
+                                }>
+                                  {result.status}
+                                </Badge>
+                              </div>
+                              {result.status === 'updated' && result.reviewData && (
+                                <div className="mt-2 grid grid-cols-4 gap-2 text-xs">
+                                  <div className={result.hasBooking ? 'text-blue-600' : 'text-gray-400'}>
+                                    Booking: {result.reviewData.booking || 'N/A'}
+                                  </div>
+                                  <div className={result.hasGoogle ? 'text-green-600' : 'text-gray-400'}>
+                                    Google: {result.reviewData.google || 'N/A'}
+                                  </div>
+                                  <div className={result.hasTripAdvisor ? 'text-red-600' : 'text-gray-400'}>
+                                    TripAdvisor: {result.reviewData.tripadvisor || 'N/A'}
+                                  </div>
+                                  <div className={result.hasHolidayCheck ? 'text-orange-600' : 'text-gray-400'}>
+                                    HolidayCheck: {result.reviewData.holidaycheck || 'N/A'}
+                                  </div>
+                                </div>
+                              )}
+                              {result.error && (
+                                <p className="text-sm text-red-600 mt-1">{result.error}</p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </DialogContent>
+            </Dialog>
+            
+            <Dialog open={addHotelOpen} onOpenChange={setAddHotelOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Hotel
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[600px]">
               <DialogHeader>
                 <DialogTitle>Add New Hotel</DialogTitle>
                 <DialogDescription>
@@ -2166,6 +2363,7 @@ export default function CustomerManagement() {
             )}
           </DialogContent>
         </Dialog>
+        </div>
       </div>
     </AppLayout>
   );
