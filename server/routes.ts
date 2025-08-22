@@ -2230,24 +2230,205 @@ Return only valid JSON, no markdown or explanations.`;
   }
 
   // Enhanced hotel data extraction with reliable review data sources
-  // Get all hotels endpoint
+  // Get all hotels endpoint with comprehensive filtering
   app.get('/api/hotels', requireAuth, async (req: Request, res: Response) => {
     try {
-      console.log('🏨 Getting all hotels from database...');
+      console.log('🏨 Getting all hotels from database with filters...');
+      console.log('🔍 Query parameters:', req.query);
       
       const allHotels = await storage.getHotels();
       console.log(`✅ Found ${allHotels.length} hotels in database`);
       
-      // Return hotels with pagination structure expected by frontend
+      // Extract filter parameters from query
+      const {
+        q = '',
+        stars = '',
+        category = '',
+        country = '',
+        city = '',
+        roomCountMin = '',
+        roomCountMax = '',
+        priceMin = '',
+        priceMax = '',
+        dataQuality = '',
+        dateFrom = '',
+        dateTo = '',
+        sortBy = 'updatedAt',
+        sortOrder = 'desc',
+        page = '1',
+        limit = '20'
+      } = req.query;
+
+      // Parse array parameters
+      const starsArray = stars ? String(stars).split(',').filter(s => s.trim()) : [];
+      const categoryArray = category ? String(category).split(',').filter(c => c.trim()) : [];
+      const dataQualityArray = dataQuality ? String(dataQuality).split(',').filter(d => d.trim()) : [];
+
+      console.log('📊 Parsed filters:', {
+        search: q,
+        stars: starsArray,
+        category: categoryArray,
+        country,
+        city,
+        roomCountMin,
+        roomCountMax,
+        priceMin,
+        priceMax,
+        dataQuality: dataQualityArray
+      });
+
+      // Apply filters
+      let filteredHotels = allHotels.filter(hotel => {
+        // Search filter (hotel name)
+        if (q && !hotel.name.toLowerCase().includes(String(q).toLowerCase())) {
+          return false;
+        }
+
+        // Stars filter
+        if (starsArray.length > 0) {
+          const hotelStars = hotel.stars?.toString() || 'unrated';
+          const matchesStars = starsArray.includes(hotelStars) || 
+                              (starsArray.includes('unrated') && (!hotel.stars || hotel.stars === 0));
+          if (!matchesStars) {
+            console.log(`❌ Hotel ${hotel.name} filtered out: stars ${hotelStars} not in ${starsArray.join(',')}`);
+            return false;
+          }
+        }
+
+        // Category filter
+        if (categoryArray.length > 0) {
+          const hotelCategory = hotel.category || '';
+          if (!categoryArray.some(cat => hotelCategory.toLowerCase().includes(cat.toLowerCase()))) {
+            return false;
+          }
+        }
+
+        // Location filters
+        if (country && !hotel.location?.toLowerCase().includes(String(country).toLowerCase())) {
+          return false;
+        }
+        if (city && !hotel.location?.toLowerCase().includes(String(city).toLowerCase())) {
+          return false;
+        }
+
+        // Room count filters
+        if (roomCountMin && hotel.roomCount && hotel.roomCount < parseInt(String(roomCountMin))) {
+          return false;
+        }
+        if (roomCountMax && hotel.roomCount && hotel.roomCount > parseInt(String(roomCountMax))) {
+          return false;
+        }
+
+        // Price filters (assuming averagePrice field exists)
+        if (priceMin && hotel.averagePrice && parseFloat(hotel.averagePrice.toString()) < parseFloat(String(priceMin))) {
+          return false;
+        }
+        if (priceMax && hotel.averagePrice && parseFloat(hotel.averagePrice.toString()) > parseFloat(String(priceMax))) {
+          return false;
+        }
+
+        // Data quality filters
+        if (dataQualityArray.length > 0) {
+          const hasIssues = dataQualityArray.some(quality => {
+            switch (quality) {
+              case 'missingRoomCount':
+                return !hotel.roomCount || hotel.roomCount === 0;
+              case 'missingAvgPrice':
+                return !hotel.averagePrice || hotel.averagePrice === 0;
+              case 'lowAIConfidence':
+                return hotel.aiConfidence && hotel.aiConfidence < 0.7;
+              default:
+                return false;
+            }
+          });
+          if (!hasIssues) {
+            return false;
+          }
+        }
+
+        // Date range filters
+        if (dateFrom || dateTo) {
+          const hotelDate = new Date(hotel.createdAt || hotel.updatedAt || 0);
+          if (dateFrom && hotelDate < new Date(String(dateFrom))) {
+            return false;
+          }
+          if (dateTo && hotelDate > new Date(String(dateTo))) {
+            return false;
+          }
+        }
+
+        return true;
+      });
+
+      console.log(`🔍 Filtered from ${allHotels.length} to ${filteredHotels.length} hotels`);
+
+      // Apply sorting
+      filteredHotels.sort((a, b) => {
+        let aVal, bVal;
+        
+        switch (sortBy) {
+          case 'name':
+            aVal = a.name?.toLowerCase() || '';
+            bVal = b.name?.toLowerCase() || '';
+            break;
+          case 'stars':
+            aVal = a.stars || 0;
+            bVal = b.stars || 0;
+            break;
+          case 'roomCount':
+            aVal = a.roomCount || 0;
+            bVal = b.roomCount || 0;
+            break;
+          case 'averagePrice':
+            aVal = parseFloat(a.averagePrice?.toString() || '0');
+            bVal = parseFloat(b.averagePrice?.toString() || '0');
+            break;
+          case 'createdAt':
+            aVal = new Date(a.createdAt || 0).getTime();
+            bVal = new Date(b.createdAt || 0).getTime();
+            break;
+          case 'updatedAt':
+          default:
+            aVal = new Date(a.updatedAt || a.createdAt || 0).getTime();
+            bVal = new Date(b.updatedAt || b.createdAt || 0).getTime();
+            break;
+        }
+
+        if (sortOrder === 'asc') {
+          return aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
+        } else {
+          return aVal > bVal ? -1 : aVal < bVal ? 1 : 0;
+        }
+      });
+
+      // Apply pagination
+      const pageNum = parseInt(String(page)) || 1;
+      const limitNum = parseInt(String(limit)) || 20;
+      const startIndex = (pageNum - 1) * limitNum;
+      const endIndex = startIndex + limitNum;
+      const paginatedHotels = filteredHotels.slice(startIndex, endIndex);
+
+      const totalPages = Math.ceil(filteredHotels.length / limitNum);
+
+      console.log(`📄 Pagination: Page ${pageNum}/${totalPages}, showing ${paginatedHotels.length} hotels`);
+
+      // Return hotels with proper pagination structure
       res.json({
-        data: allHotels,
+        data: paginatedHotels,
         pagination: {
-          page: 1,
-          limit: 50,
-          total: allHotels.length,
-          totalPages: 1,
-          hasNext: false,
-          hasPrev: false
+          page: pageNum,
+          limit: limitNum,
+          total: filteredHotels.length,
+          totalPages: totalPages,
+          hasNext: pageNum < totalPages,
+          hasPrev: pageNum > 1
+        },
+        filterInfo: {
+          applied: starsArray.length > 0 || categoryArray.length > 0 || q || country || city || 
+                   roomCountMin || roomCountMax || priceMin || priceMax || dataQualityArray.length > 0 ||
+                   dateFrom || dateTo,
+          originalCount: allHotels.length,
+          filteredCount: filteredHotels.length
         }
       });
     } catch (error: any) {
