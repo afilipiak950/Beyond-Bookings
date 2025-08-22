@@ -1019,9 +1019,27 @@ NEVER mention databases, SQL queries, or tools. Answer directly with your knowle
 
   // Delete thread
   async deleteThread(threadId: number, userId: number): Promise<void> {
+    console.log(`🗑️ Starting cascade deletion for AI thread ${threadId}`);
+    
+    // Step 1: Delete logs first (they reference threads)
+    console.log(`📊 Deleting AI logs for thread ${threadId}`);
+    await db
+      .delete(aiLogs)
+      .where(eq(aiLogs.threadId, threadId));
+    
+    // Step 2: Delete messages
+    console.log(`💬 Deleting AI messages for thread ${threadId}`);
+    await db
+      .delete(aiMessages)
+      .where(eq(aiMessages.threadId, threadId));
+    
+    // Step 3: Finally delete the thread
+    console.log(`🧵 Deleting AI thread ${threadId}`);
     await db
       .delete(aiThreads)
       .where(eq(aiThreads.id, threadId));
+    
+    console.log(`✅ AI thread ${threadId} deletion completed`);
   }
 
   // Smart clear threads with advanced options
