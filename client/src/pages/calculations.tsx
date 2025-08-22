@@ -352,7 +352,73 @@ export default function Calculations() {
 
   // Approval status badge system
   const getApprovalStatusBadge = (calculation: PricingCalculationWithCreator) => {
-    const approvalStatus = calculation.approvalStatus || 'none_required';
+    let approvalStatus = calculation.approvalStatus;
+    
+    // 🚀 CRITICAL FIX: Live validation for existing calculations without approval status
+    if (!approvalStatus || approvalStatus === 'none_required') {
+      // Perform live approval validation for existing calculations
+      const stars = calculation.stars || 0;
+      const averagePrice = parseFloat(calculation.averagePrice || "0");
+      const voucherPrice = parseFloat(calculation.voucherPrice || "0");
+      const profitMargin = parseFloat(calculation.profitMargin || "0");
+      const totalPrice = parseFloat(calculation.totalPrice || "1");
+      const projectCosts = parseFloat(calculation.operationalCosts || "0") * 2.74; // Estimate from operational costs
+      
+      // Calculate margin percentage
+      const marginPercentage = totalPrice > 0 ? (profitMargin / totalPrice) * 100 : 0;
+      
+      let needsApproval = false;
+      const reasons = [];
+      
+      // Rule 1: Star category validation (3, 4, 5 only)
+      if (![3, 4, 5].includes(stars)) {
+        needsApproval = true;
+        reasons.push(`Invalid star category: ${stars}`);
+      } else {
+        // Rule 2 & 3: VK and voucher price caps by star rating
+        const STAR_CAPS = {
+          3: { maxVK: 50.00, maxGutschein: 30.00 },
+          4: { maxVK: 60.00, maxGutschein: 35.00 },
+          5: { maxVK: 75.00, maxGutschein: 45.00 }
+        };
+        
+        const caps = STAR_CAPS[stars as keyof typeof STAR_CAPS];
+        
+        // Rule 2: VK > star-cap (CRITICAL for voco!)
+        if (averagePrice > caps.maxVK) {
+          needsApproval = true;
+          reasons.push(`Hotel price €${averagePrice} exceeds ${stars}★ limit of €${caps.maxVK}`);
+        }
+        
+        // Rule 3: Voucher > star-cap  
+        if (voucherPrice > caps.maxGutschein) {
+          needsApproval = true;
+          reasons.push(`Voucher €${voucherPrice} exceeds ${stars}★ limit of €${caps.maxGutschein}`);
+        }
+      }
+      
+      // Rule 4: Margin after taxes < 27%
+      if (marginPercentage < 27) {
+        needsApproval = true;
+        reasons.push(`Margin ${marginPercentage.toFixed(1)}% below 27% limit`);
+      }
+      
+      // Rule 5: Project costs > €50,000
+      if (projectCosts > 50000) {
+        needsApproval = true;
+        reasons.push(`Project costs €${projectCosts.toLocaleString()} exceed €50,000 limit`);
+      }
+      
+      // Override approval status if validation shows approval is needed
+      if (needsApproval) {
+        approvalStatus = 'required_not_sent';
+        console.log(`🚨 LIVE APPROVAL VALIDATION: ${calculation.hotelName} requires approval!`);
+        console.log(`📋 Reasons: ${reasons.join('; ')}`);
+        console.log(`📊 Data: Price: €${averagePrice}, Stars: ${stars}★, Margin: ${marginPercentage.toFixed(1)}%, Voucher: €${voucherPrice}`);
+      } else {
+        approvalStatus = 'none_required';
+      }
+    }
     
     switch (approvalStatus) {
       case 'none_required':
