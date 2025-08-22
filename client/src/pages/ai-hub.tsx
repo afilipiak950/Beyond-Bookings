@@ -463,6 +463,9 @@ export default function AIHub() {
   const [clearAllDialogOpen, setClearAllDialogOpen] = useState(false);
   const [clearOption, setClearOption] = useState<'all' | 'unpinned' | 'older_than'>('all');
   const [olderThanDays, setOlderThanDays] = useState(30);
+
+  // Vector storage clearing
+  const [clearVectorDialogOpen, setClearVectorDialogOpen] = useState(false);
   
   const clearAllChats = useMutation({
     mutationFn: (options: { type: 'all' | 'unpinned' | 'older_than', days?: number }) => 
@@ -482,6 +485,29 @@ export default function AIHub() {
       toast({
         title: "Clear Failed", 
         description: error.message || "Unable to clear chats. Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const clearVectorStorage = useMutation({
+    mutationFn: () => apiRequest('/api/ai/clear-vector-storage', 'DELETE'),
+    onSuccess: (result: any) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/ai/threads'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/ai/docs'] });
+      setActiveThreadId(null);
+      setClearVectorDialogOpen(false);
+      
+      toast({
+        title: "Vector Storage Cleared",
+        description: result.message || "All AI self-learning data has been cleared. The AI system will start fresh.",
+        variant: "default"
+      });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Clear Failed", 
+        description: error.message || "Unable to clear vector storage. Please try again.",
         variant: "destructive"
       });
     }
@@ -771,6 +797,71 @@ export default function AIHub() {
               <Button onClick={createThread} size="sm" variant="ghost" className="h-6 w-6 p-0 shrink-0">
                 <Plus className="h-3 w-3" />
               </Button>
+              
+              {/* Admin Only: Clear Vector Storage */}
+              {isAdmin && (
+                <Dialog open={clearVectorDialogOpen} onOpenChange={setClearVectorDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button 
+                      size="sm" 
+                      variant="ghost" 
+                      className="h-6 w-6 p-0 shrink-0 text-orange-600 hover:text-orange-700 hover:bg-orange-100/50 transition-colors"
+                      title="Clear Vector Storage (Admin Only)"
+                    >
+                      <Database className="h-3 w-3" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle className="flex items-center gap-2 text-orange-600">
+                        <Database className="h-4 w-4" />
+                        Clear Vector Storage
+                      </DialogTitle>
+                      <DialogDescription>
+                        This will permanently delete all AI self-learning data and vector embeddings. The AI system will start completely fresh.
+                      </DialogDescription>
+                    </DialogHeader>
+                    
+                    <div className="space-y-4">
+                      <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                        <h4 className="font-medium text-orange-800 mb-2">⚠️ Data to be cleared:</h4>
+                        <ul className="text-sm text-orange-700 space-y-1">
+                          <li>• AI Embeddings & Vector Data</li>
+                          <li>• AI Learning Sessions</li>
+                          <li>• Price Intelligence Data</li>
+                          <li>• AI Documents & Chunks</li>
+                          <li>• All Conversation Threads</li>
+                          <li>• AI Interaction Logs</li>
+                          <li>• User Feedback Data</li>
+                        </ul>
+                      </div>
+                      
+                      <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                        <p className="text-sm text-red-700 font-medium">
+                          ⚠️ This action cannot be undone and will reset ALL AI learning progress.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end gap-3 pt-4">
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setClearVectorDialogOpen(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button 
+                        onClick={() => clearVectorStorage.mutate()}
+                        disabled={clearVectorStorage.isPending}
+                        className="bg-red-600 hover:bg-red-700 text-white"
+                      >
+                        {clearVectorStorage.isPending ? "Clearing..." : "Clear All Vector Data"}
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              )}
+
               <Dialog open={clearAllDialogOpen} onOpenChange={setClearAllDialogOpen}>
                 <DialogTrigger asChild>
                   <Button 

@@ -3374,6 +3374,78 @@ CRITICAL REQUIREMENTS:
     }
   });
 
+  // Clear all vector storage and AI self-learning data
+  app.delete('/api/ai/clear-vector-storage', requireAuth, requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const user = req.user as User;
+      console.log(`🧹 Admin ${user.id} clearing all vector storage and AI learning data`);
+
+      // Delete in correct order to handle foreign key constraints
+      
+      // 1. AI Embeddings (references ai_chunks)
+      console.log('🗑️ Clearing AI embeddings...');
+      await storage.clearAIEmbeddings();
+      
+      // 2. AI Chunks (references ai_docs)
+      console.log('🗑️ Clearing AI chunks...');
+      await storage.clearAIChunks();
+      
+      // 3. AI Docs
+      console.log('🗑️ Clearing AI documents...');
+      await storage.clearAIDocs();
+      
+      // 4. AI Messages (references ai_threads)
+      console.log('🗑️ Clearing AI messages...');
+      await storage.clearAIMessages();
+      
+      // 5. AI Threads
+      console.log('🗑️ Clearing AI threads...');
+      await storage.clearAIThreads();
+      
+      // 6. AI Logs
+      console.log('🗑️ Clearing AI logs...');
+      await storage.clearAILogs();
+      
+      // 7. Price Intelligence (vector embeddings and learning data)
+      console.log('🗑️ Clearing price intelligence data...');
+      await storage.clearPriceIntelligence();
+      
+      // 8. AI Learning Sessions
+      console.log('🗑️ Clearing AI learning sessions...');
+      await storage.clearAILearningSessions();
+      
+      // 9. Feedback data
+      console.log('🗑️ Clearing feedback data...');
+      await storage.clearFeedback();
+
+      console.log('✅ All vector storage and AI learning data cleared successfully');
+
+      res.json({
+        success: true,
+        message: 'All vector storage and AI self-learning data has been cleared successfully. The AI system will start fresh.',
+        cleared: [
+          'AI Embeddings',
+          'AI Chunks', 
+          'AI Documents',
+          'AI Messages',
+          'AI Threads',
+          'AI Logs',
+          'Price Intelligence',
+          'AI Learning Sessions',
+          'Feedback Data'
+        ]
+      });
+
+    } catch (error) {
+      console.error('❌ Error clearing vector storage data:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Failed to clear vector storage data',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   // Delete approval request
   app.delete('/api/approvals/:id', requireAuth, requireAdmin, async (req: Request, res: Response) => {
     try {

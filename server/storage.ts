@@ -11,6 +11,12 @@ import {
   documentInsights,
   approvalRequests,
   notifications,
+  aiThreads,
+  aiMessages,
+  aiDocs,
+  aiChunks,
+  aiEmbeddings,
+  aiLogs,
   type User,
   type UpsertUser,
   type Hotel,
@@ -73,6 +79,17 @@ export interface IStorage {
 
   // Export operations
   exportToPDF(calculationId: number, userId: number): Promise<Buffer>;
+
+  // AI Vector Storage Clearing Operations
+  clearAIEmbeddings(): Promise<boolean>;
+  clearAIChunks(): Promise<boolean>;
+  clearAIDocs(): Promise<boolean>;
+  clearAIMessages(): Promise<boolean>;
+  clearAIThreads(): Promise<boolean>;
+  clearAILogs(): Promise<boolean>;
+  clearPriceIntelligence(): Promise<boolean>;
+  clearAILearningSessions(): Promise<boolean>;
+  clearFeedback(): Promise<boolean>;
   exportToExcel(calculationId: number, userId: number): Promise<Buffer>;
 
   // OCR Analysis operations
@@ -1009,6 +1026,106 @@ ${calculation.hotelName},${calculation.hotelUrl || ''},${calculation.stars || ''
       .returning();
 
     return result.length > 0;
+  }
+
+  // AI Vector Storage Clearing Methods
+  async clearAIEmbeddings(): Promise<boolean> {
+    try {
+      await db.delete(aiEmbeddings);
+      console.log('✅ AI embeddings cleared');
+      return true;
+    } catch (error) {
+      console.error('❌ Error clearing AI embeddings:', error);
+      return false;
+    }
+  }
+
+  async clearAIChunks(): Promise<boolean> {
+    try {
+      await db.delete(aiChunks);
+      console.log('✅ AI chunks cleared');
+      return true;
+    } catch (error) {
+      console.error('❌ Error clearing AI chunks:', error);
+      return false;
+    }
+  }
+
+  async clearAIDocs(): Promise<boolean> {
+    try {
+      await db.delete(aiDocs);
+      console.log('✅ AI documents cleared');
+      return true;
+    } catch (error) {
+      console.error('❌ Error clearing AI documents:', error);
+      return false;
+    }
+  }
+
+  async clearAIMessages(): Promise<boolean> {
+    try {
+      await db.delete(aiMessages);
+      console.log('✅ AI messages cleared');
+      return true;
+    } catch (error) {
+      console.error('❌ Error clearing AI messages:', error);
+      return false;
+    }
+  }
+
+  async clearAIThreads(): Promise<boolean> {
+    try {
+      await db.delete(aiThreads);
+      console.log('✅ AI threads cleared');
+      return true;
+    } catch (error) {
+      console.error('❌ Error clearing AI threads:', error);
+      return false;
+    }
+  }
+
+  async clearAILogs(): Promise<boolean> {
+    try {
+      await db.delete(aiLogs);
+      console.log('✅ AI logs cleared');
+      return true;
+    } catch (error) {
+      console.error('❌ Error clearing AI logs:', error);
+      return false;
+    }
+  }
+
+  async clearPriceIntelligence(): Promise<boolean> {
+    try {
+      await db.delete(priceIntelligence);
+      console.log('✅ Price intelligence data cleared');
+      return true;
+    } catch (error) {
+      console.error('❌ Error clearing price intelligence data:', error);
+      return false;
+    }
+  }
+
+  async clearAILearningSessions(): Promise<boolean> {
+    try {
+      await db.delete(aiLearningSessions);
+      console.log('✅ AI learning sessions cleared');
+      return true;
+    } catch (error) {
+      console.error('❌ Error clearing AI learning sessions:', error);
+      return false;
+    }
+  }
+
+  async clearFeedback(): Promise<boolean> {
+    try {
+      await db.delete(feedback);
+      console.log('✅ Feedback data cleared');
+      return true;
+    } catch (error) {
+      console.error('❌ Error clearing feedback data:', error);
+      return false;
+    }
   }
 }
 
