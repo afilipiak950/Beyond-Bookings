@@ -214,6 +214,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteHotel(id: number): Promise<boolean> {
+    console.log(`🚨 DELETE HOTEL METHOD CALLED WITH ID: ${id}`);
     try {
       console.log(`🗑️ Attempting to delete hotel with ID: ${id}`);
       
@@ -227,6 +228,7 @@ export class DatabaseStorage implements IStorage {
       console.log(`✅ Hotel found: ${existingHotel.name}, proceeding with deletion`);
       
       // Check for associated pricing calculations
+      console.log(`🔍 Checking for associated pricing calculations...`);
       const associatedCalculations = await db.select().from(pricingCalculations).where(eq(pricingCalculations.hotelId, id));
       console.log(`📊 Found ${associatedCalculations.length} associated pricing calculations`);
       
@@ -234,11 +236,13 @@ export class DatabaseStorage implements IStorage {
         console.log(`⚠️ Hotel has ${associatedCalculations.length} associated calculations. Setting hotelId to NULL.`);
         
         // Set hotelId to NULL in pricing calculations instead of deleting them
-        await db.update(pricingCalculations)
+        const updateResult = await db.update(pricingCalculations)
           .set({ hotelId: null })
           .where(eq(pricingCalculations.hotelId, id));
           
-        console.log(`✅ Updated ${associatedCalculations.length} pricing calculations to remove hotel reference`);
+        console.log(`✅ Updated ${associatedCalculations.length} pricing calculations, result:`, updateResult);
+      } else {
+        console.log(`✅ No associated calculations found, proceeding with direct deletion`);
       }
       
       // Now delete the hotel
