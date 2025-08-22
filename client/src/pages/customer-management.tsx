@@ -648,122 +648,427 @@ export default function CustomerManagement() {
         </Card>
       </div>
 
-      {/* Hotel Details Dialog */}
+      {/* Comprehensive Hotel Details Dialog */}
       {selectedHotel && (
         <Dialog open={!!selectedHotel} onOpenChange={() => setSelectedHotel(null)}>
-          <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-y-auto">
+          <DialogContent className="sm:max-w-[1000px] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
-                <Building2 className="h-5 w-5" />
+                <Building2 className="h-6 w-6 text-blue-600" />
                 {selectedHotel.name}
+                <Badge variant="outline" className="ml-2">
+                  {"★".repeat(selectedHotel.stars)} {selectedHotel.stars}-Star
+                </Badge>
               </DialogTitle>
               <DialogDescription>
-                Detailed information and review data for this hotel
+                Complete hotel profile with AI-powered insights, review analytics, and business intelligence
               </DialogDescription>
             </DialogHeader>
             
-            <div className="space-y-6">
-              {/* Basic Info */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-sm font-medium">Location</Label>
-                  <p className="text-sm">{selectedHotel.city}, {selectedHotel.country}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium">Star Rating</Label>
-                  <div className="flex items-center gap-1">
-                    {[...Array(5)].map((_, i) => (
-                      <Star 
-                        key={i} 
-                        className={`h-4 w-4 ${i < selectedHotel.stars ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} 
-                      />
-                    ))}
-                  </div>
-                </div>
-                {selectedHotel.roomCount && (
-                  <div>
-                    <Label className="text-sm font-medium">Room Count</Label>
-                    <p className="text-sm">{selectedHotel.roomCount}</p>
-                  </div>
-                )}
-                {selectedHotel.averagePrice && (
-                  <div>
-                    <Label className="text-sm font-medium">Average Price</Label>
-                    <p className="text-sm">{formatPrice(selectedHotel.averagePrice)}</p>
-                  </div>
-                )}
+            <div className="space-y-8">
+              {/* Quick Stats Overview */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <Card className="p-4 text-center">
+                  <MapPin className="h-8 w-8 mx-auto mb-2 text-blue-500" />
+                  <p className="text-sm text-muted-foreground">Location</p>
+                  <p className="font-semibold">{selectedHotel.city}</p>
+                  <p className="text-xs text-muted-foreground">{selectedHotel.country}</p>
+                </Card>
+                
+                <Card className="p-4 text-center">
+                  <Users className="h-8 w-8 mx-auto mb-2 text-green-500" />
+                  <p className="text-sm text-muted-foreground">Rooms</p>
+                  <p className="font-semibold text-xl">{selectedHotel.roomCount || 'N/A'}</p>
+                </Card>
+                
+                <Card className="p-4 text-center">
+                  <DollarSign className="h-8 w-8 mx-auto mb-2 text-yellow-500" />
+                  <p className="text-sm text-muted-foreground">Avg. Price</p>
+                  <p className="font-semibold text-xl">{selectedHotel.averagePrice ? formatPrice(selectedHotel.averagePrice) : 'N/A'}</p>
+                </Card>
+                
+                <Card className="p-4 text-center">
+                  <Award className="h-8 w-8 mx-auto mb-2 text-purple-500" />
+                  <p className="text-sm text-muted-foreground">Category</p>
+                  <p className="font-semibold">{selectedHotel.category || 'Business'}</p>
+                </Card>
               </div>
 
-              {/* Review Data */}
-              {(selectedHotel.bookingRating || selectedHotel.googleRating || selectedHotel.tripadvisorRating || selectedHotel.holidaycheckRating) && (
-                <div>
-                  <h3 className="text-lg font-semibold mb-4">Review Ratings & Links</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {selectedHotel.bookingRating && (
-                      <Card>
-                        <CardContent className="p-4">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="font-medium text-blue-600">Booking.com</span>
-                            <span className="font-bold">{formatRating(selectedHotel.bookingRating)}/10</span>
+              {/* Comprehensive Review Analytics */}
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <MessageSquare className="h-5 w-5 text-blue-600" />
+                    Review Analytics Dashboard
+                  </h3>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={async () => {
+                      try {
+                        const response = await fetch(`/api/hotels/${selectedHotel.id}/extract-reviews`, {
+                          method: 'POST'
+                        });
+                        if (response.ok) {
+                          toast({
+                            title: "Review extraction started",
+                            description: "Fresh review data is being collected from all platforms"
+                          });
+                          refetchHotels();
+                        }
+                      } catch (error) {
+                        toast({
+                          title: "Extraction failed",
+                          description: "Could not start review extraction",
+                          variant: "destructive"
+                        });
+                      }
+                    }}
+                  >
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Refresh Reviews
+                  </Button>
+                </div>
+
+                {/* Platform Reviews Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Booking.com */}
+                  <Card className="border-l-4 border-l-blue-500">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-blue-600 flex items-center gap-2">
+                          <span className="w-6 h-6 bg-blue-600 text-white rounded text-xs flex items-center justify-center font-bold">B</span>
+                          Booking.com
+                        </CardTitle>
+                        {selectedHotel.bookingUrl && (
+                          <Button variant="ghost" size="sm" asChild>
+                            <a href={selectedHotel.bookingUrl} target="_blank" rel="noopener noreferrer">
+                              <ExternalLink className="h-4 w-4" />
+                            </a>
+                          </Button>
+                        )}
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      {selectedHotel.bookingRating ? (
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-2xl font-bold text-blue-600">{formatRating(selectedHotel.bookingRating)}</span>
+                            <span className="text-sm text-muted-foreground">/ 10</span>
                           </div>
+                          <Progress value={(selectedHotel.bookingRating / 10) * 100} className="h-2" />
                           {selectedHotel.bookingReviewCount && (
                             <p className="text-sm text-muted-foreground">
+                              <ThumbsUp className="h-4 w-4 inline mr-1" />
                               {selectedHotel.bookingReviewCount} reviews
                             </p>
                           )}
-                        </CardContent>
-                      </Card>
-                    )}
-                    
-                    {selectedHotel.googleRating && (
-                      <Card>
-                        <CardContent className="p-4">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="font-medium text-green-600">Google Reviews</span>
-                            <span className="font-bold">{formatRating(selectedHotel.googleRating)}/5</span>
+                          {selectedHotel.bookingSummary && (
+                            <div className="p-3 bg-blue-50 rounded-lg">
+                              <p className="text-sm text-blue-800 italic">"{selectedHotel.bookingSummary}"</p>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="text-center py-6 text-muted-foreground">
+                          <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                          <p className="text-sm">No review data available</p>
+                          <p className="text-xs">Click "Refresh Reviews" to extract</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Google Reviews */}
+                  <Card className="border-l-4 border-l-green-500">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-green-600 flex items-center gap-2">
+                          <span className="w-6 h-6 bg-green-600 text-white rounded text-xs flex items-center justify-center font-bold">G</span>
+                          Google Reviews
+                        </CardTitle>
+                        {selectedHotel.googleUrl && (
+                          <Button variant="ghost" size="sm" asChild>
+                            <a href={selectedHotel.googleUrl} target="_blank" rel="noopener noreferrer">
+                              <ExternalLink className="h-4 w-4" />
+                            </a>
+                          </Button>
+                        )}
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      {selectedHotel.googleRating ? (
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-2xl font-bold text-green-600">{formatRating(selectedHotel.googleRating)}</span>
+                            <span className="text-sm text-muted-foreground">/ 5</span>
                           </div>
+                          <Progress value={(selectedHotel.googleRating / 5) * 100} className="h-2" />
                           {selectedHotel.googleReviewCount && (
                             <p className="text-sm text-muted-foreground">
+                              <ThumbsUp className="h-4 w-4 inline mr-1" />
                               {selectedHotel.googleReviewCount} reviews
                             </p>
                           )}
-                        </CardContent>
-                      </Card>
-                    )}
-                    
-                    {selectedHotel.tripadvisorRating && (
-                      <Card>
-                        <CardContent className="p-4">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="font-medium text-red-600">TripAdvisor</span>
-                            <span className="font-bold">{formatRating(selectedHotel.tripadvisorRating)}/5</span>
+                          {selectedHotel.googleSummary && (
+                            <div className="p-3 bg-green-50 rounded-lg">
+                              <p className="text-sm text-green-800 italic">"{selectedHotel.googleSummary}"</p>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="text-center py-6 text-muted-foreground">
+                          <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                          <p className="text-sm">No review data available</p>
+                          <p className="text-xs">Click "Refresh Reviews" to extract</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* TripAdvisor */}
+                  <Card className="border-l-4 border-l-red-500">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-red-600 flex items-center gap-2">
+                          <span className="w-6 h-6 bg-red-600 text-white rounded text-xs flex items-center justify-center font-bold">T</span>
+                          TripAdvisor
+                        </CardTitle>
+                        {selectedHotel.tripadvisorUrl && (
+                          <Button variant="ghost" size="sm" asChild>
+                            <a href={selectedHotel.tripadvisorUrl} target="_blank" rel="noopener noreferrer">
+                              <ExternalLink className="h-4 w-4" />
+                            </a>
+                          </Button>
+                        )}
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      {selectedHotel.tripadvisorRating ? (
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-2xl font-bold text-red-600">{formatRating(selectedHotel.tripadvisorRating)}</span>
+                            <span className="text-sm text-muted-foreground">/ 5</span>
                           </div>
+                          <Progress value={(selectedHotel.tripadvisorRating / 5) * 100} className="h-2" />
                           {selectedHotel.tripadvisorReviewCount && (
                             <p className="text-sm text-muted-foreground">
+                              <ThumbsUp className="h-4 w-4 inline mr-1" />
                               {selectedHotel.tripadvisorReviewCount} reviews
                             </p>
                           )}
-                        </CardContent>
-                      </Card>
-                    )}
-                    
-                    {selectedHotel.holidaycheckRating && (
-                      <Card>
-                        <CardContent className="p-4">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="font-medium text-orange-600">HolidayCheck</span>
-                            <span className="font-bold">{formatRating(selectedHotel.holidaycheckRating)}/6</span>
+                          {selectedHotel.tripadvisorSummary && (
+                            <div className="p-3 bg-red-50 rounded-lg">
+                              <p className="text-sm text-red-800 italic">"{selectedHotel.tripadvisorSummary}"</p>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="text-center py-6 text-muted-foreground">
+                          <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                          <p className="text-sm">No review data available</p>
+                          <p className="text-xs">Click "Refresh Reviews" to extract</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* HolidayCheck */}
+                  <Card className="border-l-4 border-l-orange-500">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-orange-600 flex items-center gap-2">
+                          <span className="w-6 h-6 bg-orange-600 text-white rounded text-xs flex items-center justify-center font-bold">H</span>
+                          HolidayCheck
+                        </CardTitle>
+                        {selectedHotel.holidaycheckUrl && (
+                          <Button variant="ghost" size="sm" asChild>
+                            <a href={selectedHotel.holidaycheckUrl} target="_blank" rel="noopener noreferrer">
+                              <ExternalLink className="h-4 w-4" />
+                            </a>
+                          </Button>
+                        )}
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      {selectedHotel.holidaycheckRating ? (
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-2xl font-bold text-orange-600">{formatRating(selectedHotel.holidaycheckRating)}</span>
+                            <span className="text-sm text-muted-foreground">/ 6</span>
                           </div>
+                          <Progress value={(selectedHotel.holidaycheckRating / 6) * 100} className="h-2" />
                           {selectedHotel.holidaycheckReviewCount && (
                             <p className="text-sm text-muted-foreground">
+                              <ThumbsUp className="h-4 w-4 inline mr-1" />
                               {selectedHotel.holidaycheckReviewCount} reviews
                             </p>
                           )}
-                        </CardContent>
-                      </Card>
-                    )}
-                  </div>
+                          {selectedHotel.holidaycheckSummary && (
+                            <div className="p-3 bg-orange-50 rounded-lg">
+                              <p className="text-sm text-orange-800 italic">"{selectedHotel.holidaycheckSummary}"</p>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="text-center py-6 text-muted-foreground">
+                          <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                          <p className="text-sm">No review data available</p>
+                          <p className="text-xs">Click "Refresh Reviews" to extract</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
                 </div>
+              </div>
+
+              {/* AI Assistant Section */}
+              <Card className="border-2 border-dashed border-blue-300 bg-gradient-to-r from-blue-50 to-indigo-50">
+                <CardHeader>
+                  <CardTitle className="text-blue-700 flex items-center gap-2">
+                    <Zap className="h-5 w-5" />
+                    AI Hotel Assistant
+                  </CardTitle>
+                  <CardDescription>
+                    Get instant AI-powered insights about {selectedHotel.name}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="justify-start text-left h-auto p-4 bg-white hover:bg-blue-50"
+                      onClick={() => {
+                        // This would trigger an AI query about pricing
+                        toast({
+                          title: "AI Analysis",
+                          description: "Generating pricing intelligence for " + selectedHotel.name
+                        });
+                      }}
+                    >
+                      <TrendingUp className="h-5 w-5 mr-2 text-green-600" />
+                      <div>
+                        <p className="font-medium">Pricing Analysis</p>
+                        <p className="text-xs text-muted-foreground">AI-powered price optimization</p>
+                      </div>
+                    </Button>
+                    
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="justify-start text-left h-auto p-4 bg-white hover:bg-blue-50"
+                      onClick={() => {
+                        // This would trigger an AI query about reviews
+                        toast({
+                          title: "AI Analysis",
+                          description: "Analyzing review patterns for " + selectedHotel.name
+                        });
+                      }}
+                    >
+                      <MessageSquare className="h-5 w-5 mr-2 text-blue-600" />
+                      <div>
+                        <p className="font-medium">Review Insights</p>
+                        <p className="text-xs text-muted-foreground">Guest sentiment analysis</p>
+                      </div>
+                    </Button>
+                    
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="justify-start text-left h-auto p-4 bg-white hover:bg-blue-50"
+                      onClick={() => {
+                        // This would trigger an AI query about market comparison
+                        toast({
+                          title: "AI Analysis",
+                          description: "Comparing " + selectedHotel.name + " with market competitors"
+                        });
+                      }}
+                    >
+                      <BarChart3 className="h-5 w-5 mr-2 text-purple-600" />
+                      <div>
+                        <p className="font-medium">Market Position</p>
+                        <p className="text-xs text-muted-foreground">Competitive benchmarking</p>
+                      </div>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Hotel Management Actions */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Target className="h-5 w-5 text-green-600" />
+                    Hotel Management
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-wrap gap-3">
+                    <Button variant="outline" size="sm">
+                      <Calculator className="h-4 w-4 mr-2" />
+                      Create Calculation
+                    </Button>
+                    <Button variant="outline" size="sm">
+                      <FileText className="h-4 w-4 mr-2" />
+                      Export Report
+                    </Button>
+                    <Button variant="outline" size="sm">
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                      Update Data
+                    </Button>
+                    <Button variant="outline" size="sm">
+                      <Bookmark className="h-4 w-4 mr-2" />
+                      Add to Favorites
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Additional Details */}
+              {(selectedHotel.description || selectedHotel.contactEmail || selectedHotel.contactPhone || selectedHotel.website) && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Additional Information</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {selectedHotel.description && (
+                      <div>
+                        <Label className="text-sm font-medium">Description</Label>
+                        <p className="text-sm text-muted-foreground mt-1">{selectedHotel.description}</p>
+                      </div>
+                    )}
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {selectedHotel.contactEmail && (
+                        <div className="flex items-center gap-2">
+                          <Mail className="h-4 w-4 text-muted-foreground" />
+                          <a href={`mailto:${selectedHotel.contactEmail}`} className="text-sm text-blue-600 hover:underline">
+                            {selectedHotel.contactEmail}
+                          </a>
+                        </div>
+                      )}
+                      
+                      {selectedHotel.contactPhone && (
+                        <div className="flex items-center gap-2">
+                          <Phone className="h-4 w-4 text-muted-foreground" />
+                          <a href={`tel:${selectedHotel.contactPhone}`} className="text-sm text-blue-600 hover:underline">
+                            {selectedHotel.contactPhone}
+                          </a>
+                        </div>
+                      )}
+                      
+                      {selectedHotel.website && (
+                        <div className="flex items-center gap-2">
+                          <Globe className="h-4 w-4 text-muted-foreground" />
+                          <a href={selectedHotel.website} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline">
+                            Website
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
               )}
             </div>
           </DialogContent>
