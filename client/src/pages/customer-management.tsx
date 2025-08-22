@@ -1759,8 +1759,14 @@ export default function CustomerManagement() {
                                 <div className="flex justify-between items-center">
                                   <span className="text-xs text-blue-600">Booking.com</span>
                                   <div className="flex items-center space-x-1">
-                                    <span className="text-xs font-medium">{hotel.bookingReviews.rating}/10</span>
-                                    <span className="text-xs text-muted-foreground">({hotel.bookingReviews.count})</span>
+                                    {hotel.bookingReviews.rating ? (
+                                      <>
+                                        <span className="text-xs font-medium">{hotel.bookingReviews.rating}/10</span>
+                                        <span className="text-xs text-muted-foreground">({hotel.bookingReviews.reviewCount || hotel.bookingReviews.count})</span>
+                                      </>
+                                    ) : (
+                                      <span className="text-xs text-muted-foreground italic">No rating</span>
+                                    )}
                                   </div>
                                 </div>
                               )}
@@ -1768,8 +1774,14 @@ export default function CustomerManagement() {
                                 <div className="flex justify-between items-center">
                                   <span className="text-xs text-red-600">Google</span>
                                   <div className="flex items-center space-x-1">
-                                    <span className="text-xs font-medium">{hotel.googleReviews.rating}/5</span>
-                                    <span className="text-xs text-muted-foreground">({hotel.googleReviews.count})</span>
+                                    {hotel.googleReviews.rating ? (
+                                      <>
+                                        <span className="text-xs font-medium">{hotel.googleReviews.rating}/5</span>
+                                        <span className="text-xs text-muted-foreground">({hotel.googleReviews.reviewCount || hotel.googleReviews.count})</span>
+                                      </>
+                                    ) : (
+                                      <span className="text-xs text-muted-foreground italic">No rating</span>
+                                    )}
                                   </div>
                                 </div>
                               )}
@@ -1777,8 +1789,14 @@ export default function CustomerManagement() {
                                 <div className="flex justify-between items-center">
                                   <span className="text-xs text-green-600">TripAdvisor</span>
                                   <div className="flex items-center space-x-1">
-                                    <span className="text-xs font-medium">{hotel.tripadvisorReviews.rating}/5</span>
-                                    <span className="text-xs text-muted-foreground">({hotel.tripadvisorReviews.count})</span>
+                                    {hotel.tripadvisorReviews.rating ? (
+                                      <>
+                                        <span className="text-xs font-medium">{hotel.tripadvisorReviews.rating}/5</span>
+                                        <span className="text-xs text-muted-foreground">({hotel.tripadvisorReviews.reviewCount || hotel.tripadvisorReviews.count})</span>
+                                      </>
+                                    ) : (
+                                      <span className="text-xs text-muted-foreground italic">No rating</span>
+                                    )}
                                   </div>
                                 </div>
                               )}
@@ -1786,8 +1804,14 @@ export default function CustomerManagement() {
                                 <div className="flex justify-between items-center">
                                   <span className="text-xs text-orange-600">HolidayCheck</span>
                                   <div className="flex items-center space-x-1">
-                                    <span className="text-xs font-medium">{hotel.holidayCheckReviews.rating}/6</span>
-                                    <span className="text-xs text-muted-foreground">({hotel.holidayCheckReviews.count})</span>
+                                    {hotel.holidayCheckReviews.rating ? (
+                                      <>
+                                        <span className="text-xs font-medium">{hotel.holidayCheckReviews.rating}/6</span>
+                                        <span className="text-xs text-muted-foreground">({hotel.holidayCheckReviews.reviewCount || hotel.holidayCheckReviews.count})</span>
+                                      </>
+                                    ) : (
+                                      <span className="text-xs text-muted-foreground italic">No rating</span>
+                                    )}
                                   </div>
                                 </div>
                               )}
