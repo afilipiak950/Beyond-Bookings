@@ -214,8 +214,33 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteHotel(id: number): Promise<boolean> {
-    const result = await db.delete(hotels).where(eq(hotels.id, id));
-    return (result.rowCount ?? 0) > 0;
+    try {
+      console.log(`🗑️ Attempting to delete hotel with ID: ${id}`);
+      
+      // First check if hotel exists
+      const existingHotel = await this.getHotel(id);
+      if (!existingHotel) {
+        console.log(`❌ Hotel with ID ${id} not found`);
+        return false;
+      }
+      
+      console.log(`✅ Hotel found: ${existingHotel.name}, proceeding with deletion`);
+      
+      // Delete the hotel
+      const result = await db.delete(hotels).where(eq(hotels.id, id));
+      console.log(`🔍 Delete result:`, result);
+      
+      // Verify deletion by checking if hotel still exists
+      const deletedHotel = await this.getHotel(id);
+      const wasDeleted = !deletedHotel;
+      
+      console.log(`🎯 Deletion ${wasDeleted ? 'successful' : 'failed'} for hotel ID ${id}`);
+      return wasDeleted;
+      
+    } catch (error) {
+      console.error(`❌ Error deleting hotel ${id}:`, error);
+      return false;
+    }
   }
 
   async scrapeHotelData(url: string): Promise<any> {
