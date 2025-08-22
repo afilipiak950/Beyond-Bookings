@@ -420,8 +420,8 @@ export default function CustomerManagement() {
           </div>
         </div>
 
-        {/* Sidebar */}
-        <div className="w-64 bg-gray-50 dark:bg-gray-800 p-4">
+        {/* Sidebar - Floating Panel */}
+        <div className="fixed right-4 top-20 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 z-10">
           <div className="space-y-4">
             <div>
               <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">Hotel Clients</h3>
