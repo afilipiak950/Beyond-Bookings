@@ -514,8 +514,11 @@ export default function Calculations() {
         ),
       });
 
-      // Refresh calculations
+      // Refresh calculations AND approvals cache for real-time updates
       queryClient.invalidateQueries({ queryKey: ['/api/pricing-calculations'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/approvals'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/approvals/stats'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/approvals/my-requests'] });
     } catch (error: any) {
       toast({
         title: "Error",
