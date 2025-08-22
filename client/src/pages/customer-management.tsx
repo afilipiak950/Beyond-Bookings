@@ -369,6 +369,17 @@ export default function CustomerManagement() {
   const hotelData = hotelResponse?.data || [];
   const pagination = hotelResponse?.pagination;
   const filterInfo = hotelResponse?.filters;
+  
+  // Debug: Log first hotel's data to check review fields
+  if (hotelData.length > 0) {
+    console.log('🏨 First hotel data structure:', hotelData[0]);
+    console.log('🏨 Available review fields:', {
+      bookingReviews: hotelData[0].bookingReviews,
+      googleReviews: hotelData[0].googleReviews,
+      tripadvisorReviews: hotelData[0].tripadvisorReviews,
+      holidayCheckReviews: hotelData[0].holidayCheckReviews
+    });
+  }
 
   // Mutation for authentic hotel data extraction with real search URLs
   const scrapeHotelMutation = useMutation({
@@ -563,6 +574,13 @@ export default function CustomerManagement() {
 
   // Handle hotel details view
   const handleViewDetails = (hotel: any) => {
+    console.log('🔍 Selected hotel data:', hotel);
+    console.log('🔍 Review data available:', {
+      bookingReviews: hotel.bookingReviews,
+      googleReviews: hotel.googleReviews,
+      tripadvisorReviews: hotel.tripadvisorReviews,
+      holidayCheckReviews: hotel.holidayCheckReviews
+    });
     setSelectedHotel(hotel);
     setSearchQuery("");
     setSearchResults([]);
