@@ -2474,7 +2474,7 @@ RETURN ONLY BASIC HOTEL DATA in valid JSON format:
         tripadvisorReviews: tripadvisorReviews || null,
         holidayCheckReviews: holidayCheckReviews || null,
         reviewSummary: reviewSummary || null,
-        lastReviewUpdate: (bookingReviews || googleReviews || tripadvisorReviews || holidayCheckReviews) ? new Date().toISOString() : null
+        lastReviewUpdate: (bookingReviews || googleReviews || tripadvisorReviews || holidayCheckReviews) ? new Date() : null
       };
 
       console.log('💾 Saving hotel to database with review data:', hotelData);
