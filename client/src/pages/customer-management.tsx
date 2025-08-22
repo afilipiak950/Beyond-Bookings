@@ -486,28 +486,6 @@ export default function CustomerManagement() {
     },
   });
 
-  // Mutation for batch updating hotels with review data
-  const batchUpdateReviewsMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest('/api/hotels/batch-update-reviews', 'POST');
-      return await response.json();
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/hotels"] });
-      toast({
-        title: "Batch review update completed!",
-        description: `Successfully updated ${data.summary.success} hotels with authentic review data from all 4 platforms`,
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Failed to batch update reviews",
-        description: error.message || "Could not update hotels with review data",
-        variant: "destructive",
-      });
-    },
-  });
-
   // Handle hotel data extraction
   const handleExtractData = async () => {
     if (!hotelName.trim()) {
@@ -672,33 +650,20 @@ export default function CustomerManagement() {
               Manage your hotel clients and their pricing strategies
             </p>
           </div>
-          <div className="flex gap-2">
-            <Button
-              onClick={() => batchUpdateReviewsMutation.mutate()}
-              disabled={batchUpdateReviewsMutation.isPending}
-              variant="outline"
-            >
-              {batchUpdateReviewsMutation.isPending ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <RefreshCw className="h-4 w-4 mr-2" />
-              )}
-              Update All Reviews
-            </Button>
-            <Dialog open={addHotelOpen} onOpenChange={setAddHotelOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Hotel
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[600px]">
-                <DialogHeader>
-                  <DialogTitle>Add New Hotel</DialogTitle>
-                  <DialogDescription>
-                    Enter the hotel name and we'll automatically extract all the details
-                  </DialogDescription>
-                </DialogHeader>
+          <Dialog open={addHotelOpen} onOpenChange={setAddHotelOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Hotel
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[600px]">
+              <DialogHeader>
+                <DialogTitle>Add New Hotel</DialogTitle>
+                <DialogDescription>
+                  Enter the hotel name and we'll automatically extract all the details
+                </DialogDescription>
+              </DialogHeader>
               
               <div className="space-y-6">
                 {/* Hotel Name Input */}
@@ -2201,7 +2166,6 @@ export default function CustomerManagement() {
             )}
           </DialogContent>
         </Dialog>
-        </div>
       </div>
     </AppLayout>
   );
