@@ -25,6 +25,7 @@ import { documentAnalyses, hotels, users } from "@shared/schema";
 import { eq, desc, and, or, isNull, gte, lte, like, ilike, inArray, sql, count } from "drizzle-orm";
 import OpenAI from "openai";
 import aiRoutes from "./ai/routes";
+import * as cheerio from "cheerio";
 // Temporarily commented out to fix import errors
 // import { UltraEnhancedAIService } from "./ai/aiService-enhanced";
 
@@ -114,7 +115,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Ensure role is included in the response
-      const { password, ...safeUser } = user;
+      const { password, ...safeUser } = user as any;
       res.json({
         ...safeUser,
         role: safeUser.role || 'user' // Default to 'user' if role is missing
@@ -144,7 +145,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const users = await storage.getAllUsers();
       // Remove password field from response
       const safeUsers = users.map(user => {
-        const { password, ...safeUser } = user;
+        const { password, ...safeUser } = user as any;
         return safeUser;
       });
       res.json({
@@ -267,7 +268,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Return user without password
-      const { password, ...safeUser } = updatedUser;
+      const { password, ...safeUser } = updatedUser as any;
       res.json({
         success: true,
         message: `User role updated to ${role} successfully`,
@@ -300,7 +301,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Return user without password
-      const { password, ...safeUser } = updatedUser;
+      const { password, ...safeUser } = updatedUser as any;
       res.json(safeUser);
     } catch (error) {
       console.error("Error updating user:", error);

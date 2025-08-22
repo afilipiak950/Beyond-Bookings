@@ -805,15 +805,6 @@ ${calculation.hotelName},${calculation.hotelUrl || ''},${calculation.stars || ''
       .where(eq(users.role, 'admin'));
   }
 
-  // Get user by ID for decision notifications
-  async getUserById(userId: number): Promise<User | undefined> {
-    const [user] = await db
-      .select()
-      .from(users)
-      .where(eq(users.id, userId));
-    
-    return user;
-  }
 
   // Get approval request with hotel name for email notifications
   async getApprovalRequestWithHotelName(id: number): Promise<(ApprovalRequest & { hotelName?: string; createdByUser: { email: string; firstName?: string; lastName?: string } }) | undefined> {

@@ -40,10 +40,10 @@ export const users = pgTable("users", {
 });
 
 // Approval requests table for pricing calculations that exceed thresholds
-export const approvalRequests = pgTable("approval_requests", {
+export const approvalRequests: any = pgTable("approval_requests", {
   id: serial("id").primaryKey(),
   createdByUserId: integer("created_by_user_id").notNull().references(() => users.id),
-  calculationId: integer("calculation_id").references(() => pricingCalculations.id), // Link to pricing calculation
+  calculationId: integer("calculation_id"), // Link to pricing calculation
   inputHash: varchar("input_hash", { length: 64 }), // SHA-256 hash for tracking input changes
   approvedByUserId: integer("approved_by_user_id").references(() => users.id),
   decisionByUserId: integer("decision_by_user_id").references(() => users.id),
@@ -73,7 +73,7 @@ export const notifications = pgTable("notifications", {
   title: varchar("title").notNull(),
   message: text("message").notNull(),
   approvalRequestId: integer("approval_request_id").references(() => approvalRequests.id),
-  calculationId: integer("calculation_id").references(() => pricingCalculations.id),
+  calculationId: integer("calculation_id"),
   status: varchar("status").default("unread").notNull(), // 'unread', 'read'
   readAt: timestamp("read_at"),
   createdAt: timestamp("created_at").defaultNow(),
@@ -120,7 +120,7 @@ export const hotels = pgTable("hotels", {
 ]);
 
 // Pricing calculations table
-export const pricingCalculations = pgTable("pricing_calculations", {
+export const pricingCalculations: any = pgTable("pricing_calculations", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id),
   hotelId: integer("hotel_id").references(() => hotels.id),
@@ -153,7 +153,7 @@ export const pricingCalculations = pgTable("pricing_calculations", {
   approvalStatus: text("approval_status", { 
     enum: ["none_required", "required_not_sent", "pending", "approved", "rejected"] 
   }).default("none_required"),
-  lastApprovalRequestId: integer("last_approval_request_id").references(() => approvalRequests.id),
+  lastApprovalRequestId: integer("last_approval_request_id"),
   inputHash: text("input_hash"), // SHA-256 hash of key input fields for change detection
   approvedInputHash: text("approved_input_hash"), // Hash of inputs when approved to enforce snapshot identity
   
