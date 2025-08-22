@@ -90,10 +90,7 @@ export default function UserManagement() {
   // Create user mutation
   const createUserMutation = useMutation({
     mutationFn: (userData: CreateUserForm) =>
-      apiRequest('/api/admin/users', {
-        method: 'POST',
-        body: userData
-      }),
+      apiRequest('/api/admin/users', 'POST', userData),
     onSuccess: () => {
       toast({
         title: "Success",
@@ -121,14 +118,11 @@ export default function UserManagement() {
   // Update user role mutation
   const updateUserRoleMutation = useMutation({
     mutationFn: ({ userId, role }: { userId: number; role: string }) =>
-      apiRequest(`/api/admin/users/${userId}`, {
-        method: 'PATCH',
-        body: { role }
-      }),
-    onSuccess: (data) => {
+      apiRequest(`/api/admin/users/${userId}`, 'PATCH', { role }),
+    onSuccess: () => {
       toast({
         title: "Success",
-        description: data.message || "User role updated successfully",
+        description: "User role updated successfully",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
       setEditingUser(null);
@@ -145,9 +139,7 @@ export default function UserManagement() {
   // Delete user mutation
   const deleteUserMutation = useMutation({
     mutationFn: (userId: number) =>
-      apiRequest(`/api/admin/users/${userId}`, {
-        method: 'DELETE'
-      }),
+      apiRequest(`/api/admin/users/${userId}`, 'DELETE'),
     onSuccess: () => {
       toast({
         title: "Success",
