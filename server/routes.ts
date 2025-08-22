@@ -2494,6 +2494,30 @@ RETURN ONLY BASIC HOTEL DATA in valid JSON format:
     }
   });
 
+  // Update hotel endpoint
+  app.put('/api/hotels/:id', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const hotelId = parseInt(req.params.id);
+      if (!hotelId) {
+        return res.status(400).json({ message: "Hotel ID is required" });
+      }
+
+      console.log('🔄 Updating hotel:', hotelId, req.body);
+      
+      const updatedHotel = await storage.updateHotel(hotelId, req.body);
+      console.log('✅ Hotel updated successfully:', updatedHotel);
+
+      res.json(updatedHotel);
+      
+    } catch (error: any) {
+      console.error('❌ Hotel update failed:', error);
+      res.status(500).json({ 
+        message: "Failed to update hotel", 
+        error: error?.message || 'Unknown error'
+      });
+    }
+  });
+
   // NEW: Hotel extraction with AUTHENTIC review platform search URLs
   app.post('/api/hotels/extract-authentic', requireAuth, async (req: Request, res: Response) => {
     try {

@@ -569,6 +569,61 @@ export default function CustomerManagement() {
     setDetailsOpen(true);
   };
 
+  // Handle refresh reviews for existing hotel
+  const handleRefreshReviews = async (hotel: any) => {
+    if (!hotel?.name) return;
+    
+    setExtractionLoading(true);
+    try {
+      // Extract review data for this hotel
+      const extractResponse = await apiRequest(`/api/hotels/extract-authentic`, 'POST', {
+        name: hotel.name,
+        url: hotel.url
+      }) as any;
+
+      // Update the hotel with the new review data
+      const updateResponse = await apiRequest(`/api/hotels/${hotel.id}`, 'PUT', {
+        ...hotel,
+        bookingReviews: extractResponse.bookingReviews,
+        googleReviews: extractResponse.googleReviews,
+        tripadvisorReviews: extractResponse.tripadvisorReviews,
+        holidayCheckReviews: extractResponse.holidayCheckReviews,
+        reviewSummary: extractResponse.reviewSummary,
+        lastReviewUpdate: extractResponse.lastReviewUpdate
+      }) as any;
+
+      // Update the selected hotel in state
+      setSelectedHotel(updateResponse);
+      
+      // Refresh hotels list
+      queryClient.invalidateQueries({ queryKey: ['/api/hotels'] });
+
+      // Count review platforms found
+      const reviewPlatforms = [
+        extractResponse.bookingReviews && 'Booking.com',
+        extractResponse.googleReviews && 'Google Reviews', 
+        extractResponse.holidayCheckReviews && 'HolidayCheck',
+        extractResponse.tripadvisorReviews && 'TripAdvisor'
+      ].filter(Boolean);
+
+      toast({
+        title: "Review data refreshed!",
+        description: reviewPlatforms.length > 0 
+          ? `Found reviews from ${reviewPlatforms.join(', ')}` 
+          : "Hotel data updated (no review data found on platforms)",
+      });
+
+    } catch (error: any) {
+      toast({
+        title: "Failed to refresh reviews",
+        description: error?.message || "Please try again later",
+        variant: "destructive",
+      });
+    } finally {
+      setExtractionLoading(false);
+    }
+  };
+
   // Handle OpenAI search about hotel
   const handleHotelSearch = async () => {
     if (!searchQuery.trim() || !selectedHotel) return;
@@ -1864,13 +1919,29 @@ export default function CustomerManagement() {
                 </div>
                 
                 {/* Review Data Section */}
-                {(selectedHotel.bookingReviews || selectedHotel.googleReviews || selectedHotel.tripadvisorReviews || selectedHotel.holidayCheckReviews) && (
-                  <div className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200">
-                    <h3 className="font-semibold text-gray-800 mb-4 flex items-center">
+                <div className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-semibold text-gray-800 flex items-center">
                       <MessageSquare className="h-4 w-4 mr-2 text-purple-600" />
                       Reviews & Ratings
                     </h3>
-                    
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleRefreshReviews(selectedHotel)}
+                      disabled={extractionLoading}
+                      className="text-purple-600 border-purple-300 hover:bg-purple-100"
+                    >
+                      {extractionLoading ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      ) : (
+                        <RefreshCw className="h-4 w-4 mr-2" />
+                      )}
+                      Refresh Reviews
+                    </Button>
+                  </div>
+                  
+                  {(selectedHotel.bookingReviews || selectedHotel.googleReviews || selectedHotel.tripadvisorReviews || selectedHotel.holidayCheckReviews) ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {/* Booking.com Reviews */}
                       {selectedHotel.bookingReviews && (
@@ -2028,8 +2099,14 @@ export default function CustomerManagement() {
                         )}
                       </div>
                     )}
-                  </div>
-                )}
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      <MessageSquare className="h-12 w-12 mx-auto mb-3 text-gray-400" />
+                      <p className="text-sm mb-2">No review data available for this hotel</p>
+                      <p className="text-xs text-gray-400">Click "Refresh Reviews" to extract review data from booking platforms</p>
+                    </div>
+                  )}
+                </div>
                 
                 {/* AI Search Section */}
                 <div className="space-y-4">
