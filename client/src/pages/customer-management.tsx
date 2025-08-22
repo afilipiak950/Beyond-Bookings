@@ -1049,7 +1049,6 @@ export default function CustomerManagement() {
                                           />
                                         ))}
                                       </div>
-                                      <span className="text-xs text-gray-600">({extractedData.googleReviews.reviewCount} reviews)</span>
                                     </>
                                   ) : (
                                     <span className="text-sm text-green-600 font-medium">Click to view authentic ratings & reviews</span>
