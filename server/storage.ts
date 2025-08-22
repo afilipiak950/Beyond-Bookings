@@ -226,7 +226,22 @@ export class DatabaseStorage implements IStorage {
       
       console.log(`✅ Hotel found: ${existingHotel.name}, proceeding with deletion`);
       
-      // Delete the hotel
+      // Check for associated pricing calculations
+      const associatedCalculations = await db.select().from(pricingCalculations).where(eq(pricingCalculations.hotelId, id));
+      console.log(`📊 Found ${associatedCalculations.length} associated pricing calculations`);
+      
+      if (associatedCalculations.length > 0) {
+        console.log(`⚠️ Hotel has ${associatedCalculations.length} associated calculations. Setting hotelId to NULL.`);
+        
+        // Set hotelId to NULL in pricing calculations instead of deleting them
+        await db.update(pricingCalculations)
+          .set({ hotelId: null })
+          .where(eq(pricingCalculations.hotelId, id));
+          
+        console.log(`✅ Updated ${associatedCalculations.length} pricing calculations to remove hotel reference`);
+      }
+      
+      // Now delete the hotel
       const result = await db.delete(hotels).where(eq(hotels.id, id));
       console.log(`🔍 Delete result:`, result);
       
