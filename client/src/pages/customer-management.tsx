@@ -1197,7 +1197,7 @@ export default function CustomerManagement() {
                             )}
                           </div>
 
-                          {/* Overall Review Summary */}
+                          {/* Overall Review Summary - Hidden
                           {extractedData.reviewSummary && (
                             <div className="mt-4 p-3 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg border border-purple-200">
                               <h5 className="font-medium text-purple-800 mb-2 flex items-center">
@@ -1212,6 +1212,7 @@ export default function CustomerManagement() {
                               )}
                             </div>
                           )}
+                          */}
                         </div>
                         )}
                       </TabsContent>
