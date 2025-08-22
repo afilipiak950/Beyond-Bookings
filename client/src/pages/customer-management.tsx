@@ -1878,7 +1878,7 @@ export default function CustomerManagement() {
                   )}
                   
                   {(selectedHotel.bookingReviews || selectedHotel.googleReviews || selectedHotel.tripadvisorReviews || selectedHotel.holidayCheckReviews || selectedHotel.reviewSummary) && (
-                    
+                    <>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {/* Booking.com Reviews */}
                       {selectedHotel.bookingReviews && (
@@ -2049,7 +2049,8 @@ export default function CustomerManagement() {
                         )}
                       </div>
                     )}
-                  </div>
+                    </>
+                  )}
                 </div>
                 
                 {/* AI Search Section */}
