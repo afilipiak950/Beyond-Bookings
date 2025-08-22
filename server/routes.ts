@@ -2784,7 +2784,9 @@ RETURN ONLY BASIC HOTEL DATA in valid JSON format:
         return res.status(400).json({ message: "Hotel ID is required" });
       }
 
-      console.log('🗑️ Deleting hotel:', hotelId);
+      console.log('🗑️ Route: Starting hotel deletion for ID:', hotelId);
+      console.log('🔍 Route: Storage object type:', typeof storage);
+      console.log('🔍 Route: deleteHotel method type:', typeof storage.deleteHotel);
       
       const deleted = await storage.deleteHotel(hotelId);
       
