@@ -3063,8 +3063,8 @@ CRITICAL REQUIREMENTS:
         apiKey: process.env.OPENAI_API_KEY
       });
 
-      // Get additional hotel data from database for richer context
-      let enhancedHotelContext = `Hotel Information:
+      // Create comprehensive hotel context for AI
+      const hotelContext = `Hotel Information:
 - Name: ${hotel.name}
 - Location: ${hotel.location || 'Not specified'}
 - Stars: ${hotel.stars || 'Not specified'}
@@ -3073,94 +3073,24 @@ CRITICAL REQUIREMENTS:
 - Amenities: ${hotel.amenities ? hotel.amenities.join(', ') : 'Not specified'}
 - Website: ${hotel.url || 'Not specified'}`;
 
-      // Add pricing information if available
-      if (hotel.averagePrice) {
-        enhancedHotelContext += `\n- Average Price: €${hotel.averagePrice} per night`;
-      }
-
-      // Add comprehensive review data for better context
-      if (hotel.bookingReviews || hotel.googleReviews || hotel.tripadvisorReviews || hotel.holidayCheckReviews) {
-        enhancedHotelContext += `\n\nReview Data from Major Platforms:`;
-        
-        if (hotel.bookingReviews && hotel.bookingReviews.rating) {
-          enhancedHotelContext += `\n- Booking.com: ${hotel.bookingReviews.rating}/10 (${hotel.bookingReviews.count || hotel.bookingReviews.reviewCount || 'N/A'} reviews)`;
-        }
-        
-        if (hotel.googleReviews && hotel.googleReviews.rating) {
-          enhancedHotelContext += `\n- Google Reviews: ${hotel.googleReviews.rating}/5 (${hotel.googleReviews.count || hotel.googleReviews.reviewCount || 'N/A'} reviews)`;
-        }
-        
-        if (hotel.tripadvisorReviews && hotel.tripadvisorReviews.rating) {
-          enhancedHotelContext += `\n- TripAdvisor: ${hotel.tripadvisorReviews.rating}/5 (${hotel.tripadvisorReviews.count || hotel.tripadvisorReviews.reviewCount || 'N/A'} reviews)`;
-        }
-        
-        if (hotel.holidayCheckReviews && hotel.holidayCheckReviews.rating) {
-          enhancedHotelContext += `\n- HolidayCheck: ${hotel.holidayCheckReviews.rating}/6 (${hotel.holidayCheckReviews.count || hotel.holidayCheckReviews.reviewCount || 'N/A'} reviews)`;
-        }
-      }
-
-      // Add AI review summary for deeper insights
-      if (hotel.reviewSummary) {
-        enhancedHotelContext += `\n\nAI Review Summary: ${hotel.reviewSummary}`;
-      }
-
-      const hotelContext = enhancedHotelContext;
-
-      // Enhanced system prompt based on query type
-      const isPricingQuery = query.toLowerCase().includes('pricing') || 
-                            query.toLowerCase().includes('price') || 
-                            query.toLowerCase().includes('cost') || 
-                            query.toLowerCase().includes('rate') || 
-                            query.toLowerCase().includes('preis');
-
-      const systemPrompt = isPricingQuery ? 
-        `You are an expert hotel revenue management and pricing analyst with deep knowledge of the hospitality industry. 
-
-When answering pricing questions, provide:
-• **Current Market Analysis** - typical price ranges for this hotel category and location
-• **Seasonal Variations** - how prices change throughout the year  
-• **Booking Strategies** - best times to book and money-saving tips
-• **Value Assessment** - what guests get for the price point
-• **Competitive Context** - how this hotel compares to similar properties
-
-Format your response like ChatGPT - conversational, insightful, and well-structured with clear sections. Use real market knowledge and be specific with numbers when possible.` :
-        `You are a knowledgeable hotel expert and travel advisor. Provide detailed, conversational responses like ChatGPT - insightful, well-structured, and genuinely helpful. Use your extensive knowledge of hotels, destinations, and hospitality to give comprehensive answers that go beyond basic information.`;
-
-      // Enhanced user prompt with real market context
-      const userPrompt = isPricingQuery ? 
-        `${hotelContext}
-
-User Question: ${query}
-
-Please provide a detailed pricing analysis for this hotel. Include:
-- Typical room rates for different seasons (estimate ranges based on location, stars, and category)
-- Factors that influence pricing at this property
-- Best booking strategies and timing recommendations
-- How this hotel's pricing compares to competitors in the area
-- What amenities/services justify the price point
-- Money-saving tips for potential guests
-
-Be specific with price estimates where possible, and explain your reasoning based on hotel category, location, and amenities.` :
-        `${hotelContext}
-
-User Question: ${query}
-
-Please provide a comprehensive, conversational answer about this hotel. Draw from your extensive knowledge of hotels, destinations, and hospitality industry best practices. Be detailed and insightful like ChatGPT would be.`;
-
       const completion = await openai.chat.completions.create({
         model: "gpt-4o",
         messages: [
           {
             role: "system",
-            content: systemPrompt
+            content: "You are a helpful hotel expert assistant. Answer questions about hotels based on the provided information and your knowledge. Be detailed, accurate, and helpful. Format your responses clearly with bullet points or sections when appropriate."
           },
           {
             role: "user",
-            content: userPrompt
+            content: `${hotelContext}
+
+User Question: ${query}
+
+Please provide a comprehensive answer about this hotel based on the information provided and your general knowledge of hotels, locations, and hospitality industry.`
           }
         ],
-        max_completion_tokens: 1200,
-        temperature: 0.8
+        max_completion_tokens: 800,
+        temperature: 0.7
       });
 
       const response = completion.choices[0].message.content;
