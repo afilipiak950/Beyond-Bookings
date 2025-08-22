@@ -201,25 +201,16 @@ export class DatabaseStorage implements IStorage {
     return hotel;
   }
 
-  async updateHotel(hotelId: number, updateData: Partial<InsertHotel>): Promise<Hotel> {
-    const [updatedHotel] = await db
+  async updateHotel(id: number, hotelData: Partial<InsertHotel>): Promise<Hotel | undefined> {
+    const [hotel] = await db
       .update(hotels)
       .set({
-        ...updateData,
+        ...hotelData,
         updatedAt: new Date(),
       })
-      .where(eq(hotels.id, hotelId))
+      .where(eq(hotels.id, id))
       .returning();
-    
-    if (!updatedHotel) {
-      throw new Error(`Hotel with ID ${hotelId} not found`);
-    }
-    
-    return updatedHotel;
-  }
-
-  async getAllHotels(): Promise<Hotel[]> {
-    return await db.select().from(hotels).orderBy(desc(hotels.createdAt));
+    return hotel;
   }
 
   async deleteHotel(id: number): Promise<boolean> {

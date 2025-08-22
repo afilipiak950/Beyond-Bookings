@@ -2419,36 +2419,7 @@ RETURN ONLY BASIC HOTEL DATA in valid JSON format:
         return res.status(400).json({ message: "Hotel name is required" });
       }
 
-      // Create review data objects in the correct JSONB format
-      const bookingReviews = (bookingRating || bookingReviewCount || bookingUrl) ? {
-        rating: bookingRating ? parseFloat(bookingRating) : null,
-        reviewCount: bookingReviewCount ? parseInt(bookingReviewCount) : null,
-        url: bookingUrl?.trim() || null,
-        summary: null
-      } : null;
-
-      const googleReviews = (googleRating || googleReviewCount || googleUrl) ? {
-        rating: googleRating ? parseFloat(googleRating) : null,
-        reviewCount: googleReviewCount ? parseInt(googleReviewCount) : null,
-        url: googleUrl?.trim() || null,
-        summary: null
-      } : null;
-
-      const tripadvisorReviews = (tripadvisorRating || tripadvisorReviewCount || tripadvisorUrl) ? {
-        rating: tripadvisorRating ? parseFloat(tripadvisorRating) : null,
-        reviewCount: tripadvisorReviewCount ? parseInt(tripadvisorReviewCount) : null,
-        url: tripadvisorUrl?.trim() || null,
-        summary: null
-      } : null;
-
-      const holidayCheckReviews = (holidaycheckRating || holidaycheckReviewCount || holidaycheckUrl) ? {
-        rating: holidaycheckRating ? parseFloat(holidaycheckRating) : null,
-        reviewCount: holidaycheckReviewCount ? parseInt(holidaycheckReviewCount) : null,
-        url: holidaycheckUrl?.trim() || null,
-        summary: null
-      } : null;
-
-      // Create hotel object with structured review data
+      // Create hotel object with all review data
       const hotelData = {
         name: name.trim(),
         location: location?.trim() || '',
@@ -2459,14 +2430,21 @@ RETURN ONLY BASIC HOTEL DATA in valid JSON format:
         url: url?.trim() || '',
         category: category?.trim() || '',
         amenities: Array.isArray(amenities) ? amenities : [],
-        averagePrice: (parseFloat(averagePrice) || 0).toString(),
-        // Review platform data in JSONB format
-        bookingReviews,
-        googleReviews,
-        tripadvisorReviews,
-        holidayCheckReviews,
-        reviewSummary: null,
-        lastReviewUpdate: (bookingReviews || googleReviews || tripadvisorReviews || holidayCheckReviews) ? new Date() : null,
+        averagePrice: parseFloat(averagePrice) || 0,
+        // Review platform data
+        bookingRating: bookingRating ? parseFloat(bookingRating) : null,
+        bookingReviewCount: bookingReviewCount ? parseInt(bookingReviewCount) : null,
+        bookingUrl: bookingUrl?.trim() || null,
+        googleRating: googleRating ? parseFloat(googleRating) : null,
+        googleReviewCount: googleReviewCount ? parseInt(googleReviewCount) : null,
+        googleUrl: googleUrl?.trim() || null,
+        tripadvisorRating: tripadvisorRating ? parseFloat(tripadvisorRating) : null,
+        tripadvisorReviewCount: tripadvisorReviewCount ? parseInt(tripadvisorReviewCount) : null,
+        tripadvisorUrl: tripadvisorUrl?.trim() || null,
+        holidaycheckRating: holidaycheckRating ? parseFloat(holidaycheckRating) : null,
+        holidaycheckReviewCount: holidaycheckReviewCount ? parseInt(holidaycheckReviewCount) : null,
+        holidaycheckUrl: holidaycheckUrl?.trim() || null,
+        // Remove createdAt and lastReviewUpdate - let the storage layer handle these
       };
 
       console.log('💾 Saving hotel to database:', hotelData);
@@ -2676,239 +2654,6 @@ Only return hotel data if you can verify this is a real, existing hotel. Do not 
       console.error('Authentic extraction error:', error);
       res.status(500).json({ 
         message: "Failed to extract hotel data", 
-        error: error?.message || 'Unknown error'
-      });
-    }
-  });
-
-  // COMPREHENSIVE BATCH REVIEW EXTRACTION FOR ALL HOTELS
-  app.post('/api/hotels/batch-review-extraction', requireAuth, async (req: Request, res: Response) => {
-    try {
-      console.log('🚀 STARTING COMPREHENSIVE BATCH REVIEW EXTRACTION');
-      
-      // Get all hotels from database
-      const allHotels = await storage.getAllHotels();
-      console.log(`📊 Found ${allHotels.length} hotels in database for review extraction`);
-
-      const { default: OpenAI } = await import('openai');
-      const openai = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY
-      });
-
-      const results = [];
-      let processedCount = 0;
-      const startTime = Date.now();
-
-      for (const hotel of allHotels) {
-        processedCount++;
-        console.log(`\n🔍 [${processedCount}/${allHotels.length}] Processing: ${hotel.name}`);
-        
-        try {
-          // Check if hotel already has comprehensive review data
-          const hasAllReviews = hotel.bookingReviews && hotel.googleReviews && 
-                               hotel.tripadvisorReviews && hotel.holidayCheckReviews &&
-                               hotel.bookingReviews.rating && hotel.googleReviews.rating &&
-                               hotel.tripadvisorReviews.rating && hotel.holidayCheckReviews.rating;
-
-          if (hasAllReviews) {
-            console.log(`✅ ${hotel.name} already has complete review data - skipping`);
-            results.push({
-              hotelId: hotel.id,
-              hotelName: hotel.name,
-              status: 'skipped',
-              reason: 'Already has complete review data',
-              hasBooking: !!hotel.bookingReviews?.rating,
-              hasGoogle: !!hotel.googleReviews?.rating,
-              hasTripAdvisor: !!hotel.tripadvisorReviews?.rating,
-              hasHolidayCheck: !!hotel.holidayCheckReviews?.rating
-            });
-            continue;
-          }
-
-          console.log(`🔎 Extracting comprehensive review data for: ${hotel.name}`);
-          
-          // Create comprehensive prompt for all 4 platforms
-          const reviewExtractionPrompt = `You are a professional hotel review researcher. Research comprehensive review data for "${hotel.name}"${hotel.location ? ` located at ${hotel.location}` : ''}${hotel.city ? ` in ${hotel.city}` : ''}.
-
-RESEARCH ALL 4 PLATFORMS WITH REAL DATA:
-
-1. BOOKING.COM REVIEWS:
-   - Find actual rating (out of 10)
-   - Find exact review count
-   - Find real guest review summary
-   - Find actual Booking.com URL
-
-2. GOOGLE REVIEWS:
-   - Find actual rating (out of 5) 
-   - Find exact review count
-   - Find real guest review summary
-   - Find actual Google Maps URL
-
-3. TRIPADVISOR REVIEWS:
-   - Find actual rating (out of 5)
-   - Find exact review count  
-   - Find real traveler review summary
-   - Find actual TripAdvisor URL
-
-4. HOLIDAYCHECK REVIEWS:
-   - Find actual rating (out of 6)
-   - Find exact review count
-   - Find real guest review summary
-   - Find actual HolidayCheck URL
-
-MANDATORY JSON OUTPUT FORMAT:
-{
-  "bookingReviews": {
-    "rating": [exact_number_out_of_10],
-    "reviewCount": [exact_count],
-    "url": "actual_booking_url",
-    "summary": "real guest feedback summary (2-3 sentences)"
-  },
-  "googleReviews": {
-    "rating": [exact_number_out_of_5],
-    "reviewCount": [exact_count], 
-    "url": "actual_google_maps_url",
-    "summary": "real guest feedback summary (2-3 sentences)"
-  },
-  "tripadvisorReviews": {
-    "rating": [exact_number_out_of_5],
-    "reviewCount": [exact_count],
-    "url": "actual_tripadvisor_url", 
-    "summary": "real traveler feedback summary (2-3 sentences)"
-  },
-  "holidayCheckReviews": {
-    "rating": [exact_number_out_of_6],
-    "reviewCount": [exact_count],
-    "url": "actual_holidaycheck_url",
-    "summary": "real guest feedback summary (2-3 sentences)"
-  },
-  "reviewSummary": "comprehensive AI analysis combining all platforms (3-4 sentences)",
-  "researchQuality": "high|medium|low",
-  "dataConfidence": "verified|estimated|limited"
-}
-
-CRITICAL REQUIREMENTS:
-- Return REAL ratings and counts, not placeholder values
-- All URLs must be actual, working links to the hotel
-- Summaries must reflect real guest experiences
-- If a platform has no data, set rating/count to null but still provide search URL
-- Research quality: 'high' = found all platforms, 'medium' = found 2-3 platforms, 'low' = found 1 platform
-- Data confidence: 'verified' = found exact hotel match, 'estimated' = similar hotel data, 'limited' = search URLs only`;
-
-          const completion = await openai.chat.completions.create({
-            model: "gpt-4o",
-            messages: [
-              {
-                role: "system",
-                content: "You are a professional hotel review researcher. Research and provide REAL review data from all major platforms. Always return valid JSON with actual ratings and review counts."
-              },
-              {
-                role: "user",
-                content: reviewExtractionPrompt
-              }
-            ],
-            max_completion_tokens: 1200,
-            temperature: 1
-          });
-
-          const response = completion.choices[0].message.content;
-          if (!response) {
-            throw new Error('No response from OpenAI');
-          }
-
-          // Clean and parse JSON response
-          let cleanResponse = response.trim();
-          if (cleanResponse.startsWith('```json')) {
-            cleanResponse = cleanResponse.replace(/```json\n?/, '').replace(/\n?```$/, '');
-          } else if (cleanResponse.startsWith('```')) {
-            cleanResponse = cleanResponse.replace(/```\n?/, '').replace(/\n?```$/, '');
-          }
-
-          const reviewData = JSON.parse(cleanResponse);
-          console.log(`📊 Extracted review data for ${hotel.name}:`, {
-            booking: reviewData.bookingReviews?.rating || 'not found',
-            google: reviewData.googleReviews?.rating || 'not found', 
-            tripadvisor: reviewData.tripadvisorReviews?.rating || 'not found',
-            holidaycheck: reviewData.holidayCheckReviews?.rating || 'not found',
-            quality: reviewData.researchQuality,
-            confidence: reviewData.dataConfidence
-          });
-
-          // Update hotel with new review data
-          const updateData = {
-            ...reviewData,
-            lastReviewUpdate: new Date()
-          };
-
-          await storage.updateHotel(hotel.id, updateData);
-          console.log(`✅ Updated ${hotel.name} with comprehensive review data`);
-
-          results.push({
-            hotelId: hotel.id,
-            hotelName: hotel.name,
-            status: 'updated',
-            reviewData: {
-              booking: reviewData.bookingReviews?.rating || null,
-              google: reviewData.googleReviews?.rating || null,
-              tripadvisor: reviewData.tripadvisorReviews?.rating || null,
-              holidaycheck: reviewData.holidayCheckReviews?.rating || null
-            },
-            quality: reviewData.researchQuality,
-            confidence: reviewData.dataConfidence,
-            hasBooking: !!reviewData.bookingReviews?.rating,
-            hasGoogle: !!reviewData.googleReviews?.rating,
-            hasTripAdvisor: !!reviewData.tripadvisorReviews?.rating,
-            hasHolidayCheck: !!reviewData.holidayCheckReviews?.rating
-          });
-
-          // Small delay to avoid rate limiting
-          await new Promise(resolve => setTimeout(resolve, 2000));
-
-        } catch (error: any) {
-          console.error(`❌ Failed to extract reviews for ${hotel.name}:`, error);
-          results.push({
-            hotelId: hotel.id,
-            hotelName: hotel.name,
-            status: 'failed',
-            error: error.message,
-            hasBooking: !!hotel.bookingReviews?.rating,
-            hasGoogle: !!hotel.googleReviews?.rating,
-            hasTripAdvisor: !!hotel.tripadvisorReviews?.rating,
-            hasHolidayCheck: !!hotel.holidayCheckReviews?.rating
-          });
-        }
-      }
-
-      const endTime = Date.now();
-      const duration = Math.round((endTime - startTime) / 1000);
-      
-      const summary = {
-        totalHotels: allHotels.length,
-        processed: results.filter(r => r.status === 'updated').length,
-        skipped: results.filter(r => r.status === 'skipped').length,
-        failed: results.filter(r => r.status === 'failed').length,
-        duration: `${duration} seconds`,
-        completedAt: new Date().toISOString()
-      };
-
-      console.log(`\n🎉 BATCH REVIEW EXTRACTION COMPLETED:`);
-      console.log(`   Total Hotels: ${summary.totalHotels}`);
-      console.log(`   Updated: ${summary.processed}`);
-      console.log(`   Skipped: ${summary.skipped}`);
-      console.log(`   Failed: ${summary.failed}`);
-      console.log(`   Duration: ${summary.duration}`);
-
-      res.json({
-        success: true,
-        summary,
-        results
-      });
-
-    } catch (error: any) {
-      console.error('❌ Batch review extraction failed:', error);
-      res.status(500).json({
-        success: false,
-        message: "Batch review extraction failed",
         error: error?.message || 'Unknown error'
       });
     }
