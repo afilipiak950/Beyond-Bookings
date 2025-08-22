@@ -2776,6 +2776,38 @@ RETURN ONLY BASIC HOTEL DATA in valid JSON format:
     }
   });
 
+  // Delete hotel endpoint
+  app.delete('/api/hotels/:id', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const hotelId = parseInt(req.params.id);
+      if (!hotelId) {
+        return res.status(400).json({ message: "Hotel ID is required" });
+      }
+
+      console.log('🗑️ Deleting hotel:', hotelId);
+      
+      const deleted = await storage.deleteHotel(hotelId);
+      
+      if (!deleted) {
+        return res.status(404).json({ message: "Hotel not found" });
+      }
+
+      console.log('✅ Hotel deleted successfully:', hotelId);
+
+      res.json({ 
+        success: true,
+        message: "Hotel deleted successfully" 
+      });
+      
+    } catch (error: any) {
+      console.error('❌ Hotel deletion failed:', error);
+      res.status(500).json({ 
+        message: "Failed to delete hotel", 
+        error: error?.message || 'Unknown error'
+      });
+    }
+  });
+
   // NEW: Hotel extraction with AUTHENTIC review platform search URLs
   app.post('/api/hotels/extract-authentic', requireAuth, async (req: Request, res: Response) => {
     try {
