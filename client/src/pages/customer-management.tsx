@@ -1965,16 +1965,22 @@ export default function CustomerManagement() {
                             )}
                           </div>
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="text-sm font-medium">{selectedHotel.bookingReviews.rating}/10</span>
-                            <div className="flex">
-                              {Array.from({length: 5}, (_, i) => (
-                                <Star 
-                                  key={i} 
-                                  className={`h-3 w-3 ${i < Math.round(selectedHotel.bookingReviews.rating / 2) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
-                                />
-                              ))}
-                            </div>
-                            <span className="text-xs text-gray-600">({selectedHotel.bookingReviews.count} reviews)</span>
+                            {selectedHotel.bookingReviews.rating ? (
+                              <>
+                                <span className="text-sm font-medium">{selectedHotel.bookingReviews.rating}/10</span>
+                                <div className="flex">
+                                  {Array.from({length: 5}, (_, i) => (
+                                    <Star 
+                                      key={i} 
+                                      className={`h-3 w-3 ${i < Math.round(selectedHotel.bookingReviews.rating / 2) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
+                                    />
+                                  ))}
+                                </div>
+                                <span className="text-xs text-gray-600">({selectedHotel.bookingReviews.reviewCount || selectedHotel.bookingReviews.count} reviews)</span>
+                              </>
+                            ) : (
+                              <span className="text-xs text-gray-500 italic">Rating data not available - click link to view manually</span>
+                            )}
                           </div>
                           <p className="text-xs text-gray-700">{selectedHotel.bookingReviews.summary}</p>
                         </div>
@@ -2000,16 +2006,22 @@ export default function CustomerManagement() {
                             )}
                           </div>
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="text-sm font-medium">{selectedHotel.googleReviews.rating}/5</span>
-                            <div className="flex">
-                              {Array.from({length: 5}, (_, i) => (
-                                <Star 
-                                  key={i} 
-                                  className={`h-3 w-3 ${i < Math.round(selectedHotel.googleReviews.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
-                                />
-                              ))}
-                            </div>
-                            <span className="text-xs text-gray-600">({selectedHotel.googleReviews.count} reviews)</span>
+                            {selectedHotel.googleReviews.rating ? (
+                              <>
+                                <span className="text-sm font-medium">{selectedHotel.googleReviews.rating}/5</span>
+                                <div className="flex">
+                                  {Array.from({length: 5}, (_, i) => (
+                                    <Star 
+                                      key={i} 
+                                      className={`h-3 w-3 ${i < Math.round(selectedHotel.googleReviews.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
+                                    />
+                                  ))}
+                                </div>
+                                <span className="text-xs text-gray-600">({selectedHotel.googleReviews.reviewCount || selectedHotel.googleReviews.count} reviews)</span>
+                              </>
+                            ) : (
+                              <span className="text-xs text-gray-500 italic">Rating data not available - click link to view manually</span>
+                            )}
                           </div>
                           <p className="text-xs text-gray-700">{selectedHotel.googleReviews.summary}</p>
                         </div>
@@ -2035,16 +2047,22 @@ export default function CustomerManagement() {
                             )}
                           </div>
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="text-sm font-medium">{selectedHotel.tripadvisorReviews.rating}/5</span>
-                            <div className="flex">
-                              {Array.from({length: 5}, (_, i) => (
-                                <Star 
-                                  key={i} 
-                                  className={`h-3 w-3 ${i < Math.round(selectedHotel.tripadvisorReviews.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
-                                />
-                              ))}
-                            </div>
-                            <span className="text-xs text-gray-600">({selectedHotel.tripadvisorReviews.count} reviews)</span>
+                            {selectedHotel.tripadvisorReviews.rating ? (
+                              <>
+                                <span className="text-sm font-medium">{selectedHotel.tripadvisorReviews.rating}/5</span>
+                                <div className="flex">
+                                  {Array.from({length: 5}, (_, i) => (
+                                    <Star 
+                                      key={i} 
+                                      className={`h-3 w-3 ${i < Math.round(selectedHotel.tripadvisorReviews.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
+                                    />
+                                  ))}
+                                </div>
+                                <span className="text-xs text-gray-600">({selectedHotel.tripadvisorReviews.reviewCount || selectedHotel.tripadvisorReviews.count} reviews)</span>
+                              </>
+                            ) : (
+                              <span className="text-xs text-gray-500 italic">Rating data not available - click link to view manually</span>
+                            )}
                           </div>
                           <p className="text-xs text-gray-700">{selectedHotel.tripadvisorReviews.summary}</p>
                         </div>
@@ -2070,16 +2088,22 @@ export default function CustomerManagement() {
                             )}
                           </div>
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="text-sm font-medium">{selectedHotel.holidayCheckReviews.rating}/6</span>
-                            <div className="flex">
-                              {Array.from({length: 6}, (_, i) => (
-                                <Star 
-                                  key={i} 
-                                  className={`h-3 w-3 ${i < Math.round(selectedHotel.holidayCheckReviews.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
-                                />
-                              ))}
-                            </div>
-                            <span className="text-xs text-gray-600">({selectedHotel.holidayCheckReviews.count} reviews)</span>
+                            {selectedHotel.holidayCheckReviews.rating ? (
+                              <>
+                                <span className="text-sm font-medium">{selectedHotel.holidayCheckReviews.rating}/6</span>
+                                <div className="flex">
+                                  {Array.from({length: 6}, (_, i) => (
+                                    <Star 
+                                      key={i} 
+                                      className={`h-3 w-3 ${i < Math.round(selectedHotel.holidayCheckReviews.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
+                                    />
+                                  ))}
+                                </div>
+                                <span className="text-xs text-gray-600">({selectedHotel.holidayCheckReviews.reviewCount || selectedHotel.holidayCheckReviews.count} reviews)</span>
+                              </>
+                            ) : (
+                              <span className="text-xs text-gray-500 italic">Rating data not available - click link to view manually</span>
+                            )}
                           </div>
                           <p className="text-xs text-gray-700">{selectedHotel.holidayCheckReviews.summary}</p>
                         </div>

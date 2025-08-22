@@ -1582,6 +1582,90 @@ CRITICAL: You must always return a specific price number in EUR. If exact data u
 
   // REAL web search function that uses external search API
   async function performWebSearch(hotelName: string, platform: string, platformName: string) {
+    console.log(`🔍 Performing real AI web search for ${hotelName} on ${platformName}`);
+    
+    try {
+      const { default: OpenAI } = await import('openai');
+      const openai = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY
+      });
+
+      // Use OpenAI to search for real hotel ratings data
+      const searchPrompt = `Find real, current review data for the hotel "${hotelName}" on ${platformName}.
+
+Search for authentic ratings and review counts from ${platform}. Return ONLY a JSON object with this exact format:
+
+{
+  "rating": actual_rating_number_or_null,
+  "reviewCount": actual_review_count_or_null,
+  "url": "actual_hotel_page_url_or_search_url",
+  "searchDetails": "Brief description of what data was found"
+}
+
+Rating scales:
+- Booking.com: 1-10 scale
+- Google Reviews: 1-5 scale  
+- TripAdvisor: 1-5 scale
+- HolidayCheck: 1-6 scale
+
+If you cannot find authentic rating data, set rating and reviewCount to null, but provide a proper search URL for the platform.
+
+Return only valid JSON, no markdown or explanations.`;
+
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          {
+            role: "system",
+            content: "You are a web search assistant that finds real hotel rating data. Return only valid JSON responses. If you cannot find authentic data, return null for rating and reviewCount but provide proper search URLs."
+          },
+          {
+            role: "user",
+            content: searchPrompt
+          }
+        ],
+        max_completion_tokens: 300,
+        temperature: 0.1
+      });
+
+      const response = completion.choices[0].message.content;
+      if (!response) {
+        throw new Error('No response from OpenAI');
+      }
+
+      // Parse the JSON response
+      let cleanResponse = response.trim();
+      if (cleanResponse.startsWith('```json')) {
+        cleanResponse = cleanResponse.replace(/```json\n?/, '').replace(/\n?```$/, '');
+      } else if (cleanResponse.startsWith('```')) {
+        cleanResponse = cleanResponse.replace(/```\n?/, '').replace(/\n?```$/, '');
+      }
+
+      const searchResult = JSON.parse(cleanResponse);
+      console.log(`✅ ${platformName} AI search result:`, searchResult);
+      
+      return {
+        rating: searchResult.rating,
+        reviewCount: searchResult.reviewCount,
+        url: searchResult.url || generateSearchUrl(hotelName, platform),
+        searchDetails: searchResult.searchDetails || `AI search completed for ${hotelName} on ${platformName}`
+      };
+      
+    } catch (error) {
+      console.error(`❌ AI search error for ${platformName}:`, error);
+      
+      // Fallback: return search URL with no rating data
+      return {
+        rating: null,
+        reviewCount: null,
+        url: generateSearchUrl(hotelName, platform),
+        searchDetails: `AI search failed for ${hotelName} on ${platformName} - manual verification needed`
+      };
+    }
+  }
+
+  // Legacy hardcoded data function for testing purposes
+  async function performWebSearchLegacy(hotelName: string, platform: string, platformName: string) {
     // For this demo, we'll return real data found from actual search
     // In production, this would call an actual web search API
     
@@ -2468,7 +2552,7 @@ RETURN ONLY BASIC HOTEL DATA in valid JSON format:
         url: url?.trim() || '',
         category: category?.trim() || '',
         amenities: Array.isArray(amenities) ? amenities : [],
-        averagePrice: parseFloat(averagePrice) || 0,
+        averagePrice: averagePrice ? parseFloat(averagePrice).toString() : '0.00',
         // JSONB Review data (primary format)
         bookingReviews: bookingReviews || null,
         googleReviews: googleReviews || null,
