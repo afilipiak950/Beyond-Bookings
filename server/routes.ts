@@ -2840,6 +2840,69 @@ CRITICAL REQUIREMENTS:
     });
   });
 
+  // AI Hotel Search endpoint
+  app.post('/api/ai/hotel-search', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const { query, hotel } = req.body;
+      
+      if (!query?.trim() || !hotel?.name) {
+        return res.status(400).json({ message: "Query and hotel information are required" });
+      }
+
+      console.log(`🤖 AI hotel search for: ${hotel.name} - Query: ${query}`);
+
+      const { default: OpenAI } = await import('openai');
+      const openai = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY
+      });
+
+      // Create comprehensive hotel context for AI
+      const hotelContext = `Hotel Information:
+- Name: ${hotel.name}
+- Location: ${hotel.location || 'Not specified'}
+- Stars: ${hotel.stars || 'Not specified'}
+- Room Count: ${hotel.roomCount || 'Not specified'}
+- Category: ${hotel.category || 'Not specified'}
+- Amenities: ${hotel.amenities ? hotel.amenities.join(', ') : 'Not specified'}
+- Website: ${hotel.url || 'Not specified'}`;
+
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          {
+            role: "system",
+            content: "You are a helpful hotel expert assistant. Answer questions about hotels based on the provided information and your knowledge. Be detailed, accurate, and helpful. Format your responses clearly with bullet points or sections when appropriate."
+          },
+          {
+            role: "user",
+            content: `${hotelContext}
+
+User Question: ${query}
+
+Please provide a comprehensive answer about this hotel based on the information provided and your general knowledge of hotels, locations, and hospitality industry.`
+          }
+        ],
+        max_completion_tokens: 800,
+        temperature: 0.7
+      });
+
+      const response = completion.choices[0].message.content;
+      if (!response) {
+        throw new Error('No response from OpenAI');
+      }
+
+      console.log('✅ AI hotel search completed successfully');
+      res.json({ response });
+      
+    } catch (error: any) {
+      console.error('❌ AI hotel search failed:', error);
+      res.status(500).json({ 
+        message: "Failed to get AI response", 
+        error: error?.message || 'Unknown error'
+      });
+    }
+  });
+
   // Mount AI routes
   app.use('/api/ai', aiRoutes);
   
