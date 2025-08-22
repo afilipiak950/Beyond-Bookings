@@ -3173,6 +3173,186 @@ CRITICAL REQUIREMENTS:
     });
   });
 
+  // ============================================
+  // 🚀 APPROVAL API ROUTES - CRITICAL MISSING IMPLEMENTATION
+  // ============================================
+
+  // Create approval request
+  app.post('/api/approvals', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const userId = (req as any).user.id;
+      console.log(`📝 Creating approval request for user ${userId}`);
+      console.log(`📋 Request body:`, JSON.stringify(req.body, null, 2));
+      
+      const { calculationId, calculationSnapshot, businessJustification } = req.body;
+      
+      if (!calculationId || !calculationSnapshot) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+      
+      // Generate input hash for integrity validation
+      const crypto = await import('crypto');
+      const inputString = JSON.stringify(calculationSnapshot);
+      const inputHash = crypto.createHash('sha256').update(inputString).digest('hex');
+      
+      const approvalData = {
+        createdByUserId: userId,
+        calculationId: calculationId,
+        status: 'pending',
+        starCategory: calculationSnapshot.stars || 0,
+        inputSnapshot: {
+          calculationId,
+          calculationSnapshot,
+          businessJustification
+        },
+        calculationSnapshot: calculationSnapshot,
+        reasons: [businessJustification || "Calculation requires approval based on business rules"],
+        inputHash: inputHash,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      
+      console.log(`💾 Creating approval request with data:`, JSON.stringify(approvalData, null, 2));
+      
+      const approvalRequest = await storage.createApprovalRequest(approvalData);
+      console.log(`✅ Approval request created with ID: ${approvalRequest.id}`);
+      
+      res.json({
+        success: true,
+        data: approvalRequest,
+        message: "Approval request created successfully"
+      });
+      
+    } catch (error: any) {
+      console.error('❌ Failed to create approval request:', error);
+      res.status(500).json({ 
+        message: "Failed to create approval request", 
+        error: error?.message || 'Unknown error'
+      });
+    }
+  });
+
+  // Get approval requests (with filtering)
+  app.get('/api/approvals', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const { status } = req.query;
+      console.log(`📊 Getting approval requests with status filter: ${status || 'all'}`);
+      
+      const filters: any = {};
+      if (status && status !== 'all') {
+        filters.status = status as string;
+      }
+      
+      const approvalRequests = await storage.getApprovalRequests(filters);
+      console.log(`✅ Found ${approvalRequests.length} approval requests`);
+      
+      res.json({
+        success: true,
+        data: approvalRequests
+      });
+      
+    } catch (error: any) {
+      console.error('❌ Failed to get approval requests:', error);
+      res.status(500).json({ 
+        message: "Failed to fetch approval requests", 
+        error: error?.message || 'Unknown error'
+      });
+    }
+  });
+
+  // Get approval statistics
+  app.get('/api/approvals/stats', requireAuth, async (req: Request, res: Response) => {
+    try {
+      console.log(`📈 Getting approval statistics`);
+      
+      const allRequests = await storage.getApprovalRequests();
+      
+      const stats = {
+        pending: allRequests.filter(req => req.status === 'pending').length,
+        approved: allRequests.filter(req => req.status === 'approved').length,
+        rejected: allRequests.filter(req => req.status === 'rejected').length,
+        total: allRequests.length
+      };
+      
+      console.log(`📊 Approval stats:`, stats);
+      
+      res.json({
+        success: true,
+        data: stats
+      });
+      
+    } catch (error: any) {
+      console.error('❌ Failed to get approval stats:', error);
+      res.status(500).json({ 
+        message: "Failed to fetch approval statistics", 
+        error: error?.message || 'Unknown error'
+      });
+    }
+  });
+
+  // Get user's approval requests
+  app.get('/api/approvals/my-requests', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const userId = (req as any).user.id;
+      console.log(`👤 Getting approval requests for user ${userId}`);
+      
+      const userRequests = await storage.getUserApprovalRequests(userId);
+      console.log(`✅ Found ${userRequests.length} requests for user`);
+      
+      res.json({
+        success: true,
+        data: userRequests
+      });
+      
+    } catch (error: any) {
+      console.error('❌ Failed to get user approval requests:', error);
+      res.status(500).json({ 
+        message: "Failed to fetch your approval requests", 
+        error: error?.message || 'Unknown error'
+      });
+    }
+  });
+
+  // Update approval request (approve/reject)
+  app.patch('/api/approvals/:id', requireAuth, requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const requestId = parseInt(req.params.id);
+      const adminUserId = (req as any).user.id;
+      const { action, adminComment } = req.body;
+      
+      console.log(`🔧 Admin ${adminUserId} making approval decision: ${action} for request ${requestId}`);
+      
+      if (!['approve', 'reject'].includes(action)) {
+        return res.status(400).json({ message: "Action must be 'approve' or 'reject'" });
+      }
+      
+      if (action === 'reject' && !adminComment?.trim()) {
+        return res.status(400).json({ message: "Admin comment is required when rejecting" });
+      }
+      
+      const result = await storage.makeApprovalDecision(requestId, adminUserId, action, adminComment);
+      
+      if (!result.success) {
+        return res.status(400).json({ message: result.error });
+      }
+      
+      console.log(`✅ Approval decision processed successfully`);
+      
+      res.json({
+        success: true,
+        data: result.approvalRequest,
+        message: `Request ${action}ed successfully`
+      });
+      
+    } catch (error: any) {
+      console.error('❌ Failed to process approval decision:', error);
+      res.status(500).json({ 
+        message: "Failed to process approval decision", 
+        error: error?.message || 'Unknown error'
+      });
+    }
+  });
+
   // Mount AI routes
   app.use('/api/ai', aiRoutes);
   
