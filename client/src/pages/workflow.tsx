@@ -662,22 +662,33 @@ export default function Workflow() {
       console.log("Loading calculation data:", existingCalculation);
       const calculation = existingCalculation as PricingCalculation;
       
+      // Calculate the margin and discount percentages properly
+      const totalPrice = parseFloat(calculation.totalPrice || "0");
+      const profitMargin = parseFloat(calculation.profitMargin || "0");
+      const discountVsMarket = parseFloat(calculation.discountVsMarket || "0");
+      const averagePrice = parseFloat(calculation.averagePrice || "0");
+      
+      const marginPercentage = totalPrice > 0 ? (profitMargin / totalPrice) * 100 : 0;
+      const discountPercentage = averagePrice > 0 ? (discountVsMarket / averagePrice) * 100 : 0;
+
       setWorkflowData(prev => ({
         ...prev,
         hotelName: calculation.hotelName || "",
+        hotelUrl: calculation.hotelUrl || "",
         stars: calculation.stars || 0,
         roomCount: calculation.roomCount || 0,
         occupancyRate: parseFloat(calculation.occupancyRate || "70"),
-        averagePrice: parseFloat(calculation.averagePrice || "0"),
+        averagePrice: averagePrice,
         projectCosts: parseFloat(calculation.operationalCosts || "0"),
         hotelVoucherValue: parseFloat(calculation.voucherPrice || "0"),
+        contractYears: 1, // Default since not stored in DB
         calculationResult: {
           vatAmount: parseFloat(calculation.vatAmount || "0"),
-          profitMargin: parseFloat(calculation.profitMargin || "0"),
-          totalPrice: parseFloat(calculation.totalPrice || "0"),
-          discountVsMarket: parseFloat(calculation.discountVsMarket || "0"),
-          marginPercentage: 0, // This would need to be calculated
-          discountPercentage: 0, // This would need to be calculated
+          profitMargin: profitMargin,
+          totalPrice: totalPrice,
+          discountVsMarket: discountVsMarket,
+          marginPercentage: marginPercentage,
+          discountPercentage: discountPercentage,
         }
       }));
       
