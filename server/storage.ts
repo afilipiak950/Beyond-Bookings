@@ -385,29 +385,19 @@ export class DatabaseStorage implements IStorage {
     try {
       console.log(`🗑️ Starting cascade deletion for calculation ${id}`);
       
-      // Step 1: Find all approval requests for this calculation
-      const relatedApprovalRequests = await db
-        .select({ id: approvalRequests.id })
-        .from(approvalRequests)
-        .where(eq(approvalRequests.calculationId, id));
+      // Step 1: Delete notifications that reference approval requests for this calculation
+      console.log(`🔔 Deleting notifications linked to calculation ${id}`);
+      await db
+        .delete(notifications)
+        .where(sql`approval_request_id IN (SELECT id FROM approval_requests WHERE calculation_id = ${id})`);
       
-      console.log(`📋 Found ${relatedApprovalRequests.length} approval requests to clean up`);
-      
-      // Step 2: Delete notifications that reference these approval requests
-      for (const approvalRequest of relatedApprovalRequests) {
-        console.log(`🔔 Deleting notifications for approval request ${approvalRequest.id}`);
-        await db
-          .delete(notifications)
-          .where(eq(notifications.approvalRequestId, approvalRequest.id));
-      }
-      
-      // Step 3: Delete the approval requests
+      // Step 2: Delete approval requests
       console.log(`📝 Deleting approval requests for calculation ${id}`);
       await db
         .delete(approvalRequests)
         .where(eq(approvalRequests.calculationId, id));
       
-      // Step 4: Finally delete the pricing calculation
+      // Step 3: Finally delete the pricing calculation
       console.log(`💼 Deleting pricing calculation ${id}`);
       const result = await db
         .delete(pricingCalculations)
