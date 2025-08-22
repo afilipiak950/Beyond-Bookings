@@ -468,7 +468,19 @@ export default function CustomerManagement() {
   const deleteHotelMutation = useMutation({
     mutationFn: async (hotelId: number) => {
       const response = await apiRequest(`/api/hotels/${hotelId}`, 'DELETE');
-      return await response.json();
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to delete hotel: ${response.status} ${response.statusText}`);
+      }
+      
+      // Try to parse as JSON, but handle cases where response might not be JSON
+      try {
+        return await response.json();
+      } catch (e) {
+        // If JSON parsing fails but response was OK, assume success
+        return { success: true, message: "Hotel deleted successfully" };
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/hotels"] });
