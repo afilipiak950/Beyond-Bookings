@@ -469,7 +469,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (hotelName.includes('kö59') || hotelName.includes('ko59')) {
         console.log('Found Kö59 - using real data WITH pricing research');
-        const baseData = {
+        const baseData: any = {
           name: "Kö59",
           location: "Königsallee 59, 40215 Düsseldorf, Germany",
           city: "Düsseldorf",
@@ -523,7 +523,7 @@ MANDATORY OUTPUT FORMAT (valid JSON only):
 CRITICAL: You must always return a specific price number in EUR. Research 5-star luxury boutique hotels in Düsseldorf if exact data unavailable.`
               }
             ],
-            max_completion_tokens: 600,
+            max_tokens: 600,
             temperature: 1
           });
 
@@ -572,8 +572,8 @@ CRITICAL: You must always return a specific price number in EUR. Research 5-star
               console.log(`🎯 Generated intelligent estimate for Kö59: ${estimatedPrice}€`);
             }
           }
-        } catch (priceError) {
-          console.error('❌ Price research failed for Kö59:', priceError.message);
+        } catch (priceError: any) {
+          console.error('❌ Price research failed for Kö59:', priceError?.message || priceError);
           // Final emergency pricing
           const finalPrice = 252; // 5-star luxury Düsseldorf estimate
           baseData.averagePrice = finalPrice;
@@ -1085,12 +1085,12 @@ CRITICAL: You must always return a specific price number in EUR. If exact data u
           testResponse = await mistral.chat.complete({
             model: model,
             messages: [{ role: "user", content: "Hello, respond with 'API working'" }],
-            max_completion_tokens: 50
+            maxTokens: 50
           });
           console.log(`Test successful with model: ${model}`);
           break;
-        } catch (modelError) {
-          console.warn(`Model ${model} test failed:`, modelError.message);
+        } catch (modelError: any) {
+          console.warn(`Model ${model} test failed:`, modelError?.message || modelError);
           if (model === models[models.length - 1]) {
             console.log('All Mistral models failed, but API key is valid');
             testResponse = { choices: [{ message: { content: 'API key valid, rate limited' } }] };
@@ -1099,7 +1099,7 @@ CRITICAL: You must always return a specific price number in EUR. If exact data u
         }
       }
       
-      console.log("Mistral API test response:", testResponse.choices[0]?.message?.content);
+      console.log("Mistral API test response:", testResponse?.choices?.[0]?.message?.content);
       
       // Test OCR with existing image file
       const testFile = "attached_assets/image_1751298556290.png";
@@ -1116,19 +1116,19 @@ CRITICAL: You must always return a specific price number in EUR. If exact data u
         originalPath: "test.png"
       };
       
-      const result = await documentProcessor['processFileWithOCR'](fakeExtractedFile, 999, req.user.id.toString());
+      const result = await documentProcessor['processFileWithOCR'](fakeExtractedFile, 999, req.user?.id?.toString() || '0');
       
       res.json({
         success: true,
-        mistralTest: testResponse.choices[0]?.message?.content,
+        mistralTest: testResponse?.choices?.[0]?.message?.content,
         apiKeyExists: !!process.env.MISTRAL_API_KEY,
         ocrResult: result,
         message: "OCR debug test completed"
       });
       
-    } catch (error) {
+    } catch (error: any) {
       console.error("OCR debug error:", error);
-      res.status(500).json({ error: error.message, stack: error.stack });
+      res.status(500).json({ error: error?.message || 'Unknown error', stack: error?.stack });
     }
   });
 
@@ -1205,7 +1205,7 @@ CRITICAL: You must always return a specific price number in EUR. If exact data u
         rating: null,
         reviewCount: null,
         url: generateSearchUrl(hotelName, platform),
-        searchDetails: `Search failed: ${error.message}`
+        searchDetails: `Search failed: ${error?.message || error}`
       };
     }
   }
@@ -1240,9 +1240,10 @@ CRITICAL: You must always return a specific price number in EUR. If exact data u
       };
       
       // Check if we have specific data for this hotel
-      if (knownHotelData[hotelKey]) {
+      const hotelData = (knownHotelData as any)[hotelKey];
+      if (hotelData) {
         return {
-          ...knownHotelData[hotelKey],
+          ...hotelData,
           url: googleMapsUrl
         };
       }
@@ -1290,13 +1291,13 @@ CRITICAL: You must always return a specific price number in EUR. If exact data u
           searchDetails: `Google Maps REAL scraping attempted - hotel found but no extractable rating data`
         };
         
-      } catch (error) {
+      } catch (error: any) {
         console.error('Real Google scraping failed:', error);
         return {
           rating: null,
           reviewCount: null,
           url: googleMapsUrl,
-          searchDetails: `Google Maps REAL scraping failed - ${error.message || 'network error'}`
+          searchDetails: `Google Maps REAL scraping failed - ${error?.message || 'network error'}`
         };
       }
       
@@ -1314,7 +1315,7 @@ CRITICAL: You must always return a specific price number in EUR. If exact data u
         rating: null,
         reviewCount: null,
         url: `https://www.google.com/maps/search/${encodeURIComponent(hotelName)}`,
-        searchDetails: `Google scraping failed: ${error.message}`
+        searchDetails: `Google scraping failed: ${error?.message || error}`
       };
     }
   }
@@ -1337,8 +1338,9 @@ CRITICAL: You must always return a specific price number in EUR. If exact data u
     };
     
     // Check if we have specific data for this hotel
-    if (knownHotelData[hotelKey]) {
-      return knownHotelData[hotelKey];
+    const hotelData = (knownHotelData as any)[hotelKey];
+    if (hotelData) {
+      return hotelData;
     }
     
     // REAL web scraping for unknown hotels
@@ -1394,7 +1396,7 @@ CRITICAL: You must always return a specific price number in EUR. If exact data u
         rating: null,
         reviewCount: null,
         url: `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(hotelName)}`,
-        searchDetails: `Booking.com REAL scraping failed - ${error.message || 'network error'}`
+        searchDetails: `Booking.com REAL scraping failed - ${error?.message || 'network error'}`
       };
     }
     
@@ -1424,8 +1426,9 @@ CRITICAL: You must always return a specific price number in EUR. If exact data u
     };
     
     // Check if we have specific data for this hotel
-    if (knownHotelData[hotelKey]) {
-      return knownHotelData[hotelKey];
+    const hotelData = (knownHotelData as any)[hotelKey];
+    if (hotelData) {
+      return hotelData;
     }
     
     // REAL web scraping for unknown hotels
@@ -1481,7 +1484,7 @@ CRITICAL: You must always return a specific price number in EUR. If exact data u
         rating: null,
         reviewCount: null,
         url: `https://www.tripadvisor.com/Search?q=${encodeURIComponent(hotelName)}`,
-        searchDetails: `TripAdvisor REAL scraping failed - ${error.message || 'network error'}`
+        searchDetails: `TripAdvisor REAL scraping failed - ${error?.message || 'network error'}`
       };
     }
     
@@ -1511,8 +1514,9 @@ CRITICAL: You must always return a specific price number in EUR. If exact data u
     };
     
     // Check if we have specific data for this hotel
-    if (knownHotelData[hotelKey]) {
-      return knownHotelData[hotelKey];
+    const hotelData = (knownHotelData as any)[hotelKey];
+    if (hotelData) {
+      return hotelData;
     }
     
     // REAL web scraping for unknown hotels
@@ -1967,60 +1971,13 @@ Return only valid JSON, no markdown or explanations.`;
       console.log('✅ Booking.com HTTP scraping result:', result);
       return result;
       
-    } catch (error) {
-      console.error('❌ Booking.com HTTP scraping failed:', error.message);
+    } catch (error: any) {
+      console.error('❌ Booking.com HTTP scraping failed:', error?.message || error);
       return null;
     }
   }
 
-  async function scrapeGoogleReviews(hotelName: string) {
-    try {
-      console.log(`🔍 Attempting alternate Google search for: ${hotelName}`);
-      
-      // Google Maps scraping is very difficult due to heavy JS requirements
-      // Instead, we'll use a search approach to find the establishment
-      const axios = await import('axios');
-      const cheerio = await import('cheerio');
-      
-      const searchQuery = `${hotelName} hotel reviews site:google.com`;
-      const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`;
-      
-      console.log(`📡 Searching Google for: ${searchUrl}`);
-      
-      const response = await axios.default.get(searchUrl, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        },
-        timeout: 10000
-      });
-      
-      const $ = cheerio.load(response.data);
-      
-      // Look for Google Maps links in search results
-      let mapsUrl = null;
-      $('a[href*="maps.google.com"], a[href*="/maps/place/"]').each((i, el) => {
-        const href = $(el).attr('href');
-        if (href && href.includes('maps') && !mapsUrl) {
-          mapsUrl = href.startsWith('http') ? href : `https://www.google.com${href}`;
-        }
-      });
-      
-      // Since we can't easily scrape live Google Maps data, we'll return search URL
-      const result = {
-        rating: null, // Cannot easily scrape Google Maps rating via HTTP
-        reviewCount: null, // Cannot easily scrape Google Maps review count via HTTP
-        url: mapsUrl || `https://www.google.com/maps/search/${encodeURIComponent(hotelName + ' hotel')}`
-      };
-      
-      console.log('✅ Google search result:', result);
-      return result;
-      
-    } catch (error) {
-      console.error('❌ Google search failed:', error.message);
-      return null;
-    }
-  }
+  // Duplicate function removed
 
   async function scrapeHolidayCheckReviews(hotelName: string) {
     try {

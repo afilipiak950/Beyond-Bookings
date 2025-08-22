@@ -74,8 +74,10 @@ export function Approvals() {
   });
 
   const updateRequestMutation = useMutation({
-    mutationFn: ({ id, action, adminComment }: { id: number; action: 'approve' | 'reject'; adminComment?: string }) =>
-      apiRequest(`/api/approvals/${id}`, 'PATCH', { action, adminComment }),
+    mutationFn: async ({ id, action, adminComment }: { id: number; action: 'approve' | 'reject'; adminComment?: string }) => {
+      const response = await apiRequest(`/api/approvals/${id}`, 'PATCH', { action, adminComment });
+      return await response.json();
+    },
     onSuccess: (data) => {
       // Handle different response scenarios
       if (data.idempotent) {
