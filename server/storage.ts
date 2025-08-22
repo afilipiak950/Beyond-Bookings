@@ -383,18 +383,42 @@ export class DatabaseStorage implements IStorage {
 
   async deletePricingCalculation(id: number, userId: number): Promise<boolean> {
     try {
-      // Also delete any associated approval requests
+      console.log(`🗑️ Starting cascade deletion for calculation ${id}`);
+      
+      // Step 1: Find all approval requests for this calculation
+      const relatedApprovalRequests = await db
+        .select({ id: approvalRequests.id })
+        .from(approvalRequests)
+        .where(eq(approvalRequests.calculationId, id));
+      
+      console.log(`📋 Found ${relatedApprovalRequests.length} approval requests to clean up`);
+      
+      // Step 2: Delete notifications that reference these approval requests
+      for (const approvalRequest of relatedApprovalRequests) {
+        console.log(`🔔 Deleting notifications for approval request ${approvalRequest.id}`);
+        await db
+          .delete(notifications)
+          .where(eq(notifications.approvalRequestId, approvalRequest.id));
+      }
+      
+      // Step 3: Delete the approval requests
+      console.log(`📝 Deleting approval requests for calculation ${id}`);
       await db
         .delete(approvalRequests)
         .where(eq(approvalRequests.calculationId, id));
       
+      // Step 4: Finally delete the pricing calculation
+      console.log(`💼 Deleting pricing calculation ${id}`);
       const result = await db
         .delete(pricingCalculations)
         .where(and(
           eq(pricingCalculations.id, id),
           eq(pricingCalculations.userId, userId)
         ));
-      return (result.rowCount ?? 0) > 0;
+      
+      const success = (result.rowCount ?? 0) > 0;
+      console.log(`✅ Calculation ${id} deletion ${success ? 'successful' : 'failed'}`);
+      return success;
     } catch (error) {
       console.error('Error deleting pricing calculation:', error);
       return false;
