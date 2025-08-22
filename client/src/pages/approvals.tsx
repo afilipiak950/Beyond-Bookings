@@ -206,8 +206,8 @@ export function Approvals() {
     }
   };
 
-  const approvalRequestsData = approvalRequests?.approvalRequests || [];
-  const myRequestsData = myRequests?.approvalRequests || [];
+  const approvalRequestsData = approvalRequests?.data || [];
+  const myRequestsData = myRequests?.data || [];
 
 
 
