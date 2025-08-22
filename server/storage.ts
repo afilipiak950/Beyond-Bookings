@@ -741,6 +741,31 @@ ${calculation.hotelName},${calculation.hotelUrl || ''},${calculation.stars || ''
     return updated;
   }
 
+  async deleteApprovalRequest(id: number): Promise<boolean> {
+    try {
+      console.log(`🗑️ Starting cascade deletion for approval request ${id}`);
+      
+      // Step 1: Delete notifications that reference this approval request (if any)
+      console.log(`🔔 Deleting notifications for approval request ${id}`);
+      await db
+        .delete(notifications)
+        .where(eq(notifications.approvalRequestId, id));
+      
+      // Step 2: Delete the approval request
+      console.log(`📝 Deleting approval request ${id}`);
+      const result = await db
+        .delete(approvalRequests)
+        .where(eq(approvalRequests.id, id));
+      
+      const success = (result.rowCount ?? 0) > 0;
+      console.log(`✅ Approval request ${id} deletion ${success ? 'successful' : 'failed'}`);
+      return success;
+    } catch (error) {
+      console.error('Error deleting approval request:', error);
+      return false;
+    }
+  }
+
   // Method for admin decision-making with comprehensive approval workflow
   async makeApprovalDecision(
     requestId: number, 

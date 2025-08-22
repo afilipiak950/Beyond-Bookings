@@ -3374,6 +3374,40 @@ CRITICAL REQUIREMENTS:
     }
   });
 
+  // Delete approval request
+  app.delete('/api/approvals/:id', requireAuth, requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const requestId = parseInt(req.params.id);
+      const adminUserId = (req as any).user.id;
+      
+      console.log(`🗑️ Admin ${adminUserId} deleting approval request ${requestId}`);
+      
+      if (isNaN(requestId)) {
+        return res.status(400).json({ message: "Invalid request ID" });
+      }
+      
+      const success = await storage.deleteApprovalRequest(requestId);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Approval request not found" });
+      }
+      
+      console.log(`✅ Approval request ${requestId} deleted successfully`);
+      
+      res.json({
+        success: true,
+        message: "Approval request deleted successfully"
+      });
+      
+    } catch (error: any) {
+      console.error('❌ Failed to delete approval request:', error);
+      res.status(500).json({ 
+        message: "Failed to delete approval request", 
+        error: error?.message || 'Unknown error'
+      });
+    }
+  });
+
   // Mount AI routes
   app.use('/api/ai', aiRoutes);
   

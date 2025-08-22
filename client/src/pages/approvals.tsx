@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle, XCircle, Clock, Eye, Users, TrendingUp } from "lucide-react";
+import { CheckCircle, XCircle, Clock, Eye, Users, TrendingUp, Trash2 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import AppLayout from "@/components/layout/app-layout";
 import { AdminGuard } from "@/components/auth/AdminGuard";
@@ -125,6 +125,32 @@ export function Approvals() {
     },
   });
 
+  const deleteRequestMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await apiRequest(`/api/approvals/${id}`, 'DELETE');
+      return await response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Request Deleted",
+        description: "Approval request has been deleted successfully.",
+        variant: "destructive"
+      });
+      
+      // Refresh all queries
+      queryClient.invalidateQueries({ queryKey: ['/api/approvals'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/approvals/stats'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/approvals/my-requests'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error", 
+        description: error.message || "Failed to delete request. Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'approved':
@@ -205,6 +231,12 @@ export function Approvals() {
         action: decisionAction,
         adminComment: adminComment.trim() || undefined
       });
+    }
+  };
+
+  const handleDeleteRequest = (requestId: number, requestTitle: string) => {
+    if (confirm(`Delete approval request "${requestTitle}"? This action cannot be undone.`)) {
+      deleteRequestMutation.mutate(requestId);
     }
   };
 
@@ -340,13 +372,14 @@ export function Approvals() {
                           By: {formatDisplayName(request.createdByUser)} • {request.starCategory} • {new Date(request.createdAt).toLocaleDateString()}
                         </CardDescription>
                       </div>
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button variant="outline" size="sm" onClick={() => setSelectedRequest(request)}>
-                            <Eye className="h-4 w-4 mr-2" />
-                            View Details
-                          </Button>
-                        </DialogTrigger>
+                      <div className="flex gap-2">
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button variant="outline" size="sm" onClick={() => setSelectedRequest(request)}>
+                              <Eye className="h-4 w-4 mr-2" />
+                              View Details
+                            </Button>
+                          </DialogTrigger>
                         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
                           <DialogHeader>
                             <DialogTitle>Approval Request #{request.id}</DialogTitle>
@@ -450,7 +483,17 @@ export function Approvals() {
                             )}
                           </div>
                         </DialogContent>
-                      </Dialog>
+                        </Dialog>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteRequest(request.id, getHotelNameFromRequest(request))}
+                          disabled={deleteRequestMutation.isPending}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   </CardHeader>
                   <CardContent>
