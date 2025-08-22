@@ -1861,6 +1861,187 @@ export default function CustomerManagement() {
                     </div>
                   </div>
                 </div>
+
+                {/* Reviews Section */}
+                {(selectedHotel.bookingReviews || selectedHotel.googleReviews || selectedHotel.tripadvisorReviews || selectedHotel.holidayCheckReviews || selectedHotel.reviewSummary) && (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <Star className="h-5 w-5 text-yellow-500" />
+                      <h3 className="font-semibold text-gray-800">Reviews & Ratings</h3>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Booking.com Reviews */}
+                      {selectedHotel.bookingReviews && (
+                        <div className="p-3 border border-blue-200 rounded-lg bg-gradient-to-r from-blue-50 to-blue-100">
+                          <div className="flex items-center justify-between mb-2">
+                            <h5 className="font-medium text-blue-800 flex items-center">
+                              <Globe className="h-3 w-3 mr-1" />
+                              Booking.com
+                            </h5>
+                            {selectedHotel.bookingReviews.url && (
+                              <a 
+                                href={selectedHotel.bookingReviews.url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-xs text-blue-600 hover:text-blue-800 underline"
+                              >
+                                View Reviews →
+                              </a>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-sm font-medium">{selectedHotel.bookingReviews.rating}/10</span>
+                            <div className="flex">
+                              {Array.from({length: 10}, (_, i) => (
+                                <div key={i} className={`w-2 h-2 rounded-full mr-0.5 ${i < Math.round(selectedHotel.bookingReviews.rating) ? 'bg-blue-400' : 'bg-gray-300'}`} />
+                              ))}
+                            </div>
+                            {selectedHotel.bookingReviews.count && (
+                              <span className="text-xs text-gray-600">({selectedHotel.bookingReviews.count} reviews)</span>
+                            )}
+                          </div>
+                          {selectedHotel.bookingReviews.summary && (
+                            <p className="text-xs text-gray-700">{selectedHotel.bookingReviews.summary}</p>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Google Reviews */}
+                      {selectedHotel.googleReviews && (
+                        <div className="p-3 border border-green-200 rounded-lg bg-gradient-to-r from-green-50 to-green-100">
+                          <div className="flex items-center justify-between mb-2">
+                            <h5 className="font-medium text-green-800 flex items-center">
+                              <Globe className="h-3 w-3 mr-1" />
+                              Google Reviews
+                            </h5>
+                            {selectedHotel.googleReviews.url && (
+                              <a 
+                                href={selectedHotel.googleReviews.url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-xs text-green-600 hover:text-green-800 underline"
+                              >
+                                View Reviews →
+                              </a>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-sm font-medium">{selectedHotel.googleReviews.rating}/5</span>
+                            <div className="flex">
+                              {Array.from({length: 5}, (_, i) => (
+                                <Star 
+                                  key={i} 
+                                  className={`h-3 w-3 ${i < Math.round(selectedHotel.googleReviews.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
+                                />
+                              ))}
+                            </div>
+                            {selectedHotel.googleReviews.count && (
+                              <span className="text-xs text-gray-600">({selectedHotel.googleReviews.count} reviews)</span>
+                            )}
+                          </div>
+                          {selectedHotel.googleReviews.summary && (
+                            <p className="text-xs text-gray-700">{selectedHotel.googleReviews.summary}</p>
+                          )}
+                        </div>
+                      )}
+
+                      {/* TripAdvisor Reviews */}
+                      {selectedHotel.tripadvisorReviews && (
+                        <div className="p-3 border border-red-200 rounded-lg bg-gradient-to-r from-red-50 to-red-100">
+                          <div className="flex items-center justify-between mb-2">
+                            <h5 className="font-medium text-red-800 flex items-center">
+                              <Globe className="h-3 w-3 mr-1" />
+                              TripAdvisor
+                            </h5>
+                            {selectedHotel.tripadvisorReviews.url && (
+                              <a 
+                                href={selectedHotel.tripadvisorReviews.url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-xs text-red-600 hover:text-red-800 underline"
+                              >
+                                View Reviews →
+                              </a>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-sm font-medium">{selectedHotel.tripadvisorReviews.rating}/5</span>
+                            <div className="flex">
+                              {Array.from({length: 5}, (_, i) => (
+                                <Star 
+                                  key={i} 
+                                  className={`h-3 w-3 ${i < Math.round(selectedHotel.tripadvisorReviews.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
+                                />
+                              ))}
+                            </div>
+                            {selectedHotel.tripadvisorReviews.count && (
+                              <span className="text-xs text-gray-600">({selectedHotel.tripadvisorReviews.count} reviews)</span>
+                            )}
+                          </div>
+                          {selectedHotel.tripadvisorReviews.summary && (
+                            <p className="text-xs text-gray-700">{selectedHotel.tripadvisorReviews.summary}</p>
+                          )}
+                        </div>
+                      )}
+
+                      {/* HolidayCheck Reviews */}
+                      {selectedHotel.holidayCheckReviews && (
+                        <div className="p-3 border border-orange-200 rounded-lg bg-gradient-to-r from-orange-50 to-orange-100">
+                          <div className="flex items-center justify-between mb-2">
+                            <h5 className="font-medium text-orange-800 flex items-center">
+                              <Globe className="h-3 w-3 mr-1" />
+                              HolidayCheck
+                            </h5>
+                            {selectedHotel.holidayCheckReviews.url && (
+                              <a 
+                                href={selectedHotel.holidayCheckReviews.url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-xs text-orange-600 hover:text-orange-800 underline"
+                              >
+                                View Reviews →
+                              </a>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-sm font-medium">{selectedHotel.holidayCheckReviews.rating}/6</span>
+                            <div className="flex">
+                              {Array.from({length: 6}, (_, i) => (
+                                <Star 
+                                  key={i} 
+                                  className={`h-3 w-3 ${i < Math.round(selectedHotel.holidayCheckReviews.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
+                                />
+                              ))}
+                            </div>
+                            {selectedHotel.holidayCheckReviews.count && (
+                              <span className="text-xs text-gray-600">({selectedHotel.holidayCheckReviews.count} reviews)</span>
+                            )}
+                          </div>
+                          {selectedHotel.holidayCheckReviews.summary && (
+                            <p className="text-xs text-gray-700">{selectedHotel.holidayCheckReviews.summary}</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* AI Review Summary */}
+                    {selectedHotel.reviewSummary && (
+                      <div className="p-4 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg border border-purple-200">
+                        <h5 className="font-medium text-purple-800 mb-2 flex items-center">
+                          <Brain className="h-4 w-4 mr-2" />
+                          AI Review Summary
+                        </h5>
+                        <p className="text-sm text-purple-700">{selectedHotel.reviewSummary}</p>
+                        {selectedHotel.lastReviewUpdate && (
+                          <p className="text-xs text-purple-600 mt-2">
+                            Last updated: {new Date(selectedHotel.lastReviewUpdate).toLocaleDateString()}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
                 
                 {/* AI Search Section */}
                 <div className="space-y-4">
