@@ -1693,6 +1693,52 @@ export default function CustomerManagement() {
                             <span>N/A</span>
                           )}
                         </div>
+                        
+                        {/* Review Data Display */}
+                        {(hotel.bookingReviews || hotel.googleReviews || hotel.tripadvisorReviews || hotel.holidayCheckReviews) && (
+                          <div className="border-t pt-2 mt-2">
+                            <div className="text-xs text-muted-foreground mb-2 font-medium">Reviews</div>
+                            <div className="space-y-1">
+                              {hotel.bookingReviews && (
+                                <div className="flex justify-between items-center">
+                                  <span className="text-xs text-blue-600">Booking.com</span>
+                                  <div className="flex items-center space-x-1">
+                                    <span className="text-xs font-medium">{hotel.bookingReviews.rating}/10</span>
+                                    <span className="text-xs text-muted-foreground">({hotel.bookingReviews.count})</span>
+                                  </div>
+                                </div>
+                              )}
+                              {hotel.googleReviews && (
+                                <div className="flex justify-between items-center">
+                                  <span className="text-xs text-red-600">Google</span>
+                                  <div className="flex items-center space-x-1">
+                                    <span className="text-xs font-medium">{hotel.googleReviews.rating}/5</span>
+                                    <span className="text-xs text-muted-foreground">({hotel.googleReviews.count})</span>
+                                  </div>
+                                </div>
+                              )}
+                              {hotel.tripadvisorReviews && (
+                                <div className="flex justify-between items-center">
+                                  <span className="text-xs text-green-600">TripAdvisor</span>
+                                  <div className="flex items-center space-x-1">
+                                    <span className="text-xs font-medium">{hotel.tripadvisorReviews.rating}/5</span>
+                                    <span className="text-xs text-muted-foreground">({hotel.tripadvisorReviews.count})</span>
+                                  </div>
+                                </div>
+                              )}
+                              {hotel.holidayCheckReviews && (
+                                <div className="flex justify-between items-center">
+                                  <span className="text-xs text-orange-600">HolidayCheck</span>
+                                  <div className="flex items-center space-x-1">
+                                    <span className="text-xs font-medium">{hotel.holidayCheckReviews.rating}/6</span>
+                                    <span className="text-xs text-muted-foreground">({hotel.holidayCheckReviews.count})</span>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                        
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Added:</span>
                           <span>{hotel.createdAt ? new Date(hotel.createdAt).toLocaleDateString() : 'N/A'}</span>

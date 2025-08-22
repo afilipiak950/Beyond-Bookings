@@ -99,6 +99,7 @@ export const hotels = pgTable("hotels", {
   bookingReviews: jsonb("booking_reviews"), // {rating, count, summary, url}
   googleReviews: jsonb("google_reviews"), // {rating, count, summary, url}
   holidayCheckReviews: jsonb("holiday_check_reviews"), // {rating, count, summary, url}
+  tripadvisorReviews: jsonb("tripadvisor_reviews"), // {rating, count, summary, url}
   reviewSummary: text("review_summary"), // AI-generated summary of all reviews
   lastReviewUpdate: timestamp("last_review_update"),
   createdByUserId: integer("created_by_user_id").references(() => users.id), // For owner filtering
