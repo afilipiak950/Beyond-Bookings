@@ -523,7 +523,7 @@ export default function CustomerManagement() {
               <div>
                 <CardTitle>Hotel Clients</CardTitle>
                 <CardDescription>
-                  {pagination ? `${pagination.total} hotel${pagination.total !== 1 ? 's' : ''}${filterInfo?.applied ? ' (filtered)' : ''}` : `${hotelData?.length || 0} hotels in your database`}
+                  {pagination ? `${pagination.total} hotel${pagination.total !== 1 ? 's' : ''}${filterInfo?.applied ? ' (filtered)' : ''}` : `${hotelData?.data?.length || 0} hotels in your database`}
                 </CardDescription>
               </div>
               {pagination && pagination.total > 0 && (
@@ -538,7 +538,7 @@ export default function CustomerManagement() {
               <div className="text-center py-6">
                 <div className="text-muted-foreground">Loading customers...</div>
               </div>
-            ) : !hotelData || hotelData.length === 0 ? (
+            ) : !hotelData?.data || hotelData.data.length === 0 ? (
               <div className="text-center py-12">
                 <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">No customers yet</h3>
@@ -552,7 +552,7 @@ export default function CustomerManagement() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {hotelData.map((hotel: any) => (
+                {hotelData.data.map((hotel: any) => (
                   <Card key={hotel.id} className="relative hover:shadow-lg transition-shadow cursor-pointer group">
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between mb-3">
