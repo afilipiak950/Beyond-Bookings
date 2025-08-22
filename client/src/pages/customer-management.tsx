@@ -1863,12 +1863,21 @@ export default function CustomerManagement() {
                 </div>
 
                 {/* Reviews Section */}
-                {(selectedHotel.bookingReviews || selectedHotel.googleReviews || selectedHotel.tripadvisorReviews || selectedHotel.holidayCheckReviews || selectedHotel.reviewSummary) && (
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2">
-                      <Star className="h-5 w-5 text-yellow-500" />
-                      <h3 className="font-semibold text-gray-800">Reviews & Ratings</h3>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Star className="h-5 w-5 text-yellow-500" />
+                    <h3 className="font-semibold text-gray-800">Reviews & Ratings</h3>
+                  </div>
+                  
+                  {/* Show message if no reviews */}
+                  {!(selectedHotel.bookingReviews || selectedHotel.googleReviews || selectedHotel.tripadvisorReviews || selectedHotel.holidayCheckReviews || selectedHotel.reviewSummary) && (
+                    <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                      <p className="text-sm text-gray-600">No review data available for this hotel yet.</p>
+                      <p className="text-xs text-gray-500 mt-1">Reviews will appear here once the hotel is updated with review information.</p>
                     </div>
+                  )}
+                  
+                  {(selectedHotel.bookingReviews || selectedHotel.googleReviews || selectedHotel.tripadvisorReviews || selectedHotel.holidayCheckReviews || selectedHotel.reviewSummary) && (
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {/* Booking.com Reviews */}
@@ -2041,7 +2050,7 @@ export default function CustomerManagement() {
                       </div>
                     )}
                   </div>
-                )}
+                </div>
                 
                 {/* AI Search Section */}
                 <div className="space-y-4">
