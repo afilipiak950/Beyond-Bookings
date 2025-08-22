@@ -2483,7 +2483,42 @@ Return only valid JSON, no markdown or explanations.`;
       
       console.log(`🔍 Validated calculation data:`, JSON.stringify(calculationData, null, 2));
       
-      const calculation = await storage.createPricingCalculation(calculationData);
+      // 🚀 CRITICAL FIX: Add missing approval validation logic
+      console.log(`🔒 Checking approval requirements for calculation...`);
+      
+      // Extract pricing input for validation
+      const pricingInput = extractPricingInputFromWorkflow(calculationData);
+      console.log(`📊 Extracted pricing input:`, JSON.stringify(pricingInput, null, 2));
+      
+      // Validate pricing against business rules
+      const validationResult = validatePricing(pricingInput);
+      console.log(`🎯 Approval validation result:`, JSON.stringify(validationResult, null, 2));
+      
+      // Set approval status based on validation
+      let approvalStatus: 'none_required' | 'required_not_sent' = 'none_required';
+      if (validationResult.needsApproval) {
+        approvalStatus = 'required_not_sent';
+        console.log(`⚠️ APPROVAL REQUIRED! Reasons:`, validationResult.reasons.join('; '));
+      } else {
+        console.log(`✅ No approval required - all business rules satisfied`);
+      }
+      
+      // Generate input hash for integrity validation
+      const crypto = await import('crypto');
+      const inputString = JSON.stringify(pricingInput);
+      const inputHash = crypto.createHash('sha256').update(inputString).digest('hex');
+      console.log(`🔐 Generated input hash: ${inputHash}`);
+      
+      // Add approval fields to calculation data
+      const finalCalculationData = {
+        ...calculationData,
+        approvalStatus,
+        inputHash
+      };
+      
+      console.log(`🏁 Final calculation data with approval status:`, JSON.stringify(finalCalculationData, null, 2));
+      
+      const calculation = await storage.createPricingCalculation(finalCalculationData);
       console.log(`✅ Pricing calculation saved with ID: ${calculation.id}`);
       console.log(`📊 Full saved calculation:`, JSON.stringify(calculation, null, 2));
       
