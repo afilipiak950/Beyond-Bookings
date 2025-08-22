@@ -483,7 +483,9 @@ export default function CustomerManagement() {
       }
     },
     onSuccess: () => {
+      // Force refetch of hotels data immediately
       queryClient.invalidateQueries({ queryKey: ["/api/hotels"] });
+      queryClient.refetchQueries({ queryKey: ["/api/hotels"] });
       toast({
         title: "Hotel deleted successfully!",
         description: "The hotel has been removed from your database",
