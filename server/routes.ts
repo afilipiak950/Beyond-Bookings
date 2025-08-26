@@ -39,7 +39,8 @@ const registerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
   firstName: z.string().optional(),
-  lastName: z.string().optional()
+  lastName: z.string().optional(),
+  role: z.string().default('admin') // Default to admin for new registrations
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -73,7 +74,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/auth/register', async (req, res) => {
     try {
-      const { email, password, firstName, lastName } = registerSchema.parse(req.body);
+      const { email, password, firstName, lastName, role } = registerSchema.parse(req.body);
       
       const existingUser = await storage.getUserByEmail(email);
       if (existingUser) {
@@ -86,6 +87,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         password: hashedPassword,
         firstName: firstName || null,
         lastName: lastName || null,
+        role: role || 'admin', // Default to admin
         isActive: true
       });
 
@@ -96,7 +98,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         firstName: user.firstName,
         lastName: user.lastName,
         isActive: user.isActive,
-        role: user.role || 'user'
+        role: user.role || 'admin'
       });
     } catch (error) {
       console.error("Register error:", error);
