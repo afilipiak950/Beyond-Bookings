@@ -3264,49 +3264,26 @@ export default function Workflow() {
                     </div>
                   </div>
 
-                  {/* VAT Rates */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-gray-50 rounded-lg p-3">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <span className="text-xs font-medium text-gray-600">MwSt</span>
-                        <Input
-                          type="number"
-                          step="0.1"
-                          value={editableCosts.vatRate7}
-                          onChange={(e) => setEditableCosts(prev => ({...prev, vatRate7: parseFloat(e.target.value) || 7.0}))}
-                          className="w-16 h-7 text-xs text-center border-gray-300"
-                        />
-                        <span className="text-xs text-gray-600">%</span>
-                      </div>
-                      <div className="text-lg font-semibold text-gray-900">
-                        {(() => {
-                          const projectCosts = workflowData.projectCosts || 20000;
-                          const nettoKosten = projectCosts / (1 + editableCosts.vatRate19/100);
-                          const mwst7 = nettoKosten * (editableCosts.vatRate7/100);
-                          return mwst7.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' ' + getCurrencySymbol(workflowData.currency);
-                        })()}
-                      </div>
+                  {/* VAT Rate */}
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <span className="text-xs font-medium text-gray-600">MwSt</span>
+                      <Input
+                        type="number"
+                        step="0.1"
+                        value={editableCosts.vatRate19}
+                        onChange={(e) => setEditableCosts(prev => ({...prev, vatRate19: parseFloat(e.target.value) || 19.0}))}
+                        className="w-16 h-7 text-xs text-center border-gray-300"
+                      />
+                      <span className="text-xs text-gray-600">%</span>
                     </div>
-                    <div className="bg-gray-50 rounded-lg p-3">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <span className="text-xs font-medium text-gray-600">MwSt</span>
-                        <Input
-                          type="number"
-                          step="0.1"
-                          value={editableCosts.vatRate19}
-                          onChange={(e) => setEditableCosts(prev => ({...prev, vatRate19: parseFloat(e.target.value) || 19.0}))}
-                          className="w-16 h-7 text-xs text-center border-gray-300"
-                        />
-                        <span className="text-xs text-gray-600">%</span>
-                      </div>
-                      <div className="text-lg font-semibold text-gray-900">
-                        {(() => {
-                          const projectCosts = workflowData.projectCosts || 20000;
-                          const nettoKosten = projectCosts / (1 + editableCosts.vatRate19/100);
-                          const mwst19 = nettoKosten * (editableCosts.vatRate19/100);
-                          return mwst19.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' ' + getCurrencySymbol(workflowData.currency);
-                        })()}
-                      </div>
+                    <div className="text-lg font-semibold text-gray-900">
+                      {(() => {
+                        const projectCosts = workflowData.projectCosts || 20000;
+                        const nettoKosten = projectCosts / (1 + editableCosts.vatRate19/100);
+                        const mwst19 = nettoKosten * (editableCosts.vatRate19/100);
+                        return mwst19.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' ' + getCurrencySymbol(workflowData.currency);
+                      })()}
                     </div>
                   </div>
 
