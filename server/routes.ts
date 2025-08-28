@@ -486,92 +486,159 @@ Return this EXACT JSON format:
         lastReviewUpdate: null
       };
 
-      // Try real web search for each platform
+      // Try direct OpenAI search approach
       try {
-        console.log('🌐 Attempting real web search using SerpAPI...');
+        console.log('🤖 Attempting direct OpenAI review search...');
         
-        // Check if SERPAPI_KEY is available for real searches
-        if (process.env.SERPAPI_KEY) {
-          const { getJson } = await import('serpapi');
-          
-          const searchPromises = [
-            // Booking.com search
-            getJson({
-              engine: "google",
-              q: `${hotelName} site:booking.com reviews rating`,
-              api_key: process.env.SERPAPI_KEY
-            }),
-            // Google Reviews search
-            getJson({
-              engine: "google", 
-              q: `${hotelName} google reviews rating`,
-              api_key: process.env.SERPAPI_KEY
-            }),
-            // HolidayCheck search
-            getJson({
-              engine: "google",
-              q: `${hotelName} site:holidaycheck.de bewertungen`,
-              api_key: process.env.SERPAPI_KEY
-            }),
-            // TripAdvisor search
-            getJson({
-              engine: "google",
-              q: `${hotelName} site:tripadvisor.com reviews rating`,
-              api_key: process.env.SERPAPI_KEY
-            })
-          ];
-          
-          const searchResults = await Promise.allSettled(searchPromises);
-          console.log('🔍 Real web search completed, processing results...');
-          
-          // Process actual search results
-          if (searchResults.some(result => result.status === 'fulfilled')) {
-            console.log('✅ Real search data found, extracting review information...');
-            // Here we would process the actual search results
-            // For now, still return unavailable until we implement result parsing
-          }
-        } else {
-          console.log('⚠️  SERPAPI_KEY not available - using manual search approach');
-        }
-        
-        const searchResults = [null, null, null, null]; // Placeholder
+        const directSearchPrompt = `Suche mir die aktuellen Bewertungen und Anzahl der Reviews für "${hotelName}"${location ? ` in ${location}` : ''} von diesen vier Plattformen heraus:
 
-        // If we had real search results, process them here
-        if (searchResults.some(result => result !== null)) {
-          console.log('✅ Real search data found');
-          // Process real search results
-        } else {
-          console.log('⚠️  No real search data available - marking as unavailable');
+1. Booking.com - finde Rating (1-10 Skala) und Anzahl Reviews
+2. Google Reviews - finde Rating (1-5 Skala) und Anzahl Reviews  
+3. HolidayCheck - finde Rating (1-6 Skala) und Anzahl Reviews
+4. TripAdvisor - finde Rating (1-5 Skala) und Anzahl Reviews
+
+WICHTIG: Suche nach ECHTEN, aktuellen Daten. Wenn du keine echten Daten findest, markiere das entsprechend.
+
+Gib mir das Ergebnis in diesem JSON Format zurück:
+{
+  "bookingReviews": {
+    "rating": echte_bewertung_oder_null,
+    "reviewCount": echte_anzahl_oder_null,
+    "url": "direkte_url_zum_hotel",
+    "insights": "was Gäste konkret sagen",
+    "dataFound": true/false
+  },
+  "googleReviews": {
+    "rating": echte_bewertung_oder_null,
+    "reviewCount": echte_anzahl_oder_null,
+    "url": "google_maps_link",
+    "insights": "Google Bewertungen Zusammenfassung", 
+    "dataFound": true/false
+  },
+  "holidayCheckReviews": {
+    "rating": echte_bewertung_oder_null,
+    "reviewCount": echte_anzahl_oder_null,
+    "url": "holidaycheck_link",
+    "insights": "HolidayCheck Feedback",
+    "dataFound": true/false
+  },
+  "tripadvisorReviews": {
+    "rating": echte_bewertung_oder_null,
+    "reviewCount": echte_anzahl_oder_null,
+    "url": "tripadvisor_link", 
+    "insights": "TripAdvisor Bewertungen",
+    "dataFound": true/false
+  },
+  "searchSuccess": true/false,
+  "extractionMethod": "direct_openai_search"
+}`;
+
+        const searchCompletion = await openai.chat.completions.create({
+          model: "gpt-4o",
+          messages: [
+            {
+              role: "system",
+              content: "Du bist ein Experte für Hotelbewertungen und kannst echte Review-Daten von Booking-Plattformen recherchieren. Suche nach aktuellen, authentischen Bewertungsdaten."
+            },
+            {
+              role: "user",
+              content: directSearchPrompt
+            }
+          ],
+          max_completion_tokens: 1200,
+          temperature: 0.1
+        });
+
+        let searchResults;
+        try {
+          const searchContent = searchCompletion.choices[0]?.message?.content;
+          if (!searchContent) {
+            throw new Error('No content in OpenAI response');
+          }
           
-          // HONEST approach: Return search URLs without fake data
+          console.log('🔍 Direct OpenAI search response:', searchContent);
+          
+          // Extract JSON from the response
+          const jsonMatch = searchContent.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            searchResults = JSON.parse(jsonMatch[0]);
+            console.log('✅ Parsed OpenAI search results:', JSON.stringify(searchResults, null, 2));
+          } else {
+            throw new Error('No JSON found in OpenAI response');
+          }
+        } catch (parseError) {
+          console.error('❌ Failed to parse OpenAI search response:', parseError);
+          searchResults = { searchSuccess: false };
+        }
+
+        // Process OpenAI search results
+        if (searchResults && searchResults.searchSuccess) {
+          console.log('✅ OpenAI found real search data - processing results...');
+          
           reviewData = {
-            bookingReviews: {
+            bookingReviews: searchResults.bookingReviews || {
               rating: null,
               reviewCount: null,
               url: `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(hotelName)}`,
               insights: "Suche manuell auf Booking.com für echte Bewertungen"
             },
-            googleReviews: {
+            googleReviews: searchResults.googleReviews || {
               rating: null,
               reviewCount: null,
               url: `https://www.google.com/search?q=${encodeURIComponent(hotelName + ' hotel reviews')}`,
               insights: "Suche manuell auf Google Maps für echte Bewertungen"
             },
-            holidayCheckReviews: {
+            holidayCheckReviews: searchResults.holidayCheckReviews || {
               rating: null,
               reviewCount: null,
               url: `https://www.holidaycheck.de/search?q=${encodeURIComponent(hotelName)}`,
               insights: "Suche manuell auf HolidayCheck für echte Bewertungen"
             },
-            tripadvisorReviews: {
+            tripadvisorReviews: searchResults.tripadvisorReviews || {
               rating: null,
               reviewCount: null,
               url: `https://www.tripadvisor.com/Search?q=${encodeURIComponent(hotelName)}`,
               insights: "Suche manuell auf TripAdvisor für echte Bewertungen"
             },
-            reviewSummary: `HINWEIS: Echte Review-Daten können nicht automatisch abgerufen werden. Bitte besuchen Sie die bereitgestellten Links für aktuelle Bewertungen von ${hotelName}.`,
+            reviewSummary: `OpenAI Direktsuche durchgeführt für ${hotelName}. ${searchResults.searchSuccess ? 'Echte Daten gefunden' : 'Keine aktuellen Daten verfügbar'} - Bitte prüfen Sie die bereitgestellten Links für die neuesten Bewertungen.`,
+            dataExtracted: searchResults.searchSuccess || false,
+            extractionConfidence: searchResults.searchSuccess ? "openai_direct" : "unavailable",
+            averageRating: null,
+            totalReviewCount: null,
+            lastReviewUpdate: null
+          };
+        } else {
+          console.log('⚠️  OpenAI direct search unsuccessful - using manual approach');
+          
+          // HONEST fallback approach
+          reviewData = {
+            bookingReviews: {
+              rating: null,
+              reviewCount: null,
+              url: `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(hotelName)}`,
+              insights: "OpenAI Direktsuche nicht erfolgreich - Suche manuell auf Booking.com"
+            },
+            googleReviews: {
+              rating: null,
+              reviewCount: null,
+              url: `https://www.google.com/search?q=${encodeURIComponent(hotelName + ' hotel reviews')}`,
+              insights: "OpenAI Direktsuche nicht erfolgreich - Suche manuell auf Google Maps"
+            },
+            holidayCheckReviews: {
+              rating: null,
+              reviewCount: null,
+              url: `https://www.holidaycheck.de/search?q=${encodeURIComponent(hotelName)}`,
+              insights: "OpenAI Direktsuche nicht erfolgreich - Suche manuell auf HolidayCheck"
+            },
+            tripadvisorReviews: {
+              rating: null,
+              reviewCount: null,
+              url: `https://www.tripadvisor.com/Search?q=${encodeURIComponent(hotelName)}`,
+              insights: "OpenAI Direktsuche nicht erfolgreich - Suche manuell auf TripAdvisor"
+            },
+            reviewSummary: `OpenAI Direktsuche für ${hotelName} durchgeführt, aber keine aktuellen Review-Daten gefunden. Bitte besuchen Sie die bereitgestellten Links für manuelle Überprüfung.`,
             dataExtracted: false,
-            extractionConfidence: "unavailable",
+            extractionConfidence: "direct_search_failed",
             averageRating: null,
             totalReviewCount: null,
             lastReviewUpdate: null
