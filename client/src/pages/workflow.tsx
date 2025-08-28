@@ -712,7 +712,12 @@ export default function Workflow() {
         averagePrice: averagePrice,
         projectCosts: parseFloat(calculation.operationalCosts || "0"),
         hotelVoucherValue: parseFloat(calculation.voucherPrice || "0"),
-        contractYears: 1, // Default since not stored in DB
+        
+        // Load the NEW saved form fields from database
+        date: calculation.calculationDate || new Date().toISOString().split('T')[0],
+        currency: calculation.currency || "EUR",
+        contractYears: calculation.contractYears || 1,
+        
         // Load customer request fields that were missing before
         contactPerson: calculation.contactPerson || "",
         contactEmail: calculation.contactEmail || "",
@@ -1612,6 +1617,10 @@ export default function Workflow() {
     const totalPrice = projectCosts + vatAmount;
     const discountVsMarket = (averagePrice * roomCount) - totalPrice;
 
+    // Calculate additional fields that are shown on the left side
+    const availableRoomnights = Math.floor(roomCount * 365 * (1 - occupancyRate / 100));
+    const addressableRoomnights = Math.min(Math.floor(availableRoomnights * 0.15), 1000);
+
     const calculationData = {
       hotelName: workflowData.hotelName || 'Unnamed Hotel',
       hotelUrl: workflowData.hotelUrl || '',
@@ -1627,6 +1636,14 @@ export default function Workflow() {
       totalPrice: totalPrice.toString(),
       discountVsMarket: discountVsMarket.toString(),
       isDraft: false,
+      
+      // NEW: Save all left-side form fields that were missing
+      calculationDate: workflowData.date || new Date().toISOString().split('T')[0],
+      currency: workflowData.currency || 'EUR',
+      contractYears: workflowData.contractYears || 1,
+      availableRoomnights: availableRoomnights,
+      addressableRoomnights: addressableRoomnights,
+      
       // Customer request fields - save these important fields too
       contactPerson: workflowData.contactPerson || null,
       contactEmail: workflowData.contactEmail || null,

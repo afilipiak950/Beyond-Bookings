@@ -137,6 +137,14 @@ export const pricingCalculations: any = pgTable("pricing_calculations", {
   profitMargin: decimal("profit_margin", { precision: 10, scale: 2 }).notNull(),
   totalPrice: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
   discountVsMarket: decimal("discount_vs_market", { precision: 10, scale: 2 }),
+  
+  // Additional form fields that need to be saved
+  calculationDate: text("calculation_date"), // Date field from form
+  currency: text("currency").default("EUR"), // Currency field from form
+  contractYears: integer("contract_years").default(1), // Contract duration
+  availableRoomnights: integer("available_roomnights"), // Calculated field
+  addressableRoomnights: integer("addressable_roomnights"), // Calculated field
+  
   isDraft: boolean("is_draft").default(false),
   // Customer request fields
   contactPerson: text("contact_person"),
