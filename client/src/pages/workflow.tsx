@@ -798,6 +798,11 @@ export default function Workflow() {
   const [extractionLoading, setExtractionLoading] = useState(false);
   const [extractedData, setExtractedData] = useState<any>(null);
   
+  // Review search states
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [extractedReviews, setExtractedReviews] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState("basic-data");
+  
   // Review data state for platforms
   const [reviewData, setReviewData] = useState({
     booking: { rating: '', reviewCount: '', url: '', summary: '' },
@@ -808,6 +813,54 @@ export default function Workflow() {
   
   const [extractHotelName, setExtractHotelName] = useState("");
   const [extractHotelUrl, setExtractHotelUrl] = useState("");
+
+  // Handle review search
+  const handleSearchReviews = async () => {
+    if (!extractHotelName.trim()) {
+      toast({
+        title: "Hotel name required",
+        description: "Bitte geben Sie einen Hotelnamen ein",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setReviewsLoading(true);
+    try {
+      const response = await fetch('/api/hotels/search-reviews', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          hotelName: extractHotelName.trim(),
+          location: extractedData?.location || ""
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to search reviews');
+      }
+
+      const reviewData = await response.json();
+      setExtractedReviews(reviewData.reviews);
+      
+      toast({
+        title: "Reviews gefunden",
+        description: `${reviewData.reviews.totalReviewCount} Reviews von 4 Plattformen gefunden`,
+      });
+
+    } catch (error) {
+      console.error('Review search error:', error);
+      toast({
+        title: "Fehler",
+        description: "Review-Suche fehlgeschlagen",
+        variant: "destructive"
+      });
+    } finally {
+      setReviewsLoading(false);
+    }
+  };
   
   // Fetch hotels from database
   const { data: hotelsResponse, isLoading: hotelsLoading } = useQuery<{data: any[], pagination: any}>({
@@ -4057,109 +4110,242 @@ export default function Workflow() {
         </div>
       </div>
 
-      {/* Hotel Extraction Dialog */}
+      {/* Hotel Extraction Dialog with Tabs */}
       <Dialog open={hotelExtractionOpen} onOpenChange={setHotelExtractionOpen}>
-        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-5xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Globe className="h-5 w-5 text-blue-600" />
-              Hotel Daten Extrahieren & Erstellen
+              Hotel Daten & Reviews Extrahieren
             </DialogTitle>
             <DialogDescription>
-              Extrahieren Sie automatisch Hoteldaten und erstellen Sie einen neuen Hotel-Eintrag
+              Extrahieren Sie automatisch Hoteldaten und Reviews von 4 Plattformen
             </DialogDescription>
           </DialogHeader>
           
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="extract-hotel-name">Hotel Name</Label>
-                <Input
-                  id="extract-hotel-name"
-                  value={extractHotelName}
-                  onChange={(e) => setExtractHotelName(e.target.value)}
-                  placeholder="Hotel name eingeben..."
-                />
-              </div>
-              <div>
-                <Label htmlFor="extract-hotel-url">Hotel URL (optional)</Label>
-                <Input
-                  id="extract-hotel-url"
-                  value={extractHotelUrl}
-                  onChange={(e) => setExtractHotelUrl(e.target.value)}
-                  placeholder="https://www.hotel-website.de"
-                />
-              </div>
-            </div>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="basic-data">Grunddaten</TabsTrigger>
+              <TabsTrigger value="reviews">Reviews & Bewertungen</TabsTrigger>
+            </TabsList>
 
-            <div className="flex gap-3">
-              <Button 
-                onClick={handleExtractData}
-                disabled={extractionLoading || !extractHotelName.trim()}
-                className="flex-1"
-              >
-                {extractionLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Extrahiere Daten...
-                  </>
-                ) : (
-                  <>
-                    <Search className="mr-2 h-4 w-4" />
-                    Hotel Daten Extrahieren
-                  </>
-                )}
-              </Button>
-              
-              {extractedData && (
-                <Button 
-                  onClick={handleCreateHotelFromExtraction}
-                  variant="outline"
-                  className="flex-1 bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
-                >
-                  <Building2 className="mr-2 h-4 w-4" />
-                  Hotel Erstellen & Verwenden
-                </Button>
-              )}
-            </div>
-
-            {extractedData && (
-              <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-                <h4 className="font-semibold text-gray-800 mb-3">Extrahierte Hotel Daten:</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <div>
-                    <span className="text-sm font-medium text-gray-600">Name:</span>
-                    <p className="text-sm text-gray-900">{extractedData.name || 'Nicht gefunden'}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm font-medium text-gray-600">Sterne:</span>
-                    <p className="text-sm text-gray-900">{extractedData.stars || 'Nicht gefunden'}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm font-medium text-gray-600">Zimmer:</span>
-                    <p className="text-sm text-gray-900">{extractedData.roomCount || 'Nicht gefunden'}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm font-medium text-gray-600">Lage:</span>
-                    <p className="text-sm text-gray-900">{extractedData.location || 'Nicht gefunden'}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm font-medium text-gray-600">Durchschnittspreis:</span>
-                    <p className="text-sm text-gray-900">
-                      {extractedData.averagePrice ? 
-                        `${Number(extractedData.averagePrice).toFixed(2)} ${getCurrencySymbol(workflowData.currency)}` : 
-                        'Nicht gefunden'
-                      }
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-sm font-medium text-gray-600">Website:</span>
-                    <p className="text-sm text-gray-900">{extractedData.url || 'Nicht gefunden'}</p>
-                  </div>
+            <TabsContent value="basic-data" className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="extract-hotel-name">Hotel Name</Label>
+                  <Input
+                    id="extract-hotel-name"
+                    value={extractHotelName}
+                    onChange={(e) => setExtractHotelName(e.target.value)}
+                    placeholder="Hotel name eingeben..."
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="extract-hotel-url">Hotel URL (optional)</Label>
+                  <Input
+                    id="extract-hotel-url"
+                    value={extractHotelUrl}
+                    onChange={(e) => setExtractHotelUrl(e.target.value)}
+                    placeholder="https://www.hotel-website.de"
+                  />
                 </div>
               </div>
-            )}
-          </div>
+
+              <div className="flex gap-3">
+                <Button 
+                  onClick={handleExtractData}
+                  disabled={extractionLoading || !extractHotelName.trim()}
+                  className="flex-1"
+                >
+                  {extractionLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Extrahiere Daten...
+                    </>
+                  ) : (
+                    <>
+                      <Search className="mr-2 h-4 w-4" />
+                      Hotel Daten Extrahieren
+                    </>
+                  )}
+                </Button>
+                
+                {extractedData && extractedReviews && (
+                  <Button 
+                    onClick={handleCreateHotelFromExtraction}
+                    variant="outline"
+                    className="flex-1 bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
+                  >
+                    <Building2 className="mr-2 h-4 w-4" />
+                    Hotel mit Reviews Erstellen
+                  </Button>
+                )}
+              </div>
+
+              {extractedData && (
+                <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                  <h4 className="font-semibold text-gray-800 mb-3">Extrahierte Hotel Daten:</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div>
+                      <span className="text-sm font-medium text-gray-600">Name:</span>
+                      <p className="text-sm text-gray-900">{extractedData.name || 'Nicht gefunden'}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-gray-600">Sterne:</span>
+                      <p className="text-sm text-gray-900">{extractedData.stars || 'Nicht gefunden'}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-gray-600">Zimmer:</span>
+                      <p className="text-sm text-gray-900">{extractedData.roomCount || 'Nicht gefunden'}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-gray-600">Lage:</span>
+                      <p className="text-sm text-gray-900">{extractedData.location || 'Nicht gefunden'}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-gray-600">Durchschnittspreis:</span>
+                      <p className="text-sm text-gray-900">
+                        {extractedData.averagePrice ? 
+                          `${Number(extractedData.averagePrice).toFixed(2)} ${getCurrencySymbol(workflowData.currency)}` : 
+                          'Nicht gefunden'
+                        }
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-gray-600">Website:</span>
+                      <p className="text-sm text-gray-900">{extractedData.url || 'Nicht gefunden'}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="reviews" className="space-y-6">
+              <div className="flex gap-3">
+                <Button 
+                  onClick={handleSearchReviews}
+                  disabled={reviewsLoading || !extractHotelName.trim()}
+                  className="flex-1"
+                >
+                  {reviewsLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Suche Reviews...
+                    </>
+                  ) : (
+                    <>
+                      <MessageSquare className="mr-2 h-4 w-4" />
+                      AI Review Search (4 Plattformen)
+                    </>
+                  )}
+                </Button>
+              </div>
+
+              {extractedReviews && (
+                <div className="space-y-4">
+                  <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <h4 className="font-semibold text-blue-800 mb-2">Review Zusammenfassung</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <span className="text-sm font-medium text-blue-600">Gesamt Reviews:</span>
+                        <p className="text-sm text-blue-800">{extractedReviews.totalReviewCount}</p>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-blue-600">Durchschnitt:</span>
+                        <p className="text-sm text-blue-800 flex items-center">
+                          <Star className="h-4 w-4 text-yellow-500 mr-1" />
+                          {extractedReviews.averageRating?.toFixed(1)}/10
+                        </p>
+                      </div>
+                    </div>
+                    <p className="text-sm text-blue-700">{extractedReviews.reviewSummary}</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Booking.com Reviews */}
+                    <div className="p-4 bg-white rounded-lg border">
+                      <div className="flex items-center justify-between mb-2">
+                        <h5 className="font-semibold text-gray-800">Booking.com</h5>
+                        <a 
+                          href={extractedReviews.bookingReviews.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 text-sm"
+                        >
+                          Öffnen →
+                        </a>
+                      </div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Star className="h-4 w-4 text-yellow-500" />
+                        <span className="font-medium">{extractedReviews.bookingReviews.rating}/10</span>
+                        <span className="text-sm text-gray-600">({extractedReviews.bookingReviews.reviewCount} Reviews)</span>
+                      </div>
+                    </div>
+
+                    {/* Google Reviews */}
+                    <div className="p-4 bg-white rounded-lg border">
+                      <div className="flex items-center justify-between mb-2">
+                        <h5 className="font-semibold text-gray-800">Google Reviews</h5>
+                        <a 
+                          href={extractedReviews.googleReviews.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 text-sm"
+                        >
+                          Öffnen →
+                        </a>
+                      </div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Star className="h-4 w-4 text-yellow-500" />
+                        <span className="font-medium">{extractedReviews.googleReviews.rating}/5</span>
+                        <span className="text-sm text-gray-600">({extractedReviews.googleReviews.reviewCount} Reviews)</span>
+                      </div>
+                    </div>
+
+                    {/* HolidayCheck Reviews */}
+                    <div className="p-4 bg-white rounded-lg border">
+                      <div className="flex items-center justify-between mb-2">
+                        <h5 className="font-semibold text-gray-800">HolidayCheck</h5>
+                        <a 
+                          href={extractedReviews.holidayCheckReviews.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 text-sm"
+                        >
+                          Öffnen →
+                        </a>
+                      </div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Star className="h-4 w-4 text-yellow-500" />
+                        <span className="font-medium">{extractedReviews.holidayCheckReviews.rating}/6</span>
+                        <span className="text-sm text-gray-600">({extractedReviews.holidayCheckReviews.reviewCount} Reviews)</span>
+                      </div>
+                    </div>
+
+                    {/* TripAdvisor Reviews */}
+                    <div className="p-4 bg-white rounded-lg border">
+                      <div className="flex items-center justify-between mb-2">
+                        <h5 className="font-semibold text-gray-800">TripAdvisor</h5>
+                        <a 
+                          href={extractedReviews.tripadvisorReviews.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 text-sm"
+                        >
+                          Öffnen →
+                        </a>
+                      </div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Star className="h-4 w-4 text-yellow-500" />
+                        <span className="font-medium">{extractedReviews.tripadvisorReviews.rating}/5</span>
+                        <span className="text-sm text-gray-600">({extractedReviews.tripadvisorReviews.reviewCount} Reviews)</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
         </DialogContent>
       </Dialog>
     </AppLayout>

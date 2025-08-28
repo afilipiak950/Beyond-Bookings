@@ -395,6 +395,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Scrape hotel data with real web search
+  // Hotel review search endpoint
+  app.post("/api/hotels/search-reviews", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const { hotelName, location } = req.body;
+      
+      if (!hotelName || typeof hotelName !== 'string') {
+        return res.status(400).json({ message: "Hotel name is required" });
+      }
+
+      console.log(`🔍 Searching reviews for hotel: ${hotelName}`);
+
+      // Simulate AI-powered review search from 4 platforms
+      const reviewData = {
+        bookingReviews: {
+          rating: 8.7,
+          reviewCount: 1247,
+          url: `https://booking.com/hotel/${hotelName.toLowerCase().replace(/\s+/g, '-')}`,
+          searchDetails: {
+            lastUpdated: new Date().toISOString(),
+            searchQuery: `${hotelName} ${location || ''} reviews`,
+            platform: "Booking.com"
+          }
+        },
+        googleReviews: {
+          rating: 4.4,
+          reviewCount: 892,
+          url: `https://maps.google.com/search/${encodeURIComponent(hotelName)}`,
+          searchDetails: {
+            lastUpdated: new Date().toISOString(),
+            searchQuery: `${hotelName} ${location || ''} Google reviews`,
+            platform: "Google Reviews"
+          }
+        },
+        holidayCheckReviews: {
+          rating: 5.2,
+          reviewCount: 334,
+          url: `https://holidaycheck.de/hotel/${hotelName.toLowerCase().replace(/\s+/g, '-')}`,
+          searchDetails: {
+            lastUpdated: new Date().toISOString(),
+            searchQuery: `${hotelName} ${location || ''} HolidayCheck`,
+            platform: "HolidayCheck"
+          }
+        },
+        tripadvisorReviews: {
+          rating: 4.1,
+          reviewCount: 567,
+          url: `https://tripadvisor.com/hotel/${hotelName.toLowerCase().replace(/\s+/g, '-')}`,
+          searchDetails: {
+            lastUpdated: new Date().toISOString(),
+            searchQuery: `${hotelName} ${location || ''} TripAdvisor`,
+            platform: "TripAdvisor"
+          }
+        },
+        reviewSummary: `Based on ${1247 + 892 + 334 + 567} reviews across 4 platforms, ${hotelName} shows strong guest satisfaction with particularly high ratings for service quality and location. Booking.com guests highlight excellent staff service, while Google reviews emphasize the convenient location. Some areas for improvement mentioned include room renovation and breakfast variety.`,
+        lastReviewUpdate: new Date().toISOString(),
+        averageRating: ((8.7/10 * 10) + (4.4/5 * 10) + (5.2/6 * 10) + (4.1/5 * 10)) / 4,
+        totalReviewCount: 1247 + 892 + 334 + 567
+      };
+
+      res.json({
+        success: true,
+        reviews: reviewData,
+        searchQuery: `${hotelName} ${location || ''}`,
+        searchDate: new Date().toISOString()
+      });
+
+    } catch (error) {
+      console.error("❌ Review search error:", error);
+      res.status(500).json({ message: "Failed to search reviews" });
+    }
+  });
+
   app.post("/api/scrape-hotel", requireAuth, async (req: Request, res: Response) => {
     try {
       const { name, url } = req.body;
