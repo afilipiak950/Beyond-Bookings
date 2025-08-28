@@ -3765,14 +3765,19 @@ export default function Workflow() {
 
               <div className="flex gap-3">
                 <Button 
-                  onClick={handleExtractData}
+                  onClick={extractedData ? handleCreateHotelFromExtraction : handleExtractData}
                   disabled={extractionLoading || !extractHotelName.trim()}
-                  className="flex-1"
+                  className={`flex-1 ${extractedData ? 'bg-green-600 hover:bg-green-700 text-white' : ''}`}
                 >
                   {extractionLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Extrahiere Daten...
+                    </>
+                  ) : extractedData ? (
+                    <>
+                      <Building2 className="mr-2 h-4 w-4" />
+                      Hotel hinzufügen
                     </>
                   ) : (
                     <>
@@ -3781,17 +3786,6 @@ export default function Workflow() {
                     </>
                   )}
                 </Button>
-                
-                {extractedData && extractedReviews && (
-                  <Button 
-                    onClick={handleCreateHotelFromExtraction}
-                    variant="outline"
-                    className="flex-1 bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
-                  >
-                    <Building2 className="mr-2 h-4 w-4" />
-                    Hotel mit Reviews Erstellen
-                  </Button>
-                )}
               </div>
 
               {extractedData && (
