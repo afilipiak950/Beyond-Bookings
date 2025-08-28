@@ -710,8 +710,8 @@ export default function Workflow() {
         roomCount: calculation.roomCount || 0,
         occupancyRate: parseFloat(calculation.occupancyRate || "70"),
         averagePrice: averagePrice,
-        projectCosts: calculation.projectCosts ? parseFloat(calculation.projectCosts) : parseFloat(calculation.operationalCosts || "0"),
-        hotelVoucherValue: parseFloat(calculation.voucherPrice || "0"),
+        projectCosts: calculation.projectCosts ? parseFloat(calculation.projectCosts) : 20000, // Use correct projectCosts field from database
+        hotelVoucherValue: parseFloat(calculation.voucherPrice || "30"), // Restore actual hotelVoucherValue from database
         
         // Load the NEW saved form fields from database
         date: calculation.calculationDate || new Date().toISOString().split('T')[0],
@@ -1673,7 +1673,7 @@ export default function Workflow() {
       roomCount: roomCount,
       occupancyRate: occupancyRate.toString(),
       averagePrice: averagePrice.toString(),
-      voucherPrice: voucherValue.toString(),
+      voucherPrice: (workflowData.hotelVoucherValue || voucherValue).toString(), // Save actual hotelVoucherValue from form
       operationalCosts: operationalCosts.toString(),
       vatRate: vatRate.toString(),
       vatAmount: vatAmount.toString(),
