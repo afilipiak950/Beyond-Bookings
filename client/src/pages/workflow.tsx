@@ -3799,7 +3799,33 @@ export default function Workflow() {
                           const costAdvantage = selfFinancedCosts - beboConvertCosts;
                           return costAdvantage.toLocaleString('de-DE');
                         })()} {getCurrencySymbol(workflowData.currency)} 
-                        <span className="text-lg text-teal-500 ml-2">= -XX%</span>
+                        <span className="text-lg text-teal-500 ml-2">{(() => {
+                          const projectCosts = workflowData.projectCosts || 0;
+                          const voucherValue = workflowData.hotelVoucherValue || 0;
+                          const roomnights = voucherValue > 0 ? Math.round(projectCosts / voucherValue) : 0;
+                          
+                          // Self-financed total cost
+                          const selfFinancedTotal = projectCosts;
+                          
+                          // Bebo convert total costs calculation
+                          const costs = roomnights * editableCosts.realCostPerVoucher;
+                          const amount7 = editableCosts.splitting7;
+                          const amount19 = voucherValue - editableCosts.splitting7;
+                          const vatRate7 = editableCosts.vatRate7;
+                          const vatRate19 = editableCosts.vatRate19;
+                          const mwst7 = roomnights * amount7 * (vatRate7/100);
+                          const mwst19 = roomnights * amount19 * (vatRate19/100);
+                          const totalAt7Percent = roomnights * voucherValue * (vatRate7/100);
+                          const actualTax = mwst7 + mwst19;
+                          const steuerbelastung = actualTax - totalAt7Percent;
+                          const steuervorteil = mwst7 + mwst19;
+                          const beboConvertTotal = costs + steuerbelastung - steuervorteil;
+                          
+                          const costAdvantage = selfFinancedTotal - beboConvertTotal;
+                          const savingsPercentage = selfFinancedTotal > 0 ? ((costAdvantage / selfFinancedTotal) * 100) : 0;
+                          
+                          return `= ${savingsPercentage >= 0 ? '-' : '+'}${Math.abs(savingsPercentage).toFixed(1)}%`;
+                        })()}</span>
                       </div>
                     </div>
 
