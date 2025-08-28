@@ -3432,16 +3432,24 @@ export default function Workflow() {
                     
                     <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                       <span className="text-sm font-medium text-gray-700">Steuerbelastung</span>
-                      <div className="flex items-center space-x-2">
-                        <Input
-                          type="number"
-                          step="0.01"
-                          value={editableCosts.taxBurden}
-                          onChange={(e) => setEditableCosts(prev => ({...prev, taxBurden: parseFloat(e.target.value) || 0}))}
-                          className="w-20 h-8 text-right text-sm border-gray-300"
-                        />
-                        <span className="text-sm font-medium text-gray-700">{getCurrencySymbol(workflowData.currency)}</span>
-                      </div>
+                      <span className="text-lg font-semibold text-gray-900">
+                        {(() => {
+                          const projectCosts = workflowData.projectCosts || 20000;
+                          const stars = workflowData.stars || 3;
+                          const voucherValue = (workflowData.hotelVoucherValue && workflowData.hotelVoucherValue > 0) ? workflowData.hotelVoucherValue : (stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30);
+                          const roomnights = Math.round(projectCosts / voucherValue);
+                          // Calculate tax burden based on splitting - typically the difference between 7% and 19% VAT
+                          const amount7 = editableCosts.splitting7;
+                          const amount19 = voucherValue - editableCosts.splitting7;
+                          const mwst7 = roomnights * amount7 * (editableCosts.vatRate7/100);
+                          const mwst19 = roomnights * amount19 * (editableCosts.vatRate19/100);
+                          // Tax burden is the additional tax cost compared to if everything was at 7%
+                          const totalAt7Percent = roomnights * voucherValue * (editableCosts.vatRate7/100);
+                          const actualTax = mwst7 + mwst19;
+                          const taxBurden = actualTax - totalAt7Percent;
+                          return taxBurden.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' ' + getCurrencySymbol(workflowData.currency);
+                        })()}
+                      </span>
                     </div>
 
                     <div className="flex justify-between items-center p-3 bg-[#88E7D3]/20 rounded-lg">
@@ -3474,12 +3482,15 @@ export default function Workflow() {
                         const voucherValue = (workflowData.hotelVoucherValue && workflowData.hotelVoucherValue > 0) ? workflowData.hotelVoucherValue : (stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30);
                         const roomnights = Math.round(projectCosts / voucherValue);
                         const costs = roomnights * editableCosts.realCostPerVoucher;
-                        const steuerbelastung = editableCosts.taxBurden;
-                        // Calculate VAT advantage based on splitting
+                        // Calculate tax burden based on splitting - same calculation as above
                         const amount7 = editableCosts.splitting7;
                         const amount19 = voucherValue - editableCosts.splitting7;
                         const mwst7 = roomnights * amount7 * (editableCosts.vatRate7/100);
                         const mwst19 = roomnights * amount19 * (editableCosts.vatRate19/100);
+                        const totalAt7Percent = roomnights * voucherValue * (editableCosts.vatRate7/100);
+                        const actualTax = mwst7 + mwst19;
+                        const steuerbelastung = actualTax - totalAt7Percent;
+                        // Calculate VAT advantage based on splitting
                         const steuervorteil = mwst7 + mwst19;
                         const gesamtkosten = costs + steuerbelastung - steuervorteil;
                         return gesamtkosten.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' ' + getCurrencySymbol(workflowData.currency);
