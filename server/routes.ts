@@ -560,8 +560,8 @@ Gib mir dann das Ergebnis in diesem JSON Format zurück:
               content: directSearchPrompt
             }
           ],
-          max_completion_tokens: 1500,
-          temperature: 0.0
+          max_completion_tokens: 1500
+          // GPT-5 only supports default temperature of 1
         });
 
         let searchResults;

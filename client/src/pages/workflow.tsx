@@ -3877,112 +3877,120 @@ export default function Workflow() {
                     <div className="p-4 bg-white rounded-lg border">
                       <div className="flex items-center justify-between mb-2">
                         <h5 className="font-semibold text-gray-800">Booking.com</h5>
-                        <a 
-                          href={extractedReviews.bookingReviews.url} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-800 text-sm"
-                        >
-                          Öffnen →
-                        </a>
+                        {extractedReviews.bookingReviews?.url && (
+                          <a 
+                            href={extractedReviews.bookingReviews.url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 text-sm"
+                          >
+                            Öffnen →
+                          </a>
+                        )}
                       </div>
                       <div className="flex items-center gap-2 mb-2">
                         <Star className="h-4 w-4 text-yellow-500" />
                         <span className="font-medium">
-                          {extractedReviews.bookingReviews.rating ? 
+                          {extractedReviews.bookingReviews?.rating ? 
                             `${extractedReviews.bookingReviews.rating}/10` : 
                             'Bewertung nicht verfügbar'
                           }
                         </span>
-                        {extractedReviews.bookingReviews.reviewCount && (
+                        {extractedReviews.bookingReviews?.reviewCount && (
                           <span className="text-sm text-gray-600">({extractedReviews.bookingReviews.reviewCount} Reviews)</span>
                         )}
                       </div>
-                      <p className="text-xs text-gray-600">{extractedReviews.bookingReviews.insights}</p>
+                      <p className="text-xs text-gray-600">{extractedReviews.bookingReviews?.insights || 'Keine Details verfügbar'}</p>
                     </div>
 
                     {/* Google Reviews */}
                     <div className="p-4 bg-white rounded-lg border">
                       <div className="flex items-center justify-between mb-2">
                         <h5 className="font-semibold text-gray-800">Google Reviews</h5>
-                        <a 
-                          href={extractedReviews.googleReviews.url} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-800 text-sm"
-                        >
-                          Öffnen →
-                        </a>
+                        {extractedReviews.googleReviews?.url && (
+                          <a 
+                            href={extractedReviews.googleReviews.url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 text-sm"
+                          >
+                            Öffnen →
+                          </a>
+                        )}
                       </div>
                       <div className="flex items-center gap-2 mb-2">
                         <Star className="h-4 w-4 text-yellow-500" />
                         <span className="font-medium">
-                          {extractedReviews.googleReviews.rating ? 
+                          {extractedReviews.googleReviews?.rating ? 
                             `${extractedReviews.googleReviews.rating}/5` : 
                             'Bewertung nicht verfügbar'
                           }
                         </span>
-                        {extractedReviews.googleReviews.reviewCount && (
+                        {extractedReviews.googleReviews?.reviewCount && (
                           <span className="text-sm text-gray-600">({extractedReviews.googleReviews.reviewCount} Reviews)</span>
                         )}
                       </div>
-                      <p className="text-xs text-gray-600">{extractedReviews.googleReviews.insights}</p>
+                      <p className="text-xs text-gray-600">{extractedReviews.googleReviews?.insights || 'Keine Details verfügbar'}</p>
                     </div>
 
                     {/* HolidayCheck Reviews */}
                     <div className="p-4 bg-white rounded-lg border">
                       <div className="flex items-center justify-between mb-2">
                         <h5 className="font-semibold text-gray-800">HolidayCheck</h5>
-                        <a 
-                          href={extractedReviews.holidayCheckReviews.url} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-800 text-sm"
-                        >
-                          Öffnen →
-                        </a>
+                        {extractedReviews.holidayCheckReviews?.url && (
+                          <a 
+                            href={extractedReviews.holidayCheckReviews.url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 text-sm"
+                          >
+                            Öffnen →
+                          </a>
+                        )}
                       </div>
                       <div className="flex items-center gap-2 mb-2">
                         <Star className="h-4 w-4 text-yellow-500" />
                         <span className="font-medium">
-                          {extractedReviews.holidayCheckReviews.rating ? 
+                          {extractedReviews.holidayCheckReviews?.rating ? 
                             `${extractedReviews.holidayCheckReviews.rating}/6` : 
                             'Bewertung nicht verfügbar'
                           }
                         </span>
-                        {extractedReviews.holidayCheckReviews.reviewCount && (
+                        {extractedReviews.holidayCheckReviews?.reviewCount && (
                           <span className="text-sm text-gray-600">({extractedReviews.holidayCheckReviews.reviewCount} Reviews)</span>
                         )}
                       </div>
-                      <p className="text-xs text-gray-600">{extractedReviews.holidayCheckReviews.insights}</p>
+                      <p className="text-xs text-gray-600">{extractedReviews.holidayCheckReviews?.insights || 'Keine Details verfügbar'}</p>
                     </div>
 
                     {/* TripAdvisor Reviews */}
                     <div className="p-4 bg-white rounded-lg border">
                       <div className="flex items-center justify-between mb-2">
                         <h5 className="font-semibold text-gray-800">TripAdvisor</h5>
-                        <a 
-                          href={extractedReviews.tripadvisorReviews.url} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-800 text-sm"
-                        >
-                          Öffnen →
-                        </a>
+                        {extractedReviews.tripadvisorReviews?.url && (
+                          <a 
+                            href={extractedReviews.tripadvisorReviews.url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 text-sm"
+                          >
+                            Öffnen →
+                          </a>
+                        )}
                       </div>
                       <div className="flex items-center gap-2 mb-2">
                         <Star className="h-4 w-4 text-yellow-500" />
                         <span className="font-medium">
-                          {extractedReviews.tripadvisorReviews.rating ? 
+                          {extractedReviews.tripadvisorReviews?.rating ? 
                             `${extractedReviews.tripadvisorReviews.rating}/5` : 
                             'Bewertung nicht verfügbar'
                           }
                         </span>
-                        {extractedReviews.tripadvisorReviews.reviewCount && (
+                        {extractedReviews.tripadvisorReviews?.reviewCount && (
                           <span className="text-sm text-gray-600">({extractedReviews.tripadvisorReviews.reviewCount} Reviews)</span>
                         )}
                       </div>
-                      <p className="text-xs text-gray-600">{extractedReviews.tripadvisorReviews.insights}</p>
+                      <p className="text-xs text-gray-600">{extractedReviews.tripadvisorReviews?.insights || 'Keine Details verfügbar'}</p>
                     </div>
                   </div>
                 </div>
