@@ -73,6 +73,17 @@ export interface WorkflowData {
   holidaycheckRating?: number;
   holidaycheckReviewCount?: number;
   
+  // Customer request fields that should be saved to database
+  contactPerson?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  financingVolume?: number;
+  projectDescription?: string;
+  urgency?: string; // 'low', 'medium', 'high'
+  additionalNotes?: string;
+  requestType?: string; // 'standard', 'customer_financing'
+  status?: string; // 'draft', 'submitted', 'processing', 'completed'
+  
   calculationResult?: {
     vatAmount: number;
     profitMargin: number;
@@ -702,6 +713,16 @@ export default function Workflow() {
         projectCosts: parseFloat(calculation.operationalCosts || "0"),
         hotelVoucherValue: parseFloat(calculation.voucherPrice || "0"),
         contractYears: 1, // Default since not stored in DB
+        // Load customer request fields that were missing before
+        contactPerson: calculation.contactPerson || "",
+        contactEmail: calculation.contactEmail || "",
+        contactPhone: calculation.contactPhone || "",
+        financingVolume: calculation.financingVolume ? parseFloat(calculation.financingVolume) : undefined,
+        projectDescription: calculation.projectDescription || "",
+        urgency: calculation.urgency || "",
+        additionalNotes: calculation.additionalNotes || "",
+        requestType: calculation.requestType || "standard",
+        status: calculation.status || "draft",
         calculationResult: {
           vatAmount: parseFloat(calculation.vatAmount || "0"),
           profitMargin: profitMargin,
@@ -1605,7 +1626,17 @@ export default function Workflow() {
       profitMargin: profitMargin.toString(),
       totalPrice: totalPrice.toString(),
       discountVsMarket: discountVsMarket.toString(),
-      isDraft: false
+      isDraft: false,
+      // Customer request fields - save these important fields too
+      contactPerson: workflowData.contactPerson || null,
+      contactEmail: workflowData.contactEmail || null,
+      contactPhone: workflowData.contactPhone || null,
+      financingVolume: workflowData.financingVolume?.toString() || null,
+      projectDescription: workflowData.projectDescription || null,
+      urgency: workflowData.urgency || null,
+      additionalNotes: workflowData.additionalNotes || null,
+      requestType: workflowData.requestType || 'standard',
+      status: workflowData.status || 'draft'
     };
 
     // Use the mutation instead of direct fetch
