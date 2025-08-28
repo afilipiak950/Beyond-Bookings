@@ -495,37 +495,56 @@ Return this EXACT JSON format:
           throw new Error('OpenAI API key not configured');
         }
         
+        // Generate proper working search URLs for each platform
+        const generateRealSearchUrls = (hotelName: string, location?: string) => {
+          const searchTerm = encodeURIComponent(hotelName + (location ? ` ${location}` : ''));
+          return {
+            booking: `https://www.booking.com/searchresults.html?ss=${searchTerm}`,
+            google: `https://www.google.com/search?q=${searchTerm}+reviews`,
+            holidayCheck: `https://www.holidaycheck.de/search?q=${searchTerm}`,
+            tripadvisor: `https://www.tripadvisor.com/Search?q=${searchTerm}`
+          };
+        };
+
+        const realUrls = generateRealSearchUrls(hotelName, location);
+        
         const directSearchPrompt = `Erstelle realistische Bewertungsdaten für das Hotel "${hotelName}"${location ? ` in ${location}` : ''}. 
 
 Generiere typische Bewertungen basierend auf dem Hoteltyp und der Lage. Verwende realistische Zahlen für ein ${hotelName.includes('4') || hotelName.includes('vier') ? '4-Sterne' : hotelName.includes('5') || hotelName.includes('fünf') ? '5-Sterne' : '3-Sterne'} Hotel.
+
+Verwende diese echten Such-URLs:
+- Booking.com: ${realUrls.booking}
+- Google: ${realUrls.google}  
+- HolidayCheck: ${realUrls.holidayCheck}
+- TripAdvisor: ${realUrls.tripadvisor}
 
 Antworte NUR mit diesem exakten JSON Format (ohne zusätzlichen Text):
 {
   "bookingReviews": {
     "rating": echte_bewertung_als_zahl,
     "reviewCount": echte_anzahl_als_zahl,
-    "url": "direkter_booking_link",
+    "url": "${realUrls.booking}",
     "insights": "kurze Zusammenfassung der Bewertungen",
     "dataFound": true
   },
   "googleReviews": {
     "rating": echte_bewertung_als_zahl,
     "reviewCount": echte_anzahl_als_zahl,
-    "url": "direkter_google_maps_link",
+    "url": "${realUrls.google}",
     "insights": "kurze Zusammenfassung", 
     "dataFound": true
   },
   "holidayCheckReviews": {
     "rating": echte_bewertung_als_zahl,
     "reviewCount": echte_anzahl_als_zahl,
-    "url": "direkter_holidaycheck_link",
+    "url": "${realUrls.holidayCheck}",
     "insights": "kurze Zusammenfassung",
     "dataFound": true
   },
   "tripadvisorReviews": {
     "rating": echte_bewertung_als_zahl,
     "reviewCount": echte_anzahl_als_zahl,
-    "url": "direkter_tripadvisor_link", 
+    "url": "${realUrls.tripadvisor}", 
     "insights": "kurze Zusammenfassung",
     "dataFound": true
   },
@@ -575,29 +594,52 @@ Antworte NUR mit diesem exakten JSON Format (ohne zusätzlichen Text):
         if (searchResults && searchResults.searchSuccess) {
           console.log('✅ OpenAI found real search data - processing results...');
           
+          // Always use real working search URLs instead of any dummy URLs from OpenAI
+          const workingUrls = generateRealSearchUrls(hotelName, location);
+          
           reviewData = {
-            bookingReviews: searchResults.bookingReviews || {
+            bookingReviews: searchResults.bookingReviews ? {
+              rating: searchResults.bookingReviews.rating,
+              reviewCount: searchResults.bookingReviews.reviewCount,
+              url: workingUrls.booking, // Use real working URL
+              insights: searchResults.bookingReviews.insights || "OpenAI-generierte Bewertungsanalyse"
+            } : {
               rating: null,
               reviewCount: null,
-              url: `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(hotelName)}`,
+              url: workingUrls.booking,
               insights: "Suche manuell auf Booking.com für echte Bewertungen"
             },
-            googleReviews: searchResults.googleReviews || {
+            googleReviews: searchResults.googleReviews ? {
+              rating: searchResults.googleReviews.rating,
+              reviewCount: searchResults.googleReviews.reviewCount,
+              url: workingUrls.google, // Use real working URL
+              insights: searchResults.googleReviews.insights || "OpenAI-generierte Bewertungsanalyse"
+            } : {
               rating: null,
               reviewCount: null,
-              url: `https://www.google.com/search?q=${encodeURIComponent(hotelName + ' hotel reviews')}`,
+              url: workingUrls.google,
               insights: "Suche manuell auf Google Maps für echte Bewertungen"
             },
-            holidayCheckReviews: searchResults.holidayCheckReviews || {
+            holidayCheckReviews: searchResults.holidayCheckReviews ? {
+              rating: searchResults.holidayCheckReviews.rating,
+              reviewCount: searchResults.holidayCheckReviews.reviewCount,
+              url: workingUrls.holidayCheck, // Use real working URL
+              insights: searchResults.holidayCheckReviews.insights || "OpenAI-generierte Bewertungsanalyse"
+            } : {
               rating: null,
               reviewCount: null,
-              url: `https://www.holidaycheck.de/search?q=${encodeURIComponent(hotelName)}`,
+              url: workingUrls.holidayCheck,
               insights: "Suche manuell auf HolidayCheck für echte Bewertungen"
             },
-            tripadvisorReviews: searchResults.tripadvisorReviews || {
+            tripadvisorReviews: searchResults.tripadvisorReviews ? {
+              rating: searchResults.tripadvisorReviews.rating,
+              reviewCount: searchResults.tripadvisorReviews.reviewCount,
+              url: workingUrls.tripadvisor, // Use real working URL
+              insights: searchResults.tripadvisorReviews.insights || "OpenAI-generierte Bewertungsanalyse"
+            } : {
               rating: null,
               reviewCount: null,
-              url: `https://www.tripadvisor.com/Search?q=${encodeURIComponent(hotelName)}`,
+              url: workingUrls.tripadvisor,
               insights: "Suche manuell auf TripAdvisor für echte Bewertungen"
             },
             reviewSummary: `OpenAI Direktsuche durchgeführt für ${hotelName}. ${searchResults.searchSuccess ? 'Echte Daten gefunden' : 'Keine aktuellen Daten verfügbar'} - Bitte prüfen Sie die bereitgestellten Links für die neuesten Bewertungen.`,
@@ -614,30 +656,31 @@ Antworte NUR mit diesem exakten JSON Format (ohne zusätzlichen Text):
           const generateFallbackData = () => {
             const baseRating = 7.5 + (Math.random() * 2); // 7.5-9.5 range
             const reviewCountBase = 50 + Math.floor(Math.random() * 200); // 50-250 reviews
+            const workingUrls = generateRealSearchUrls(hotelName, location);
             
             return {
               booking: {
                 rating: Number((baseRating).toFixed(1)),
                 reviewCount: reviewCountBase + Math.floor(Math.random() * 50),
-                url: `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(hotelName)}`,
+                url: workingUrls.booking,
                 insights: `Basiert auf typischen Bewertungen für ähnliche Hotels`
               },
               google: {
                 rating: Number((baseRating * 0.6).toFixed(1)), // Convert to 5-star scale
                 reviewCount: Math.floor(reviewCountBase * 1.5),
-                url: `https://www.google.com/search?q=${encodeURIComponent(hotelName + ' reviews')}`,
+                url: workingUrls.google,
                 insights: `Geschätzte Bewertung basierend auf Hotelkategorie`
               },
               holidayCheck: {
                 rating: Number((baseRating * 0.72).toFixed(1)), // Convert to 6-star scale  
                 reviewCount: Math.floor(reviewCountBase * 0.8),
-                url: `https://www.holidaycheck.de/search?q=${encodeURIComponent(hotelName)}`,
+                url: workingUrls.holidayCheck,
                 insights: `Typische HolidayCheck Bewertung für diese Hotelklasse`
               },
               tripadvisor: {
                 rating: Number((baseRating * 0.6).toFixed(1)), // Convert to 5-star scale
                 reviewCount: Math.floor(reviewCountBase * 1.2),
-                url: `https://www.tripadvisor.com/Search?q=${encodeURIComponent(hotelName)}`,
+                url: workingUrls.tripadvisor,
                 insights: `Realistische TripAdvisor Einschätzung`
               }
             };
