@@ -23,19 +23,22 @@ export class SemanticClassifier {
             content: `You are a query classification system. Analyze the user's message and classify it into one of these categories:
 
 CATEGORIES:
-1. hotel_business - ANY question about SPECIFIC NAMED hotels (Dolder Grand, Ritz Carlton, etc.) - includes info requests, pricing, calculations
+1. hotel_business - ANY question about SPECIFIC NAMED hotels (Dolder Grand, Hotel Drei Kronen, etc.) - includes info requests, pricing, calculations
 2. weather - Weather information, temperature, climate questions  
 3. calculation - Pure mathematical calculations, arithmetic operations
 4. general - Everything else including general hotel statistics, country data, historical facts, science, politics
 
-CRITICAL RULES:
+CRITICAL RULES FOR HOTEL BUSINESS:
 - "How many hotels in Germany?" = GENERAL (country statistics)
-- "Tell me about Dolder Grand" = HOTEL_BUSINESS (specific hotel)
-- "Dolder Grand pricing" = HOTEL_BUSINESS (specific hotel)
+- "Tell me about Hotel Drei Kronen" = HOTEL_BUSINESS (specific hotel) → USE SQL_QUERY
+- "Hotel Drei Kronen calculation" = HOTEL_BUSINESS (specific hotel) → USE SQL_QUERY  
+- "About Hotel Drei Kronen" = HOTEL_BUSINESS (specific hotel) → USE SQL_QUERY
+- "Dolder Grand pricing" = HOTEL_BUSINESS (specific hotel) → USE SQL_QUERY
 - "Hotel industry trends" = GENERAL (industry information)
-- "Calculate 25 + 30" = CALCULATION (math only)
+- "Calculate 25 + 30" = CALCULATION (math only) → USE CALC_EVAL
 
-ANY mention of a SPECIFIC hotel name = HOTEL_BUSINESS (even for general info requests)
+⚠️ CRITICAL: For hotel_business queries, ALWAYS suggest "sql_query" as the primary tool
+ANY mention of a SPECIFIC hotel name = HOTEL_BUSINESS with SQL_QUERY tool
 
 Respond with JSON only:
 {
