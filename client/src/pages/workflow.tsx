@@ -888,6 +888,7 @@ export default function Workflow() {
     realCostPerVoucher: 17.00,  // 17€ per voucher for Beyond Bookings
     taxBurden: 1800.90,         // Steuerbelastung
     productType: "Finanzierung Rechnung für Dritte",  // Produkt
+    splitting7: 5.0,            // Amount with 7% VAT from voucher value
     vatRate7: 7.0,              // Mehrwertsteuer 7%
     vatRate19: 19.0             // Mehrwertsteuer 19%
   });
@@ -3336,6 +3337,33 @@ export default function Workflow() {
                     </div>
                   </div>
 
+                  {/* Splitting */}
+                  <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                    <div className="text-sm text-gray-600 mb-2">Splitting</div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="flex items-center space-x-2">
+                        <Input
+                          type="number"
+                          step="0.1"
+                          value={editableCosts.splitting7}
+                          onChange={(e) => setEditableCosts(prev => ({...prev, splitting7: parseFloat(e.target.value) || 5.0}))}
+                          className="w-16 h-7 text-xs text-center border-gray-300"
+                        />
+                        <span className="text-xs text-gray-600">{getCurrencySymbol(workflowData.currency)} mit 7% MwSt</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-xs text-gray-600">
+                          {(() => {
+                            const voucherValue = (workflowData.hotelVoucherValue && workflowData.hotelVoucherValue > 0) ? workflowData.hotelVoucherValue : 30;
+                            const remaining = voucherValue - editableCosts.splitting7;
+                            return remaining.toFixed(1);
+                          })()}
+                        </span>
+                        <span className="text-xs text-gray-600">{getCurrencySymbol(workflowData.currency)} mit 19% MwSt</span>
+                      </div>
+                    </div>
+                  </div>
+
                   {/* VAT Rates */}
                   <div className="grid grid-cols-2 gap-3">
                     <div className="bg-gray-50 rounded-lg p-3">
@@ -3356,8 +3384,8 @@ export default function Workflow() {
                           const stars = workflowData.stars || 3;
                           const voucherValue = (workflowData.hotelVoucherValue && workflowData.hotelVoucherValue > 0) ? workflowData.hotelVoucherValue : (stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30);
                           const roomnights = Math.round(projectCosts / voucherValue);
-                          const totalVoucherValue = roomnights * voucherValue;
-                          const mwst7 = totalVoucherValue * (editableCosts.vatRate7/100) / (1 + editableCosts.vatRate7/100);
+                          const amount7 = editableCosts.splitting7;
+                          const mwst7 = roomnights * amount7 * (editableCosts.vatRate7/100);
                           return mwst7.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' ' + getCurrencySymbol(workflowData.currency);
                         })()}
                       </div>
@@ -3380,8 +3408,8 @@ export default function Workflow() {
                           const stars = workflowData.stars || 3;
                           const voucherValue = (workflowData.hotelVoucherValue && workflowData.hotelVoucherValue > 0) ? workflowData.hotelVoucherValue : (stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30);
                           const roomnights = Math.round(projectCosts / voucherValue);
-                          const totalVoucherValue = roomnights * voucherValue;
-                          const mwst19 = totalVoucherValue * (editableCosts.vatRate19/100) / (1 + editableCosts.vatRate19/100);
+                          const amount19 = voucherValue - editableCosts.splitting7;
+                          const mwst19 = roomnights * amount19 * (editableCosts.vatRate19/100);
                           return mwst19.toLocaleString('de-DE', {minimumFractionDigits: 0, maximumFractionDigits: 0}) + ' ' + getCurrencySymbol(workflowData.currency);
                         })()}
                       </div>
