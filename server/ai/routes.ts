@@ -66,7 +66,7 @@ const chatRequestSchema = z.object({
   message: z.string().min(1),
   threadId: z.union([z.number(), z.null()]).optional().transform(val => val === null ? undefined : val),
   mode: z.enum(['general', 'calculation', 'docs', 'sql', 'sheets', 'api']).default('general'),
-  model: z.enum(['gpt-5', 'gpt-5-mini', 'gpt-5-preview', 'gpt-4o', 'gpt-4o-mini', 'gpt-4']).default('gpt-5-mini'),
+  model: z.enum(['gpt-4o', 'gpt-4o-mini', 'gpt-4', 'gpt-4-turbo']).default('gpt-4o-mini'),
   title: z.string().optional(),
 });
 

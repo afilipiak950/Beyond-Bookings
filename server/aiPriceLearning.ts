@@ -132,7 +132,7 @@ export class AIPriceLearningService {
         reasoning,
         basedOnSimilarHotels: similarHotels.length
       };
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("AI price suggestion error:", error);
       
       // Fallback to standard calculation

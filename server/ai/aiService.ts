@@ -378,7 +378,7 @@ export class AIService {
       };
       
       // Only add parameters that are supported by the model
-      if (!supportedModel.startsWith('gpt-5')) {
+      if (!supportedModel.startsWith('gpt-4')) {
         // GPT-4 models support these parameters
         completionOptions.temperature = 1;
         completionOptions.top_p = 0.9;
@@ -841,33 +841,31 @@ ABER VERWENDE NUR DIE DATEN DES AKTUELLEN HOTELS AUS DEM KONTEXT!`;
     return baseTools;
   }
 
-  // Support GPT-5 and GPT-5 mini as primary models
+  // Support available OpenAI models
   private getSupportedModel(requestedModel: string): string {
     const modelMapping = {
-      'gpt-5': 'gpt-5', // Use GPT-5 directly
-      'gpt-5-preview': 'gpt-5-preview',
-      'gpt-5-mini': 'gpt-5-mini', // Use GPT-5 mini
-      'gpt-4o-mini': 'gpt-5-mini', // Map old mini to GPT-5 mini
-      'gpt-4o': 'gpt-5', // Map GPT-4o to GPT-5
-      'gpt-4': 'gpt-5', // Map GPT-4 to GPT-5
-      'gpt-4-turbo': 'gpt-5',
+      'gpt-5': 'gpt-4o', // Map requested GPT-5 to GPT-4o
+      'gpt-5-preview': 'gpt-4o',
+      'gpt-5-mini': 'gpt-4o-mini', // Map requested GPT-5 mini to GPT-4o-mini
+      'gpt-4o-mini': 'gpt-4o-mini',
+      'gpt-4o': 'gpt-4o',
+      'gpt-4': 'gpt-4o',
+      'gpt-4-turbo': 'gpt-4o',
     };
     
-    return modelMapping[requestedModel as keyof typeof modelMapping] || 'gpt-5';
+    return modelMapping[requestedModel as keyof typeof modelMapping] || 'gpt-4o-mini';
   }
 
-  // Calculate usage cost with GPT-5 and GPT-5 mini support
+  // Calculate usage cost with actual OpenAI models
   private calculateCost(usage: TokenUsage, model: string): number {
     const rates = {
-      'gpt-5': { input: 0.005, output: 0.015 }, // GPT-5 pricing
-      'gpt-5-preview': { input: 0.005, output: 0.015 },
-      'gpt-5-mini': { input: 0.0002, output: 0.0008 }, // GPT-5 mini pricing
       'gpt-4o': { input: 0.0025, output: 0.01 },
       'gpt-4o-mini': { input: 0.00015, output: 0.0006 },
       'gpt-4': { input: 0.03, output: 0.06 },
+      'gpt-4-turbo': { input: 0.01, output: 0.03 },
     };
     
-    const rate = rates[model as keyof typeof rates] || rates['gpt-5-mini'];
+    const rate = rates[model as keyof typeof rates] || rates['gpt-4o-mini'];
     return (usage.prompt_tokens * rate.input + usage.completion_tokens * rate.output) / 1000;
   }
 
