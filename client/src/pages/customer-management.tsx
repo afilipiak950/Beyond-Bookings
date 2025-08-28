@@ -61,6 +61,7 @@ export default function CustomerManagement() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchDialogOpen, setSearchDialogOpen] = useState(false);
   
   // Comprehensive filter state
   const [filterOpen, setFilterOpen] = useState(false);
