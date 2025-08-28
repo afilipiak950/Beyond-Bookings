@@ -53,6 +53,7 @@ function Router() {
         <>
           <Route path="/" component={Dashboard} />
           <Route path="/workflow" component={Workflow} />
+          <Route path="/workflow/:calculationId" component={Workflow} />
           <Route path="/calculations" component={Calculations} />
           <Route path="/ocr-analyzer" component={OCRAnalyzer} />
           <Route path="/document-analysis" component={DocumentAnalysis} />
