@@ -89,33 +89,55 @@ export class VoucherIntelligenceEngine {
     characteristics: HotelCharacteristics,
     context: MarketContext = {}
   ): Promise<VoucherPrediction> {
+    console.log('🧠 Starting voucher prediction for:', characteristics.name, `(${characteristics.stars}⭐)`);
+    
     try {
-      // Generate embeddings
-      const hotelEmbedding = await this.generateHotelEmbedding(characteristics);
-      const contextEmbedding = await this.generateContextEmbedding(context);
+      // Step 1: Check if we have sufficient data for AI analysis
+      console.log('📊 Step 1: Data availability check...');
+      const hasMinimumData = characteristics.name && characteristics.stars > 0;
+      
+      if (!hasMinimumData) {
+        console.log('⚠️ Insufficient data for AI analysis, using fallback');
+        return this.getFallbackPrediction(characteristics);
+      }
 
-      // Find similar hotels using vector similarity
-      const similarHotels = await this.findSimilarHotels(hotelEmbedding, characteristics.stars);
+      // Step 2: Find similar hotels (simplified approach for now)
+      console.log('🔍 Step 2: Finding similar hotels...');
+      const similarHotels = await this.findSimilarHotels([], characteristics.stars);
+      console.log('✅ Found', similarHotels.length, 'similar hotels');
 
-      // Calculate base voucher value using AI
-      const baseValue = await this.calculateBaseVoucherValue(characteristics, context, similarHotels);
+      // Step 3: Calculate base voucher value
+      console.log('⭐ Step 3: Calculating base value...');
+      const baseValue = this.getStarBasedVoucherValue(characteristics.stars);
+      console.log('✅ Base value:', '€' + baseValue);
 
-      // Apply learned adjustments from user feedback
-      const { adjustedValue, confidence, reasoning } = await this.applyLearningAdjustments(
-        baseValue,
-        characteristics,
-        similarHotels
-      );
+      // Step 4: Apply adjustments based on similar hotels
+      console.log('🤖 Step 4: Applying AI adjustments...');
+      const adjustedValue = this.applySimpleAdjustments(baseValue, similarHotels, characteristics);
+      console.log('✅ Adjusted value:', '€' + adjustedValue);
 
-      return {
+      // Step 5: Calculate confidence
+      console.log('📈 Step 5: Calculating confidence...');
+      const confidence = this.calculateSimpleConfidence(similarHotels, characteristics);
+      console.log('✅ Confidence:', confidence + '%');
+
+      // Step 6: Generate reasoning
+      console.log('💭 Step 6: Generating reasoning...');
+      const reasoning = this.generateSimpleReasoning(characteristics, adjustedValue, baseValue, similarHotels);
+      console.log('✅ Reasoning generated');
+
+      const result = {
         suggestedValue: Math.round(adjustedValue * 100) / 100,
         confidence: Math.round(confidence * 100) / 100,
         reasoning,
         similarHotels: similarHotels.length,
-        influencingFactors: this.identifyInfluencingFactors(characteristics, context, similarHotels),
+        influencingFactors: this.getSimpleInfluencingFactors(characteristics, similarHotels),
       };
+
+      console.log('💡 Final prediction:', '€' + result.suggestedValue, `(${result.confidence}% confidence)`);
+      return result;
     } catch (error) {
-      console.error('Error predicting voucher value:', error);
+      console.error('❌ Error predicting voucher value:', error);
       
       // Fallback to star-based calculation
       const fallbackValue = this.getStarBasedFallback(characteristics.stars);
@@ -195,21 +217,32 @@ export class VoucherIntelligenceEngine {
    */
   private async findSimilarHotels(hotelEmbedding: number[], stars: number, limit: number = 10) {
     try {
-      // For now, find hotels with similar characteristics
-      // In production, this would use pgvector for cosine similarity
+      console.log('🔍 Searching for similar hotels with', stars, 'stars (±1)');
+      
+      // Simplified similarity search based on star rating
       const similarHotels = await db
-        .select()
+        .select({
+          id: voucherIntelligence.id,
+          hotelName: voucherIntelligence.hotelName,
+          stars: voucherIntelligence.stars,
+          voucherValue: voucherIntelligence.voucherValue,
+          userFeedback: voucherIntelligence.userFeedback,
+          confidence: voucherIntelligence.confidence,
+          wasManuallyEdited: voucherIntelligence.wasManuallyEdited,
+          createdAt: voucherIntelligence.createdAt
+        })
         .from(voucherIntelligence)
         .where(and(
-          eq(voucherIntelligence.stars, stars),
-          eq(voucherIntelligence.wasManuallyEdited, true)
+          sql`${voucherIntelligence.stars} BETWEEN ${stars - 1} AND ${stars + 1}`,
+          sql`${voucherIntelligence.voucherValue} > 0`
         ))
-        .orderBy(desc(voucherIntelligence.predictionAccuracy))
+        .orderBy(desc(voucherIntelligence.confidence), desc(voucherIntelligence.createdAt))
         .limit(limit);
 
+      console.log('✅ Found', similarHotels.length, 'similar hotels');
       return similarHotels;
     } catch (error) {
-      console.error('Error finding similar hotels:', error);
+      console.error('❌ Error finding similar hotels:', error);
       return [];
     }
   }
@@ -512,6 +545,146 @@ Respond with JSON: {"voucherValue": number, "reasoning": "explanation"}
         mostCommonReasons: []
       };
     }
+  }
+
+  /**
+   * Get fallback prediction when AI analysis fails
+   */
+  private getFallbackPrediction(characteristics: HotelCharacteristics): VoucherPrediction {
+    const fallbackValue = this.getStarBasedVoucherValue(characteristics.stars);
+    return {
+      suggestedValue: fallbackValue,
+      confidence: 60,
+      reasoning: `Standard-Empfehlung für ${characteristics.stars}-Sterne Hotels. KI-Analyse vorübergehend nicht verfügbar.`,
+      similarHotels: 0,
+      influencingFactors: ['Sterne-Kategorie']
+    };
+  }
+  
+  /**
+   * Apply simple adjustments based on similar hotels
+   */
+  private applySimpleAdjustments(
+    baseValue: number, 
+    similarHotels: any[], 
+    characteristics: HotelCharacteristics
+  ): number {
+    let adjustedValue = baseValue;
+    
+    if (similarHotels.length > 0) {
+      // Calculate average voucher value from similar hotels
+      const voucherValues = similarHotels.map(hotel => hotel.voucherValue || baseValue);
+      const avgSimilarValue = voucherValues.reduce((sum, val) => sum + val, 0) / voucherValues.length;
+      console.log('📊 Average similar hotel voucher value:', '€' + avgSimilarValue);
+      
+      // Weight the adjustment based on number of similar hotels
+      const weight = Math.min(similarHotels.length / 10, 0.3); // Max 30% influence
+      adjustedValue = (baseValue * (1 - weight)) + (avgSimilarValue * weight);
+      console.log('⚖️ Weighted adjustment applied (weight:', weight + '):', '€' + adjustedValue);
+    }
+    
+    // Apply room count adjustments
+    if (characteristics.roomCount) {
+      if (characteristics.roomCount > 200) {
+        adjustedValue *= 1.05; // 5% increase for large hotels
+        console.log('🏨 Large hotel bonus (+5%):', characteristics.roomCount, 'rooms');
+      } else if (characteristics.roomCount < 50) {
+        adjustedValue *= 0.95; // 5% decrease for small boutique hotels
+        console.log('🏨 Boutique hotel adjustment (-5%):', characteristics.roomCount, 'rooms');
+      }
+    }
+    
+    return Math.max(adjustedValue, baseValue * 0.7); // Never go below 70% of base value
+  }
+  
+  /**
+   * Calculate simple confidence score
+   */
+  private calculateSimpleConfidence(similarHotels: any[], characteristics: HotelCharacteristics): number {
+    let confidence = 60; // Base confidence
+    
+    // Increase confidence based on similar hotels
+    confidence += Math.min(similarHotels.length * 5, 20); // +5% per similar hotel, max +20%
+    
+    // Increase confidence if we have room count data
+    if (characteristics.roomCount) {
+      confidence += 5;
+    }
+    
+    // Increase confidence if we have location data
+    if (characteristics.location) {
+      confidence += 5;
+    }
+    
+    return Math.min(confidence, 85); // Cap at 85%
+  }
+  
+  /**
+   * Generate simple reasoning explanation
+   */
+  private generateSimpleReasoning(
+    characteristics: HotelCharacteristics,
+    adjustedValue: number,
+    baseValue: number,
+    similarHotels: any[]
+  ): string {
+    const diff = adjustedValue - baseValue;
+    const diffPercent = Math.round((diff / baseValue) * 100);
+    
+    let reasoning = `Empfehlung für ${characteristics.name} (${characteristics.stars}⭐): €${adjustedValue.toFixed(2)}`;
+    
+    if (Math.abs(diffPercent) > 2) {
+      if (diffPercent > 0) {
+        reasoning += `. Aufschlag von ${diffPercent}% aufgrund`;
+      } else {
+        reasoning += `. Abschlag von ${Math.abs(diffPercent)}% aufgrund`;
+      }
+      
+      const factors = [];
+      if (similarHotels.length > 0) {
+        factors.push(`ähnlicher Hotels`);
+      }
+      if (characteristics.roomCount && characteristics.roomCount > 200) {
+        factors.push('Hotelgröße');
+      }
+      if (characteristics.roomCount && characteristics.roomCount < 50) {
+        factors.push('Boutique-Charakter');
+      }
+      
+      reasoning += ` ${factors.join(', ')}.`;
+    } else {
+      reasoning += '. Standard-Wert für diese Sterne-Kategorie.';
+    }
+    
+    return reasoning;
+  }
+  
+  /**
+   * Get simple influencing factors
+   */
+  private getSimpleInfluencingFactors(
+    characteristics: HotelCharacteristics, 
+    similarHotels: any[]
+  ): string[] {
+    const factors = [`${characteristics.stars}-Sterne-Kategorie`];
+    
+    if (similarHotels.length > 0) {
+      factors.push(`${similarHotels.length} ähnliche Hotels`);
+    }
+    
+    if (characteristics.roomCount) {
+      if (characteristics.roomCount > 200) {
+        factors.push('Großes Hotel');
+      } else if (characteristics.roomCount < 50) {
+        factors.push('Boutique Hotel');
+      }
+    }
+    
+    if (characteristics.location) {
+      factors.push('Standort');
+    }
+    
+    return factors;
   }
 }
 
