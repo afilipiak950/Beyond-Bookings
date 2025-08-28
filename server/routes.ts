@@ -2821,6 +2821,38 @@ Return only valid JSON, no markdown or explanations.`;
     }
   });
 
+  // Get single pricing calculation by ID
+  app.get('/api/pricing-calculations/:id', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const calculationId = parseInt(req.params.id);
+      const userId = (req as any).user.id;
+      
+      if (!calculationId) {
+        return res.status(400).json({ message: "Calculation ID is required" });
+      }
+
+      console.log(`📊 Getting pricing calculation ID: ${calculationId} for user: ${userId}`);
+      
+      // Get the specific calculation from storage
+      const calculations = await storage.getPricingCalculations(userId);
+      const calculation = calculations.find(calc => calc.id === calculationId);
+      
+      if (!calculation) {
+        console.log(`❌ Calculation ID ${calculationId} not found for user ${userId}`);
+        return res.status(404).json({ message: "Calculation not found" });
+      }
+      
+      console.log(`✅ Found calculation: ${calculation.hotelName}`);
+      res.json(calculation);
+    } catch (error: any) {
+      console.error('❌ Failed to get pricing calculation:', error);
+      res.status(500).json({ 
+        message: "Failed to fetch pricing calculation", 
+        error: error?.message || 'Unknown error'
+      });
+    }
+  });
+
   // Delete pricing calculation
   app.delete('/api/pricing-calculations/:id', requireAuth, async (req: Request, res: Response) => {
     try {

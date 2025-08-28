@@ -656,16 +656,27 @@ export default function Workflow() {
   };
   
   // Load existing calculation if ID is provided
-  const { data: existingCalculation, isLoading: isLoadingCalculation } = useQuery({
+  const { data: existingCalculation, isLoading: isLoadingCalculation, error: calculationError } = useQuery({
     queryKey: [`/api/pricing-calculations/${calculationId}`],
     enabled: !!calculationId,
     retry: false,
   });
+  
+  // Debug the query result
+  useEffect(() => {
+    console.log("🔍 Query Debug:", {
+      calculationId,
+      existingCalculation,
+      isLoadingCalculation,
+      calculationError
+    });
+  }, [calculationId, existingCalculation, isLoadingCalculation, calculationError]);
 
   // Load existing calculation data into workflow
   useEffect(() => {
     if (existingCalculation) {
-      console.log("Loading calculation data:", existingCalculation);
+      console.log("🔄 Loading calculation data:", existingCalculation);
+      console.log("📊 Current workflowData before loading:", workflowData);
       setIsLoadingExistingCalculation(true);
       const calculation = existingCalculation as PricingCalculation;
       
@@ -678,8 +689,8 @@ export default function Workflow() {
       const marginPercentage = totalPrice > 0 ? (profitMargin / totalPrice) * 100 : 0;
       const discountPercentage = averagePrice > 0 ? (discountVsMarket / averagePrice) * 100 : 0;
 
-      setWorkflowData(prev => ({
-        ...prev,
+      const newWorkflowData = {
+        ...workflowData,
         hotelName: calculation.hotelName || "",
         hotelUrl: calculation.hotelUrl || "",
         stars: calculation.stars || 0,
@@ -697,7 +708,10 @@ export default function Workflow() {
           marginPercentage: marginPercentage,
           discountPercentage: discountPercentage,
         }
-      }));
+      };
+      
+      console.log("🎯 Setting new workflow data:", newWorkflowData);
+      setWorkflowData(newWorkflowData);
       
       toast({
         title: "Calculation Loaded",
