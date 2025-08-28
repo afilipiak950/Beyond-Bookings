@@ -1961,8 +1961,8 @@ Return only valid JSON, no markdown or explanations.`;
             content: searchPrompt
           }
         ],
-        max_completion_tokens: 300,
-        temperature: 0.1
+        max_completion_tokens: 300
+        // GPT-5 only supports default temperature of 1
       });
 
       const response = completion.choices[0].message.content;
