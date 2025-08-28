@@ -2,6 +2,60 @@ import { db } from '../../db.js';
 import { sql } from 'drizzle-orm';
 import { executeDirectSQL } from './direct_sql.js';
 import { HotelContextManager } from '../hotel-context-manager.js';
+import { IntelligenceEnhancer } from '../intelligence-enhancer.js';
+
+// 🧠 Ultra-Intelligence Helper Functions
+function generateIntelligentSuggestions(query: string, data: any): string[] {
+  const suggestions = [];
+  const lowerQuery = query.toLowerCase();
+  
+  if (lowerQuery.includes('hotel') && data.hotels?.length > 0) {
+    suggestions.push(`Try searching for specific hotels: ${data.hotels.slice(0, 3).map((h: any) => h.name).join(', ')}`);
+  }
+  
+  if (lowerQuery.includes('calculation') && data.pricingCalculations?.length > 0) {
+    suggestions.push(`Found ${data.pricingCalculations.length} pricing calculations in database`);
+  }
+  
+  if (lowerQuery.includes('profit') || lowerQuery.includes('margin')) {
+    suggestions.push('Query profitability metrics with: SELECT AVG(profit_margin) FROM pricing_calculations');
+  }
+  
+  return suggestions;
+}
+
+function generateAlternativeQueries(originalQuery: string): string[] {
+  const alternatives = [];
+  const lower = originalQuery.toLowerCase();
+  
+  if (lower.includes('hotel')) {
+    alternatives.push('SELECT * FROM hotels ORDER BY stars DESC LIMIT 10');
+    alternatives.push('SELECT name, stars, city FROM hotels WHERE stars >= 4');
+  }
+  
+  if (lower.includes('calculation')) {
+    alternatives.push('SELECT * FROM pricing_calculations ORDER BY created_at DESC LIMIT 5');
+    alternatives.push('SELECT hotel_name, profit_margin FROM pricing_calculations ORDER BY profit_margin DESC');
+  }
+  
+  return alternatives;
+}
+
+function generateActionableInsights(data: any): string[] {
+  const insights = [];
+  
+  if (data.hotels?.length > 0) {
+    const fiveStars = data.hotels.filter((h: any) => h.stars === 5).length;
+    insights.push(`${fiveStars} luxury 5-star hotels available for premium calculations`);
+  }
+  
+  if (data.pricingCalculations?.length > 0) {
+    const avgMargin = data.businessMetrics?.avgProfitMargin || 0;
+    insights.push(`Average profit margin across calculations: ${avgMargin.toFixed(1)}%`);
+  }
+  
+  return insights;
+}
 
 export interface SqlQueryInput {
   query?: string;
@@ -518,14 +572,43 @@ export async function sql_query(input: SqlQueryInput | any): Promise<SqlQueryRes
         };
       } catch (fallbackError) {
         console.error('Fallback query failed:', fallbackError);
-        // Return original zero result but with helpful context
-        return {
-          rows: [],
-          rowCount: 0,
-          executedQuery,
-          took_ms,
-          error: 'Query returned no results - try alternative table/column names. Available: 10 hotels, 8 pricing calculations with profitability data.'
-        };
+        // 🧠 ULTRA-INTELLIGENCE: Provide comprehensive business intelligence for zero results
+        console.log('🔍 Zero results detected - activating ultra-intelligence fallback system');
+        
+        try {
+          const comprehensiveData = await IntelligenceEnhancer.getComprehensiveData(userId || 1);
+          const intelligentSuggestions = generateIntelligentSuggestions(originalQuery, comprehensiveData);
+          const alternativeQueries = generateAlternativeQueries(originalQuery);
+          const actionableInsights = generateActionableInsights(comprehensiveData);
+          
+          return {
+            rows: [],
+            rowCount: 0,
+            executedQuery,
+            took_ms,
+            ultraIntelligence: {
+              availableData: {
+                hotels: comprehensiveData.hotels?.length || 0,
+                calculations: comprehensiveData.pricingCalculations?.length || 0,
+                approvals: comprehensiveData.businessMetrics || {}
+              },
+              smartSuggestions: intelligentSuggestions,
+              alternativeQueries: alternativeQueries,
+              actionableInsights: actionableInsights,
+              comprehensiveData: comprehensiveData.comprehensiveData
+            },
+            error: `🚀 ULTRA-INTELLIGENT ANALYSIS: Query returned no results, but comprehensive business data available. ${intelligentSuggestions.join(', ')}`
+          };
+        } catch (enhancerError) {
+          console.error('🔥 Intelligence Enhancer failed:', enhancerError);
+          return {
+            rows: [],
+            rowCount: 0,
+            executedQuery,
+            took_ms,
+            error: 'Query returned no results - try alternative table/column names. Available: 10 hotels, 8 pricing calculations with profitability data.'
+          };
+        }
       }
     }
 
