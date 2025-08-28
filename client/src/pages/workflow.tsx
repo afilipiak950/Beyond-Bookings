@@ -1592,8 +1592,15 @@ export default function Workflow() {
   // Save calculation mutation with automatic cache invalidation
   const saveMutation = useMutation({
     mutationFn: async (calculationData: any) => {
-      const response = await fetch('/api/pricing-calculations', {
-        method: 'POST',
+      // Check if we're editing an existing calculation or creating a new one
+      const isEditing = calculationId && calculationId !== "new";
+      const url = isEditing ? `/api/pricing-calculations/${calculationId}` : '/api/pricing-calculations';
+      const method = isEditing ? 'PUT' : 'POST';
+      
+      console.log(`🔄 ${isEditing ? 'Updating' : 'Creating'} calculation with ${method} to ${url}`);
+      
+      const response = await fetch(url, {
+        method: method,
         headers: {
           'Content-Type': 'application/json',
         },

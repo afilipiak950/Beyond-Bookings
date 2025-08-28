@@ -2888,6 +2888,63 @@ Return only valid JSON, no markdown or explanations.`;
   });
 
   // Create new pricing calculation
+  // Update existing pricing calculation
+  app.put('/api/pricing-calculations/:id', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const calculationId = parseInt(req.params.id);
+      const userId = (req as any).user.id;
+      
+      console.log(`🔄 Updating pricing calculation ID: ${calculationId} for user: ${userId}`);
+      
+      // Validate that calculation exists and belongs to user
+      const existingCalculation = await storage.getPricingCalculation(calculationId, userId);
+      if (!existingCalculation) {
+        return res.status(404).json({ message: 'Calculation not found' });
+      }
+      
+      // Parse and validate the calculation data
+      const validatedData = insertPricingCalculationSchema.parse({
+        ...req.body,
+        userId // Ensure the user ID is set correctly
+      });
+      
+      console.log(`📝 Updating calculation with data:`, validatedData);
+      
+      // Update the calculation (storage method expects calculationId, userId, validatedData)
+      const updatedCalculation = await storage.updatePricingCalculation(calculationId, userId, validatedData);
+      
+      if (!updatedCalculation) {
+        return res.status(404).json({ message: 'Failed to update calculation' });
+      }
+      
+      console.log(`✅ Pricing calculation updated with ID: ${updatedCalculation.id}`);
+      console.log(`📊 Full updated calculation:`, JSON.stringify(updatedCalculation, null, 2));
+      console.log(`📤 Sending response:`, {
+        data: updatedCalculation,
+        success: true,
+        message: "Pricing calculation updated successfully"
+      });
+      
+      res.json({
+        data: updatedCalculation,
+        success: true,
+        message: "Pricing calculation updated successfully"
+      });
+    } catch (error) {
+      console.error('Error updating pricing calculation:', error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors 
+        });
+      }
+      res.status(500).json({ 
+        message: "Failed to update pricing calculation",
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   app.post('/api/pricing-calculations', requireAuth, async (req: Request, res: Response) => {
     try {
       const userId = (req as any).user.id;
