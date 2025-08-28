@@ -108,7 +108,7 @@ export default function Register() {
           <p className="text-gray-600">Register a new administrator for bebo convert</p>
         </div>
 
-        <Card className="glass-card">
+        <Card className="bg-white/80 backdrop-blur-sm border border-white/50 shadow-xl">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Shield className="h-5 w-5 text-blue-600" />
