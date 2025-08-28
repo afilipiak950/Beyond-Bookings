@@ -1668,8 +1668,8 @@ export default function Workflow() {
   // Save calculation function
   const saveCalculation = async () => {
     // Calculate required fields based on workflow data
-    const projectCosts = workflowData.projectCosts || 20000;
-    const stars = workflowData.stars || 3;
+    const projectCosts = workflowData.projectCosts || 0;
+    const stars = workflowData.stars || 0;
     const voucherValue = (workflowData.hotelVoucherValue && workflowData.hotelVoucherValue > 0) ? workflowData.hotelVoucherValue : (stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30);
     const roomCount = workflowData.roomCount || Math.round(projectCosts / voucherValue);
     const averagePrice = workflowData.averagePrice || 120;
@@ -3207,7 +3207,7 @@ export default function Workflow() {
                           const stars = workflowData.stars || 0;
                           const voucherValue = (workflowData.hotelVoucherValue && workflowData.hotelVoucherValue > 0) ? workflowData.hotelVoucherValue : (stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30);
                           const roomnights = Math.round(projectCosts / voucherValue);
-                          return roomnights > 0 ? roomnights.toLocaleString('de-DE') : '667';
+                          return roomnights.toLocaleString('de-DE');
                         })()}
                       </span>
                     </div>
@@ -3218,19 +3218,29 @@ export default function Workflow() {
                     <div className="text-[#1C5D97]/20 text-sm mb-2">Kostenvorteil gesamt</div>
                     <div className="text-2xl font-bold text-white mb-2">
                       {(() => {
-                        const projectCosts = workflowData.projectCosts || 20000;
-                        const stars = workflowData.stars || 3;
-                        const voucherValue = (workflowData.hotelVoucherValue && workflowData.hotelVoucherValue > 0) ? workflowData.hotelVoucherValue : (stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30);
-                        const roomnights = Math.round(projectCosts / voucherValue);
+                        const projectCosts = workflowData.projectCosts || 0;
+                        const voucherValue = workflowData.hotelVoucherValue || 0;
+                        const roomnights = voucherValue > 0 ? Math.round(projectCosts / voucherValue) : 0;
                         
-                        // Beyond Bookings real costs calculation
-                        const beyondBookingsCosts = roomnights * editableCosts.realCostPerVoucher;
-                        const steuerbelastung = editableCosts.taxBurden;
-                        const nettoKosten = projectCosts / (1 + editableCosts.vatRate19/100);
-                        const steuervorteil = nettoKosten * (editableCosts.vatRate19/100);
-                        const gesamtkosten = beyondBookingsCosts + steuerbelastung - steuervorteil;
+                        // Self-financed total cost
+                        const selfFinancedTotal = projectCosts;
                         
-                        const advantage = projectCosts - gesamtkosten;
+                        // Bebo convert total costs calculation
+                        const costs = roomnights * editableCosts.realCostPerVoucher;
+                        // Calculate tax burden based on splitting
+                        const amount7 = editableCosts.splitting7;
+                        const amount19 = voucherValue - editableCosts.splitting7;
+                        const vatRate7 = editableCosts.vatRate7;
+                        const vatRate19 = editableCosts.vatRate19;
+                        const mwst7 = roomnights * amount7 * (vatRate7/100);
+                        const mwst19 = roomnights * amount19 * (vatRate19/100);
+                        const totalAt7Percent = roomnights * voucherValue * (vatRate7/100);
+                        const actualTax = mwst7 + mwst19;
+                        const steuerbelastung = actualTax - totalAt7Percent;
+                        const steuervorteil = mwst7 + mwst19;
+                        const beboConvertTotal = costs + steuerbelastung - steuervorteil;
+                        
+                        const advantage = selfFinancedTotal - beboConvertTotal;
                         return advantage.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' ' + getCurrencySymbol(workflowData.currency);
                       })()}
                     </div>
@@ -3258,7 +3268,7 @@ export default function Workflow() {
                     <div className="text-sm text-gray-600 mb-1">Kosten Netto</div>
                     <div className="text-2xl font-bold text-gray-900">
                       {(() => {
-                        const projectCosts = workflowData.projectCosts || 20000;
+                        const projectCosts = workflowData.projectCosts || 0;
                         const nettoKosten = projectCosts / (1 + editableCosts.vatRate19/100);
                         return nettoKosten.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' ' + getCurrencySymbol(workflowData.currency);
                       })()}
@@ -3280,7 +3290,7 @@ export default function Workflow() {
                     </div>
                     <div className="text-lg font-semibold text-gray-900">
                       {(() => {
-                        const projectCosts = workflowData.projectCosts || 20000;
+                        const projectCosts = workflowData.projectCosts || 0;
                         const nettoKosten = projectCosts / (1 + editableCosts.vatRate19/100);
                         const mwst19 = nettoKosten * (editableCosts.vatRate19/100);
                         return mwst19.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' ' + getCurrencySymbol(workflowData.currency);
@@ -3293,7 +3303,7 @@ export default function Workflow() {
                     <div className="text-white/70 text-sm mb-2">Kosten brutto</div>
                     <div className="text-2xl font-bold text-white mb-2">
                       {(() => {
-                        const projectCosts = workflowData.projectCosts || 20000;
+                        const projectCosts = workflowData.projectCosts || 0;
                         return projectCosts.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' ' + getCurrencySymbol(workflowData.currency);
                       })()}
                     </div>
@@ -3318,17 +3328,16 @@ export default function Workflow() {
                     <div className="text-sm text-gray-600 mb-1">Gutschein-Verkauf</div>
                     <div className="text-2xl font-bold text-gray-900">
                       {(() => {
-                        const projectCosts = workflowData.projectCosts || 20000;
-                        const stars = workflowData.stars || 3;
-                        const voucherValue = (workflowData.hotelVoucherValue && workflowData.hotelVoucherValue > 0) ? workflowData.hotelVoucherValue : (stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30);
-                        const roomnights = Math.round(projectCosts / voucherValue);
-                        return `${roomnights} Gutscheine × ${convertFromEURLocal(voucherValue, workflowData.currency).toFixed(2)} ${getCurrencySymbol(workflowData.currency)}`;
+                        const projectCosts = workflowData.projectCosts || 0;
+                        const voucherValue = workflowData.hotelVoucherValue || 0;
+                        const roomnights = voucherValue > 0 ? Math.round(projectCosts / voucherValue) : 0;
+                        return `${roomnights} Gutscheine × ${voucherValue.toFixed(2)} ${getCurrencySymbol(workflowData.currency)}`;
                       })()}
                     </div>
                     <div className="text-lg font-semibold text-gray-900 mt-1">
                       {(() => {
-                        const projectCosts = workflowData.projectCosts || 20000;
-                        const stars = workflowData.stars || 3;
+                        const projectCosts = workflowData.projectCosts || 0;
+                        const stars = workflowData.stars || 0;
                         const voucherValue = (workflowData.hotelVoucherValue && workflowData.hotelVoucherValue > 0) ? workflowData.hotelVoucherValue : (stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30);
                         const roomnights = Math.round(projectCosts / voucherValue);
                         const totalValue = roomnights * voucherValue;
@@ -3380,8 +3389,8 @@ export default function Workflow() {
                       </div>
                       <div className="text-lg font-semibold text-gray-900">
                         {(() => {
-                          const projectCosts = workflowData.projectCosts || 20000;
-                          const stars = workflowData.stars || 3;
+                          const projectCosts = workflowData.projectCosts || 0;
+                          const stars = workflowData.stars || 0;
                           const voucherValue = (workflowData.hotelVoucherValue && workflowData.hotelVoucherValue > 0) ? workflowData.hotelVoucherValue : (stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30);
                           const roomnights = Math.round(projectCosts / voucherValue);
                           const amount7 = editableCosts.splitting7;
@@ -3404,8 +3413,8 @@ export default function Workflow() {
                       </div>
                       <div className="text-lg font-semibold text-gray-900">
                         {(() => {
-                          const projectCosts = workflowData.projectCosts || 20000;
-                          const stars = workflowData.stars || 3;
+                          const projectCosts = workflowData.projectCosts || 0;
+                          const stars = workflowData.stars || 0;
                           const voucherValue = (workflowData.hotelVoucherValue && workflowData.hotelVoucherValue > 0) ? workflowData.hotelVoucherValue : (stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30);
                           const roomnights = Math.round(projectCosts / voucherValue);
                           const amount19 = voucherValue - editableCosts.splitting7;
@@ -3422,8 +3431,8 @@ export default function Workflow() {
                       <span className="text-sm font-medium text-[#36B197]">Reale Kosten pro Gutschein</span>
                       <span className="text-lg font-semibold text-[#36B197]">
                         {convertFromEURLocal(editableCosts.realCostPerVoucher, workflowData.currency).toFixed(2)}{getCurrencySymbol(workflowData.currency)} × {(() => {
-                          const projectCosts = workflowData.projectCosts || 20000;
-                          const stars = workflowData.stars || 3;
+                          const projectCosts = workflowData.projectCosts || 0;
+                          const stars = workflowData.stars || 0;
                           const voucherValue = (workflowData.hotelVoucherValue && workflowData.hotelVoucherValue > 0) ? workflowData.hotelVoucherValue : (stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30);
                           return Math.round(projectCosts / voucherValue);
                         })()}
@@ -3434,8 +3443,8 @@ export default function Workflow() {
                       <span className="text-sm font-medium text-gray-700">Steuerbelastung</span>
                       <span className="text-lg font-semibold text-gray-900">
                         {(() => {
-                          const projectCosts = workflowData.projectCosts || 20000;
-                          const stars = workflowData.stars || 3;
+                          const projectCosts = workflowData.projectCosts || 0;
+                          const stars = workflowData.stars || 0;
                           const voucherValue = (workflowData.hotelVoucherValue && workflowData.hotelVoucherValue > 0) ? workflowData.hotelVoucherValue : (stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30);
                           const roomnights = Math.round(projectCosts / voucherValue);
                           // Calculate tax burden based on splitting - typically the difference between 7% and 19% VAT
@@ -3456,8 +3465,8 @@ export default function Workflow() {
                       <span className="text-sm font-medium text-[#36B197]">Steuervorteil</span>
                       <span className="text-lg font-semibold text-[#36B197]">
                         {(() => {
-                          const projectCosts = workflowData.projectCosts || 20000;
-                          const stars = workflowData.stars || 3;
+                          const projectCosts = workflowData.projectCosts || 0;
+                          const stars = workflowData.stars || 0;
                           const voucherValue = (workflowData.hotelVoucherValue && workflowData.hotelVoucherValue > 0) ? workflowData.hotelVoucherValue : (stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30);
                           const roomnights = Math.round(projectCosts / voucherValue);
                           // Calculate VAT amounts based on splitting
@@ -3477,8 +3486,8 @@ export default function Workflow() {
                     <div className="text-white/70 text-sm mb-2">Gesamtkosten</div>
                     <div className="text-2xl font-bold text-white mb-2">
                       {(() => {
-                        const projectCosts = workflowData.projectCosts || 20000;
-                        const stars = workflowData.stars || 3;
+                        const projectCosts = workflowData.projectCosts || 0;
+                        const stars = workflowData.stars || 0;
                         const voucherValue = (workflowData.hotelVoucherValue && workflowData.hotelVoucherValue > 0) ? workflowData.hotelVoucherValue : (stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30);
                         const roomnights = Math.round(projectCosts / voucherValue);
                         const costs = roomnights * editableCosts.realCostPerVoucher;
