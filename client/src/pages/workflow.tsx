@@ -3449,9 +3449,16 @@ export default function Workflow() {
                       <span className="text-lg font-semibold text-[#36B197]">
                         {(() => {
                           const projectCosts = workflowData.projectCosts || 20000;
-                          const nettoKosten = projectCosts / (1 + editableCosts.vatRate19/100);
-                          const mwst19 = nettoKosten * (editableCosts.vatRate19/100);
-                          return '- ' + mwst19.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' ' + getCurrencySymbol(workflowData.currency);
+                          const stars = workflowData.stars || 3;
+                          const voucherValue = (workflowData.hotelVoucherValue && workflowData.hotelVoucherValue > 0) ? workflowData.hotelVoucherValue : (stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30);
+                          const roomnights = Math.round(projectCosts / voucherValue);
+                          // Calculate VAT amounts based on splitting
+                          const amount7 = editableCosts.splitting7;
+                          const amount19 = voucherValue - editableCosts.splitting7;
+                          const mwst7 = roomnights * amount7 * (editableCosts.vatRate7/100);
+                          const mwst19 = roomnights * amount19 * (editableCosts.vatRate19/100);
+                          const totalVATAdvantage = mwst7 + mwst19;
+                          return '- ' + totalVATAdvantage.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' ' + getCurrencySymbol(workflowData.currency);
                         })()}
                       </span>
                     </div>
@@ -3468,8 +3475,12 @@ export default function Workflow() {
                         const roomnights = Math.round(projectCosts / voucherValue);
                         const costs = roomnights * editableCosts.realCostPerVoucher;
                         const steuerbelastung = editableCosts.taxBurden;
-                        const nettoKosten = projectCosts / (1 + editableCosts.vatRate19/100);
-                        const steuervorteil = nettoKosten * (editableCosts.vatRate19/100);
+                        // Calculate VAT advantage based on splitting
+                        const amount7 = editableCosts.splitting7;
+                        const amount19 = voucherValue - editableCosts.splitting7;
+                        const mwst7 = roomnights * amount7 * (editableCosts.vatRate7/100);
+                        const mwst19 = roomnights * amount19 * (editableCosts.vatRate19/100);
+                        const steuervorteil = mwst7 + mwst19;
                         const gesamtkosten = costs + steuerbelastung - steuervorteil;
                         return gesamtkosten.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' ' + getCurrencySymbol(workflowData.currency);
                       })()}
