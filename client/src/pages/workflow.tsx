@@ -3582,16 +3582,16 @@ export default function Workflow() {
                     <div className="space-y-3">
                       <div className="flex justify-between items-center p-3 bg-slate-50/70 rounded-xl">
                         <span className="text-slate-600">Lieferanten Rechnung Brutto</span>
-                        <span className="font-bold text-slate-800">{workflowData.projectCosts?.toLocaleString('de-DE') || '30.000,00'} {getCurrencySymbol(workflowData.currency)}</span>
+                        <span className="font-bold text-slate-800">{(workflowData.projectCosts || 0).toLocaleString('de-DE')} {getCurrencySymbol(workflowData.currency)}</span>
                       </div>
                       <div className="flex justify-between items-center p-3 bg-slate-50/70 rounded-xl">
                         <span className="text-slate-600">MwSt. 19%</span>
-                        <span className="font-bold text-slate-800">{((workflowData.projectCosts || 30000) * 0.19).toLocaleString('de-DE')} {getCurrencySymbol(workflowData.currency)}</span>
+                        <span className="font-bold text-slate-800">{((workflowData.projectCosts || 0) * 0.19).toLocaleString('de-DE')} {getCurrencySymbol(workflowData.currency)}</span>
                       </div>
                       <div className="w-full h-0.5 bg-gradient-to-r from-slate-300 to-slate-400 rounded-full"></div>
                       <div className="flex justify-between items-center p-3 bg-gradient-to-r from-blue-50 to-teal-50 rounded-xl border border-blue-200/40">
                         <span className="font-bold text-slate-700">Kosten netto</span>
-                        <span className="font-bold text-blue-600 text-xl">{((workflowData.projectCosts || 30000) * 1.19).toLocaleString('de-DE')} {getCurrencySymbol(workflowData.currency)}</span>
+                        <span className="font-bold text-blue-600 text-xl">{((workflowData.projectCosts || 0) + (workflowData.projectCosts || 0) * 0.19).toLocaleString('de-DE')} {getCurrencySymbol(workflowData.currency)}</span>
                       </div>
                     </div>
                   </div>
@@ -3615,11 +3615,11 @@ export default function Workflow() {
                             <span className="text-white text-sm font-bold">1</span>
                           </div>
                           <span className="font-semibold text-blue-700">Du erhältst Deine Lieferantenrechnung in Höhe von</span>
-                          <span className="font-bold text-blue-800 ml-2">{workflowData.projectCosts?.toLocaleString('de-DE') || '30.000,00'} {getCurrencySymbol(workflowData.currency)}</span>
+                          <span className="font-bold text-blue-800 ml-2">{(workflowData.projectCosts || 0).toLocaleString('de-DE')} {getCurrencySymbol(workflowData.currency)}</span>
                         </div>
                         <ul className="text-sm text-slate-600 ml-8 space-y-1">
                           <li>• Du bist weiterhin vertragsberechtigt 19%</li>
-                          <li className="text-blue-600 font-semibold">{((workflowData.projectCosts || 30000) * 0.19).toLocaleString('de-DE')} {getCurrencySymbol(workflowData.currency)} (R)</li>
+                          <li className="text-blue-600 font-semibold">{((workflowData.projectCosts || 0) * 0.19).toLocaleString('de-DE')} {getCurrencySymbol(workflowData.currency)} (R)</li>
                         </ul>
                       </div>
 
@@ -3634,12 +3634,39 @@ export default function Workflow() {
                           <span className="font-semibold text-blue-700 ml-1">Zimmer ab</span>
                         </div>
                         <ul className="text-sm text-slate-600 ml-8 space-y-1">
-                          <li>• <span className="font-semibold">{workflowData.roomCount || 857}</span> Gutscheine (ca. 5% Deiner jährlichen Leistung)</li>
-                          <li className="text-green-600 font-semibold">{convertFromEURLocal(workflowData.hotelVoucherValue || 35, workflowData.currency).toFixed(2)} {getCurrencySymbol(workflowData.currency)}</li>
-                          <li>• davon MwSt. 7% bei Erteilung vor Ort</li>
-                          <li className="text-blue-600 font-semibold">{(convertFromEURLocal(workflowData.hotelVoucherValue || 35, workflowData.currency) * 0.07).toFixed(2)} {getCurrencySymbol(workflowData.currency)} (R)</li>
-                          <li>• Erm. 19% für Frühstück (ca nach Setting /or {convertFromEURLocal(3, workflowData.currency).toFixed(2)} {getCurrencySymbol(workflowData.currency)})</li>
-                          <li className="text-red-600 font-semibold">{(convertFromEURLocal(workflowData.hotelVoucherValue || 35, workflowData.currency) * 0.19).toFixed(2)} {getCurrencySymbol(workflowData.currency)} (R)</li>
+                          <li>• <span className="font-semibold">{(() => {
+                            const projectCosts = workflowData.projectCosts || 0;
+                            const voucherValue = workflowData.hotelVoucherValue || 0;
+                            return voucherValue > 0 ? Math.round(projectCosts / voucherValue) : 0;
+                          })()}</span> Gutscheine (ca. 5% Deiner jährlichen Leistung)</li>
+                          <li className="text-green-600 font-semibold">{(workflowData.hotelVoucherValue || 0).toFixed(2)} {getCurrencySymbol(workflowData.currency)}</li>
+                          <li>• davon MwSt. 7% bei Erteilung vor Ort: {(() => {
+                            const amount7 = editableCosts.splitting7 || 0;
+                            return amount7.toFixed(2);
+                          })()} {getCurrencySymbol(workflowData.currency)}</li>
+                          <li className="text-blue-600 font-semibold">{(() => {
+                            const projectCosts = workflowData.projectCosts || 0;
+                            const voucherValue = workflowData.hotelVoucherValue || 0;
+                            const roomnights = voucherValue > 0 ? Math.round(projectCosts / voucherValue) : 0;
+                            const amount7 = editableCosts.splitting7 || 0;
+                            const vatRate7 = editableCosts.vatRate7 || 7;
+                            return (roomnights * amount7 * (vatRate7/100)).toFixed(2);
+                          })()} {getCurrencySymbol(workflowData.currency)} (R)</li>
+                          <li>• Erm. 19% für Frühstück: {(() => {
+                            const voucherValue = workflowData.hotelVoucherValue || 0;
+                            const amount7 = editableCosts.splitting7 || 0;
+                            const amount19 = voucherValue - amount7;
+                            return amount19.toFixed(2);
+                          })()} {getCurrencySymbol(workflowData.currency)}</li>
+                          <li className="text-red-600 font-semibold">{(() => {
+                            const projectCosts = workflowData.projectCosts || 0;
+                            const voucherValue = workflowData.hotelVoucherValue || 0;
+                            const roomnights = voucherValue > 0 ? Math.round(projectCosts / voucherValue) : 0;
+                            const amount7 = editableCosts.splitting7 || 0;
+                            const amount19 = voucherValue - amount7;
+                            const vatRate19 = editableCosts.vatRate19 || 19;
+                            return (roomnights * amount19 * (vatRate19/100)).toFixed(2);
+                          })()} {getCurrencySymbol(workflowData.currency)} (R)</li>
                         </ul>
                       </div>
 
@@ -3658,21 +3685,75 @@ export default function Workflow() {
                         <h3 className="text-lg font-bold text-blue-700 mb-3">Deine Kosten:</h3>
                         <div className="space-y-2">
                           <div className="flex justify-between items-center">
-                            <span className="text-slate-600">{convertFromEURLocal(20, workflowData.currency).toFixed(2)} {getCurrencySymbol(workflowData.currency)} (s) Gutschein² × {workflowData.roomCount || 857} RoomNights</span>
-                            <span className="font-bold text-slate-800">{((workflowData.roomCount || 857) * convertFromEURLocal(20, workflowData.currency)).toLocaleString('de-DE')} {getCurrencySymbol(workflowData.currency)}</span>
+                            <span className="text-slate-600">{(editableCosts.realCostPerVoucher || 0).toFixed(2)} {getCurrencySymbol(workflowData.currency)} (s) Gutschein² × {(() => {
+                              const projectCosts = workflowData.projectCosts || 0;
+                              const voucherValue = workflowData.hotelVoucherValue || 0;
+                              return voucherValue > 0 ? Math.round(projectCosts / voucherValue) : 0;
+                            })()} RoomNights</span>
+                            <span className="font-bold text-slate-800">{(() => {
+                              const projectCosts = workflowData.projectCosts || 0;
+                              const voucherValue = workflowData.hotelVoucherValue || 0;
+                              const roomnights = voucherValue > 0 ? Math.round(projectCosts / voucherValue) : 0;
+                              const realCost = editableCosts.realCostPerVoucher || 0;
+                              return (roomnights * realCost).toLocaleString('de-DE');
+                            })()} {getCurrencySymbol(workflowData.currency)}</span>
                           </div>
                           <div className="flex justify-between items-center text-red-600">
                             <span>(e) Steuerbelastung bei Gutscheineinlösung</span>
-                            <span className="font-bold">{((workflowData.roomCount || 857) * convertFromEURLocal(2.61, workflowData.currency)).toLocaleString('de-DE')} {getCurrencySymbol(workflowData.currency)}</span>
+                            <span className="font-bold">{(() => {
+                              const projectCosts = workflowData.projectCosts || 0;
+                              const voucherValue = workflowData.hotelVoucherValue || 0;
+                              const roomnights = voucherValue > 0 ? Math.round(projectCosts / voucherValue) : 0;
+                              const amount7 = editableCosts.splitting7 || 0;
+                              const amount19 = voucherValue - amount7;
+                              const vatRate7 = editableCosts.vatRate7 || 7;
+                              const vatRate19 = editableCosts.vatRate19 || 19;
+                              const mwst7 = roomnights * amount7 * (vatRate7/100);
+                              const mwst19 = roomnights * amount19 * (vatRate19/100);
+                              const totalAt7Percent = roomnights * voucherValue * (vatRate7/100);
+                              const actualTax = mwst7 + mwst19;
+                              const taxBurden = actualTax - totalAt7Percent;
+                              return taxBurden.toLocaleString('de-DE');
+                            })()} {getCurrencySymbol(workflowData.currency)}</span>
                           </div>
                           <div className="flex justify-between items-center text-green-600">
                             <span>(e) Umsatzsteuerklärung 19%</span>
-                            <span className="font-bold">- {((workflowData.roomCount || 857) * convertFromEURLocal(4.78, workflowData.currency)).toLocaleString('de-DE')} {getCurrencySymbol(workflowData.currency)}</span>
+                            <span className="font-bold">- {(() => {
+                              const projectCosts = workflowData.projectCosts || 0;
+                              const voucherValue = workflowData.hotelVoucherValue || 0;
+                              const roomnights = voucherValue > 0 ? Math.round(projectCosts / voucherValue) : 0;
+                              const amount7 = editableCosts.splitting7 || 0;
+                              const amount19 = voucherValue - amount7;
+                              const vatRate7 = editableCosts.vatRate7 || 7;
+                              const vatRate19 = editableCosts.vatRate19 || 19;
+                              const mwst7 = roomnights * amount7 * (vatRate7/100);
+                              const mwst19 = roomnights * amount19 * (vatRate19/100);
+                              return (mwst7 + mwst19).toLocaleString('de-DE');
+                            })()} {getCurrencySymbol(workflowData.currency)}</span>
                           </div>
                           <div className="w-full h-0.5 bg-gradient-to-r from-blue-300 to-teal-300 rounded-full"></div>
                           <div className="flex justify-between items-center p-3 bg-gradient-to-r from-blue-100 to-teal-100 rounded-xl">
                             <span className="font-bold text-blue-700 text-lg">Gesamtkosten</span>
-                            <span className="font-bold text-blue-800 text-xl">{((workflowData.roomCount || 857) * (convertFromEURLocal(20, workflowData.currency) + convertFromEURLocal(2.61, workflowData.currency) - convertFromEURLocal(4.78, workflowData.currency))).toLocaleString('de-DE')} {getCurrencySymbol(workflowData.currency)}</span>
+                            <span className="font-bold text-blue-800 text-xl">{(() => {
+                              const projectCosts = workflowData.projectCosts || 0;
+                              const voucherValue = workflowData.hotelVoucherValue || 0;
+                              const roomnights = voucherValue > 0 ? Math.round(projectCosts / voucherValue) : 0;
+                              const realCost = editableCosts.realCostPerVoucher || 0;
+                              const costs = roomnights * realCost;
+                              // Calculate tax burden
+                              const amount7 = editableCosts.splitting7 || 0;
+                              const amount19 = voucherValue - amount7;
+                              const vatRate7 = editableCosts.vatRate7 || 7;
+                              const vatRate19 = editableCosts.vatRate19 || 19;
+                              const mwst7 = roomnights * amount7 * (vatRate7/100);
+                              const mwst19 = roomnights * amount19 * (vatRate19/100);
+                              const totalAt7Percent = roomnights * voucherValue * (vatRate7/100);
+                              const actualTax = mwst7 + mwst19;
+                              const taxBurden = actualTax - totalAt7Percent;
+                              const taxAdvantage = mwst7 + mwst19;
+                              const totalCosts = costs + taxBurden - taxAdvantage;
+                              return totalCosts.toLocaleString('de-DE');
+                            })()} {getCurrencySymbol(workflowData.currency)}</span>
                           </div>
                         </div>
                       </div>
@@ -3686,7 +3767,29 @@ export default function Workflow() {
                     <h2 className="text-xl font-bold text-teal-700 mb-4">Ihr Kostenvorteil:</h2>
                     <div className="text-center mb-6">
                       <div className="text-4xl font-bold text-teal-600 bg-white/70 rounded-xl p-4 shadow-inner">
-                        {convertFromEURLocal(((workflowData.projectCosts || 30000) * 1.19 - (workflowData.roomCount || 857) * 17.83), workflowData.currency).toLocaleString('de-DE')} {getCurrencySymbol(workflowData.currency)} 
+                        {(() => {
+                          const projectCosts = workflowData.projectCosts || 0;
+                          const voucherValue = workflowData.hotelVoucherValue || 0;
+                          const roomnights = voucherValue > 0 ? Math.round(projectCosts / voucherValue) : 0;
+                          const realCost = editableCosts.realCostPerVoucher || 0;
+                          // Self-financed total costs
+                          const selfFinancedCosts = projectCosts + (projectCosts * 0.19);
+                          // Bebo convert total costs (from calculation above)
+                          const amount7 = editableCosts.splitting7 || 0;
+                          const amount19 = voucherValue - amount7;
+                          const vatRate7 = editableCosts.vatRate7 || 7;
+                          const vatRate19 = editableCosts.vatRate19 || 19;
+                          const costs = roomnights * realCost;
+                          const mwst7 = roomnights * amount7 * (vatRate7/100);
+                          const mwst19 = roomnights * amount19 * (vatRate19/100);
+                          const totalAt7Percent = roomnights * voucherValue * (vatRate7/100);
+                          const actualTax = mwst7 + mwst19;
+                          const taxBurden = actualTax - totalAt7Percent;
+                          const taxAdvantage = mwst7 + mwst19;
+                          const beboConvertCosts = costs + taxBurden - taxAdvantage;
+                          const costAdvantage = selfFinancedCosts - beboConvertCosts;
+                          return costAdvantage.toLocaleString('de-DE');
+                        })()} {getCurrencySymbol(workflowData.currency)} 
                         <span className="text-lg text-teal-500 ml-2">= -XX%</span>
                       </div>
                     </div>
