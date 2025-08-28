@@ -33,6 +33,11 @@ export default function CustomerManagement() {
   const [extractedData, setExtractedData] = useState<any>(null);
   const [extractionLoading, setExtractionLoading] = useState(false);
   
+  // Review search states for hotel extraction
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [extractedReviews, setExtractedReviews] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState("basic-data");
+  
   // AI enrichment state
   const [aiEnrichment, setAiEnrichment] = useState<{
     roomCount?: { value: number; source: string; confidence: 'Low' | 'Medium' | 'High'; sources: any[] };
@@ -445,6 +450,8 @@ export default function CustomerManagement() {
       setHotelName("");
       setHotelUrl("");
       setExtractedData(null);
+      setExtractedReviews(null);
+      setActiveTab("basic-data");
       setAiEnrichment({});
       setUserEditedFields(new Set());
       setEnrichmentLoading({});
@@ -525,6 +532,54 @@ export default function CustomerManagement() {
     }
   };
 
+  // Handle review search
+  const handleSearchReviews = async () => {
+    if (!hotelName.trim()) {
+      toast({
+        title: "Hotel name required",
+        description: "Bitte geben Sie einen Hotelnamen ein",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setReviewsLoading(true);
+    try {
+      const response = await fetch('/api/hotels/search-reviews', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          hotelName: hotelName.trim(),
+          location: extractedData?.location || ""
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to search reviews');
+      }
+
+      const reviewData = await response.json();
+      setExtractedReviews(reviewData.reviews);
+      
+      toast({
+        title: "Reviews gefunden",
+        description: `${reviewData.reviews.totalReviewCount} Reviews von 4 Plattformen gefunden`,
+      });
+
+    } catch (error) {
+      console.error('Review search error:', error);
+      toast({
+        title: "Fehler",
+        description: "Review-Suche fehlgeschlagen",
+        variant: "destructive"
+      });
+    } finally {
+      setReviewsLoading(false);
+    }
+  };
+
   // Handle hotel creation
   const handleCreateHotel = () => {
     if (!extractedData) {
@@ -536,7 +591,18 @@ export default function CustomerManagement() {
       return;
     }
 
-    createHotelMutation.mutate(extractedData);
+    // Include review data if available
+    const hotelDataWithReviews = {
+      ...extractedData,
+      bookingReviews: extractedReviews?.bookingReviews || null,
+      googleReviews: extractedReviews?.googleReviews || null,
+      holidayCheckReviews: extractedReviews?.holidayCheckReviews || null,
+      tripadvisorReviews: extractedReviews?.tripadvisorReviews || null,
+      reviewSummary: extractedReviews?.reviewSummary || null,
+      lastReviewUpdate: extractedReviews?.lastReviewUpdate || null,
+    };
+    
+    createHotelMutation.mutate(hotelDataWithReviews);
   };
 
   // Handle hotel deletion
@@ -726,550 +792,282 @@ export default function CustomerManagement() {
                 Add Hotel
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px]">
+            <DialogContent className="sm:max-w-5xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Add New Hotel</DialogTitle>
+                <DialogTitle className="flex items-center gap-2">
+                  <Globe className="h-5 w-5 text-blue-600" />
+                  Hotel Daten & Reviews Extrahieren
+                </DialogTitle>
                 <DialogDescription>
-                  Enter the hotel name and we'll automatically extract all the details
+                  Extrahieren Sie automatisch Hoteldaten und Reviews von 4 Plattformen
                 </DialogDescription>
               </DialogHeader>
               
-              <div className="space-y-6">
-                {/* Hotel Name Input */}
-                <div className="space-y-2">
-                  <Label htmlFor="hotelName">Hotel Name *</Label>
-                  <Input
-                    id="hotelName"
-                    value={hotelName}
-                    onChange={(e) => setHotelName(e.target.value)}
-                    placeholder="e.g., Hotel Adlon Berlin, Marriott Frankfurt"
-                    className="w-full"
-                  />
-                </div>
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="basic-data">Grunddaten</TabsTrigger>
+                  <TabsTrigger value="reviews">Reviews & Bewertungen</TabsTrigger>
+                </TabsList>
 
-                {/* Optional URL Input */}
-                <div className="space-y-2">
-                  <Label htmlFor="hotelUrl">Hotel Website (Optional)</Label>
-                  <Input
-                    id="hotelUrl"
-                    value={hotelUrl}
-                    onChange={(e) => setHotelUrl(e.target.value)}
-                    placeholder="https://hotel-website.com"
-                    className="w-full"
-                  />
-                </div>
-
-                {/* Extract Data Button */}
-                <div className="flex justify-center">
-                  <Button
-                    onClick={handleExtractData}
-                    disabled={extractionLoading || !hotelName.trim()}
-                    className="bg-gradient-to-r from-blue-500 to-green-500 hover:from-blue-600 hover:to-green-600 text-white px-8"
-                  >
-                    {extractionLoading ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2" />
-                        Extracting Data...
-                      </>
-                    ) : (
-                      <>
-                        <Globe className="h-4 w-4 mr-2" />
-                        Extract Hotel Data
-                      </>
-                    )}
-                  </Button>
-                </div>
-
-                {/* Extracted Data Display - Tabbed Interface */}
-                {extractedData && (
-                  <div className="mt-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200">
-                    <h3 className="font-semibold text-green-800 mb-4 flex items-center">
-                      <Star className="h-4 w-4 mr-2" />
-                      Hotel Information (Editable)
-                    </h3>
-                    
-                    <Tabs defaultValue="hotel-info" className="w-full">
-                      <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="hotel-info">Hotel Details</TabsTrigger>
-                        <TabsTrigger value="reviews">Reviews & Ratings</TabsTrigger>
-                      </TabsList>
-                      
-                      <TabsContent value="hotel-info" className="mt-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="editName">Hotel Name</Label>
-                        <Input
-                          id="editName"
-                          value={extractedData.name}
-                          onChange={(e) => setExtractedData({...extractedData, name: e.target.value})}
-                          className="mt-1"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="editLocation">Location</Label>
-                        <Input
-                          id="editLocation"
-                          value={extractedData.location || ''}
-                          onChange={(e) => setExtractedData({...extractedData, location: e.target.value})}
-                          className="mt-1"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="editStars">Stars</Label>
-                        <Input
-                          id="editStars"
-                          type="number"
-                          min="1"
-                          max="5"
-                          value={extractedData.stars || ''}
-                          onChange={(e) => setExtractedData({...extractedData, stars: parseInt(e.target.value) || 0})}
-                          className="mt-1"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="editRoomCount" className="flex items-center gap-2">
-                          Room Count
-                          {aiEnrichment.roomCount && aiEnrichment.roomCount.value !== null && (
-                            <Badge variant="secondary" className="text-xs">
-                              <Bot className="h-3 w-3 mr-1" />
-                              AI
-                            </Badge>
-                          )}
-                          {aiEnrichment.roomCount && aiEnrichment.roomCount.value !== null && (
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <Button variant="ghost" size="sm" className="h-5 w-5 p-0">
-                                  <Eye className="h-3 w-3" />
-                                </Button>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-80">
-                                <div className="space-y-2">
-                                  <div className="flex items-center gap-2">
-                                    <Badge variant={
-                                      aiEnrichment.roomCount.confidence === 'High' ? 'default' :
-                                      aiEnrichment.roomCount.confidence === 'Medium' ? 'secondary' : 'outline'
-                                    }>
-                                      {aiEnrichment.roomCount.confidence} Confidence
-                                    </Badge>
-                                  </div>
-                                  <p className="text-sm text-muted-foreground">
-                                    Source: {aiEnrichment.roomCount.source}
-                                  </p>
-                                  {aiEnrichment.roomCount.sources?.length > 0 && (
-                                    <div className="space-y-1">
-                                      <p className="text-xs font-medium">Sources:</p>
-                                      {aiEnrichment.roomCount.sources.slice(0, 3).map((source, idx) => (
-                                        <div key={idx} className="text-xs">
-                                          <a href={source.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                                            {source.title}
-                                          </a>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  )}
-                                </div>
-                              </PopoverContent>
-                            </Popover>
-                          )}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-5 w-5 p-0"
-                            onClick={() => extractedData?.name && runAIEnrichment('roomCount', extractedData.name, extractedData.location)}
-                            disabled={enrichmentLoading.roomCount || !extractedData?.name}
-                          >
-                            {enrichmentLoading.roomCount ? (
-                              <Loader2 className="h-3 w-3 animate-spin" />
-                            ) : (
-                              <RefreshCw className="h-3 w-3" />
-                            )}
-                          </Button>
-                        </Label>
-                        <Input
-                          id="editRoomCount"
-                          type="number"
-                          value={extractedData.roomCount || ''}
-                          onChange={(e) => handleFieldChange('roomCount', parseInt(e.target.value) || 0)}
-                          className="mt-1"
-                          placeholder={
-                            aiEnrichment.roomCount?.value 
-                              ? "AI-Recherche verfügbar" 
-                              : aiEnrichment.roomCount?.value === null
-                                ? "Keine verlässlichen Daten gefunden"
-                                : "Anzahl wird automatisch recherchiert"
-                          }
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="editCategory">Category</Label>
-                        <Input
-                          id="editCategory"
-                          value={extractedData.category || ''}
-                          onChange={(e) => setExtractedData({...extractedData, category: e.target.value})}
-                          className="mt-1"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="editUrl">Website URL</Label>
-                        <Input
-                          id="editUrl"
-                          value={extractedData.url || ''}
-                          onChange={(e) => setExtractedData({...extractedData, url: e.target.value})}
-                          className="mt-1"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="editAveragePrice" className="flex items-center gap-2">
-                          Durchschnittlicher Zimmerpreis (€)
-                          {aiEnrichment.averagePrice && aiEnrichment.averagePrice.value !== null && (
-                            <Badge variant="secondary" className="text-xs">
-                              <Bot className="h-3 w-3 mr-1" />
-                              AI
-                            </Badge>
-                          )}
-                          {aiEnrichment.averagePrice && aiEnrichment.averagePrice.value !== null && (
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <Button variant="ghost" size="sm" className="h-5 w-5 p-0">
-                                  <Eye className="h-3 w-3" />
-                                </Button>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-80">
-                                <div className="space-y-2">
-                                  <div className="flex items-center gap-2">
-                                    <Badge variant={
-                                      aiEnrichment.averagePrice.confidence === 'High' ? 'default' :
-                                      aiEnrichment.averagePrice.confidence === 'Medium' ? 'secondary' : 'outline'
-                                    }>
-                                      {aiEnrichment.averagePrice.confidence} Confidence
-                                    </Badge>
-                                    <span className="text-sm font-medium">
-                                      {formatPrice(aiEnrichment.averagePrice.value)}
-                                    </span>
-                                  </div>
-                                  <p className="text-sm text-muted-foreground">
-                                    12-Monats-Durchschnitt
-                                  </p>
-                                  <p className="text-sm text-muted-foreground">
-                                    Source: {aiEnrichment.averagePrice.source}
-                                  </p>
-                                  {aiEnrichment.averagePrice.sources?.length > 0 && (
-                                    <div className="space-y-1">
-                                      <p className="text-xs font-medium">Sources:</p>
-                                      {aiEnrichment.averagePrice.sources.slice(0, 3).map((source, idx) => (
-                                        <div key={idx} className="text-xs">
-                                          <a href={source.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                                            {source.title}
-                                          </a>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  )}
-                                </div>
-                              </PopoverContent>
-                            </Popover>
-                          )}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-5 w-5 p-0"
-                            onClick={() => extractedData?.name && runAIEnrichment('averagePrice', extractedData.name, extractedData.location)}
-                            disabled={enrichmentLoading.averagePrice || !extractedData?.name}
-                          >
-                            {enrichmentLoading.averagePrice ? (
-                              <Loader2 className="h-3 w-3 animate-spin" />
-                            ) : (
-                              <RefreshCw className="h-3 w-3" />
-                            )}
-                          </Button>
-                        </Label>
-                        <Input
-                          id="editAveragePrice"
-                          type="number"
-                          step="0.01"
-                          value={extractedData.averagePrice || ''}
-                          onChange={(e) => handleFieldChange('averagePrice', parseFloat(e.target.value) || 0)}
-                          className="mt-1"
-                          placeholder={
-                            aiEnrichment.averagePrice?.value 
-                              ? "AI-Recherche verfügbar" 
-                              : aiEnrichment.averagePrice?.value === null
-                                ? "Keine verlässlichen Daten gefunden"
-                                : "12-Monats-Durchschnitt automatisch recherchiert"
-                          }
-                        />
-                      </div>
-                      <div className="md:col-span-2">
-                        <Label htmlFor="editAmenities">Amenities (comma-separated)</Label>
-                        <Input
-                          id="editAmenities"
-                          value={extractedData.amenities ? extractedData.amenities.join(', ') : ''}
-                          onChange={(e) => setExtractedData({...extractedData, amenities: e.target.value.split(',').map(a => a.trim()).filter(a => a)})}
-                          className="mt-1"
-                          placeholder="Wi-Fi, Spa, Restaurant, Bar, etc."
-                        />
-                      </div>
-                      
-                      {/* Price research information display */}
-                      {extractedData.priceResearch && (
-                        <div className="md:col-span-2 mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                          <div className="flex items-start gap-2">
-                            <Brain className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                            <div className="flex-1 text-xs">
-                              <p className="font-medium text-blue-800 mb-1">
-                                12-Monats-Preisrecherche ({extractedData.priceResearch.confidence} Zuverlässigkeit)
-                              </p>
-                              <p className="text-blue-700 mb-2">
-                                {extractedData.priceResearch.methodology}
-                              </p>
-                              {extractedData.priceResearch.priceRange && (
-                                <div className="flex flex-wrap gap-2 text-blue-600">
-                                  <span>Spanne: {extractedData.priceResearch.priceRange.low}€ - {extractedData.priceResearch.priceRange.high}€</span>
-                                  <span>•</span>
-                                  <span>Quellen: {extractedData.priceResearch.dataSource}</span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                        </div>
-                      </TabsContent>
-                      
-                      <TabsContent value="reviews" className="mt-4">
-                        {/* Comprehensive Review Data Section */}
-                        {(extractedData.bookingReviews || extractedData.googleReviews || extractedData.holidayCheckReviews || extractedData.tripadvisorReviews) && (
-                        <div className="md:col-span-2 mt-6">
-                          <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
-                            <MessageSquare className="h-4 w-4 mr-2 text-blue-600" />
-                            Hotel Reviews & Ratings
-                          </h4>
-                          
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {/* Booking.com Reviews */}
-                            {extractedData.bookingReviews && (
-                              <div className="p-3 border border-blue-200 rounded-lg bg-gradient-to-r from-blue-50 to-blue-100">
-                                <div className="flex items-center justify-between mb-2">
-                                  <h5 className="font-medium text-blue-800 flex items-center">
-                                    <Globe className="h-3 w-3 mr-1" />
-                                    Booking.com
-                                  </h5>
-                                  {extractedData.bookingReviews.url && (
-                                    <a 
-                                      href={extractedData.bookingReviews.url} 
-                                      target="_blank" 
-                                      rel="noopener noreferrer"
-                                      className="text-xs text-blue-600 hover:text-blue-800 underline"
-                                    >
-                                      View Reviews →
-                                    </a>
-                                  )}
-                                </div>
-                                <div className="flex items-center gap-2 mb-1">
-                                  {extractedData.bookingReviews.rating ? (
-                                    <>
-                                      <span className="text-sm font-medium">{extractedData.bookingReviews.rating}/10</span>
-                                      <div className="flex">
-                                        {Array.from({length: 5}, (_, i) => (
-                                          <Star 
-                                            key={i} 
-                                            className={`h-3 w-3 ${i < Math.round(extractedData.bookingReviews.rating / 2) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
-                                          />
-                                        ))}
-                                      </div>
-                                      <span className="text-xs text-gray-600">({extractedData.bookingReviews.reviewCount} reviews)</span>
-                                    </>
-                                  ) : (
-                                    <span className="text-sm text-blue-600 font-medium">Click to view authentic ratings & reviews</span>
-                                  )}
-                                </div>
-                                <p className="text-xs text-gray-700">{extractedData.bookingReviews.summary}</p>
-                              </div>
-                            )}
-
-                            {/* Google Reviews */}
-                            {extractedData.googleReviews && (
-                              <div className="p-3 border border-green-200 rounded-lg bg-gradient-to-r from-green-50 to-green-100">
-                                <div className="flex items-center justify-between mb-2">
-                                  <h5 className="font-medium text-green-800 flex items-center">
-                                    <Globe className="h-3 w-3 mr-1" />
-                                    Google Reviews
-                                  </h5>
-                                  {extractedData.googleReviews.url && (
-                                    <a 
-                                      href={extractedData.googleReviews.url} 
-                                      target="_blank" 
-                                      rel="noopener noreferrer"
-                                      className="text-xs text-green-600 hover:text-green-800 underline"
-                                    >
-                                      View Reviews →
-                                    </a>
-                                  )}
-                                </div>
-                                <div className="flex items-center gap-2 mb-1">
-                                  {extractedData.googleReviews.rating ? (
-                                    <>
-                                      <span className="text-sm font-medium">{extractedData.googleReviews.rating}/5</span>
-                                      <div className="flex">
-                                        {Array.from({length: 5}, (_, i) => (
-                                          <Star 
-                                            key={i} 
-                                            className={`h-3 w-3 ${i < Math.round(extractedData.googleReviews.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
-                                          />
-                                        ))}
-                                      </div>
-                                      <span className="text-xs text-gray-600">({extractedData.googleReviews.reviewCount} reviews)</span>
-                                    </>
-                                  ) : (
-                                    <span className="text-sm text-green-600 font-medium">Click to view authentic ratings & reviews</span>
-                                  )}
-                                </div>
-                                <p className="text-xs text-gray-700">{extractedData.googleReviews.summary}</p>
-                              </div>
-                            )}
-
-                            {/* HolidayCheck Reviews */}
-                            {extractedData.holidayCheckReviews && (
-                              <div className="p-3 border border-orange-200 rounded-lg bg-gradient-to-r from-orange-50 to-orange-100">
-                                <div className="flex items-center justify-between mb-2">
-                                  <h5 className="font-medium text-orange-800 flex items-center">
-                                    <Globe className="h-3 w-3 mr-1" />
-                                    HolidayCheck
-                                  </h5>
-                                  {extractedData.holidayCheckReviews.url && (
-                                    <a 
-                                      href={extractedData.holidayCheckReviews.url} 
-                                      target="_blank" 
-                                      rel="noopener noreferrer"
-                                      className="text-xs text-orange-600 hover:text-orange-800 underline"
-                                    >
-                                      View Reviews →
-                                    </a>
-                                  )}
-                                </div>
-                                <div className="flex items-center gap-2 mb-1">
-                                  {extractedData.holidayCheckReviews.rating ? (
-                                    <>
-                                      <span className="text-sm font-medium">{extractedData.holidayCheckReviews.rating}/6</span>
-                                      <div className="flex">
-                                        {Array.from({length: 6}, (_, i) => (
-                                          <Star 
-                                            key={i} 
-                                            className={`h-3 w-3 ${i < Math.round(extractedData.holidayCheckReviews.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
-                                          />
-                                        ))}
-                                      </div>
-                                      <span className="text-xs text-gray-600">({extractedData.holidayCheckReviews.reviewCount} reviews)</span>
-                                    </>
-                                  ) : (
-                                    <span className="text-sm text-orange-600 font-medium">Click to view authentic ratings & reviews</span>
-                                  )}
-                                </div>
-                                <p className="text-xs text-gray-700">{extractedData.holidayCheckReviews.summary}</p>
-                              </div>
-                            )}
-
-                            {/* TripAdvisor Reviews */}
-                            {extractedData.tripadvisorReviews && (
-                              <div className="p-3 border border-red-200 rounded-lg bg-gradient-to-r from-red-50 to-red-100">
-                                <div className="flex items-center justify-between mb-2">
-                                  <h5 className="font-medium text-red-800 flex items-center">
-                                    <Globe className="h-3 w-3 mr-1" />
-                                    TripAdvisor
-                                  </h5>
-                                  {extractedData.tripadvisorReviews.url && (
-                                    <a 
-                                      href={extractedData.tripadvisorReviews.url} 
-                                      target="_blank" 
-                                      rel="noopener noreferrer"
-                                      className="text-xs text-red-600 hover:text-red-800 underline"
-                                    >
-                                      View Reviews →
-                                    </a>
-                                  )}
-                                </div>
-                                <div className="flex items-center gap-2 mb-1">
-                                  {extractedData.tripadvisorReviews.rating ? (
-                                    <>
-                                      <span className="text-sm font-medium">{extractedData.tripadvisorReviews.rating}/5</span>
-                                      <div className="flex">
-                                        {Array.from({length: 5}, (_, i) => (
-                                          <Star 
-                                            key={i} 
-                                            className={`h-3 w-3 ${i < Math.round(extractedData.tripadvisorReviews.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
-                                          />
-                                        ))}
-                                      </div>
-                                      <span className="text-xs text-gray-600">({extractedData.tripadvisorReviews.reviewCount} reviews)</span>
-                                    </>
-                                  ) : (
-                                    <span className="text-sm text-red-600 font-medium">Click to view authentic ratings & reviews</span>
-                                  )}
-                                </div>
-                                <p className="text-xs text-gray-700">{extractedData.tripadvisorReviews.summary}</p>
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Overall Review Summary - Hidden
-                          {extractedData.reviewSummary && (
-                            <div className="mt-4 p-3 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg border border-purple-200">
-                              <h5 className="font-medium text-purple-800 mb-2 flex items-center">
-                                <Brain className="h-4 w-4 mr-2" />
-                                AI Review Summary
-                              </h5>
-                              <p className="text-sm text-purple-700">{extractedData.reviewSummary}</p>
-                              {extractedData.lastReviewUpdate && (
-                                <p className="text-xs text-purple-600 mt-2">
-                                  Last updated: {new Date(extractedData.lastReviewUpdate).toLocaleDateString()}
-                                </p>
-                              )}
-                            </div>
-                          )}
-                          */}
-                        </div>
-                        )}
-                      </TabsContent>
-                    </Tabs>
+                <TabsContent value="basic-data" className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="hotelName">Hotel Name</Label>
+                      <Input
+                        id="hotelName"
+                        value={hotelName}
+                        onChange={(e) => setHotelName(e.target.value)}
+                        placeholder="Hotel name eingeben..."
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="hotelUrl">Hotel URL (optional)</Label>
+                      <Input
+                        id="hotelUrl"
+                        value={hotelUrl}
+                        onChange={(e) => setHotelUrl(e.target.value)}
+                        placeholder="https://www.hotel-website.de"
+                      />
+                    </div>
                   </div>
-                )}
 
-                {/* Action Buttons */}
-                <div className="flex justify-end space-x-3">
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setAddHotelOpen(false);
-                      setHotelName("");
-                      setHotelUrl("");
-                      setExtractedData(null);
-                      setAiEnrichment({});
-                      setUserEditedFields(new Set());
-                      setEnrichmentLoading({});
-                      setLastAutoEnrichmentName('');
-                      setFilters(prev => ({ ...prev, q: '' }));
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
+                  <div className="flex gap-3">
+                    <Button 
+                      onClick={handleExtractData}
+                      disabled={extractionLoading || !hotelName.trim()}
+                      className="flex-1"
+                    >
+                      {extractionLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Extrahiere Daten...
+                        </>
+                      ) : (
+                        <>
+                          <Search className="mr-2 h-4 w-4" />
+                          Hotel Daten Extrahieren
+                        </>
+                      )}
+                    </Button>
+                    
+                    {extractedData && extractedReviews && (
+                      <Button 
+                        onClick={handleCreateHotel}
+                        disabled={createHotelMutation.isPending}
+                        variant="outline"
+                        className="flex-1 bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
+                      >
+                        <Building2 className="mr-2 h-4 w-4" />
+                        Hotel mit Reviews Erstellen
+                      </Button>
+                    )}
+                  </div>
+
+                  {/* Extracted Data Display */}
+                  {extractedData && (
+                    <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                      <h4 className="font-semibold text-gray-800 mb-3">Extrahierte Hotel Daten:</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div>
+                          <span className="text-sm font-medium text-gray-600">Name:</span>
+                          <p className="text-sm text-gray-900">{extractedData.name || 'Nicht gefunden'}</p>
+                        </div>
+                        <div>
+                          <span className="text-sm font-medium text-gray-600">Sterne:</span>
+                          <p className="text-sm text-gray-900">{extractedData.stars || 'Nicht gefunden'}</p>
+                        </div>
+                        <div>
+                          <span className="text-sm font-medium text-gray-600">Zimmer:</span>
+                          <p className="text-sm text-gray-900">{extractedData.roomCount || 'Nicht gefunden'}</p>
+                        </div>
+                        <div>
+                          <span className="text-sm font-medium text-gray-600">Lage:</span>
+                          <p className="text-sm text-gray-900">{extractedData.location || 'Nicht gefunden'}</p>
+                        </div>
+                        <div>
+                          <span className="text-sm font-medium text-gray-600">Durchschnittspreis:</span>
+                          <p className="text-sm text-gray-900">
+                            {extractedData.averagePrice ? 
+                              `${Number(extractedData.averagePrice).toFixed(2)} €` : 
+                              'Nicht gefunden'
+                            }
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-sm font-medium text-gray-600">Website:</span>
+                          <p className="text-sm text-gray-900">{extractedData.url || 'Nicht gefunden'}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="reviews" className="space-y-6">
+                  <div className="flex gap-3">
+                    <Button 
+                      onClick={handleSearchReviews}
+                      disabled={reviewsLoading || !hotelName.trim()}
+                      className="flex-1"
+                    >
+                      {reviewsLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Suche Reviews...
+                        </>
+                      ) : (
+                        <>
+                          <MessageSquare className="mr-2 h-4 w-4" />
+                          AI Review Search (4 Plattformen)
+                        </>
+                      )}
+                    </Button>
+                  </div>
+
+                  {extractedReviews && (
+                    <div className="space-y-4">
+                      <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                        <h4 className="font-semibold text-blue-800 mb-2">Review Zusammenfassung</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                          <div>
+                            <span className="text-sm font-medium text-blue-600">Gesamt Reviews:</span>
+                            <p className="text-sm text-blue-800">{extractedReviews.totalReviewCount}</p>
+                          </div>
+                          <div>
+                            <span className="text-sm font-medium text-blue-600">Durchschnitt:</span>
+                            <p className="text-sm text-blue-800 flex items-center">
+                              <Star className="h-4 w-4 text-yellow-500 mr-1" />
+                              {extractedReviews.averageRating?.toFixed(1)}/10
+                            </p>
+                          </div>
+                        </div>
+                        <p className="text-sm text-blue-700">{extractedReviews.reviewSummary}</p>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Platform Reviews */}
+                        {extractedReviews.bookingReviews && (
+                          <div className="p-4 bg-white rounded-lg border">
+                            <div className="flex items-center justify-between mb-2">
+                              <h5 className="font-semibold text-gray-800">Booking.com</h5>
+                              <a 
+                                href={extractedReviews.bookingReviews.url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:text-blue-800 text-sm"
+                              >
+                                Öffnen →
+                              </a>
+                            </div>
+                            <div className="flex items-center gap-2 mb-2">
+                              <Star className="h-4 w-4 text-yellow-500" />
+                              <span className="font-medium">{extractedReviews.bookingReviews.rating}/10</span>
+                              <span className="text-sm text-gray-600">({extractedReviews.bookingReviews.reviewCount} Reviews)</span>
+                            </div>
+                          </div>
+                        )}
+
+                        {extractedReviews.googleReviews && (
+                          <div className="p-4 bg-white rounded-lg border">
+                            <div className="flex items-center justify-between mb-2">
+                              <h5 className="font-semibold text-gray-800">Google Reviews</h5>
+                              <a 
+                                href={extractedReviews.googleReviews.url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:text-blue-800 text-sm"
+                              >
+                                Öffnen →
+                              </a>
+                            </div>
+                            <div className="flex items-center gap-2 mb-2">
+                              <Star className="h-4 w-4 text-yellow-500" />
+                              <span className="font-medium">{extractedReviews.googleReviews.rating}/5</span>
+                              <span className="text-sm text-gray-600">({extractedReviews.googleReviews.reviewCount} Reviews)</span>
+                            </div>
+                          </div>
+                        )}
+
+                        {extractedReviews.holidayCheckReviews && (
+                          <div className="p-4 bg-white rounded-lg border">
+                            <div className="flex items-center justify-between mb-2">
+                              <h5 className="font-semibold text-gray-800">HolidayCheck</h5>
+                              <a 
+                                href={extractedReviews.holidayCheckReviews.url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:text-blue-800 text-sm"
+                              >
+                                Öffnen →
+                              </a>
+                            </div>
+                            <div className="flex items-center gap-2 mb-2">
+                              <Star className="h-4 w-4 text-yellow-500" />
+                              <span className="font-medium">{extractedReviews.holidayCheckReviews.rating}/6</span>
+                              <span className="text-sm text-gray-600">({extractedReviews.holidayCheckReviews.reviewCount} Reviews)</span>
+                            </div>
+                          </div>
+                        )}
+
+                        {extractedReviews.tripadvisorReviews && (
+                          <div className="p-4 bg-white rounded-lg border">
+                            <div className="flex items-center justify-between mb-2">
+                              <h5 className="font-semibold text-gray-800">TripAdvisor</h5>
+                              <a 
+                                href={extractedReviews.tripadvisorReviews.url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:text-blue-800 text-sm"
+                              >
+                                Öffnen →
+                              </a>
+                            </div>
+                            <div className="flex items-center gap-2 mb-2">
+                              <Star className="h-4 w-4 text-yellow-500" />
+                              <span className="font-medium">{extractedReviews.tripadvisorReviews.rating}/5</span>
+                              <span className="text-sm text-gray-600">({extractedReviews.tripadvisorReviews.reviewCount} Reviews)</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </TabsContent>
+              </Tabs>
+              
+              <div className="flex justify-end space-x-3 mt-6">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setAddHotelOpen(false);
+                    setHotelName("");
+                    setHotelUrl("");
+                    setExtractedData(null);
+                    setExtractedReviews(null);
+                    setActiveTab("basic-data");
+                  }}
+                >
+                  Abbrechen
+                </Button>
+                {extractedData && !extractedReviews && (
+                  <Button 
                     onClick={handleCreateHotel}
-                    disabled={!extractedData || createHotelMutation.isPending}
-                    className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white"
+                    disabled={createHotelMutation.isPending}
+                    variant="outline"
+                    className="bg-yellow-50 border-yellow-200 text-yellow-700 hover:bg-yellow-100"
                   >
                     {createHotelMutation.isPending ? (
                       <>
-                        <Loader2 className="h-4 w-4 mr-2" />
-                        Adding Hotel...
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Erstelle...
                       </>
                     ) : (
                       <>
-                        <Plus className="h-4 w-4 mr-2" />
-                        Add Hotel
+                        <Building2 className="mr-2 h-4 w-4" />
+                        Hotel ohne Reviews Erstellen
                       </>
                     )}
                   </Button>
-                </div>
+                )}
               </div>
             </DialogContent>
           </Dialog>
@@ -1325,862 +1123,228 @@ export default function CustomerManagement() {
                   onChange={(e) => setFilters(prev => ({ ...prev, q: e.target.value }))}
                 />
               </div>
-              {filters.q && (
-                <Button 
-                  variant="outline" 
-                  onClick={() => setFilters(prev => ({ ...prev, q: "" }))}
-                  className="px-3"
+              <div className="flex items-center space-x-2">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      <Filter className="h-4 w-4 mr-2" />
+                      Filters
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80">
+                    <div className="space-y-4">
+                      <div>
+                        <Label>Star Rating</Label>
+                        <Select value={filters.stars} onValueChange={(value) => setFilters(prev => ({ ...prev, stars: value }))}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Any rating" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="">Any rating</SelectItem>
+                            <SelectItem value="5">5 Stars</SelectItem>
+                            <SelectItem value="4">4 Stars</SelectItem>
+                            <SelectItem value="3">3 Stars</SelectItem>
+                            <SelectItem value="2">2 Stars</SelectItem>
+                            <SelectItem value="1">1 Star</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label>Location</Label>
+                        <Input 
+                          placeholder="Filter by location..."
+                          value={filters.location}
+                          onChange={(e) => setFilters(prev => ({ ...prev, location: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setFilters({ q: '', stars: '', location: '' })}
                 >
-                  <X className="h-4 w-4" />
+                  Clear
                 </Button>
-              )}
-              <Popover open={filterOpen} onOpenChange={setFilterOpen}>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="relative">
-                    <Filter className="h-4 w-4 mr-2" />
-                    Filter
-                    {getActiveFilterCount() > 0 && (
-                      <Badge variant="secondary" className="ml-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs">
-                        {getActiveFilterCount()}
-                      </Badge>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[600px] max-h-[600px] overflow-y-auto" align="start">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-medium">Advanced Filters</h4>
-                      {getActiveFilterCount() > 0 && (
-                        <Button variant="ghost" size="sm" onClick={clearAllFilters}>
-                          Clear All
-                        </Button>
-                      )}
-                    </div>
-                    
-                    <Separator />
-                    
-                    {/* Stars Filter */}
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium">Stars</Label>
-                      <div className="flex flex-wrap gap-2">
-                        {starOptions.map((star) => (
-                          <div key={star} className="flex items-center space-x-1">
-                            <Checkbox
-                              id={`star-${star}`}
-                              checked={filters.stars.includes(star)}
-                              onCheckedChange={(checked) => {
-                                if (checked) {
-                                  setFilters(prev => ({ ...prev, stars: [...prev.stars, star] }));
-                                } else {
-                                  setFilters(prev => ({ ...prev, stars: prev.stars.filter(s => s !== star) }));
-                                }
-                              }}
-                            />
-                            <Label htmlFor={`star-${star}`} className="text-sm">
-                              {star === 'unrated' ? 'Unrated' : `${star} ★`}
-                            </Label>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    {/* Category Filter */}
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium">Category</Label>
-                      <div className="flex flex-wrap gap-2">
-                        {categoryOptions.map((category) => (
-                          <div key={category} className="flex items-center space-x-1">
-                            <Checkbox
-                              id={`category-${category}`}
-                              checked={filters.category.includes(category)}
-                              onCheckedChange={(checked) => {
-                                if (checked) {
-                                  setFilters(prev => ({ ...prev, category: [...prev.category, category] }));
-                                } else {
-                                  setFilters(prev => ({ ...prev, category: prev.category.filter(c => c !== category) }));
-                                }
-                              }}
-                            />
-                            <Label htmlFor={`category-${category}`} className="text-sm">
-                              {category}
-                            </Label>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    {/* Location Filters */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="country" className="text-sm font-medium">Country</Label>
-                        <Input
-                          id="country"
-                          placeholder="Germany"
-                          value={filters.country}
-                          onChange={(e) => setFilters(prev => ({ ...prev, country: e.target.value }))}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="city" className="text-sm font-medium">City</Label>
-                        <Input
-                          id="city"
-                          placeholder="Berlin"
-                          value={filters.city}
-                          onChange={(e) => setFilters(prev => ({ ...prev, city: e.target.value }))}
-                        />
-                      </div>
-                    </div>
-                    
-                    {/* Room Count Range */}
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium">Room Count</Label>
-                      <div className="grid grid-cols-2 gap-2">
-                        <Input
-                          placeholder="Min"
-                          type="number"
-                          value={filters.roomCountMin}
-                          onChange={(e) => setFilters(prev => ({ ...prev, roomCountMin: e.target.value }))}
-                        />
-                        <Input
-                          placeholder="Max"
-                          type="number"
-                          value={filters.roomCountMax}
-                          onChange={(e) => setFilters(prev => ({ ...prev, roomCountMax: e.target.value }))}
-                        />
-                      </div>
-                    </div>
-                    
-                    {/* Price Range (EUR) */}
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium flex items-center">
-                        <Euro className="h-4 w-4 mr-1" />
-                        Durchschnittlicher Zimmerpreis (€)
-                      </Label>
-                      <div className="grid grid-cols-2 gap-2">
-                        <Input
-                          placeholder="Min €"
-                          type="number"
-                          value={filters.priceMin}
-                          onChange={(e) => setFilters(prev => ({ ...prev, priceMin: e.target.value }))}
-                        />
-                        <Input
-                          placeholder="Max €"
-                          type="number"
-                          value={filters.priceMax}
-                          onChange={(e) => setFilters(prev => ({ ...prev, priceMax: e.target.value }))}
-                        />
-                      </div>
-                    </div>
-                    
-                    {/* Data Quality Filters */}
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium">Data Quality</Label>
-                      <div className="space-y-2">
-                        {dataQualityOptions.map((option) => (
-                          <div key={option.value} className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`quality-${option.value}`}
-                              checked={filters.dataQuality.includes(option.value)}
-                              onCheckedChange={(checked) => {
-                                if (checked) {
-                                  setFilters(prev => ({ ...prev, dataQuality: [...prev.dataQuality, option.value] }));
-                                } else {
-                                  setFilters(prev => ({ ...prev, dataQuality: prev.dataQuality.filter(q => q !== option.value) }));
-                                }
-                              }}
-                            />
-                            <Label htmlFor={`quality-${option.value}`} className="text-sm">
-                              {option.label}
-                            </Label>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    {/* Date Range */}
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium flex items-center">
-                        <Calendar className="h-4 w-4 mr-1" />
-                        Date Range
-                      </Label>
-                      <div className="grid grid-cols-2 gap-2">
-                        <Input
-                          type="date"
-                          value={filters.dateFrom}
-                          onChange={(e) => setFilters(prev => ({ ...prev, dateFrom: e.target.value }))}
-                        />
-                        <Input
-                          type="date"
-                          value={filters.dateTo}
-                          onChange={(e) => setFilters(prev => ({ ...prev, dateTo: e.target.value }))}
-                        />
-                      </div>
-                    </div>
-                    
-                    <Separator />
-                    
-                    {/* Apply/Reset Buttons */}
-                    <div className="flex justify-end space-x-2">
-                      <Button variant="outline" onClick={() => setFilters({ ...appliedFilters })}>
-                        Reset
-                      </Button>
-                      <Button onClick={applyFilters}>
-                        Apply Filters
-                      </Button>
-                    </div>
-                  </div>
-                </PopoverContent>
-              </Popover>
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Active Filter Chips and Sort Controls */}
-        {(getActiveFilterCount() > 0 || appliedFilters.sortBy !== 'updatedAt') && (
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between flex-wrap gap-4">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-sm text-muted-foreground">Active filters:</span>
+        {/* Hotels Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredHotels?.map((hotel: any) => (
+            <Card key={hotel.id} className="relative group hover:shadow-lg transition-all duration-200">
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Building2 className="h-5 w-5 text-blue-600" />
+                      {hotel.name}
+                    </CardTitle>
+                    <CardDescription className="flex items-center gap-2 mt-1">
+                      <MapPin className="h-4 w-4" />
+                      {hotel.location}
+                    </CardDescription>
+                  </div>
+                  <div className="flex items-center">
+                    {Array.from({ length: hotel.stars || 0 }, (_, i) => (
+                      <Star key={i} className="h-4 w-4 text-yellow-400 fill-current" />
+                    ))}
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-gray-600">Rooms:</span>
+                      <p className="font-medium">{hotel.roomCount || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Avg. Price:</span>
+                      <p className="font-medium">{hotel.averagePrice ? `€${hotel.averagePrice}` : 'N/A'}</p>
+                    </div>
+                  </div>
                   
-                  {appliedFilters.q && (
-                    <Badge variant="secondary" className="gap-1">
-                      Search: "{appliedFilters.q}"
-                      <X className="h-3 w-3 cursor-pointer" onClick={() => {
-                        setFilters(prev => ({ ...prev, q: '' }));
-                        setAppliedFilters(prev => ({ ...prev, q: '' }));
-                      }} />
-                    </Badge>
+                  {hotel.url && (
+                    <div className="text-sm">
+                      <span className="text-gray-600">Website:</span>
+                      <a 
+                        href={hotel.url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="ml-2 text-blue-600 hover:text-blue-800 underline"
+                      >
+                        Visit Site
+                      </a>
+                    </div>
                   )}
-                  
-                  {appliedFilters.stars.length > 0 && (
-                    <Badge variant="secondary" className="gap-1">
-                      Stars: {appliedFilters.stars.join(', ')}
-                      <X className="h-3 w-3 cursor-pointer" onClick={() => {
-                        setFilters(prev => ({ ...prev, stars: [] }));
-                        setAppliedFilters(prev => ({ ...prev, stars: [] }));
-                      }} />
-                    </Badge>
-                  )}
-                  
-                  {appliedFilters.category.length > 0 && (
-                    <Badge variant="secondary" className="gap-1">
-                      Category: {appliedFilters.category.join(', ')}
-                      <X className="h-3 w-3 cursor-pointer" onClick={() => {
-                        setFilters(prev => ({ ...prev, category: [] }));
-                        setAppliedFilters(prev => ({ ...prev, category: [] }));
-                      }} />
-                    </Badge>
-                  )}
-                  
-                  {appliedFilters.country && (
-                    <Badge variant="secondary" className="gap-1">
-                      Country: {appliedFilters.country}
-                      <X className="h-3 w-3 cursor-pointer" onClick={() => {
-                        setFilters(prev => ({ ...prev, country: '' }));
-                        setAppliedFilters(prev => ({ ...prev, country: '' }));
-                      }} />
-                    </Badge>
-                  )}
-                  
-                  {appliedFilters.city && (
-                    <Badge variant="secondary" className="gap-1">
-                      City: {appliedFilters.city}
-                      <X className="h-3 w-3 cursor-pointer" onClick={() => {
-                        setFilters(prev => ({ ...prev, city: '' }));
-                        setAppliedFilters(prev => ({ ...prev, city: '' }));
-                      }} />
-                    </Badge>
-                  )}
-                  
-                  {(appliedFilters.roomCountMin || appliedFilters.roomCountMax) && (
-                    <Badge variant="secondary" className="gap-1">
-                      Rooms: {appliedFilters.roomCountMin || '0'}-{appliedFilters.roomCountMax || '∞'}
-                      <X className="h-3 w-3 cursor-pointer" onClick={() => {
-                        setFilters(prev => ({ ...prev, roomCountMin: '', roomCountMax: '' }));
-                        setAppliedFilters(prev => ({ ...prev, roomCountMin: '', roomCountMax: '' }));
-                      }} />
-                    </Badge>
-                  )}
-                  
-                  {(appliedFilters.priceMin || appliedFilters.priceMax) && (
-                    <Badge variant="secondary" className="gap-1">
-                      Price: €{appliedFilters.priceMin || '0'}-€{appliedFilters.priceMax || '∞'}
-                      <X className="h-3 w-3 cursor-pointer" onClick={() => {
-                        setFilters(prev => ({ ...prev, priceMin: '', priceMax: '' }));
-                        setAppliedFilters(prev => ({ ...prev, priceMin: '', priceMax: '' }));
-                      }} />
-                    </Badge>
-                  )}
-                  
-                  {appliedFilters.dataQuality.length > 0 && (
-                    <Badge variant="secondary" className="gap-1">
-                      Quality: {appliedFilters.dataQuality.length} filters
-                      <X className="h-3 w-3 cursor-pointer" onClick={() => {
-                        setFilters(prev => ({ ...prev, dataQuality: [] }));
-                        setAppliedFilters(prev => ({ ...prev, dataQuality: [] }));
-                      }} />
-                    </Badge>
-                  )}
-                  
-                  {(appliedFilters.dateFrom || appliedFilters.dateTo) && (
-                    <Badge variant="secondary" className="gap-1">
-                      Date Range
-                      <X className="h-3 w-3 cursor-pointer" onClick={() => {
-                        setFilters(prev => ({ ...prev, dateFrom: '', dateTo: '' }));
-                        setAppliedFilters(prev => ({ ...prev, dateFrom: '', dateTo: '' }));
-                      }} />
-                    </Badge>
-                  )}
-                  
-                  {getActiveFilterCount() > 0 && (
-                    <Button variant="ghost" size="sm" onClick={clearAllFilters} className="h-6 px-2">
-                      Clear All
+
+                  <div className="flex gap-2 pt-3">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedHotel(hotel);
+                        setSearchDialogOpen(true);
+                      }}
+                      className="flex-1"
+                    >
+                      <Bot className="h-4 w-4 mr-2" />
+                      AI Chat
                     </Button>
-                  )}
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" size="sm">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-48" align="end">
+                        <div className="space-y-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+                            onClick={() => handleDeleteHotel(hotel.id)}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete Hotel
+                          </Button>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
                 </div>
-                
-                {/* Sort Control */}
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">Sort by:</span>
-                  <Select 
-                    value={appliedFilters.sortBy} 
-                    onValueChange={(value) => {
-                      setFilters(prev => ({ ...prev, sortBy: value }));
-                      setAppliedFilters(prev => ({ ...prev, sortBy: value, page: 1 }));
-                    }}
-                  >
-                    <SelectTrigger className="w-40">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {sortOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      const newOrder = appliedFilters.sortOrder === 'asc' ? 'desc' : 'asc';
-                      setFilters(prev => ({ ...prev, sortOrder: newOrder }));
-                      setAppliedFilters(prev => ({ ...prev, sortOrder: newOrder, page: 1 }));
-                    }}
-                  >
-                    {appliedFilters.sortOrder === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                  </Button>
-                </div>
-              </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {filteredHotels?.length === 0 && !hotelsLoading && (
+          <Card>
+            <CardContent className="text-center py-12">
+              <Building2 className="h-16 w-16 mx-auto mb-4 text-gray-400" />
+              <h3 className="text-lg font-medium text-gray-800 mb-2">No Hotels Found</h3>
+              <p className="text-gray-600 mb-6">
+                {hotels?.length === 0 
+                  ? "Add your first hotel to get started with customer management." 
+                  : "Try adjusting your search filters to find hotels."
+                }
+              </p>
+              <Button 
+                onClick={() => setAddHotelOpen(true)}
+                className="bg-gradient-to-r from-blue-500 to-green-500 hover:from-blue-600 hover:to-green-600 text-white"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add First Hotel
+              </Button>
             </CardContent>
           </Card>
         )}
 
-        {/* Customers List */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>Hotel Clients</CardTitle>
-                <CardDescription>
-                  {pagination ? `${pagination.total} hotel${pagination.total !== 1 ? 's' : ''}${filterInfo?.applied ? ' (filtered)' : ''}` : `${hotelData?.length || 0} hotels in your database`}
-                </CardDescription>
-              </div>
-              {pagination && pagination.total > 0 && (
-                <div className="text-sm text-muted-foreground">
-                  Page {pagination.page} of {pagination.totalPages}
-                </div>
-              )}
-            </div>
-          </CardHeader>
-          <CardContent>
-            {hotelsLoading ? (
-              <div className="text-center py-6">
-                <div className="text-muted-foreground">Loading customers...</div>
-              </div>
-            ) : !hotelData || hotelData.length === 0 ? (
-              <div className="text-center py-12">
-                <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">No customers yet</h3>
-                <p className="text-muted-foreground mb-4">
-                  Start by adding your first hotel client or create a pricing calculation
-                </p>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add First Customer
-                </Button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                {hotelData.map((hotel) => (
-                  <Card key={hotel.id} className="hover:shadow-md transition-shadow h-[280px] flex flex-col">
-                    <CardHeader className="pb-3 flex-shrink-0">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center space-x-3 flex-1 min-w-0">
-                          <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <Building2 className="h-5 w-5 text-primary" />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <CardTitle className="text-lg truncate">{hotel.name}</CardTitle>
-                            {hotel.location && (
-                              <p className="text-sm text-muted-foreground truncate">{hotel.location}</p>
-                            )}
-                          </div>
-                        </div>
-                        {hotel.stars && (
-                          <div className="flex items-center flex-shrink-0 ml-2">
-                            <span className="text-amber-400">
-                              {"★".repeat(hotel.stars)}
-                            </span>
-                            <span className="text-slate-300 dark:text-slate-600">
-                              {"★".repeat(5 - hotel.stars)}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </CardHeader>
-                    <CardContent className="flex-1 flex flex-col justify-between">
-                      <div className="space-y-2 text-sm flex-1">
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Rooms:</span>
-                          <span>{hotel.roomCount || 'N/A'}</span>
-                        </div>
-                        <div className="flex justify-between items-start">
-                          <span className="text-muted-foreground">Website:</span>
-                          {hotel.url ? (
-                            <a 
-                              href={hotel.url} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="text-primary hover:underline truncate max-w-32 text-right"
-                            >
-                              {new URL(hotel.url).hostname}
-                            </a>
-                          ) : (
-                            <span>N/A</span>
-                          )}
-                        </div>
-                        
-                        {/* Review Data Display */}
-                        {(hotel.bookingReviews?.rating || hotel.googleReviews?.rating || hotel.tripadvisorReviews?.rating || hotel.holidayCheckReviews?.rating) && (
-                          <div className="border-t pt-2 mt-2">
-                            <div className="text-xs text-muted-foreground mb-2 font-medium">Reviews</div>
-                            <div className="space-y-1">
-                              {hotel.bookingReviews && (
-                                <div className="flex justify-between items-center">
-                                  <span className="text-xs text-blue-600">Booking.com</span>
-                                  <div className="flex items-center space-x-1">
-                                    {hotel.bookingReviews.rating ? (
-                                      <>
-                                        <span className="text-xs font-medium">{hotel.bookingReviews.rating}/10</span>
-                                        <span className="text-xs text-muted-foreground">({hotel.bookingReviews.reviewCount || hotel.bookingReviews.count})</span>
-                                      </>
-                                    ) : (
-                                      <span className="text-xs text-muted-foreground italic">No rating</span>
-                                    )}
-                                  </div>
-                                </div>
-                              )}
-                              {hotel.googleReviews && (
-                                <div className="flex justify-between items-center">
-                                  <span className="text-xs text-red-600">Google</span>
-                                  <div className="flex items-center space-x-1">
-                                    {hotel.googleReviews.rating ? (
-                                      <>
-                                        <span className="text-xs font-medium">{hotel.googleReviews.rating}/5</span>
-                                        <span className="text-xs text-muted-foreground">({hotel.googleReviews.reviewCount || hotel.googleReviews.count})</span>
-                                      </>
-                                    ) : (
-                                      <span className="text-xs text-muted-foreground italic">No rating</span>
-                                    )}
-                                  </div>
-                                </div>
-                              )}
-                              {hotel.tripadvisorReviews && (
-                                <div className="flex justify-between items-center">
-                                  <span className="text-xs text-green-600">TripAdvisor</span>
-                                  <div className="flex items-center space-x-1">
-                                    {hotel.tripadvisorReviews.rating ? (
-                                      <>
-                                        <span className="text-xs font-medium">{hotel.tripadvisorReviews.rating}/5</span>
-                                        <span className="text-xs text-muted-foreground">({hotel.tripadvisorReviews.reviewCount || hotel.tripadvisorReviews.count})</span>
-                                      </>
-                                    ) : (
-                                      <span className="text-xs text-muted-foreground italic">No rating</span>
-                                    )}
-                                  </div>
-                                </div>
-                              )}
-                              {hotel.holidayCheckReviews && (
-                                <div className="flex justify-between items-center">
-                                  <span className="text-xs text-orange-600">HolidayCheck</span>
-                                  <div className="flex items-center space-x-1">
-                                    {hotel.holidayCheckReviews.rating ? (
-                                      <>
-                                        <span className="text-xs font-medium">{hotel.holidayCheckReviews.rating}/6</span>
-                                        <span className="text-xs text-muted-foreground">({hotel.holidayCheckReviews.reviewCount || hotel.holidayCheckReviews.count})</span>
-                                      </>
-                                    ) : (
-                                      <span className="text-xs text-muted-foreground italic">No rating</span>
-                                    )}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )}
-                        
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Added:</span>
-                          <span>{hotel.createdAt ? new Date(hotel.createdAt).toLocaleDateString() : 'N/A'}</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2 mt-4 flex-shrink-0">
-                        <Button size="sm" variant="outline" className="flex-1" onClick={() => handleViewDetails(hotel)}>
-                          View Details
-                        </Button>
-                        <Button size="sm" className="flex-1" onClick={() => handleNewCalculation(hotel)}>
-                          New Calculation
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="destructive"
-                          onClick={() => handleDeleteHotel(hotel.id, hotel.name)}
-                          disabled={deleteHotelMutation.isPending}
-                          className="px-3"
-                        >
-                          {deleteHotelMutation.isPending ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Trash2 className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-            
-            {/* Pagination */}
-            {pagination && pagination.totalPages > 1 && (
-              <div className="flex items-center justify-between mt-6">
-                <div className="flex items-center space-x-2">
-                  <Button
-                    variant="outline"
-                    disabled={!pagination.hasPrev}
-                    onClick={() => setAppliedFilters(prev => ({ ...prev, page: prev.page - 1 }))}
-                  >
-                    Previous
-                  </Button>
-                  <span className="text-sm text-muted-foreground">
-                    Page {pagination.page} of {pagination.totalPages}
-                  </span>
-                  <Button
-                    variant="outline"
-                    disabled={!pagination.hasNext}
-                    onClick={() => setAppliedFilters(prev => ({ ...prev, page: prev.page + 1 }))}
-                  >
-                    Next
-                  </Button>
-                </div>
-                
-                <div className="text-sm text-muted-foreground">
-                  Showing {((pagination.page - 1) * pagination.limit) + 1} to {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} results
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-        
-        {/* Hotel Details Dialog with AI Search */}
-        <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
-          <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-y-auto">
+        {/* AI Search Dialog */}
+        <Dialog open={searchDialogOpen} onOpenChange={setSearchDialogOpen}>
+          <DialogContent className="sm:max-w-[700px] max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
-                <Building2 className="h-5 w-5 text-blue-600" />
-                {selectedHotel?.name || 'Hotel Details'}
+                <Bot className="h-5 w-5 text-green-600" />
+                AI Hotel Assistant - {selectedHotel?.name}
               </DialogTitle>
               <DialogDescription>
-                Ask AI anything about this hotel for detailed information
+                Ask questions about this hotel's amenities, location, reviews, or anything else
               </DialogDescription>
             </DialogHeader>
             
             {selectedHotel && (
               <div className="space-y-6">
-                {/* Hotel Basic Info */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gradient-to-r from-blue-50 to-green-50 rounded-lg">
-                  <div>
-                    <h3 className="font-semibold text-gray-800 mb-2">Basic Information</h3>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex items-center gap-2">
-                        <Star className="h-4 w-4 text-yellow-500" />
-                        <span>{selectedHotel.stars} Stars</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Building2 className="h-4 w-4 text-blue-600" />
-                        <span>{selectedHotel.roomCount} Rooms</span>
-                      </div>
-                      {selectedHotel.location && (
-                        <div className="flex items-center gap-2">
-                          <MapPin className="h-4 w-4 text-green-600" />
-                          <span className="text-xs">{selectedHotel.location}</span>
-                        </div>
-                      )}
+                {/* Hotel Overview */}
+                <div className="p-4 bg-gradient-to-r from-blue-50 to-green-50 rounded-lg border border-blue-200">
+                  <div className="flex items-center gap-3 mb-3">
+                    <Building2 className="h-6 w-6 text-blue-600" />
+                    <div>
+                      <h4 className="font-semibold text-gray-800">{selectedHotel.name}</h4>
+                      <p className="text-sm text-gray-600 flex items-center gap-1">
+                        <MapPin className="h-3 w-3" />
+                        {selectedHotel.location}
+                      </p>
+                    </div>
+                    <div className="ml-auto flex items-center">
+                      {Array.from({ length: selectedHotel.stars || 0 }, (_, i) => (
+                        <Star key={i} className="h-4 w-4 text-yellow-400 fill-current" />
+                      ))}
                     </div>
                   </div>
-                  
-                  <div>
-                    <h3 className="font-semibold text-gray-800 mb-2">Additional Details</h3>
-                    <div className="space-y-2 text-sm">
-                      {selectedHotel.category && (
-                        <div>
-                          <span className="font-medium">Category:</span> {selectedHotel.category}
-                        </div>
-                      )}
-                      {selectedHotel.url && (
-                        <div className="flex items-center gap-2">
-                          <Globe className="h-4 w-4 text-blue-600" />
-                          <a href={selectedHotel.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-xs">
-                            Visit Website
-                          </a>
-                        </div>
-                      )}
-                      <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-gray-500" />
-                        <span className="text-xs">Added: {new Date(selectedHotel.createdAt).toLocaleDateString()}</span>
-                      </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                    <div>
+                      <span className="text-gray-600">Rooms:</span>
+                      <p className="font-medium">{selectedHotel.roomCount || 'N/A'}</p>
                     </div>
-                  </div>
-                </div>
-                
-                {/* Review Data Section */}
-                <div className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-semibold text-gray-800 flex items-center">
-                      <MessageSquare className="h-4 w-4 mr-2 text-purple-600" />
-                      Reviews & Ratings
-                    </h3>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleRefreshReviews(selectedHotel)}
-                      disabled={extractionLoading}
-                      className="text-purple-600 border-purple-300 hover:bg-purple-100"
-                    >
-                      {extractionLoading ? (
-                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    <div>
+                      <span className="text-gray-600">Avg. Price:</span>
+                      <p className="font-medium">{selectedHotel.averagePrice ? `€${selectedHotel.averagePrice}` : 'N/A'}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Website:</span>
+                      {selectedHotel.url ? (
+                        <a 
+                          href={selectedHotel.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="font-medium text-blue-600 hover:text-blue-800 underline"
+                        >
+                          Visit
+                        </a>
                       ) : (
-                        <RefreshCw className="h-4 w-4 mr-2" />
+                        <p className="font-medium">N/A</p>
                       )}
-                      Refresh Reviews
-                    </Button>
+                    </div>
                   </div>
-                  
-                  {(selectedHotel.bookingReviews || selectedHotel.googleReviews || selectedHotel.tripadvisorReviews || selectedHotel.holidayCheckReviews) ? (
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {/* Booking.com Reviews */}
-                      {selectedHotel.bookingReviews && (
-                        <div className="p-3 border border-blue-200 rounded-lg bg-gradient-to-r from-blue-50 to-blue-100">
-                          <div className="flex items-center justify-between mb-2">
-                            <h5 className="font-medium text-blue-800 flex items-center">
-                              <Globe className="h-3 w-3 mr-1" />
-                              Booking.com
-                            </h5>
-                            {selectedHotel.bookingReviews.url && (
-                              <a 
-                                href={selectedHotel.bookingReviews.url} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="text-xs text-blue-600 hover:text-blue-800 underline"
-                              >
-                                View Reviews →
-                              </a>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2 mb-1">
-                            {selectedHotel.bookingReviews.rating ? (
-                              <>
-                                <span className="text-sm font-medium">{selectedHotel.bookingReviews.rating}/10</span>
-                                <div className="flex">
-                                  {Array.from({length: 5}, (_, i) => (
-                                    <Star 
-                                      key={i} 
-                                      className={`h-3 w-3 ${i < Math.round(selectedHotel.bookingReviews.rating / 2) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
-                                    />
-                                  ))}
-                                </div>
-                                <span className="text-xs text-gray-600">({selectedHotel.bookingReviews.reviewCount || selectedHotel.bookingReviews.count} reviews)</span>
-                              </>
-                            ) : (
-                              <span className="text-xs text-gray-500 italic">Rating data not available - click link to view manually</span>
-                            )}
-                          </div>
-                          <p className="text-xs text-gray-700">{selectedHotel.bookingReviews.summary}</p>
-                        </div>
-                      )}
-
-                      {/* Google Reviews */}
-                      {selectedHotel.googleReviews && (
-                        <div className="p-3 border border-green-200 rounded-lg bg-gradient-to-r from-green-50 to-green-100">
-                          <div className="flex items-center justify-between mb-2">
-                            <h5 className="font-medium text-green-800 flex items-center">
-                              <Globe className="h-3 w-3 mr-1" />
-                              Google Reviews
-                            </h5>
-                            {selectedHotel.googleReviews.url && (
-                              <a 
-                                href={selectedHotel.googleReviews.url} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="text-xs text-green-600 hover:text-green-800 underline"
-                              >
-                                View Reviews →
-                              </a>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2 mb-1">
-                            {selectedHotel.googleReviews.rating ? (
-                              <>
-                                <span className="text-sm font-medium">{selectedHotel.googleReviews.rating}/5</span>
-                                <div className="flex">
-                                  {Array.from({length: 5}, (_, i) => (
-                                    <Star 
-                                      key={i} 
-                                      className={`h-3 w-3 ${i < Math.round(selectedHotel.googleReviews.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
-                                    />
-                                  ))}
-                                </div>
-                                <span className="text-xs text-gray-600">({selectedHotel.googleReviews.reviewCount || selectedHotel.googleReviews.count} reviews)</span>
-                              </>
-                            ) : (
-                              <span className="text-xs text-gray-500 italic">Rating data not available - click link to view manually</span>
-                            )}
-                          </div>
-                          <p className="text-xs text-gray-700">{selectedHotel.googleReviews.summary}</p>
-                        </div>
-                      )}
-
-                      {/* TripAdvisor Reviews */}
-                      {selectedHotel.tripadvisorReviews && (
-                        <div className="p-3 border border-red-200 rounded-lg bg-gradient-to-r from-red-50 to-red-100">
-                          <div className="flex items-center justify-between mb-2">
-                            <h5 className="font-medium text-red-800 flex items-center">
-                              <Globe className="h-3 w-3 mr-1" />
-                              TripAdvisor
-                            </h5>
-                            {selectedHotel.tripadvisorReviews.url && (
-                              <a 
-                                href={selectedHotel.tripadvisorReviews.url} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="text-xs text-red-600 hover:text-red-800 underline"
-                              >
-                                View Reviews →
-                              </a>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2 mb-1">
-                            {selectedHotel.tripadvisorReviews.rating ? (
-                              <>
-                                <span className="text-sm font-medium">{selectedHotel.tripadvisorReviews.rating}/5</span>
-                                <div className="flex">
-                                  {Array.from({length: 5}, (_, i) => (
-                                    <Star 
-                                      key={i} 
-                                      className={`h-3 w-3 ${i < Math.round(selectedHotel.tripadvisorReviews.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
-                                    />
-                                  ))}
-                                </div>
-                                <span className="text-xs text-gray-600">({selectedHotel.tripadvisorReviews.reviewCount || selectedHotel.tripadvisorReviews.count} reviews)</span>
-                              </>
-                            ) : (
-                              <span className="text-xs text-gray-500 italic">Rating data not available - click link to view manually</span>
-                            )}
-                          </div>
-                          <p className="text-xs text-gray-700">{selectedHotel.tripadvisorReviews.summary}</p>
-                        </div>
-                      )}
-
-                      {/* HolidayCheck Reviews */}
-                      {selectedHotel.holidayCheckReviews && (
-                        <div className="p-3 border border-orange-200 rounded-lg bg-gradient-to-r from-orange-50 to-orange-100">
-                          <div className="flex items-center justify-between mb-2">
-                            <h5 className="font-medium text-orange-800 flex items-center">
-                              <Globe className="h-3 w-3 mr-1" />
-                              HolidayCheck
-                            </h5>
-                            {selectedHotel.holidayCheckReviews.url && (
-                              <a 
-                                href={selectedHotel.holidayCheckReviews.url} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="text-xs text-orange-600 hover:text-orange-800 underline"
-                              >
-                                View Reviews →
-                              </a>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2 mb-1">
-                            {selectedHotel.holidayCheckReviews.rating ? (
-                              <>
-                                <span className="text-sm font-medium">{selectedHotel.holidayCheckReviews.rating}/6</span>
-                                <div className="flex">
-                                  {Array.from({length: 6}, (_, i) => (
-                                    <Star 
-                                      key={i} 
-                                      className={`h-3 w-3 ${i < Math.round(selectedHotel.holidayCheckReviews.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
-                                    />
-                                  ))}
-                                </div>
-                                <span className="text-xs text-gray-600">({selectedHotel.holidayCheckReviews.reviewCount || selectedHotel.holidayCheckReviews.count} reviews)</span>
-                              </>
-                            ) : (
-                              <span className="text-xs text-gray-500 italic">Rating data not available - click link to view manually</span>
-                            )}
-                          </div>
-                          <p className="text-xs text-gray-700">{selectedHotel.holidayCheckReviews.summary}</p>
-                        </div>
-                      )}
-                      </div>
-
-                      {/* Overall Review Summary */}
-                      {selectedHotel.reviewSummary && (
-                        <div className="p-3 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg border border-purple-200">
-                          <h5 className="font-medium text-purple-800 mb-2 flex items-center">
-                            <Brain className="h-4 w-4 mr-2" />
-                            AI Review Summary
-                          </h5>
-                          <p className="text-sm text-purple-700">{selectedHotel.reviewSummary}</p>
-                          {selectedHotel.lastReviewUpdate && (
-                            <p className="text-xs text-purple-600 mt-2">
-                              Last updated: {new Date(selectedHotel.lastReviewUpdate).toLocaleDateString()}
-                            </p>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8 text-gray-500">
-                      <MessageSquare className="h-12 w-12 mx-auto mb-3 text-gray-400" />
-                      <p className="text-sm mb-2">No review data available for this hotel</p>
-                      <p className="text-xs text-gray-400">Click "Refresh Reviews" to extract review data from booking platforms</p>
-                    </div>
-                  )}
                 </div>
-                
-                {/* AI Search Section */}
+
+                {/* AI Search Interface */}
                 <div className="space-y-4">
-                  <div className="flex items-center gap-2">
-                    <Bot className="h-5 w-5 text-blue-600" />
-                    <h3 className="font-semibold text-gray-800">Ask OpenAI about this hotel</h3>
-                    <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Powered by GPT-4o</span>
-                  </div>
-                  
                   <div className="flex gap-2">
                     <Input
                       placeholder="What would you like to know about this hotel? (e.g., amenities, location, reviews, pricing)"
