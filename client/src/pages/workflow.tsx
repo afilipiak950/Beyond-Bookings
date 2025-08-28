@@ -607,13 +607,19 @@ export default function Workflow() {
     return currency?.symbol || currencyCode;
   };
   
-  // Get calculation ID from URL parameters
-  const calculationId = new URLSearchParams(window.location.search).get('id');
+  // Get calculation ID from URL parameters - make it reactive
+  const [calculationId, setCalculationId] = useState<string | null>(null);
+  const [isLoadingExistingCalculation, setIsLoadingExistingCalculation] = useState(false);
   
-  // Debug: Log the calculation ID
+  // Extract calculation ID reactively using router location
+  const [location] = useLocation();
+  
   useEffect(() => {
-    console.log("Calculation ID from URL:", calculationId);
-  }, [calculationId]);
+    const urlParams = new URLSearchParams(window.location.search);
+    const id = urlParams.get('id');
+    setCalculationId(id);
+    console.log("Calculation ID from URL:", id);
+  }, [location]); // React to location changes from router
   
   // Load exchange rates when currency changes or component mounts
   useEffect(() => {
@@ -660,6 +666,7 @@ export default function Workflow() {
   useEffect(() => {
     if (existingCalculation) {
       console.log("Loading calculation data:", existingCalculation);
+      setIsLoadingExistingCalculation(true);
       const calculation = existingCalculation as PricingCalculation;
       
       // Calculate the margin and discount percentages properly
@@ -696,13 +703,15 @@ export default function Workflow() {
         title: "Calculation Loaded",
         description: `Loaded calculation for ${calculation.hotelName}`,
       });
+      
+      setIsLoadingExistingCalculation(false);
     }
   }, [existingCalculation, toast]);
 
   // Load pre-filled hotel data from sessionStorage (when coming from customer management)
   useEffect(() => {
     const prefilledData = sessionStorage.getItem('prefilledHotelData');
-    if (prefilledData && !existingCalculation) {
+    if (prefilledData && !existingCalculation && !calculationId && !isLoadingExistingCalculation) {
       try {
         const hotelData = JSON.parse(prefilledData);
         console.log("Loading pre-filled hotel data:", hotelData);
@@ -732,7 +741,7 @@ export default function Workflow() {
         sessionStorage.removeItem('prefilledHotelData');
       }
     }
-  }, [existingCalculation, toast]);
+  }, [existingCalculation, toast, calculationId, isLoadingExistingCalculation]);
 
   // AI Price Intelligence State
   const [aiSuggestedPrice, setAiSuggestedPrice] = useState(0);
