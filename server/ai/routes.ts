@@ -469,4 +469,114 @@ router.get('/metrics', async (req: AuthenticatedRequest, res: Response) => {
   }
 });
 
+// POST /api/ai/price-suggestion - Get AI price suggestion
+router.post('/price-suggestion', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    if (!req.user?.id) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const {
+      hotelName,
+      stars,
+      roomCount,
+      averagePrice,
+      location,
+      category,
+      amenities
+    } = req.body;
+
+    if (!hotelName || !stars || !roomCount || !averagePrice) {
+      return res.status(400).json({ error: 'Missing required hotel data' });
+    }
+
+    // Import AIPriceIntelligence here to avoid circular dependencies
+    const { AIPriceIntelligence } = await import('../aiPriceIntelligence');
+    const aiPriceService = new AIPriceIntelligence();
+
+    const hotelData = {
+      name: hotelName,
+      stars: parseInt(stars),
+      roomCount: parseInt(roomCount),
+      averagePrice: parseFloat(averagePrice),
+      location: location || undefined,
+      category: category || undefined,
+    };
+
+    const result = await aiPriceService.calculateRealisticPrice(
+      req.user.id.toString(),
+      hotelData
+    );
+
+    res.json({
+      success: true,
+      suggestedPrice: result.aiSuggestedPrice,
+      confidencePercentage: Math.round(result.confidence * 100),
+      reasoning: result.reasoning,
+      basedOnSimilarHotels: result.similarHotels.length,
+      aiPercentage: result.aiPercentage,
+    });
+
+  } catch (error: any) {
+    console.error('AI price suggestion error:', error);
+    res.status(500).json({
+      error: error.message || 'Failed to generate AI price suggestion'
+    });
+  }
+});
+
+// POST /api/ai/store-feedback - Store AI feedback for learning
+router.post('/store-feedback', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    if (!req.user?.id) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const {
+      hotelName,
+      stars,
+      roomCount,
+      averagePrice,
+      aiSuggestedPrice,
+      actualPrice,
+      userFeedback,
+      location,
+      category,
+      amenities
+    } = req.body;
+
+    if (!hotelName || !aiSuggestedPrice || !actualPrice) {
+      return res.status(400).json({ error: 'Missing required feedback data' });
+    }
+
+    // Import AIPriceIntelligence here to avoid circular dependencies
+    const { AIPriceIntelligence } = await import('../aiPriceIntelligence');
+    const aiPriceService = new AIPriceIntelligence();
+
+    await aiPriceService.storeFeedback(req.user.id.toString(), {
+      name: hotelName,
+      stars: parseInt(stars) || 0,
+      roomCount: parseInt(roomCount) || 0,
+      averagePrice: parseFloat(averagePrice) || 0,
+      location: location || undefined,
+      category: category || undefined,
+    }, {
+      aiSuggestedPrice: parseFloat(aiSuggestedPrice),
+      actualPrice: parseFloat(actualPrice),
+      userFeedback: userFeedback || '',
+    });
+
+    res.json({
+      success: true,
+      message: 'Feedback stored successfully'
+    });
+
+  } catch (error: any) {
+    console.error('Store feedback error:', error);
+    res.status(500).json({
+      error: error.message || 'Failed to store feedback'
+    });
+  }
+});
+
 export default router;

@@ -103,7 +103,7 @@ export class AIPriceIntelligence {
       
       // Store in price intelligence database
       await db.insert(priceIntelligence).values({
-        userId,
+        userId: parseInt(userId),
         hotelName: hotelData.name,
         stars: hotelData.stars,
         roomCount: hotelData.roomCount,
@@ -425,6 +425,52 @@ Keep it concise, business-focused, and in German.`
     });
 
     return patterns;
+  }
+
+  /**
+   * Store AI feedback for learning purposes
+   */
+  async storeFeedback(
+    userId: string,
+    hotelData: HotelCharacteristics,
+    feedback: {
+      aiSuggestedPrice: number;
+      actualPrice: number;
+      userFeedback: string;
+    }
+  ): Promise<void> {
+    try {
+      // Calculate percentages for learning
+      const aiPercentage = (feedback.aiSuggestedPrice / hotelData.averagePrice) * 100;
+      const actualPercentage = (feedback.actualPrice / hotelData.averagePrice) * 100;
+
+      // Store the feedback in the price intelligence table
+      await db.insert(priceIntelligence).values({
+        userId: parseInt(userId),
+        hotelName: hotelData.name,
+        stars: hotelData.stars,
+        roomCount: hotelData.roomCount,
+        averagePrice: hotelData.averagePrice.toString(),
+        aiSuggestedPrice: feedback.aiSuggestedPrice.toString(),
+        actualPrice: feedback.actualPrice.toString(),
+        aiPercentage: aiPercentage.toString(),
+        actualPercentage: actualPercentage.toString(),
+        userFeedback: feedback.userFeedback,
+        wasManuallyEdited: true,
+        vectorEmbedding: null,
+        learningMetrics: {
+          confidence: 0.8,
+          source: 'user_feedback'
+        },
+      });
+
+      // Trigger learning session to improve future predictions
+      await this.triggerLearningSession(userId, 'user_feedback');
+
+    } catch (error) {
+      console.error('Error storing AI feedback:', error);
+      throw new Error('Failed to store feedback');
+    }
   }
 }
 
