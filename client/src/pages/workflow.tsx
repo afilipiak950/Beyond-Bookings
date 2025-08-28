@@ -674,10 +674,12 @@ export default function Workflow() {
 
   // Load existing calculation data into workflow
   useEffect(() => {
-    if (existingCalculation) {
+    if (existingCalculation && !isLoadingCalculation && !calculationError) {
       console.log("🔄 Loading calculation data:", existingCalculation);
       console.log("📊 Current workflowData before loading:", workflowData);
       setIsLoadingExistingCalculation(true);
+      
+      // The API returns the calculation directly, not wrapped in a data object
       const calculation = existingCalculation as PricingCalculation;
       
       // Calculate the margin and discount percentages properly
