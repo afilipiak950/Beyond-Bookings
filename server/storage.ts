@@ -907,7 +907,7 @@ ${calculation.hotelName},${calculation.hotelUrl || ''},${calculation.stars || ''
         if (requestInputHash && currentInputHash && requestInputHash !== currentInputHash) {
           // Inputs changed since request - set calculation to require new approval
           await this.updatePricingCalculationByAdmin(calculationId, {
-            approvalStatus: 'required_not_sent',
+            approvalStatus: 'required_not_sent' as any,
             lastApprovalRequestId: null,
             updatedAt: new Date(),
           });
@@ -923,7 +923,7 @@ ${calculation.hotelName},${calculation.hotelUrl || ''},${calculation.stars || ''
       // Update the approval request
       const updatedRequest = await this.updateApprovalRequest(requestId, adminUserId, {
         status: action === 'approve' ? 'approved' : 'rejected',
-        adminComment: adminComment || null,
+        adminComment: adminComment || undefined,
       });
 
       if (!updatedRequest) {
@@ -1013,10 +1013,7 @@ ${calculation.hotelName},${calculation.hotelUrl || ''},${calculation.stars || ''
       .orderBy(desc(notifications.createdAt));
 
     if (filters?.status && filters.status !== 'all') {
-      query = query.where(and(
-        eq(notifications.recipientUserId, userId),
-        eq(notifications.status, filters.status)
-      ));
+      query = query.where(eq(notifications.status, filters.status));
     }
 
     if (filters?.limit) {

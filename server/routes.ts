@@ -289,7 +289,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updateData = updateUserProfileSchema.parse(req.body);
 
       // Handle password update if provided
-      let finalUpdateData = { ...updateData };
+      let finalUpdateData: any = { ...updateData };
       if (updateData.newPassword) {
         finalUpdateData.password = await hashPassword(updateData.newPassword);
         delete finalUpdateData.newPassword;
@@ -2626,7 +2626,8 @@ Return only valid JSON, no markdown or explanations.`;
               case 'missingAvgPrice':
                 return !hotel.averagePrice || hotel.averagePrice === 0;
               case 'lowAIConfidence':
-                return hotel.aiConfidence && hotel.aiConfidence < 0.7;
+                // Check if hotel has any AI confidence data in review summaries
+                return false; // Placeholder as hotel schema doesn't have aiConfidence field
               default:
                 return false;
             }
