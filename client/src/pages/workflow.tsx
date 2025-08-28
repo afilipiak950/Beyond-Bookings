@@ -2274,8 +2274,9 @@ export default function Workflow() {
                             // Calculate hotel voucher value based on stars
                             const voucherValue = (workflowData.hotelVoucherValue && workflowData.hotelVoucherValue > 0) ? workflowData.hotelVoucherValue : (stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30);
                             
-                            // Formula: Vertragsvolumen Estimate = (Project Costs / Hotel Voucher Value) × (Actual Price × 0.75) × 1.1
-                            const vertragsvolumenEstimate = (projectCosts / voucherValue) * (currentActualPrice * tripzEstimateMultiplier) * 1.1;
+                            // Formula: Vertragsvolumen Estimate = Math.round(Project Costs / Hotel Voucher Value) × (Actual Price × 0.75) × 1.1
+                            // Use rounded room nights value to match the display field
+                            const vertragsvolumenEstimate = Math.round(projectCosts / voucherValue) * (currentActualPrice * tripzEstimateMultiplier) * 1.1;
                             
                             // Marge = Vertragsvolumen Estimate - Projektkosten brutto
                             const marge = vertragsvolumenEstimate - projectCosts;
@@ -2357,8 +2358,9 @@ export default function Workflow() {
                               ? workflowData.hotelVoucherValue 
                               : (stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30);
                             
-                            // Formula: Vertragsvolumen Estimate = (Project Costs / Hotel Voucher Value) × (Actual Price × tripzMultiplier) × 1.1
-                            const vertragsvolumenEstimate = (projectCosts / voucherValue) * (currentActualPrice * tripzEstimateMultiplier) * 1.1;
+                            // Formula: Vertragsvolumen Estimate = Math.round(Project Costs / Hotel Voucher Value) × (Actual Price × tripzMultiplier) × 1.1
+                            // Use rounded room nights value to match the display field
+                            const vertragsvolumenEstimate = Math.round(projectCosts / voucherValue) * (currentActualPrice * tripzEstimateMultiplier) * 1.1;
                             
                             // Calculation now correctly uses actual hotel voucher value instead of star-based value
                             
@@ -2640,8 +2642,9 @@ export default function Workflow() {
                           // Calculate hotel voucher value based on stars
                           const voucherValue = (workflowData.hotelVoucherValue && workflowData.hotelVoucherValue > 0) ? workflowData.hotelVoucherValue : (stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30);
                           
-                          // Formula: Vertragsvolumen Estimate = (Project Costs / Hotel Voucher Value) × (Actual Price × 0.75) × 1.1
-                          const vertragsvolumenEstimate = (projectCosts / voucherValue) * (currentActualPrice * tripzEstimateMultiplier) * 1.1;
+                          // Formula: Vertragsvolumen Estimate = Math.round(Project Costs / Hotel Voucher Value) × (Actual Price × 0.75) × 1.1
+                          // Use rounded room nights value to match the display field
+                          const vertragsvolumenEstimate = Math.round(projectCosts / voucherValue) * (currentActualPrice * tripzEstimateMultiplier) * 1.1;
                           
                           // Result = Vertragsvolumen Estimate - Finanzierung: Projektkosten brutto
                           const result = vertragsvolumenEstimate - projectCosts;
@@ -2676,8 +2679,9 @@ export default function Workflow() {
                           // Calculate hotel voucher value based on stars
                           const voucherValue = (workflowData.hotelVoucherValue && workflowData.hotelVoucherValue > 0) ? workflowData.hotelVoucherValue : (stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30);
                           
-                          // Formula: Vertragsvolumen Estimate = (Project Costs / Hotel Voucher Value) × (Actual Price × 0.75) × 1.1
-                          const vertragsvolumenEstimate = (projectCosts / voucherValue) * (currentActualPrice * tripzEstimateMultiplier) * 1.1;
+                          // Formula: Vertragsvolumen Estimate = Math.round(Project Costs / Hotel Voucher Value) × (Actual Price × 0.75) × 1.1
+                          // Use rounded room nights value to match the display field
+                          const vertragsvolumenEstimate = Math.round(projectCosts / voucherValue) * (currentActualPrice * tripzEstimateMultiplier) * 1.1;
                           
                           // Show 0 when no meaningful input data
                           if (projectCosts === 0 && currentActualPrice === 0) {
@@ -2718,8 +2722,9 @@ export default function Workflow() {
                           // Calculate hotel voucher value based on stars
                           const voucherValue = (workflowData.hotelVoucherValue && workflowData.hotelVoucherValue > 0) ? workflowData.hotelVoucherValue : (stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30);
                           
-                          // Formula: Vertragsvolumen Estimate = (Project Costs / Hotel Voucher Value) × (Actual Price × 0.75) × 1.1
-                          const vertragsvolumenEstimate = (projectCosts / voucherValue) * (currentActualPrice * tripzEstimateMultiplier) * 1.1;
+                          // Formula: Vertragsvolumen Estimate = Math.round(Project Costs / Hotel Voucher Value) × (Actual Price × 0.75) × 1.1
+                          // Use rounded room nights value to match the display field
+                          const vertragsvolumenEstimate = Math.round(projectCosts / voucherValue) * (currentActualPrice * tripzEstimateMultiplier) * 1.1;
                           
                           // Marge = Vertragsvolumen Estimate - Projektkosten brutto (absolute difference)
                           const marge = vertragsvolumenEstimate - projectCosts;
@@ -2783,8 +2788,9 @@ export default function Workflow() {
                           // Calculate hotel voucher value based on stars
                           const voucherValue = (workflowData.hotelVoucherValue && workflowData.hotelVoucherValue > 0) ? workflowData.hotelVoucherValue : (stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30);
                           
-                          // Formula: Vertragsvolumen Estimate = (Project Costs / Hotel Voucher Value) × (Actual Price × 0.75) × 1.1
-                          const vertragsvolumenEstimate = (projectCosts / voucherValue) * (currentActualPrice * tripzEstimateMultiplier) * 1.1;
+                          // Formula: Vertragsvolumen Estimate = Math.round(Project Costs / Hotel Voucher Value) × (Actual Price × 0.75) × 1.1
+                          // Use rounded room nights value to match the display field
+                          const vertragsvolumenEstimate = Math.round(projectCosts / voucherValue) * (currentActualPrice * tripzEstimateMultiplier) * 1.1;
                           
                           // Vorsteuer Tripz Provision = (Vertragsvolumen Estimate × 0.19) × 0.23
                           const vorsteuerTripz = (vertragsvolumenEstimate * 0.19) * 0.23;
@@ -2819,8 +2825,9 @@ export default function Workflow() {
                           // Calculate hotel voucher value based on stars
                           const voucherValue = (workflowData.hotelVoucherValue && workflowData.hotelVoucherValue > 0) ? workflowData.hotelVoucherValue : (stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30);
                           
-                          // Formula: Vertragsvolumen Estimate = (Project Costs / Hotel Voucher Value) × (Actual Price × 0.75) × 1.1
-                          const vertragsvolumenEstimate = (projectCosts / voucherValue) * (currentActualPrice * tripzEstimateMultiplier) * 1.1;
+                          // Formula: Vertragsvolumen Estimate = Math.round(Project Costs / Hotel Voucher Value) × (Actual Price × 0.75) × 1.1
+                          // Use rounded room nights value to match the display field
+                          const vertragsvolumenEstimate = Math.round(projectCosts / voucherValue) * (currentActualPrice * tripzEstimateMultiplier) * 1.1;
                           
                           // Vorsteuer Produktkauf = Projektkosten × 0.19
                           const vorsteuerProdukt = projectCosts * 0.19;
@@ -2866,8 +2873,9 @@ export default function Workflow() {
                           // Calculate hotel voucher value based on stars
                           const voucherValue = (workflowData.hotelVoucherValue && workflowData.hotelVoucherValue > 0) ? workflowData.hotelVoucherValue : (stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30);
                           
-                          // Formula: Vertragsvolumen Estimate = (Project Costs / Hotel Voucher Value) × (Actual Price × 0.75) × 1.1
-                          const vertragsvolumenEstimate = (projectCosts / voucherValue) * (currentActualPrice * tripzEstimateMultiplier) * 1.1;
+                          // Formula: Vertragsvolumen Estimate = Math.round(Project Costs / Hotel Voucher Value) × (Actual Price × 0.75) × 1.1
+                          // Use rounded room nights value to match the display field
+                          const vertragsvolumenEstimate = Math.round(projectCosts / voucherValue) * (currentActualPrice * tripzEstimateMultiplier) * 1.1;
                           
                           // Marge = Vertragsvolumen Estimate - Projektkosten brutto
                           const marge = vertragsvolumenEstimate - projectCosts;
