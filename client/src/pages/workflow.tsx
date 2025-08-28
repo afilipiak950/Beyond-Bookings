@@ -3854,13 +3854,18 @@ export default function Workflow() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                       <div>
                         <span className="text-sm font-medium text-blue-600">Gesamt Reviews:</span>
-                        <p className="text-sm text-blue-800">{extractedReviews.totalReviewCount}</p>
+                        <p className="text-sm text-blue-800">
+                          {extractedReviews.totalReviewCount || 'Nicht verfügbar'}
+                        </p>
                       </div>
                       <div>
                         <span className="text-sm font-medium text-blue-600">Durchschnitt:</span>
                         <p className="text-sm text-blue-800 flex items-center">
                           <Star className="h-4 w-4 text-yellow-500 mr-1" />
-                          {extractedReviews.averageRating?.toFixed(1)}/10
+                          {extractedReviews.averageRating ? 
+                            `${extractedReviews.averageRating.toFixed(1)}/10` : 
+                            'Nicht verfügbar'
+                          }
                         </p>
                       </div>
                     </div>
@@ -3883,9 +3888,17 @@ export default function Workflow() {
                       </div>
                       <div className="flex items-center gap-2 mb-2">
                         <Star className="h-4 w-4 text-yellow-500" />
-                        <span className="font-medium">{extractedReviews.bookingReviews.rating}/10</span>
-                        <span className="text-sm text-gray-600">({extractedReviews.bookingReviews.reviewCount} Reviews)</span>
+                        <span className="font-medium">
+                          {extractedReviews.bookingReviews.rating ? 
+                            `${extractedReviews.bookingReviews.rating}/10` : 
+                            'Bewertung nicht verfügbar'
+                          }
+                        </span>
+                        {extractedReviews.bookingReviews.reviewCount && (
+                          <span className="text-sm text-gray-600">({extractedReviews.bookingReviews.reviewCount} Reviews)</span>
+                        )}
                       </div>
+                      <p className="text-xs text-gray-600">{extractedReviews.bookingReviews.insights}</p>
                     </div>
 
                     {/* Google Reviews */}
@@ -3903,9 +3916,17 @@ export default function Workflow() {
                       </div>
                       <div className="flex items-center gap-2 mb-2">
                         <Star className="h-4 w-4 text-yellow-500" />
-                        <span className="font-medium">{extractedReviews.googleReviews.rating}/5</span>
-                        <span className="text-sm text-gray-600">({extractedReviews.googleReviews.reviewCount} Reviews)</span>
+                        <span className="font-medium">
+                          {extractedReviews.googleReviews.rating ? 
+                            `${extractedReviews.googleReviews.rating}/5` : 
+                            'Bewertung nicht verfügbar'
+                          }
+                        </span>
+                        {extractedReviews.googleReviews.reviewCount && (
+                          <span className="text-sm text-gray-600">({extractedReviews.googleReviews.reviewCount} Reviews)</span>
+                        )}
                       </div>
+                      <p className="text-xs text-gray-600">{extractedReviews.googleReviews.insights}</p>
                     </div>
 
                     {/* HolidayCheck Reviews */}
@@ -3923,9 +3944,17 @@ export default function Workflow() {
                       </div>
                       <div className="flex items-center gap-2 mb-2">
                         <Star className="h-4 w-4 text-yellow-500" />
-                        <span className="font-medium">{extractedReviews.holidayCheckReviews.rating}/6</span>
-                        <span className="text-sm text-gray-600">({extractedReviews.holidayCheckReviews.reviewCount} Reviews)</span>
+                        <span className="font-medium">
+                          {extractedReviews.holidayCheckReviews.rating ? 
+                            `${extractedReviews.holidayCheckReviews.rating}/6` : 
+                            'Bewertung nicht verfügbar'
+                          }
+                        </span>
+                        {extractedReviews.holidayCheckReviews.reviewCount && (
+                          <span className="text-sm text-gray-600">({extractedReviews.holidayCheckReviews.reviewCount} Reviews)</span>
+                        )}
                       </div>
+                      <p className="text-xs text-gray-600">{extractedReviews.holidayCheckReviews.insights}</p>
                     </div>
 
                     {/* TripAdvisor Reviews */}
@@ -3943,9 +3972,17 @@ export default function Workflow() {
                       </div>
                       <div className="flex items-center gap-2 mb-2">
                         <Star className="h-4 w-4 text-yellow-500" />
-                        <span className="font-medium">{extractedReviews.tripadvisorReviews.rating}/5</span>
-                        <span className="text-sm text-gray-600">({extractedReviews.tripadvisorReviews.reviewCount} Reviews)</span>
+                        <span className="font-medium">
+                          {extractedReviews.tripadvisorReviews.rating ? 
+                            `${extractedReviews.tripadvisorReviews.rating}/5` : 
+                            'Bewertung nicht verfügbar'
+                          }
+                        </span>
+                        {extractedReviews.tripadvisorReviews.reviewCount && (
+                          <span className="text-sm text-gray-600">({extractedReviews.tripadvisorReviews.reviewCount} Reviews)</span>
+                        )}
                       </div>
+                      <p className="text-xs text-gray-600">{extractedReviews.tripadvisorReviews.insights}</p>
                     </div>
                   </div>
                 </div>

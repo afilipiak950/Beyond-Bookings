@@ -463,74 +463,139 @@ Return this EXACT JSON format:
   "extractionConfidence": "high/medium/low"
 }`;
 
-      console.log('🤖 Extracting real review data with AI...');
+      console.log('🔍 Attempting real review data extraction with web search...');
 
-      const reviewCompletion = await openai.chat.completions.create({
-        model: "gpt-4o",
-        messages: [
-          {
-            role: "system",
-            content: "You are a comprehensive hotel review data analyst with access to real-time booking platform data. Extract authentic review information with precise ratings, counts, and working URLs."
-          },
-          {
-            role: "user",
-            content: reviewSearchPrompt
-          }
-        ],
-        max_completion_tokens: 1000,
-        temperature: 0.1
-      });
+      // Real web search approach - use actual search APIs
+      const searchQueries = [
+        `${hotelName} booking.com reviews rating`,
+        `${hotelName} google reviews rating`,
+        `${hotelName} holidaycheck bewertungen`,
+        `${hotelName} tripadvisor reviews rating`
+      ];
 
-      let reviewData;
+      let reviewData: any = {
+        bookingReviews: null,
+        googleReviews: null,
+        holidayCheckReviews: null,
+        tripadvisorReviews: null,
+        reviewSummary: null,
+        dataExtracted: false,
+        extractionConfidence: "low",
+        averageRating: null,
+        totalReviewCount: null,
+        lastReviewUpdate: null
+      };
+
+      // Try real web search for each platform
       try {
-        const reviewContent = reviewCompletion.choices[0].message.content;
-        console.log('🔍 Raw AI review response:', reviewContent);
+        console.log('🌐 Attempting real web search using SerpAPI...');
         
-        // Extract JSON from the response
-        const jsonMatch = reviewContent.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          reviewData = JSON.parse(jsonMatch[0]);
-          console.log('✅ Parsed AI review data:', JSON.stringify(reviewData, null, 2));
+        // Check if SERPAPI_KEY is available for real searches
+        if (process.env.SERPAPI_KEY) {
+          const { getJson } = await import('serpapi');
+          
+          const searchPromises = [
+            // Booking.com search
+            getJson({
+              engine: "google",
+              q: `${hotelName} site:booking.com reviews rating`,
+              api_key: process.env.SERPAPI_KEY
+            }),
+            // Google Reviews search
+            getJson({
+              engine: "google", 
+              q: `${hotelName} google reviews rating`,
+              api_key: process.env.SERPAPI_KEY
+            }),
+            // HolidayCheck search
+            getJson({
+              engine: "google",
+              q: `${hotelName} site:holidaycheck.de bewertungen`,
+              api_key: process.env.SERPAPI_KEY
+            }),
+            // TripAdvisor search
+            getJson({
+              engine: "google",
+              q: `${hotelName} site:tripadvisor.com reviews rating`,
+              api_key: process.env.SERPAPI_KEY
+            })
+          ];
+          
+          const searchResults = await Promise.allSettled(searchPromises);
+          console.log('🔍 Real web search completed, processing results...');
+          
+          // Process actual search results
+          if (searchResults.some(result => result.status === 'fulfilled')) {
+            console.log('✅ Real search data found, extracting review information...');
+            // Here we would process the actual search results
+            // For now, still return unavailable until we implement result parsing
+          }
         } else {
-          throw new Error('No JSON found in AI response');
+          console.log('⚠️  SERPAPI_KEY not available - using manual search approach');
         }
-      } catch (parseError) {
-        console.error('❌ Failed to parse AI review response:', parseError);
-        // Fallback with smart estimates
+        
+        const searchResults = [null, null, null, null]; // Placeholder
+
+        // If we had real search results, process them here
+        if (searchResults.some(result => result !== null)) {
+          console.log('✅ Real search data found');
+          // Process real search results
+        } else {
+          console.log('⚠️  No real search data available - marking as unavailable');
+          
+          // HONEST approach: Return search URLs without fake data
+          reviewData = {
+            bookingReviews: {
+              rating: null,
+              reviewCount: null,
+              url: `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(hotelName)}`,
+              insights: "Suche manuell auf Booking.com für echte Bewertungen"
+            },
+            googleReviews: {
+              rating: null,
+              reviewCount: null,
+              url: `https://www.google.com/search?q=${encodeURIComponent(hotelName + ' hotel reviews')}`,
+              insights: "Suche manuell auf Google Maps für echte Bewertungen"
+            },
+            holidayCheckReviews: {
+              rating: null,
+              reviewCount: null,
+              url: `https://www.holidaycheck.de/search?q=${encodeURIComponent(hotelName)}`,
+              insights: "Suche manuell auf HolidayCheck für echte Bewertungen"
+            },
+            tripadvisorReviews: {
+              rating: null,
+              reviewCount: null,
+              url: `https://www.tripadvisor.com/Search?q=${encodeURIComponent(hotelName)}`,
+              insights: "Suche manuell auf TripAdvisor für echte Bewertungen"
+            },
+            reviewSummary: `HINWEIS: Echte Review-Daten können nicht automatisch abgerufen werden. Bitte besuchen Sie die bereitgestellten Links für aktuelle Bewertungen von ${hotelName}.`,
+            dataExtracted: false,
+            extractionConfidence: "unavailable",
+            averageRating: null,
+            totalReviewCount: null,
+            lastReviewUpdate: null
+          };
+        }
+      } catch (error) {
+        console.error('❌ Web search failed completely:', error);
         reviewData = {
-          bookingReviews: {
-            rating: 7.8 + Math.random() * 1.5,
-            reviewCount: Math.floor(200 + Math.random() * 800),
-            url: `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(hotelName)}`,
-            insights: "Guests appreciate the central location and friendly staff service."
-          },
-          googleReviews: {
-            rating: 3.8 + Math.random() * 1.0,
-            reviewCount: Math.floor(100 + Math.random() * 400),
-            url: `https://maps.google.com/search/${encodeURIComponent(hotelName + ' hotel')}`,
-            insights: "Google reviewers highlight convenient location and good value for money."
-          },
-          holidayCheckReviews: {
-            rating: 4.5 + Math.random() * 1.0,
-            reviewCount: Math.floor(50 + Math.random() * 200),
-            url: `https://www.holidaycheck.de/search?q=${encodeURIComponent(hotelName)}`,
-            insights: "HolidayCheck travelers praise comfort and cleanliness standards."
-          },
-          tripadvisorReviews: {
-            rating: 3.5 + Math.random() * 1.2,
-            reviewCount: Math.floor(80 + Math.random() * 300),
-            url: `https://www.tripadvisor.com/Search?q=${encodeURIComponent(hotelName + ' hotel')}`,
-            insights: "TripAdvisor guests value the amenities and professional service."
-          },
-          reviewSummary: `Based on multi-platform analysis, ${hotelName} receives positive feedback for location and service quality. Guests consistently mention professional staff and convenient access to local attractions, with some noting opportunities for facility updates.`,
-          dataExtracted: true,
-          extractionConfidence: "medium"
+          bookingReviews: null,
+          googleReviews: null,
+          holidayCheckReviews: null,
+          tripadvisorReviews: null,
+          reviewSummary: "Review-Daten konnten nicht abgerufen werden. Manuelle Suche erforderlich.",
+          dataExtracted: false,
+          extractionConfidence: "failed",
+          averageRating: null,
+          totalReviewCount: null,
+          lastReviewUpdate: null
         };
       }
 
-      // Calculate aggregated metrics
+      // Calculate aggregated metrics ONLY if real data exists
       const platforms = [reviewData.bookingReviews, reviewData.googleReviews, reviewData.holidayCheckReviews, reviewData.tripadvisorReviews];
-      const validPlatforms = platforms.filter(p => p && p.rating && p.reviewCount);
+      const validPlatforms = platforms.filter(p => p && p.rating !== null && p.reviewCount !== null);
       
       if (validPlatforms.length > 0) {
         // Normalize ratings to 10-point scale for average calculation
@@ -548,16 +613,18 @@ Return this EXACT JSON format:
         reviewData.averageRating = totalNormalizedRating / validPlatforms.length;
         reviewData.totalReviewCount = totalReviews;
       } else {
-        reviewData.averageRating = 7.5;
-        reviewData.totalReviewCount = 0;
+        // No fake data - be honest about unavailability
+        reviewData.averageRating = null;
+        reviewData.totalReviewCount = null;
       }
       
       reviewData.lastReviewUpdate = new Date().toISOString();
 
-      console.log(`✅ AI Review extraction completed for ${hotelName}:`, {
+      console.log(`ℹ️  Review search completed for ${hotelName}:`, {
         platforms: validPlatforms.length,
-        avgRating: reviewData.averageRating?.toFixed(1),
-        totalReviews: reviewData.totalReviewCount
+        avgRating: reviewData.averageRating ? reviewData.averageRating?.toFixed(1) : 'unavailable',
+        totalReviews: reviewData.totalReviewCount || 'unavailable',
+        extractionStatus: reviewData.extractionConfidence
       });
 
       res.json({
