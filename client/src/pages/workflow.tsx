@@ -738,41 +738,52 @@ export default function Workflow() {
         }
       };
       
-      // NEW: Restore all right-side calculation state from database
-      if (calculation.actualPrice) {
+      // CRITICAL: Restore all right-side calculation state from database
+      // Use proper checks to avoid falsy value issues
+      if (calculation.actualPrice !== null && calculation.actualPrice !== undefined) {
+        console.log("🔄 Restoring actualPrice:", calculation.actualPrice);
         setActualPrice(parseFloat(calculation.actualPrice));
       }
-      if (calculation.aiSuggestedPrice) {
+      if (calculation.aiSuggestedPrice !== null && calculation.aiSuggestedPrice !== undefined) {
+        console.log("🔄 Restoring aiSuggestedPrice:", calculation.aiSuggestedPrice);
         setAiSuggestedPrice(parseFloat(calculation.aiSuggestedPrice));
       }
-      if (calculation.aiConfidence) {
+      if (calculation.aiConfidence !== null && calculation.aiConfidence !== undefined) {
+        console.log("🔄 Restoring aiConfidence:", calculation.aiConfidence);
         setAiConfidence(calculation.aiConfidence);
       }
       if (calculation.aiReasoning) {
+        console.log("🔄 Restoring aiReasoning:", calculation.aiReasoning);
         setAiReasoning(calculation.aiReasoning);
       }
-      if (calculation.isManualEdit !== null) {
+      if (calculation.isManualEdit !== null && calculation.isManualEdit !== undefined) {
+        console.log("🔄 Restoring isManualEdit:", calculation.isManualEdit);
         setIsManualEdit(calculation.isManualEdit);
       }
       if (calculation.manualEditFeedback) {
+        console.log("🔄 Restoring manualEditFeedback:", calculation.manualEditFeedback);
         setEditFeedback(calculation.manualEditFeedback);
       }
       
       // Restore voucher calculation state
-      if (calculation.isVoucherManualEdit !== null) {
+      if (calculation.isVoucherManualEdit !== null && calculation.isVoucherManualEdit !== undefined) {
+        console.log("🔄 Restoring isVoucherManualEdit:", calculation.isVoucherManualEdit);
         setIsVoucherManualEdit(calculation.isVoucherManualEdit);
       }
       if (calculation.voucherEditFeedback) {
+        console.log("🔄 Restoring voucherEditFeedback:", calculation.voucherEditFeedback);
         setVoucherEditFeedback(calculation.voucherEditFeedback);
       }
       
       // Restore Tripz calculation state
       if (calculation.tripzEstimateMultiplier) {
+        console.log("🔄 Restoring tripzEstimateMultiplier:", calculation.tripzEstimateMultiplier);
         setTripzEstimateMultiplier(parseFloat(calculation.tripzEstimateMultiplier));
       }
       
       // Restore additional calculation metadata
-      if (calculation.similarHotelsCount) {
+      if (calculation.similarHotelsCount !== null && calculation.similarHotelsCount !== undefined) {
+        console.log("🔄 Restoring similarHotelsCount:", calculation.similarHotelsCount);
         setSimilarHotelsCount(calculation.similarHotelsCount);
       }
       
@@ -840,12 +851,13 @@ export default function Workflow() {
   const [similarHotelsCount, setSimilarHotelsCount] = useState(0);
   const [isLoadingAI, setIsLoadingAI] = useState(false);
 
-  // Synchronize actualPrice with workflowData.averagePrice
+  // Synchronize actualPrice with workflowData.averagePrice (only for new calculations, not edits)
   useEffect(() => {
-    if (workflowData.averagePrice !== actualPrice) {
+    // CRITICAL: Don't overwrite restored values when loading existing calculation
+    if (!calculationId && !isLoadingExistingCalculation && workflowData.averagePrice !== actualPrice) {
       setActualPrice(workflowData.averagePrice || 0);
     }
-  }, [workflowData.averagePrice]);
+  }, [workflowData.averagePrice, calculationId, isLoadingExistingCalculation]);
 
   // Hotel Voucher Value State
   const [hotelVoucherValue, setHotelVoucherValue] = useState(0);
