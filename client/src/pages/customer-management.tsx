@@ -1174,7 +1174,7 @@ export default function CustomerManagement() {
 
         {/* Hotels Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredHotels?.map((hotel: any) => (
+          {hotelData?.map((hotel: any) => (
             <Card key={hotel.id} className="relative group hover:shadow-lg transition-all duration-200">
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
@@ -1262,7 +1262,7 @@ export default function CustomerManagement() {
           ))}
         </div>
 
-        {filteredHotels?.length === 0 && !hotelsLoading && (
+        {hotelData?.length === 0 && !hotelsLoading && (
           <Card>
             <CardContent className="text-center py-12">
               <Building2 className="h-16 w-16 mx-auto mb-4 text-gray-400" />
