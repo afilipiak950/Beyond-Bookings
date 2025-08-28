@@ -192,8 +192,67 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteUser(id: number): Promise<boolean> {
-    const result = await db.delete(users).where(eq(users.id, id));
-    return (result.rowCount ?? 0) > 0;
+    try {
+      console.log(`🗑️ Starting cascade deletion for user ${id}`);
+      
+      // Step 1: Delete feedback records created by this user
+      console.log(`💬 Deleting feedback records for user ${id}`);
+      await db.delete(feedback).where(eq(feedback.userId, id));
+      
+      // Step 2: Delete notifications sent to this user
+      console.log(`🔔 Deleting notifications for user ${id}`);
+      await db.delete(notifications).where(eq(notifications.recipientUserId, id));
+      
+      // Step 3: Handle approval requests - set user references to NULL where appropriate
+      console.log(`📝 Updating approval requests for user ${id}`);
+      await db.update(approvalRequests)
+        .set({ approvedByUserId: null })
+        .where(eq(approvalRequests.approvedByUserId, id));
+      
+      await db.update(approvalRequests)
+        .set({ decisionByUserId: null })
+        .where(eq(approvalRequests.decisionByUserId, id));
+      
+      // Delete approval requests created by this user
+      await db.delete(approvalRequests).where(eq(approvalRequests.createdByUserId, id));
+      
+      // Step 4: Handle pricing calculations - delete them as they're owned by the user
+      console.log(`💼 Deleting pricing calculations for user ${id}`);
+      const userCalculations = await db.select({ id: pricingCalculations.id })
+        .from(pricingCalculations)
+        .where(eq(pricingCalculations.userId, id));
+      
+      for (const calc of userCalculations) {
+        // Delete notifications related to this calculation's approval requests
+        await db.delete(notifications)
+          .where(sql`approval_request_id IN (SELECT id FROM approval_requests WHERE calculation_id = ${calc.id})`);
+        
+        // Delete approval requests for this calculation
+        await db.delete(approvalRequests)
+          .where(eq(approvalRequests.calculationId, calc.id));
+      }
+      
+      // Now delete the pricing calculations
+      await db.delete(pricingCalculations).where(eq(pricingCalculations.userId, id));
+      
+      // Step 5: Update hotels created by this user - set createdByUserId to NULL
+      console.log(`🏨 Updating hotels created by user ${id}`);
+      await db.update(hotels)
+        .set({ createdByUserId: null })
+        .where(eq(hotels.createdByUserId, id));
+      
+      // Step 6: Finally delete the user
+      console.log(`👤 Deleting user ${id}`);
+      const result = await db.delete(users).where(eq(users.id, id));
+      
+      const success = (result.rowCount ?? 0) > 0;
+      console.log(`✅ User ${id} deletion ${success ? 'successful' : 'failed'}`);
+      return success;
+      
+    } catch (error) {
+      console.error(`❌ Error deleting user ${id}:`, error);
+      return false;
+    }
   }
 
   // Hotel operations
