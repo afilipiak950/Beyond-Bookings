@@ -25,6 +25,7 @@ import { documentAnalyses, hotels, users } from "@shared/schema";
 import { eq, desc, and, or, isNull, gte, lte, like, ilike, inArray, sql, count } from "drizzle-orm";
 import OpenAI from "openai";
 import aiRoutes from "./ai/routes";
+import voucherIntelligenceRoutes from "./routes/voucherIntelligence";
 import * as cheerio from "cheerio";
 // Temporarily commented out to fix import errors
 // import { UltraEnhancedAIService } from "./ai/aiService-enhanced";
@@ -3967,6 +3968,7 @@ CRITICAL REQUIREMENTS:
 
   // Mount AI routes
   app.use('/api/ai', aiRoutes);
+  app.use('/api/voucher-intelligence', voucherIntelligenceRoutes);
   
   return httpServer;
 }

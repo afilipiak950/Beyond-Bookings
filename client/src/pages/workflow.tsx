@@ -874,6 +874,14 @@ export default function Workflow() {
   const [voucherEditOpen, setVoucherEditOpen] = useState(false);
   const [tempVoucherValue, setTempVoucherValue] = useState("");
   const [voucherEditFeedback, setVoucherEditFeedback] = useState("");
+  
+  // AI Voucher Intelligence State
+  const [aiSuggestedVoucherValue, setAiSuggestedVoucherValue] = useState(0);
+  const [voucherConfidence, setVoucherConfidence] = useState(0);
+  const [voucherReasoning, setVoucherReasoning] = useState("");
+  const [similarVoucherHotels, setSimilarVoucherHotels] = useState(0);
+  const [voucherInfluencingFactors, setVoucherInfluencingFactors] = useState<string[]>([]);
+  const [isVoucherLoading, setIsVoucherLoading] = useState(false);
 
   // PowerPoint export state
   const [isExporting, setIsExporting] = useState(false);
@@ -1479,6 +1487,11 @@ export default function Workflow() {
           ...prev,
           hotelVoucherValue: voucherValue
         }));
+        
+        // Get AI prediction for voucher value when hotel data is available
+        if (workflowData.hotelName && workflowData.stars > 0) {
+          predictVoucherValue();
+        }
       }
     }
   }, [workflowData.averagePrice, workflowData.stars, isVoucherManualEdit]);
@@ -1537,6 +1550,54 @@ export default function Workflow() {
   };
 
   // Save voucher manual edit with feedback
+  // AI Voucher Prediction Function
+  const predictVoucherValue = async () => {
+    if (!workflowData.hotelName || workflowData.stars === 0 || isVoucherLoading) return;
+    
+    setIsVoucherLoading(true);
+    try {
+      const response = await fetch('/api/voucher-intelligence/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          hotelName: workflowData.hotelName,
+          stars: workflowData.stars,
+          roomCount: workflowData.roomCount,
+          location: workflowData.city || '',
+          category: '', // Could be enhanced based on hotel data
+          amenities: [], // Could be enhanced with hotel amenities
+          averageMarketPrice: workflowData.averagePrice,
+        }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        const prediction = result.data;
+        
+        setAiSuggestedVoucherValue(prediction.suggestedValue);
+        setVoucherConfidence(prediction.confidence);
+        setVoucherReasoning(prediction.reasoning);
+        setSimilarVoucherHotels(prediction.similarHotels);
+        setVoucherInfluencingFactors(prediction.influencingFactors);
+        
+        console.log(`🧠 AI Voucher Prediction: €${prediction.suggestedValue} (${prediction.confidence}% confidence)`);
+        
+        // Auto-suggest the AI value if not manually edited and confidence is high
+        if (!isVoucherManualEdit && prediction.confidence >= 75) {
+          setHotelVoucherValue(prediction.suggestedValue);
+          setWorkflowData(prev => ({
+            ...prev,
+            hotelVoucherValue: prediction.suggestedValue
+          }));
+        }
+      }
+    } catch (error) {
+      console.error('Error predicting voucher value:', error);
+    } finally {
+      setIsVoucherLoading(false);
+    }
+  };
+
   const saveVoucherManualEdit = async () => {
     const newVoucherValue = parseFloat(tempVoucherValue);
     if (isNaN(newVoucherValue) || newVoucherValue <= 0) {
@@ -1557,6 +1618,37 @@ export default function Workflow() {
     }));
     setIsVoucherManualEdit(true);
     setVoucherEditOpen(false);
+
+    // Learn from user feedback if AI suggested a different value
+    if (aiSuggestedVoucherValue > 0 && Math.abs(aiSuggestedVoucherValue - newVoucherValue) > 0.01) {
+      try {
+        const response = await fetch('/api/voucher-intelligence/learn', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            hotelName: workflowData.hotelName,
+            stars: workflowData.stars,
+            roomCount: workflowData.roomCount,
+            location: workflowData.city || '',
+            category: '', // Could be enhanced based on hotel data
+            amenities: [], // Could be enhanced with hotel amenities
+            aiSuggestion: aiSuggestedVoucherValue,
+            userChoice: newVoucherValue,
+            userFeedback: voucherEditFeedback,
+          }),
+        });
+        
+        if (response.ok) {
+          console.log('🧠 Voucher intelligence learned from user feedback');
+          toast({
+            title: "KI-Gutscheinwert angepasst",
+            description: "Ihre Änderung wurde gespeichert und die KI lernt aus Ihrem Feedback.",
+          });
+        }
+      } catch (error) {
+        console.error('Error learning from voucher feedback:', error);
+      }
+    }
 
     console.log("Voucher manual edit recorded:", {
       hotel: workflowData.hotelName,
@@ -2337,9 +2429,16 @@ export default function Workflow() {
                             )}
                           </div>
                           <div className="flex items-center space-x-2">
-                            <span className="text-xl font-black bg-gradient-to-r from-red-600 to-rose-600 bg-clip-text text-transparent">
-                              {hotelVoucherValue ? hotelVoucherValue.toFixed(2) : '0.00'} {getCurrencySymbol(workflowData.currency)}
-                            </span>
+                            {isVoucherLoading ? (
+                              <div className="flex items-center space-x-2">
+                                <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+                                <span className="text-sm font-medium text-red-600">KI berechnet...</span>
+                              </div>
+                            ) : (
+                              <span className="text-xl font-black bg-gradient-to-r from-red-600 to-rose-600 bg-clip-text text-transparent">
+                                {hotelVoucherValue ? hotelVoucherValue.toFixed(2) : '0.00'} {getCurrencySymbol(workflowData.currency)}
+                              </span>
+                            )}
                             <Dialog open={voucherEditOpen} onOpenChange={setVoucherEditOpen}>
                               <DialogTrigger asChild>
                                 <button 
@@ -2358,6 +2457,41 @@ export default function Workflow() {
                                   </DialogTitle>
                                 </DialogHeader>
                                 <div className="space-y-4 pt-4">
+                                  {/* AI Suggestion Display */}
+                                  {aiSuggestedVoucherValue > 0 && (
+                                    <div className="bg-blue-50 p-3 rounded border-l-4 border-blue-400">
+                                      <div className="flex items-center space-x-2 mb-2">
+                                        <Brain className="h-4 w-4 text-blue-600" />
+                                        <p className="text-sm font-semibold text-blue-800">
+                                          KI-Empfehlung: {aiSuggestedVoucherValue.toFixed(2)} {getCurrencySymbol(workflowData.currency)}
+                                        </p>
+                                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-medium">
+                                          {voucherConfidence}% Vertrauen
+                                        </span>
+                                      </div>
+                                      <p className="text-xs text-blue-700 mb-2">
+                                        {voucherReasoning}
+                                      </p>
+                                      {similarVoucherHotels > 0 && (
+                                        <p className="text-xs text-blue-600">
+                                          📊 Basiert auf {similarVoucherHotels} ähnlichen Hotels
+                                        </p>
+                                      )}
+                                      {voucherInfluencingFactors.length > 0 && (
+                                        <div className="mt-2">
+                                          <p className="text-xs text-blue-600 font-medium">Einflussfaktoren:</p>
+                                          <div className="flex flex-wrap gap-1 mt-1">
+                                            {voucherInfluencingFactors.map((factor, idx) => (
+                                              <span key={idx} className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">
+                                                {factor}
+                                              </span>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                  
                                   <div className="bg-red-50 p-3 rounded border-l-4 border-red-400">
                                     <p className="text-sm text-red-800">
                                       <strong>Standard für {workflowData.stars}-Sterne Hotels:</strong> {
@@ -2414,6 +2548,15 @@ export default function Workflow() {
                                     >
                                       Abbrechen
                                     </Button>
+                                    {aiSuggestedVoucherValue > 0 && (
+                                      <Button 
+                                        variant="outline"
+                                        onClick={() => setTempVoucherValue(aiSuggestedVoucherValue.toString())}
+                                        className="border-blue-300 text-blue-700 hover:bg-blue-50"
+                                      >
+                                        KI-Wert verwenden
+                                      </Button>
+                                    )}
                                     <Button onClick={saveVoucherManualEdit} className="bg-red-600 hover:bg-red-700">
                                       Speichern
                                     </Button>
@@ -2426,6 +2569,28 @@ export default function Workflow() {
                         
 
                       </div>
+                      
+                      {/* AI Voucher Intelligence Explanation */}
+                      {aiSuggestedVoucherValue > 0 && (
+                        <div className="relative overflow-hidden bg-gradient-to-r from-red-50/60 via-rose-50/40 to-pink-50/60 backdrop-blur-md border border-red-200/40 rounded-2xl p-4 mt-4 shadow-inner animate-fade-in">
+                          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-400 via-rose-400 to-pink-400 animate-gradient-x"></div>
+                          <div className="flex items-start space-x-3">
+                            <div className="mt-1">
+                              <Gift className="h-5 w-5 text-red-600" />
+                            </div>
+                            <div className="flex-1">
+                              <span className="font-semibold text-red-800 text-sm">KI-Gutschein-Begründung:</span>
+                              <p className="text-sm text-red-700 mt-1 leading-relaxed">
+                                {isVoucherManualEdit ? (
+                                  <>Manuell angepasst von <span className="font-bold text-red-800">{aiSuggestedVoucherValue.toFixed(2)} {getCurrencySymbol(workflowData.currency)}</span> auf <span className="font-bold text-green-600">{hotelVoucherValue.toFixed(2)} {getCurrencySymbol(workflowData.currency)}</span>. Die KI lernt aus Ihrer Korrektur für ähnliche {workflowData.stars}-Sterne Hotels.</>
+                                ) : (
+                                  <>{voucherReasoning} {similarVoucherHotels > 0 && <><br/><span className="text-xs">Basiert auf {similarVoucherHotels} ähnlichen Hotels in der KI-Datenbank.</span></>}</>
+                                )}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                     
                     {/* Profit Margin - Animated Success Card */}

@@ -354,10 +354,73 @@ export const priceIntelligence = pgTable("price_intelligence", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// NEW: Vector Intelligence for Hotel Voucher Values
+export const voucherIntelligence = pgTable("voucher_intelligence", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  calculationId: integer("calculation_id").references(() => pricingCalculations.id),
+  
+  // Hotel characteristics
+  hotelName: varchar("hotel_name").notNull(),
+  stars: integer("stars").notNull(),
+  roomCount: integer("room_count"),
+  location: text("location"), // City, Country
+  category: text("category"), // luxury, business, budget
+  amenities: text("amenities").array(), // spa, pool, restaurant, etc.
+  
+  // Market context
+  averageMarketPrice: decimal("average_market_price", { precision: 10, scale: 2 }),
+  competitorVoucherValues: jsonb("competitor_voucher_values"), // Array of nearby hotel voucher values
+  seasonality: text("seasonality"), // high, mid, low season
+  localEvents: text("local_events").array(), // conferences, festivals affecting pricing
+  
+  // AI predictions
+  aiSuggestedVoucherValue: decimal("ai_suggested_voucher_value", { precision: 10, scale: 2 }).notNull(),
+  actualVoucherValue: decimal("actual_voucher_value", { precision: 10, scale: 2 }).notNull(),
+  confidenceScore: decimal("confidence_score", { precision: 5, scale: 2 }).notNull(), // 0-100
+  
+  // User feedback and learning
+  userFeedback: text("user_feedback"), // Why user changed the value
+  wasManuallyEdited: boolean("was_manually_edited").default(false),
+  manualEditReason: text("manual_edit_reason"), // Categorized reasons
+  
+  // Vector embeddings for similarity search
+  hotelVectorEmbedding: jsonb("hotel_vector_embedding"), // Hotel characteristics embedding
+  contextVectorEmbedding: jsonb("context_vector_embedding"), // Market context embedding
+  feedbackVectorEmbedding: jsonb("feedback_vector_embedding"), // User feedback embedding
+  
+  // Learning metrics
+  predictionAccuracy: decimal("prediction_accuracy", { precision: 5, scale: 2 }), // How accurate was AI vs user choice
+  similarHotelsCount: integer("similar_hotels_count"), // Number of similar hotels used for prediction
+  learningIteration: integer("learning_iteration").default(1), // Which AI model version made this prediction
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  // Indexes for fast vector similarity search
+  index("voucher_intelligence_stars_idx").on(table.stars),
+  index("voucher_intelligence_category_idx").on(table.category),
+  index("voucher_intelligence_location_idx").on(table.location),
+  index("voucher_intelligence_manually_edited_idx").on(table.wasManuallyEdited),
+  index("voucher_intelligence_confidence_idx").on(table.confidenceScore),
+  index("voucher_intelligence_created_at_idx").on(table.createdAt),
+]);
+
 export const priceIntelligenceRelations = relations(priceIntelligence, ({ one }) => ({
   user: one(users, {
     fields: [priceIntelligence.userId],
     references: [users.id],
+  }),
+}));
+
+export const voucherIntelligenceRelations = relations(voucherIntelligence, ({ one }) => ({
+  user: one(users, {
+    fields: [voucherIntelligence.userId],
+    references: [users.id],
+  }),
+  calculation: one(pricingCalculations, {
+    fields: [voucherIntelligence.calculationId],
+    references: [pricingCalculations.id],
   }),
 }));
 
