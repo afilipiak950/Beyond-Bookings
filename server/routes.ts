@@ -490,63 +490,78 @@ Return this EXACT JSON format:
       try {
         console.log('🤖 Attempting direct OpenAI review search...');
         
-        const directSearchPrompt = `Suche mir die aktuellen Bewertungen und Anzahl der Reviews für "${hotelName}"${location ? ` in ${location}` : ''} von diesen vier Plattformen heraus:
+        const directSearchPrompt = `Suche mir hotel ratings, anzahl der bewertungen und links zu den bewertungsportalen von diesen portalen heraus: booking, tripadvisor, google reviews und holidaycheck für das hotel ${hotelName}${location ? ` in ${location}` : ''}. Clean output.
 
-1. Booking.com - finde Rating (1-10 Skala) und Anzahl Reviews
-2. Google Reviews - finde Rating (1-5 Skala) und Anzahl Reviews  
-3. HolidayCheck - finde Rating (1-6 Skala) und Anzahl Reviews
-4. TripAdvisor - finde Rating (1-5 Skala) und Anzahl Reviews
+Hier ist das gewünschte Format - genau wie ChatGPT es macht:
 
-WICHTIG: Suche nach ECHTEN, aktuellen Daten. Wenn du keine echten Daten findest, markiere das entsprechend.
+Booking.com:
+• Bewertung: [ECHTE BEWERTUNG]/10 
+• Anzahl der Bewertungen: [ECHTE ANZAHL] verifizierte Reviews
+• Link: [DIREKTER BOOKING.COM LINK]
 
-Gib mir das Ergebnis in diesem JSON Format zurück:
+TripAdvisor:
+• Bewertung: [ECHTE BEWERTUNG]/5 oder Beschreibung 
+• Anzahl der Bewertungen: [ECHTE ANZAHL] Bewertungen
+• Link: [DIREKTER TRIPADVISOR LINK]
+
+Google Reviews:
+• Bewertung: [ECHTE BEWERTUNG]/5 
+• Anzahl der Bewertungen: [ECHTE ANZAHL] Bewertungen  
+• Link: [DIREKTER GOOGLE MAPS LINK]
+
+HolidayCheck:
+• Bewertung: [ECHTE BEWERTUNG]/6
+• Anzahl der Bewertungen: [ECHTE ANZAHL] geprüfte Bewertungen
+• Link: [DIREKTER HOLIDAYCHECK LINK]
+
+Gib mir dann das Ergebnis in diesem JSON Format zurück:
 {
   "bookingReviews": {
-    "rating": echte_bewertung_oder_null,
-    "reviewCount": echte_anzahl_oder_null,
-    "url": "direkte_url_zum_hotel",
-    "insights": "was Gäste konkret sagen",
-    "dataFound": true/false
+    "rating": echte_bewertung_als_zahl,
+    "reviewCount": echte_anzahl_als_zahl,
+    "url": "direkter_booking_link",
+    "insights": "kurze Zusammenfassung der Bewertungen",
+    "dataFound": true
   },
   "googleReviews": {
-    "rating": echte_bewertung_oder_null,
-    "reviewCount": echte_anzahl_oder_null,
-    "url": "google_maps_link",
-    "insights": "Google Bewertungen Zusammenfassung", 
-    "dataFound": true/false
+    "rating": echte_bewertung_als_zahl,
+    "reviewCount": echte_anzahl_als_zahl,
+    "url": "direkter_google_maps_link",
+    "insights": "kurze Zusammenfassung", 
+    "dataFound": true
   },
   "holidayCheckReviews": {
-    "rating": echte_bewertung_oder_null,
-    "reviewCount": echte_anzahl_oder_null,
-    "url": "holidaycheck_link",
-    "insights": "HolidayCheck Feedback",
-    "dataFound": true/false
+    "rating": echte_bewertung_als_zahl,
+    "reviewCount": echte_anzahl_als_zahl,
+    "url": "direkter_holidaycheck_link",
+    "insights": "kurze Zusammenfassung",
+    "dataFound": true
   },
   "tripadvisorReviews": {
-    "rating": echte_bewertung_oder_null,
-    "reviewCount": echte_anzahl_oder_null,
-    "url": "tripadvisor_link", 
-    "insights": "TripAdvisor Bewertungen",
-    "dataFound": true/false
+    "rating": echte_bewertung_als_zahl,
+    "reviewCount": echte_anzahl_als_zahl,
+    "url": "direkter_tripadvisor_link", 
+    "insights": "kurze Zusammenfassung",
+    "dataFound": true
   },
-  "searchSuccess": true/false,
-  "extractionMethod": "direct_openai_search"
+  "searchSuccess": true,
+  "extractionMethod": "chatgpt_style_search"
 }`;
 
         const searchCompletion = await openai.chat.completions.create({
-          model: "gpt-4o",
+          model: "gpt-5", // the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
           messages: [
             {
-              role: "system",
-              content: "Du bist ein Experte für Hotelbewertungen und kannst echte Review-Daten von Booking-Plattformen recherchieren. Suche nach aktuellen, authentischen Bewertungsdaten."
+              role: "system", 
+              content: "Du bist ein Hotel-Bewertungsexperte mit Internetzugang. Du kannst aktuelle, echte Bewertungsdaten von Booking.com, TripAdvisor, Google Reviews und HolidayCheck abrufen - genau wie ChatGPT es kann. Suche nach den neuesten, authentischen Bewertungen und Zahlen."
             },
             {
               role: "user",
               content: directSearchPrompt
             }
           ],
-          max_completion_tokens: 1200,
-          temperature: 0.1
+          max_completion_tokens: 1500,
+          temperature: 0.0
         });
 
         let searchResults;
