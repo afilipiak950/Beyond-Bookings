@@ -1150,20 +1150,36 @@ export default function Workflow() {
     if (!extractedData) return;
     
     try {
+      // Prepare hotel data including review data if available
+      const hotelData: any = {
+        name: extractedData.name,
+        location: extractedData.location || null,
+        city: extractedData.city || null,
+        country: extractedData.country || null,
+        stars: extractedData.stars || null,
+        roomCount: extractedData.roomCount || null,
+        url: extractedData.url || null,
+        category: extractedData.category || null,
+        amenities: extractedData.amenities || null,
+        averagePrice: extractedData.averagePrice || null,
+      };
+
+      // Include review data if available
+      if (extractedReviews) {
+        hotelData.bookingReviews = extractedReviews.bookingReviews || null;
+        hotelData.googleReviews = extractedReviews.googleReviews || null;
+        hotelData.holidayCheckReviews = extractedReviews.holidayCheckReviews || null;
+        hotelData.tripadvisorReviews = extractedReviews.tripadvisorReviews || null;
+        hotelData.reviewSummary = extractedReviews.reviewSummary || null;
+        hotelData.lastReviewUpdate = new Date().toISOString();
+      }
+
       const response = await fetch('/api/hotels', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          name: extractedData.name,
-          location: extractedData.location || null,
-          city: extractedData.city || null,
-          country: extractedData.country || null,
-          stars: extractedData.stars || null,
-          roomCount: extractedData.roomCount || null,
-          url: extractedData.url || null,
-        }),
+        body: JSON.stringify(hotelData),
       });
       
       if (response.ok) {
@@ -1190,13 +1206,14 @@ export default function Workflow() {
         setExtractHotelName("");
         setExtractHotelUrl("");
         setExtractedData(null);
+        setExtractedReviews(null);
         
         // Invalidate the hotels query to refetch the updated list
         queryClient.invalidateQueries({ queryKey: ["/api/hotels"] });
         
         toast({
-          title: "Hotel created",
-          description: `Created new hotel: ${newHotel.name}`,
+          title: "Hotel created successfully",
+          description: `Hotel "${newHotel.name}" created${extractedReviews ? ' with review data' : ''} and added to hotel management system.`,
         });
       } else {
         const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
