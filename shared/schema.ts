@@ -132,6 +132,7 @@ export const pricingCalculations: any = pgTable("pricing_calculations", {
   averagePrice: decimal("average_price", { precision: 10, scale: 2 }).notNull(),
   voucherPrice: decimal("voucher_price", { precision: 10, scale: 2 }).notNull(),
   operationalCosts: decimal("operational_costs", { precision: 10, scale: 2 }).notNull(),
+  projectCosts: decimal("project_costs", { precision: 15, scale: 2 }), // Critical missing field: main project cost input
   vatRate: decimal("vat_rate", { precision: 5, scale: 2 }).notNull(),
   vatAmount: decimal("vat_amount", { precision: 10, scale: 2 }).notNull(),
   profitMargin: decimal("profit_margin", { precision: 10, scale: 2 }).notNull(),
