@@ -145,6 +145,24 @@ export const pricingCalculations: any = pgTable("pricing_calculations", {
   availableRoomnights: integer("available_roomnights"), // Calculated field
   addressableRoomnights: integer("addressable_roomnights"), // Calculated field
   
+  // Right-side calculation details that need to persist
+  actualPrice: decimal("actual_price", { precision: 10, scale: 2 }), // KI/Manual realistic price
+  aiSuggestedPrice: decimal("ai_suggested_price", { precision: 10, scale: 2 }), // Original AI suggestion
+  aiConfidence: integer("ai_confidence"), // AI confidence percentage
+  aiReasoning: text("ai_reasoning"), // AI explanation text
+  isManualEdit: boolean("is_manual_edit").default(false), // Whether price was manually edited
+  manualEditFeedback: text("manual_edit_feedback"), // User's reason for manual edit
+  
+  // Voucher calculation details
+  isVoucherManualEdit: boolean("is_voucher_manual_edit").default(false), // Whether voucher was manually edited
+  voucherEditFeedback: text("voucher_edit_feedback"), // User's reason for voucher edit
+  
+  // Tripz calculation details
+  tripzEstimateMultiplier: decimal("tripz_estimate_multiplier", { precision: 5, scale: 3 }).default("0.75"), // Multiplier for Tripz payment
+  
+  // Additional calculation metadata
+  similarHotelsCount: integer("similar_hotels_count").default(0), // Number of similar hotels used by AI
+  
   isDraft: boolean("is_draft").default(false),
   // Customer request fields
   contactPerson: text("contact_person"),

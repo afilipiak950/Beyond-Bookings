@@ -738,6 +738,44 @@ export default function Workflow() {
         }
       };
       
+      // NEW: Restore all right-side calculation state from database
+      if (calculation.actualPrice) {
+        setActualPrice(parseFloat(calculation.actualPrice));
+      }
+      if (calculation.aiSuggestedPrice) {
+        setAiSuggestedPrice(parseFloat(calculation.aiSuggestedPrice));
+      }
+      if (calculation.aiConfidence) {
+        setAiConfidence(calculation.aiConfidence);
+      }
+      if (calculation.aiReasoning) {
+        setAiReasoning(calculation.aiReasoning);
+      }
+      if (calculation.isManualEdit !== null) {
+        setIsManualEdit(calculation.isManualEdit);
+      }
+      if (calculation.manualEditFeedback) {
+        setEditFeedback(calculation.manualEditFeedback);
+      }
+      
+      // Restore voucher calculation state
+      if (calculation.isVoucherManualEdit !== null) {
+        setIsVoucherManualEdit(calculation.isVoucherManualEdit);
+      }
+      if (calculation.voucherEditFeedback) {
+        setVoucherEditFeedback(calculation.voucherEditFeedback);
+      }
+      
+      // Restore Tripz calculation state
+      if (calculation.tripzEstimateMultiplier) {
+        setTripzEstimateMultiplier(parseFloat(calculation.tripzEstimateMultiplier));
+      }
+      
+      // Restore additional calculation metadata
+      if (calculation.similarHotelsCount) {
+        setSimilarHotelsCount(calculation.similarHotelsCount);
+      }
+      
       console.log("🎯 Setting new workflow data:", newWorkflowData);
       setWorkflowData(newWorkflowData);
       
@@ -1643,6 +1681,24 @@ export default function Workflow() {
       contractYears: workflowData.contractYears || 1,
       availableRoomnights: availableRoomnights,
       addressableRoomnights: addressableRoomnights,
+      
+      // NEW: Save all right-side calculation details that were missing
+      actualPrice: actualPrice?.toString() || null,
+      aiSuggestedPrice: aiSuggestedPrice?.toString() || null,
+      aiConfidence: aiConfidence || null,
+      aiReasoning: aiReasoning || null,
+      isManualEdit: isManualEdit || false,
+      manualEditFeedback: editFeedback || null,
+      
+      // Voucher calculation state
+      isVoucherManualEdit: isVoucherManualEdit || false,
+      voucherEditFeedback: voucherEditFeedback || null,
+      
+      // Tripz calculation state
+      tripzEstimateMultiplier: tripzEstimateMultiplier?.toString() || "0.75",
+      
+      // Additional calculation metadata
+      similarHotelsCount: similarHotelsCount || 0,
       
       // Customer request fields - save these important fields too
       contactPerson: workflowData.contactPerson || null,
