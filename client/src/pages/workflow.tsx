@@ -671,6 +671,8 @@ export default function Workflow() {
     queryKey: [`/api/pricing-calculations/${calculationId}`],
     enabled: !!calculationId,
     retry: false,
+    refetchOnMount: true, // Always refetch to get latest data
+    staleTime: 0, // Consider data stale immediately
   });
   
   // Debug the query result
@@ -1631,13 +1633,19 @@ export default function Workflow() {
       console.log(`🚀 Save mutation success - Starting cache invalidation process`);
       console.log(`📊 Saved calculation data:`, savedCalculation);
       
-      // ✅ CRITICAL: Invalidate the calculations cache so the /calculations page updates instantly
+      // ✅ CRITICAL: Invalidate both the calculations list AND specific calculation cache
       queryClient.invalidateQueries({ queryKey: ["/api/pricing-calculations"] });
+      
+      // Invalidate the specific calculation being edited to force fresh data load
+      if (calculationId) {
+        queryClient.invalidateQueries({ queryKey: [`/api/pricing-calculations/${calculationId}`] });
+        queryClient.refetchQueries({ queryKey: [`/api/pricing-calculations/${calculationId}`] });
+      }
       
       // Force refetch to ensure immediate update
       queryClient.refetchQueries({ queryKey: ["/api/pricing-calculations"] });
       
-      console.log(`🔄 Cache invalidation and refetch completed for key: ["/api/pricing-calculations"]`);
+      console.log(`🔄 Cache invalidation and refetch completed for all calculation caches`);
       
       toast({
         title: "Berechnung gespeichert",
