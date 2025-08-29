@@ -8,6 +8,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ChevronDown } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { 
@@ -64,6 +65,79 @@ interface ChatStreamChunk {
   toolCall?: any;
   citation?: Citation;
   error?: string;
+}
+
+// Custom dropdown component to avoid Radix UI portal issues
+function CustomSelect({ 
+  value, 
+  onValueChange, 
+  options, 
+  placeholder = "Select...", 
+  className = "" 
+}: {
+  value: string;
+  onValueChange: (value: string) => void;
+  options: { value: string; label: string }[];
+  placeholder?: string;
+  className?: string;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleSelect = (optionValue: string) => {
+    onValueChange(optionValue);
+    setIsOpen(false);
+  };
+
+  const selectedOption = options.find(opt => opt.value === value);
+
+  return (
+    <div className={`relative ${className}`} ref={dropdownRef}>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex h-8 w-32 items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        <span className={selectedOption ? '' : 'text-muted-foreground'}>
+          {selectedOption ? selectedOption.label : placeholder}
+        </span>
+        <ChevronDown className={`h-4 w-4 opacity-50 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+      
+      {isOpen && (
+        <div className="absolute top-full left-0 z-50 mt-1 w-full min-w-[8rem] overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md">
+          <div className="p-1">
+            {options.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => handleSelect(option.value)}
+                className="relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+              >
+                {value === option.value && (
+                  <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
+                    <span className="h-2 w-2 bg-current rounded-full" />
+                  </span>
+                )}
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 // Helper function to format markdown-like text to React elements
@@ -214,31 +288,33 @@ export default function AIHub() {
   const [mode, setMode] = useState('general');
   const [model, setModel] = useState('gpt-4o-mini');
   
-  // Prevent DOM conflicts by separating dropdown states
-  const [isModelOpen, setIsModelOpen] = useState(false);
-  const [isModeOpen, setIsModeOpen] = useState(false);
-  
+  // Safe dropdown handlers without DOM conflicts
   const handleModeChange = (value: string) => {
-    try {
-      console.log('Mode changing from', mode, 'to', value);
-      setMode(value);
-      setIsModeOpen(false);
-    } catch (error) {
-      console.error('Mode selection error:', error);
-      setIsModeOpen(false);
-    }
+    console.log('Mode changing from', mode, 'to', value);
+    setMode(value);
   };
   
   const handleModelChange = (value: string) => {
-    try {
-      console.log('Model changing from', model, 'to', value);
-      setModel(value);
-      setIsModelOpen(false);
-    } catch (error) {
-      console.error('Model selection error:', error);
-      setIsModelOpen(false);
-    }
+    console.log('Model changing from', model, 'to', value);
+    setModel(value);
   };
+
+  // Dropdown options
+  const modeOptions = [
+    { value: 'general', label: 'General' },
+    { value: 'calculation', label: 'Calculator' },
+    { value: 'docs', label: 'Documents' },
+    { value: 'sql', label: 'Database' },
+    { value: 'sheets', label: 'Sheets' },
+    { value: 'api', label: 'API' }
+  ];
+
+  const modelOptions = [
+    { value: 'gpt-4o-mini', label: 'Fast (Mini) ⚡' },
+    { value: 'gpt-4o', label: 'Smart (4o) 🧠' },
+    { value: 'gpt-5', label: 'Ultra (GPT-5) 🚀' },
+    { value: 'gpt-5-mini', label: 'Lightning (5 Mini) ⚡⚡' }
+  ];
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamingMessage, setStreamingMessage] = useState('');
   const [citations, setCitations] = useState<Citation[]>([]);
@@ -1211,60 +1287,20 @@ export default function AIHub() {
             </div>
             
             {/* Controls */}
-            <div className="flex items-center gap-2" key="dropdown-controls">
-              <div key="mode-select">
-                <Select 
-                  value={mode} 
-                  onValueChange={handleModeChange}
-                  open={isModeOpen}
-                  onOpenChange={(open) => {
-                    console.log('Mode dropdown open state:', open);
-                    setIsModeOpen(open);
-                  }}
-                >
-                  <SelectTrigger className="w-32 h-8">
-                    <SelectValue placeholder="Select mode" />
-                  </SelectTrigger>
-                  <SelectContent 
-                    side="bottom" 
-                    align="start"
-                    onCloseAutoFocus={(e) => e.preventDefault()}
-                  >
-                    <SelectItem value="general">General</SelectItem>
-                    <SelectItem value="calculation">Calculator</SelectItem>
-                    <SelectItem value="docs">Documents</SelectItem>
-                    <SelectItem value="sql">Database</SelectItem>
-                    <SelectItem value="sheets">Sheets</SelectItem>
-                    <SelectItem value="api">API</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="flex items-center gap-2">
+              <CustomSelect
+                value={mode}
+                onValueChange={handleModeChange}
+                options={modeOptions}
+                placeholder="Select mode"
+              />
               
-              <div key="model-select">
-                <Select 
-                  value={model} 
-                  onValueChange={handleModelChange}
-                  open={isModelOpen}
-                  onOpenChange={(open) => {
-                    console.log('Model dropdown open state:', open);
-                    setIsModelOpen(open);
-                  }}
-                >
-                  <SelectTrigger className="w-32 h-8">
-                    <SelectValue placeholder="Select model" />
-                  </SelectTrigger>
-                  <SelectContent 
-                    side="bottom" 
-                    align="start"
-                    onCloseAutoFocus={(e) => e.preventDefault()}
-                  >
-                    <SelectItem value="gpt-4o-mini">Fast (Mini) ⚡</SelectItem>
-                    <SelectItem value="gpt-4o">Smart (4o) 🧠</SelectItem>
-                    <SelectItem value="gpt-5">Ultra (GPT-5) 🚀</SelectItem>
-                    <SelectItem value="gpt-5-mini">Lightning (5 Mini) ⚡⚡</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              <CustomSelect
+                value={model}
+                onValueChange={handleModelChange}
+                options={modelOptions}
+                placeholder="Select model"
+              />
             </div>
           </div>
         </div>
