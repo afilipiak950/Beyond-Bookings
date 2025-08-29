@@ -214,16 +214,18 @@ export default function AIHub() {
   const [mode, setMode] = useState('general');
   const [model, setModel] = useState('gpt-4o-mini');
   
-  // Force re-render of dropdowns to prevent DOM conflicts
-  const [dropdownKey, setDropdownKey] = useState(0);
+  // Prevent DOM conflicts by separating dropdown states
+  const [isModelOpen, setIsModelOpen] = useState(false);
+  const [isModeOpen, setIsModeOpen] = useState(false);
   
   const handleModeChange = (value: string) => {
     try {
       console.log('Mode changing from', mode, 'to', value);
       setMode(value);
-      setDropdownKey(prev => prev + 1); // Force re-render
+      setIsModeOpen(false);
     } catch (error) {
       console.error('Mode selection error:', error);
+      setIsModeOpen(false);
     }
   };
   
@@ -231,9 +233,10 @@ export default function AIHub() {
     try {
       console.log('Model changing from', model, 'to', value);
       setModel(value);
-      setDropdownKey(prev => prev + 1); // Force re-render
+      setIsModelOpen(false);
     } catch (error) {
       console.error('Model selection error:', error);
+      setIsModelOpen(false);
     }
   };
   const [isStreaming, setIsStreaming] = useState(false);
@@ -1208,40 +1211,60 @@ export default function AIHub() {
             </div>
             
             {/* Controls */}
-            <div className="flex items-center gap-2">
-              <Select 
-                key={`mode-${dropdownKey}-${mode}`}
-                value={mode} 
-                onValueChange={handleModeChange}
-              >
-                <SelectTrigger className="w-32 h-8">
-                  <SelectValue placeholder="Select mode" />
-                </SelectTrigger>
-                <SelectContent side="bottom" align="start">
-                  <SelectItem value="general">General</SelectItem>
-                  <SelectItem value="calculation">Calculator</SelectItem>
-                  <SelectItem value="docs">Documents</SelectItem>
-                  <SelectItem value="sql">Database</SelectItem>
-                  <SelectItem value="sheets">Sheets</SelectItem>
-                  <SelectItem value="api">API</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="flex items-center gap-2" key="dropdown-controls">
+              <div key="mode-select">
+                <Select 
+                  value={mode} 
+                  onValueChange={handleModeChange}
+                  open={isModeOpen}
+                  onOpenChange={(open) => {
+                    console.log('Mode dropdown open state:', open);
+                    setIsModeOpen(open);
+                  }}
+                >
+                  <SelectTrigger className="w-32 h-8">
+                    <SelectValue placeholder="Select mode" />
+                  </SelectTrigger>
+                  <SelectContent 
+                    side="bottom" 
+                    align="start"
+                    onCloseAutoFocus={(e) => e.preventDefault()}
+                  >
+                    <SelectItem value="general">General</SelectItem>
+                    <SelectItem value="calculation">Calculator</SelectItem>
+                    <SelectItem value="docs">Documents</SelectItem>
+                    <SelectItem value="sql">Database</SelectItem>
+                    <SelectItem value="sheets">Sheets</SelectItem>
+                    <SelectItem value="api">API</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               
-              <Select 
-                key={`model-${dropdownKey}-${model}`}
-                value={model} 
-                onValueChange={handleModelChange}
-              >
-                <SelectTrigger className="w-32 h-8">
-                  <SelectValue placeholder="Select model" />
-                </SelectTrigger>
-                <SelectContent side="bottom" align="start">
-                  <SelectItem value="gpt-4o-mini">Fast (Mini) ⚡</SelectItem>
-                  <SelectItem value="gpt-4o">Smart (4o) 🧠</SelectItem>
-                  <SelectItem value="gpt-5">Ultra (GPT-5) 🚀</SelectItem>
-                  <SelectItem value="gpt-5-mini">Lightning (5 Mini) ⚡⚡</SelectItem>
-                </SelectContent>
-              </Select>
+              <div key="model-select">
+                <Select 
+                  value={model} 
+                  onValueChange={handleModelChange}
+                  open={isModelOpen}
+                  onOpenChange={(open) => {
+                    console.log('Model dropdown open state:', open);
+                    setIsModelOpen(open);
+                  }}
+                >
+                  <SelectTrigger className="w-32 h-8">
+                    <SelectValue placeholder="Select model" />
+                  </SelectTrigger>
+                  <SelectContent 
+                    side="bottom" 
+                    align="start"
+                    onCloseAutoFocus={(e) => e.preventDefault()}
+                  >
+                    <SelectItem value="gpt-4o-mini">Fast (Mini) ⚡</SelectItem>
+                    <SelectItem value="gpt-4o">Smart (4o) 🧠</SelectItem>
+                    <SelectItem value="gpt-5">Ultra (GPT-5) 🚀</SelectItem>
+                    <SelectItem value="gpt-5-mini">Lightning (5 Mini) ⚡⚡</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
         </div>
