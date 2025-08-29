@@ -125,14 +125,27 @@ function CustomSelect({
       </button>
       
       {isOpen && (
-        <div className="absolute top-full left-0 z-50 mt-1 w-full min-w-[8rem] overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md">
+        <div 
+          className="absolute top-full left-0 z-[9999] mt-1 w-full min-w-[8rem] overflow-hidden rounded-md border bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-lg"
+          onMouseDown={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
+        >
           <div className="p-1">
             {options.map((option) => (
               <button
                 key={option.value}
                 type="button"
-                onClick={() => handleSelect(option.value)}
-                className="relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log('🎯 Button clicked for option:', option.value);
+                  handleSelect(option.value);
+                }}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                className="relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
               >
                 {value === option.value && (
                   <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
