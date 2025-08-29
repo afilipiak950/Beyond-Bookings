@@ -870,9 +870,8 @@ ABER VERWENDE NUR DIE DATEN DES AKTUELLEN HOTELS AUS DEM KONTEXT!`;
   // Support available OpenAI models
   private getSupportedModel(requestedModel: string): string {
     const modelMapping = {
-      'gpt-5': 'gpt-4o', // Map requested GPT-5 to GPT-4o
-      'gpt-5-preview': 'gpt-4o',
-      'gpt-5-mini': 'gpt-4o-mini', // Map requested GPT-5 mini to GPT-4o-mini
+      'gpt-5': 'gpt-5', // Use actual GPT-5 model
+      'gpt-5-mini': 'gpt-5-mini', // Use actual GPT-5 mini
       'gpt-4o-mini': 'gpt-4o-mini',
       'gpt-4o': 'gpt-4o',
       'gpt-4': 'gpt-4o',
@@ -885,6 +884,8 @@ ABER VERWENDE NUR DIE DATEN DES AKTUELLEN HOTELS AUS DEM KONTEXT!`;
   // Calculate usage cost with actual OpenAI models
   private calculateCost(usage: TokenUsage, model: string): number {
     const rates = {
+      'gpt-5': { input: 0.00125, output: 0.01 }, // GPT-5 official pricing
+      'gpt-5-mini': { input: 0.00025, output: 0.002 }, // GPT-5 mini official pricing
       'gpt-4o': { input: 0.0025, output: 0.01 },
       'gpt-4o-mini': { input: 0.00015, output: 0.0006 },
       'gpt-4': { input: 0.03, output: 0.06 },
