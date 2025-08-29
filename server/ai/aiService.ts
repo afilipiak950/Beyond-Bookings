@@ -383,7 +383,7 @@ export class AIService {
         completionOptions.temperature = 1;
         completionOptions.top_p = 0.9;
       }
-      // GPT-5 models don't support top_p, only default temperature
+      // GPT-5 models don't support top_p or custom temperature - use defaults only
       
       // Only add tools if needed
       if (shouldUseTools && availableTools.length > 0) {
