@@ -1186,9 +1186,15 @@ export default function AIHub() {
             
             {/* Controls */}
             <div className="flex items-center gap-2">
-              <Select value={mode} onValueChange={setMode}>
+              <Select value={mode} onValueChange={(value) => {
+                try {
+                  setMode(value);
+                } catch (error) {
+                  console.error('Mode selection error:', error);
+                }
+              }}>
                 <SelectTrigger className="w-32 h-8">
-                  <SelectValue />
+                  <SelectValue placeholder="Select mode" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="general">General</SelectItem>
@@ -1200,9 +1206,15 @@ export default function AIHub() {
                 </SelectContent>
               </Select>
               
-              <Select value={model} onValueChange={setModel}>
+              <Select value={model} onValueChange={(value) => {
+                try {
+                  setModel(value);
+                } catch (error) {
+                  console.error('Model selection error:', error);
+                }
+              }}>
                 <SelectTrigger className="w-32 h-8">
-                  <SelectValue />
+                  <SelectValue placeholder="Select model" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="gpt-4o-mini">Fast (Mini) ⚡</SelectItem>
