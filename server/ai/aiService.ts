@@ -378,11 +378,12 @@ export class AIService {
       };
       
       // Only add parameters that are supported by the model
-      if (!supportedModel.startsWith('gpt-4')) {
+      if (supportedModel.startsWith('gpt-4')) {
         // GPT-4 models support these parameters
         completionOptions.temperature = 1;
         completionOptions.top_p = 0.9;
       }
+      // GPT-5 models don't support top_p, only default temperature
       
       // Only add tools if needed
       if (shouldUseTools && availableTools.length > 0) {
@@ -589,7 +590,6 @@ Respond conversationally with proper formatting, explanations, and insights. Don
               { role: 'user', content: interpretationPrompt }
             ] as any,
             stream: true,
-            temperature: 1,
             max_completion_tokens: 1000,
           });
 
