@@ -310,10 +310,10 @@ export default function AIHub() {
   ];
 
   const modelOptions = [
-    { value: 'gpt-4o-mini', label: 'Fast (Mini) ⚡' },
-    { value: 'gpt-4o', label: 'Smart (4o) 🧠' },
-    { value: 'gpt-5', label: 'Ultra (GPT-5) 🚀' },
-    { value: 'gpt-5-mini', label: 'Lightning (5 Mini) ⚡⚡' }
+    { value: 'gpt-4o-mini', label: 'Mini' },
+    { value: 'gpt-4o', label: 'GPT-4o' },
+    { value: 'gpt-5', label: 'GPT-5' },
+    { value: 'gpt-5-mini', label: 'GPT-5 Mini' }
   ];
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamingMessage, setStreamingMessage] = useState('');
