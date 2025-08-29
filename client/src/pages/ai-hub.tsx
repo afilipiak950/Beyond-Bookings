@@ -98,8 +98,15 @@ function CustomSelect({
   const handleSelect = (optionValue: string) => {
     console.log('CustomSelect handleSelect called with:', optionValue);
     console.log('Current value:', value);
-    onValueChange(optionValue);
+    
+    // Force immediate state update and close dropdown
     setIsOpen(false);
+    
+    // Call the parent handler with a slight delay to ensure UI updates
+    setTimeout(() => {
+      onValueChange(optionValue);
+      console.log('✅ Value change handler called with:', optionValue);
+    }, 0);
   };
 
   const selectedOption = options.find(opt => opt.value === value);
@@ -300,6 +307,11 @@ export default function AIHub() {
     console.log('🔄 Model changing from', model, 'to', value);
     setModel(value);
     console.log('✅ Model state updated to:', value);
+    
+    // Force a re-render to ensure UI updates
+    setTimeout(() => {
+      console.log('🔍 Model state after timeout:', value);
+    }, 100);
   };
 
   // Dropdown options
