@@ -96,6 +96,8 @@ function CustomSelect({
   }, []);
 
   const handleSelect = (optionValue: string) => {
+    console.log('CustomSelect handleSelect called with:', optionValue);
+    console.log('Current value:', value);
     onValueChange(optionValue);
     setIsOpen(false);
   };
@@ -295,8 +297,9 @@ export default function AIHub() {
   };
   
   const handleModelChange = (value: string) => {
-    console.log('Model changing from', model, 'to', value);
+    console.log('🔄 Model changing from', model, 'to', value);
     setModel(value);
+    console.log('✅ Model state updated to:', value);
   };
 
   // Dropdown options
