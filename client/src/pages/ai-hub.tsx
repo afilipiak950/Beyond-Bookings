@@ -67,98 +67,33 @@ interface ChatStreamChunk {
   error?: string;
 }
 
-// Custom dropdown component to avoid Radix UI portal issues
-function CustomSelect({ 
+// Simple select component that actually works
+function SimpleSelect({ 
   value, 
   onValueChange, 
   options, 
-  placeholder = "Select...", 
   className = "" 
 }: {
   value: string;
   onValueChange: (value: string) => void;
   options: { value: string; label: string }[];
-  placeholder?: string;
   className?: string;
 }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const handleSelect = (optionValue: string) => {
-    console.log('CustomSelect handleSelect called with:', optionValue);
-    console.log('Current value:', value);
-    
-    // Force immediate state update and close dropdown
-    setIsOpen(false);
-    
-    // Call the parent handler with a slight delay to ensure UI updates
-    setTimeout(() => {
-      onValueChange(optionValue);
-      console.log('✅ Value change handler called with:', optionValue);
-    }, 0);
-  };
-
-  const selectedOption = options.find(opt => opt.value === value);
-
   return (
-    <div className={`relative ${className}`} ref={dropdownRef}>
-      <button
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex h-8 w-32 items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-      >
-        <span className={selectedOption ? '' : 'text-muted-foreground'}>
-          {selectedOption ? selectedOption.label : placeholder}
-        </span>
-        <ChevronDown className={`h-4 w-4 opacity-50 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-      </button>
-      
-      {isOpen && (
-        <div 
-          className="absolute top-full left-0 z-[9999] mt-1 w-full min-w-[8rem] overflow-hidden rounded-md border bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-lg"
-          onMouseDown={(e) => e.stopPropagation()}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="p-1">
-            {options.map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  console.log('🎯 Button clicked for option:', option.value);
-                  handleSelect(option.value);
-                }}
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                }}
-                className="relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
-              >
-                {value === option.value && (
-                  <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
-                    <span className="h-2 w-2 bg-current rounded-full" />
-                  </span>
-                )}
-                {option.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
+    <select
+      value={value}
+      onChange={(e) => {
+        console.log('✅ Select changed to:', e.target.value);
+        onValueChange(e.target.value);
+      }}
+      className={`h-8 w-32 rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${className}`}
+    >
+      {options.map((option) => (
+        <option key={option.value} value={option.value}>
+          {option.label}
+        </option>
+      ))}
+    </select>
   );
 }
 
@@ -1316,18 +1251,16 @@ export default function AIHub() {
             
             {/* Controls */}
             <div className="flex items-center gap-2">
-              <CustomSelect
+              <SimpleSelect
                 value={mode}
                 onValueChange={handleModeChange}
                 options={modeOptions}
-                placeholder="Select mode"
               />
               
-              <CustomSelect
+              <SimpleSelect
                 value={model}
                 onValueChange={handleModelChange}
                 options={modelOptions}
-                placeholder="Select model"
               />
             </div>
           </div>
