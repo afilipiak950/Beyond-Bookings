@@ -213,6 +213,29 @@ export default function AIHub() {
   const [message, setMessage] = useState('');
   const [mode, setMode] = useState('general');
   const [model, setModel] = useState('gpt-4o-mini');
+  
+  // Force re-render of dropdowns to prevent DOM conflicts
+  const [dropdownKey, setDropdownKey] = useState(0);
+  
+  const handleModeChange = (value: string) => {
+    try {
+      console.log('Mode changing from', mode, 'to', value);
+      setMode(value);
+      setDropdownKey(prev => prev + 1); // Force re-render
+    } catch (error) {
+      console.error('Mode selection error:', error);
+    }
+  };
+  
+  const handleModelChange = (value: string) => {
+    try {
+      console.log('Model changing from', model, 'to', value);
+      setModel(value);
+      setDropdownKey(prev => prev + 1); // Force re-render
+    } catch (error) {
+      console.error('Model selection error:', error);
+    }
+  };
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamingMessage, setStreamingMessage] = useState('');
   const [citations, setCitations] = useState<Citation[]>([]);
@@ -1186,17 +1209,15 @@ export default function AIHub() {
             
             {/* Controls */}
             <div className="flex items-center gap-2">
-              <Select value={mode} onValueChange={(value) => {
-                try {
-                  setMode(value);
-                } catch (error) {
-                  console.error('Mode selection error:', error);
-                }
-              }}>
+              <Select 
+                key={`mode-${dropdownKey}-${mode}`}
+                value={mode} 
+                onValueChange={handleModeChange}
+              >
                 <SelectTrigger className="w-32 h-8">
                   <SelectValue placeholder="Select mode" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent side="bottom" align="start">
                   <SelectItem value="general">General</SelectItem>
                   <SelectItem value="calculation">Calculator</SelectItem>
                   <SelectItem value="docs">Documents</SelectItem>
@@ -1206,17 +1227,15 @@ export default function AIHub() {
                 </SelectContent>
               </Select>
               
-              <Select value={model} onValueChange={(value) => {
-                try {
-                  setModel(value);
-                } catch (error) {
-                  console.error('Model selection error:', error);
-                }
-              }}>
+              <Select 
+                key={`model-${dropdownKey}-${model}`}
+                value={model} 
+                onValueChange={handleModelChange}
+              >
                 <SelectTrigger className="w-32 h-8">
                   <SelectValue placeholder="Select model" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent side="bottom" align="start">
                   <SelectItem value="gpt-4o-mini">Fast (Mini) ⚡</SelectItem>
                   <SelectItem value="gpt-4o">Smart (4o) 🧠</SelectItem>
                   <SelectItem value="gpt-5">Ultra (GPT-5) 🚀</SelectItem>
