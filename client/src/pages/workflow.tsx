@@ -3989,7 +3989,7 @@ export default function Workflow() {
                           const costAdvantage = selfFinancedTotal - beboConvertTotal;
                           const savingsPercentage = selfFinancedTotal > 0 ? ((costAdvantage / selfFinancedTotal) * 100) : 0;
                           
-                          return `= ${savingsPercentage >= 0 ? '-' : '+'}${Math.abs(savingsPercentage).toFixed(1)}%`;
+                          return `= ${savingsPercentage >= 0 ? '+' : '-'}${Math.abs(savingsPercentage).toFixed(1)}%`;
                         })()}</span>
                       </div>
                     </div>
