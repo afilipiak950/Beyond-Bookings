@@ -183,7 +183,7 @@ Wähle automatisch das richtige Tool falls nötig:
       console.log('🛠️ AVAILABLE TOOLS:', availableTools.map(t => t.function.name));
 
       // Create AI completion with perfect setup
-      const stream = await this.openai.chat.completions.create({
+      const completionOptions: any = {
         model,
         messages: [
           { role: 'system', content: systemPrompt },
@@ -192,9 +192,18 @@ Wähle automatisch das richtige Tool falls nötig:
         tools: availableTools,
         tool_choice: 'auto',
         stream: true,
-        temperature: 1,
         max_completion_tokens: 2000,
-      });
+      };
+
+      // Only add parameters that are supported by the model
+      if (model.startsWith('gpt-4')) {
+        // GPT-4 models support these parameters
+        completionOptions.temperature = 1;
+        completionOptions.top_p = 0.9;
+      }
+      // GPT-5 models don't support top_p or custom temperature - use defaults only
+
+      const stream = await this.openai.chat.completions.create(completionOptions);
 
       let assistantMessage = '';
       let toolCalls: any[] = [];
@@ -263,7 +272,7 @@ ${toolResults.map(tr => `Tool: ${tr.tool}\nErgebnis: ${JSON.stringify(tr.result)
 
 Antworte konversationell mit klarer Formatierung und Insights. Zeige keine rohen JSON-Daten.`;
 
-          const interpretationStream = await this.openai.chat.completions.create({
+          const interpretationOptions: any = {
             model,
             messages: [
               { role: 'system', content: systemPrompt },
@@ -272,9 +281,18 @@ Antworte konversationell mit klarer Formatierung und Insights. Zeige keine rohen
               { role: 'user', content: interpretationPrompt }
             ] as any,
             stream: true,
-            temperature: 1,
             max_completion_tokens: 1000,
-          });
+          };
+
+          // Only add parameters that are supported by the model
+          if (model.startsWith('gpt-4')) {
+            // GPT-4 models support these parameters
+            interpretationOptions.temperature = 1;
+            interpretationOptions.top_p = 0.9;
+          }
+          // GPT-5 models don't support top_p or custom temperature - use defaults only
+
+          const interpretationStream = await this.openai.chat.completions.create(interpretationOptions);
 
           let interpretedResponse = '';
           for await (const chunk of interpretationStream) {
