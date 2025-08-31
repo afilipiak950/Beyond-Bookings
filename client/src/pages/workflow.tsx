@@ -3765,7 +3765,7 @@ export default function Workflow() {
                       <div className="w-full h-0.5 bg-gradient-to-r from-slate-300 to-slate-400 rounded-full"></div>
                       <div className="flex justify-between items-center p-3 bg-gradient-to-r from-blue-50 to-teal-50 rounded-xl border border-blue-200/40">
                         <span className="font-bold text-slate-700">Kosten netto</span>
-                        <span className="font-bold text-blue-600 text-xl">{((workflowData.projectCosts || 0) + (workflowData.projectCosts || 0) * 0.19).toLocaleString('de-DE')} {getCurrencySymbol(workflowData.currency)}</span>
+                        <span className="font-bold text-blue-600 text-xl">{((workflowData.projectCosts || 0) - (workflowData.projectCosts || 0) * 0.19).toLocaleString('de-DE')} {getCurrencySymbol(workflowData.currency)}</span>
                       </div>
                     </div>
                   </div>
