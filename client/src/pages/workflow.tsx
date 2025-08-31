@@ -3946,8 +3946,8 @@ export default function Workflow() {
                           const voucherValue = workflowData.hotelVoucherValue || 0;
                           const roomnights = voucherValue > 0 ? Math.round(projectCosts / voucherValue) : 0;
                           const realCost = editableCosts.realCostPerVoucher || 0;
-                          // Self-financed total costs
-                          const selfFinancedCosts = projectCosts + (projectCosts * 0.19);
+                          // Self-financed total costs (net costs from "Ihre Kosten" section)
+                          const selfFinancedCosts = projectCosts - (projectCosts * 0.19);
                           // Bebo convert total costs (from calculation above)
                           const amount7 = editableCosts.splitting7 || 0;
                           const amount19 = voucherValue - amount7;
@@ -3969,8 +3969,8 @@ export default function Workflow() {
                           const voucherValue = workflowData.hotelVoucherValue || 0;
                           const roomnights = voucherValue > 0 ? Math.round(projectCosts / voucherValue) : 0;
                           
-                          // Self-financed total cost
-                          const selfFinancedTotal = projectCosts;
+                          // Self-financed total cost (net costs from "Ihre Kosten" section)
+                          const selfFinancedTotal = projectCosts - (projectCosts * 0.19);
                           
                           // Bebo convert total costs calculation
                           const costs = roomnights * editableCosts.realCostPerVoucher;
