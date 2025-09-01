@@ -1233,8 +1233,8 @@ export default function CustomerManagement() {
                       }}
                       className="flex-1"
                     >
-                      <Bot className="h-4 w-4 mr-2" />
-                      AI Chat
+                      <Eye className="h-4 w-4 mr-2" />
+                      View Details
                     </Button>
                     <Popover>
                       <PopoverTrigger asChild>
@@ -1285,169 +1285,370 @@ export default function CustomerManagement() {
           </Card>
         )}
 
-        {/* AI Search Dialog */}
+        {/* Hotel Details Dialog */}
         <Dialog open={searchDialogOpen} onOpenChange={setSearchDialogOpen}>
-          <DialogContent className="sm:max-w-[700px] max-h-[80vh] overflow-y-auto">
+          <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
-                <Bot className="h-5 w-5 text-green-600" />
-                AI Hotel Assistant - {selectedHotel?.name}
+                <Building2 className="h-5 w-5 text-blue-600" />
+                Hotel Details - {selectedHotel?.name}
               </DialogTitle>
               <DialogDescription>
-                Ask questions about this hotel's amenities, location, reviews, or anything else
+                View all extracted hotel information and reviews
               </DialogDescription>
             </DialogHeader>
             
             {selectedHotel && (
-              <div className="space-y-6">
-                {/* Hotel Overview */}
-                <div className="p-4 bg-gradient-to-r from-blue-50 to-green-50 rounded-lg border border-blue-200">
-                  <div className="flex items-center gap-3 mb-3">
-                    <Building2 className="h-6 w-6 text-blue-600" />
-                    <div>
-                      <h4 className="font-semibold text-gray-800">{selectedHotel.name}</h4>
-                      <p className="text-sm text-gray-600 flex items-center gap-1">
-                        <MapPin className="h-3 w-3" />
-                        {selectedHotel.location}
-                      </p>
-                    </div>
-                    <div className="ml-auto flex items-center">
-                      {Array.from({ length: selectedHotel.stars || 0 }, (_, i) => (
-                        <Star key={i} className="h-4 w-4 text-yellow-400 fill-current" />
-                      ))}
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                    <div>
-                      <span className="text-gray-600">Rooms:</span>
-                      <p className="font-medium">{selectedHotel.roomCount || 'N/A'}</p>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Avg. Price:</span>
-                      <p className="font-medium">{selectedHotel.averagePrice ? `€${selectedHotel.averagePrice}` : 'N/A'}</p>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Website:</span>
-                      {selectedHotel.url ? (
-                        <a 
-                          href={selectedHotel.url} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="font-medium text-blue-600 hover:text-blue-800 underline"
-                        >
-                          Visit
-                        </a>
-                      ) : (
-                        <p className="font-medium">N/A</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
+              <Tabs defaultValue="details" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="details">Hotel Details</TabsTrigger>
+                  <TabsTrigger value="reviews">Reviews</TabsTrigger>
+                </TabsList>
 
-                {/* AI Search Interface */}
-                <div className="space-y-4">
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="What would you like to know about this hotel? (e.g., amenities, location, reviews, pricing)"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && handleHotelSearch()}
-                      className="flex-1"
-                    />
-                    <Button 
-                      onClick={handleHotelSearch}
-                      disabled={searchLoading || !searchQuery.trim()}
-                      className="px-4"
-                    >
-                      {searchLoading ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Send className="h-4 w-4" />
-                      )}
-                    </Button>
+                <TabsContent value="details" className="space-y-6">
+                  {/* Basic Information */}
+                  <div className="p-4 bg-gradient-to-r from-blue-50 to-green-50 rounded-lg border border-blue-200">
+                    <div className="flex items-center gap-3 mb-4">
+                      <Building2 className="h-6 w-6 text-blue-600" />
+                      <div className="flex-1">
+                        <h4 className="text-xl font-semibold text-gray-800">{selectedHotel.name}</h4>
+                        <p className="text-sm text-gray-600 flex items-center gap-1">
+                          <MapPin className="h-3 w-3" />
+                          {selectedHotel.location || 'Location not available'}
+                        </p>
+                      </div>
+                      <div className="flex items-center">
+                        {Array.from({ length: selectedHotel.stars || 0 }, (_, i) => (
+                          <Star key={i} className="h-4 w-4 text-yellow-400 fill-current" />
+                        ))}
+                        {selectedHotel.stars && (
+                          <span className="ml-2 text-sm text-gray-600">{selectedHotel.stars} Stars</span>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  
-                  {/* Search Results */}
-                  {searchResults.length > 0 && (
-                    <div className="space-y-4 max-h-[400px] overflow-y-auto">
-                      {searchResults.map((result, index) => (
-                        <div key={index} className="space-y-2">
-                          <div className="flex items-start gap-2 p-3 bg-blue-50 rounded-lg">
-                            <User className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                            <div className="flex-1">
-                              <p className="text-sm font-medium text-gray-800">{result.query}</p>
-                              <span className="text-xs text-gray-500">
-                                {new Date(result.timestamp).toLocaleTimeString()}
-                              </span>
-                            </div>
+
+                  {/* Detailed Information */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Left Column */}
+                    <div className="space-y-4">
+                      <div className="p-4 bg-white rounded-lg border border-gray-200">
+                        <h5 className="font-semibold text-gray-800 mb-3">Basic Information</h5>
+                        <div className="space-y-3">
+                          <div>
+                            <span className="text-sm text-gray-600">Hotel Name:</span>
+                            <p className="font-medium">{selectedHotel.name}</p>
                           </div>
-                          
-                          <div className="flex items-start gap-2 p-4 bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg border border-gray-200">
-                            <Bot className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                            <div className="flex-1">
-                              <div className="text-sm text-gray-800 space-y-2">
-                                {formatAIResponse(result.response)}
-                              </div>
-                            </div>
+                          <div>
+                            <span className="text-sm text-gray-600">Star Rating:</span>
+                            <p className="font-medium">{selectedHotel.stars ? `${selectedHotel.stars} Stars` : 'Not available'}</p>
+                          </div>
+                          <div>
+                            <span className="text-sm text-gray-600">Category:</span>
+                            <p className="font-medium">{selectedHotel.category || 'Not specified'}</p>
+                          </div>
+                          <div>
+                            <span className="text-sm text-gray-600">Room Count:</span>
+                            <p className="font-medium">{selectedHotel.roomCount || 'Not available'}</p>
+                          </div>
+                          <div>
+                            <span className="text-sm text-gray-600">Average Price:</span>
+                            <p className="font-medium">{selectedHotel.averagePrice ? `€${selectedHotel.averagePrice}` : 'Not available'}</p>
                           </div>
                         </div>
-                      ))}
+                      </div>
+
+                      {/* Location Information */}
+                      <div className="p-4 bg-white rounded-lg border border-gray-200">
+                        <h5 className="font-semibold text-gray-800 mb-3">Location</h5>
+                        <div className="space-y-3">
+                          <div>
+                            <span className="text-sm text-gray-600">Address:</span>
+                            <p className="font-medium">{selectedHotel.location || 'Not available'}</p>
+                          </div>
+                          <div>
+                            <span className="text-sm text-gray-600">City:</span>
+                            <p className="font-medium">{selectedHotel.city || 'Not available'}</p>
+                          </div>
+                          <div>
+                            <span className="text-sm text-gray-600">Country:</span>
+                            <p className="font-medium">{selectedHotel.country || 'Not available'}</p>
+                          </div>
+                          {selectedHotel.url && (
+                            <div>
+                              <span className="text-sm text-gray-600">Website:</span>
+                              <a 
+                                href={selectedHotel.url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="block font-medium text-blue-600 hover:text-blue-800 underline"
+                              >
+                                Visit Hotel Website
+                              </a>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right Column */}
+                    <div className="space-y-4">
+                      {/* Amenities */}
+                      <div className="p-4 bg-white rounded-lg border border-gray-200">
+                        <h5 className="font-semibold text-gray-800 mb-3">Amenities</h5>
+                        {selectedHotel.amenities && selectedHotel.amenities.length > 0 ? (
+                          <div className="flex flex-wrap gap-2">
+                            {selectedHotel.amenities.map((amenity: string, index: number) => (
+                              <Badge key={index} variant="secondary" className="text-xs">
+                                {amenity}
+                              </Badge>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-gray-500">No amenities listed</p>
+                        )}
+                      </div>
+
+                      {/* Review Summary */}
+                      {selectedHotel.reviewSummary && (
+                        <div className="p-4 bg-white rounded-lg border border-gray-200">
+                          <h5 className="font-semibold text-gray-800 mb-3">Review Summary</h5>
+                          <p className="text-sm text-gray-700 leading-relaxed">
+                            {selectedHotel.reviewSummary}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Creation Info */}
+                      <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <h5 className="font-semibold text-gray-800 mb-3">System Information</h5>
+                        <div className="space-y-2 text-sm">
+                          <div>
+                            <span className="text-gray-600">Created:</span>
+                            <p className="font-medium">
+                              {selectedHotel.createdAt ? new Date(selectedHotel.createdAt).toLocaleDateString() : 'Not available'}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">Last Updated:</span>
+                            <p className="font-medium">
+                              {selectedHotel.updatedAt ? new Date(selectedHotel.updatedAt).toLocaleDateString() : 'Not available'}
+                            </p>
+                          </div>
+                          {selectedHotel.lastReviewUpdate && (
+                            <div>
+                              <span className="text-gray-600">Reviews Last Updated:</span>
+                              <p className="font-medium">
+                                {new Date(selectedHotel.lastReviewUpdate).toLocaleDateString()}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="reviews" className="space-y-6">
+                  {/* Review Platforms */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Booking.com Reviews */}
+                    <div className="p-4 bg-white rounded-lg border border-gray-200">
+                      <div className="flex items-center justify-between mb-3">
+                        <h5 className="font-semibold text-gray-800 flex items-center gap-2">
+                          <Globe className="h-4 w-4 text-blue-600" />
+                          Booking.com
+                        </h5>
+                        {selectedHotel.bookingReviews?.url && (
+                          <a 
+                            href={selectedHotel.bookingReviews.url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                          >
+                            View on Site →
+                          </a>
+                        )}
+                      </div>
+                      {selectedHotel.bookingReviews ? (
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Star className="h-4 w-4 text-yellow-500" />
+                            <span className="font-medium">
+                              {selectedHotel.bookingReviews.rating ? 
+                                `${selectedHotel.bookingReviews.rating}/10` : 
+                                'No rating'
+                              }
+                            </span>
+                            {selectedHotel.bookingReviews.reviewCount && (
+                              <span className="text-sm text-gray-600">
+                                ({selectedHotel.bookingReviews.reviewCount} reviews)
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm text-gray-700">
+                            {selectedHotel.bookingReviews.insights || selectedHotel.bookingReviews.summary || 'No summary available'}
+                          </p>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-gray-500">No Booking.com reviews available</p>
+                      )}
+                    </div>
+
+                    {/* Google Reviews */}
+                    <div className="p-4 bg-white rounded-lg border border-gray-200">
+                      <div className="flex items-center justify-between mb-3">
+                        <h5 className="font-semibold text-gray-800 flex items-center gap-2">
+                          <Search className="h-4 w-4 text-green-600" />
+                          Google Reviews
+                        </h5>
+                        {selectedHotel.googleReviews?.url && (
+                          <a 
+                            href={selectedHotel.googleReviews.url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                          >
+                            View on Site →
+                          </a>
+                        )}
+                      </div>
+                      {selectedHotel.googleReviews ? (
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Star className="h-4 w-4 text-yellow-500" />
+                            <span className="font-medium">
+                              {selectedHotel.googleReviews.rating ? 
+                                `${selectedHotel.googleReviews.rating}/5` : 
+                                'No rating'
+                              }
+                            </span>
+                            {selectedHotel.googleReviews.reviewCount && (
+                              <span className="text-sm text-gray-600">
+                                ({selectedHotel.googleReviews.reviewCount} reviews)
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm text-gray-700">
+                            {selectedHotel.googleReviews.insights || selectedHotel.googleReviews.summary || 'No summary available'}
+                          </p>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-gray-500">No Google reviews available</p>
+                      )}
+                    </div>
+
+                    {/* HolidayCheck Reviews */}
+                    <div className="p-4 bg-white rounded-lg border border-gray-200">
+                      <div className="flex items-center justify-between mb-3">
+                        <h5 className="font-semibold text-gray-800 flex items-center gap-2">
+                          <Calendar className="h-4 w-4 text-orange-600" />
+                          HolidayCheck
+                        </h5>
+                        {selectedHotel.holidayCheckReviews?.url && (
+                          <a 
+                            href={selectedHotel.holidayCheckReviews.url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                          >
+                            View on Site →
+                          </a>
+                        )}
+                      </div>
+                      {selectedHotel.holidayCheckReviews ? (
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Star className="h-4 w-4 text-yellow-500" />
+                            <span className="font-medium">
+                              {selectedHotel.holidayCheckReviews.rating ? 
+                                `${selectedHotel.holidayCheckReviews.rating}/6` : 
+                                'No rating'
+                              }
+                            </span>
+                            {selectedHotel.holidayCheckReviews.reviewCount && (
+                              <span className="text-sm text-gray-600">
+                                ({selectedHotel.holidayCheckReviews.reviewCount} reviews)
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm text-gray-700">
+                            {selectedHotel.holidayCheckReviews.insights || selectedHotel.holidayCheckReviews.summary || 'No summary available'}
+                          </p>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-gray-500">No HolidayCheck reviews available</p>
+                      )}
+                    </div>
+
+                    {/* TripAdvisor Reviews */}
+                    <div className="p-4 bg-white rounded-lg border border-gray-200">
+                      <div className="flex items-center justify-between mb-3">
+                        <h5 className="font-semibold text-gray-800 flex items-center gap-2">
+                          <MapPin className="h-4 w-4 text-red-600" />
+                          TripAdvisor
+                        </h5>
+                        {selectedHotel.tripadvisorReviews?.url && (
+                          <a 
+                            href={selectedHotel.tripadvisorReviews.url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                          >
+                            View on Site →
+                          </a>
+                        )}
+                      </div>
+                      {selectedHotel.tripadvisorReviews ? (
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Star className="h-4 w-4 text-yellow-500" />
+                            <span className="font-medium">
+                              {selectedHotel.tripadvisorReviews.rating ? 
+                                `${selectedHotel.tripadvisorReviews.rating}/5` : 
+                                'No rating'
+                              }
+                            </span>
+                            {selectedHotel.tripadvisorReviews.reviewCount && (
+                              <span className="text-sm text-gray-600">
+                                ({selectedHotel.tripadvisorReviews.reviewCount} reviews)
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm text-gray-700">
+                            {selectedHotel.tripadvisorReviews.insights || selectedHotel.tripadvisorReviews.summary || 'No summary available'}
+                          </p>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-gray-500">No TripAdvisor reviews available</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Overall Review Summary */}
+                  {selectedHotel.reviewSummary && (
+                    <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                      <h5 className="font-semibold text-blue-800 mb-3">Overall Review Summary</h5>
+                      <p className="text-sm text-blue-700 leading-relaxed">
+                        {selectedHotel.reviewSummary}
+                      </p>
                     </div>
                   )}
-                  
-                  {/* Quick suggestion buttons */}
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={async () => {
-                        setSearchQuery("What are the key amenities and facilities?");
-                        await new Promise(resolve => setTimeout(resolve, 100));
-                        handleHotelSearch();
-                      }}
-                      disabled={searchLoading}
-                    >
-                      Amenities
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={async () => {
-                        setSearchQuery("What's the location like and nearby attractions?");
-                        await new Promise(resolve => setTimeout(resolve, 100));
-                        handleHotelSearch();
-                      }}
-                      disabled={searchLoading}
-                    >
-                      Location
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={async () => {
-                        setSearchQuery("What do recent reviews say about this hotel?");
-                        await new Promise(resolve => setTimeout(resolve, 100));
-                        handleHotelSearch();
-                      }}
-                      disabled={searchLoading}
-                    >
-                      Reviews
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={async () => {
-                        setSearchQuery("What are typical room rates and pricing?");
-                        await new Promise(resolve => setTimeout(resolve, 100));
-                        handleHotelSearch();
-                      }}
-                      disabled={searchLoading}
-                    >
-                      Pricing
-                    </Button>
-                  </div>
-                </div>
-              </div>
+
+                  {/* No Reviews Message */}
+                  {!selectedHotel.bookingReviews && !selectedHotel.googleReviews && 
+                   !selectedHotel.holidayCheckReviews && !selectedHotel.tripadvisorReviews && 
+                   !selectedHotel.reviewSummary && (
+                    <div className="text-center py-12">
+                      <MessageSquare className="h-16 w-16 mx-auto mb-4 text-gray-400" />
+                      <h3 className="text-lg font-medium text-gray-800 mb-2">No Reviews Available</h3>
+                      <p className="text-gray-600">
+                        No review data has been extracted for this hotel yet.
+                      </p>
+                    </div>
+                  )}
+                </TabsContent>
+              </Tabs>
             )}
           </DialogContent>
         </Dialog>
