@@ -22,11 +22,15 @@ let transporter: nodemailer.Transporter | null = null;
 
 if (EMAIL_CONFIG.enabled && EMAIL_CONFIG.smtp.auth.user && EMAIL_CONFIG.smtp.auth.pass) {
   try {
-    transporter = nodemailer.createTransporter(EMAIL_CONFIG.smtp);
-    console.log('Email transporter configured successfully');
+    transporter = nodemailer.createTransport(EMAIL_CONFIG.smtp);
+    console.log('✅ Email transporter configured successfully');
+    console.log(`📧 SMTP Config: ${EMAIL_CONFIG.smtp.host}:${EMAIL_CONFIG.smtp.port} (${EMAIL_CONFIG.smtp.auth.user})`);
   } catch (error) {
-    console.warn('Failed to create email transporter:', error);
+    console.warn('❌ Failed to create email transporter:', error);
   }
+} else {
+  console.log('❌ Email not configured - missing required environment variables');
+  console.log(`Enabled: ${EMAIL_CONFIG.enabled}, User: ${EMAIL_CONFIG.smtp.auth.user}, Pass: ${EMAIL_CONFIG.smtp.auth.pass ? '[SET]' : '[MISSING]'}`);
 }
 
 // Email sending function
