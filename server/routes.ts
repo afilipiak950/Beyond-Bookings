@@ -16,6 +16,7 @@ import { insightRestorer } from "./insightRestorer";
 import { aiLearningService } from "./aiPriceLearning";
 import { validatePricing, extractPricingInputFromWorkflow } from "./approvalValidation";
 import { notificationService } from "./notificationService";
+import { notifyAdminsPending, notifyRequesterApproved, notifyRequesterRejected } from "./emailNotifications";
 import { z } from "zod";
 import multer from "multer";
 import path from "path";
@@ -3724,6 +3725,43 @@ CRITICAL REQUIREMENTS:
       const approvalRequest = await storage.createApprovalRequest(approvalData);
       console.log(`✅ Approval request created with ID: ${approvalRequest.id}`);
       
+      // 🔔 SEND EMAIL NOTIFICATIONS TO ALL ADMINS
+      try {
+        console.log(`📧 Sending email notifications to admins for approval request ${approvalRequest.id}`);
+        
+        // Get all admin users
+        const adminUsers = await storage.getAllAdminUsers();
+        console.log(`Found ${adminUsers.length} admin users for email notification`);
+        
+        if (adminUsers.length > 0) {
+          // Get the user who created the request
+          const requester = await storage.getUser(userId);
+          if (requester) {
+            // Get the calculation details
+            const calculation = await storage.getPricingCalculation(calculationId, userId);
+            const hotelName = calculation?.hotelName || calculationSnapshot?.hotelName || `Request #${approvalRequest.id}`;
+            
+            // Prepare approval request with user info
+            const approvalRequestWithUser = {
+              ...approvalRequest,
+              hotelName,
+              createdByUser: {
+                firstName: requester.firstName || undefined,
+                lastName: requester.lastName || undefined, 
+                email: requester.email
+              }
+            };
+            
+            // Send email to all admins
+            await notifyAdminsPending(approvalRequestWithUser, adminUsers);
+            console.log(`✅ Email notifications sent to ${adminUsers.length} admins`);
+          }
+        }
+      } catch (emailError: any) {
+        console.error('⚠️ Failed to send email notifications (request still created):', emailError);
+        // Don't fail the request if email fails
+      }
+      
       res.json({
         success: true,
         data: approvalRequest,
@@ -3844,6 +3882,54 @@ CRITICAL REQUIREMENTS:
       }
       
       console.log(`✅ Approval decision processed successfully`);
+      
+      // 🔔 SEND EMAIL NOTIFICATION TO REQUESTER 
+      try {
+        console.log(`📧 Sending email notification to requester for ${action} decision`);
+        
+        if (result.approvalRequest && result.calculation) {
+          // Get the admin user who made the decision
+          const adminUser = await storage.getUser(adminUserId);
+          
+          // Get the requester's user data
+          const requesterUserId = result.approvalRequest.createdByUserId;
+          const requester = await storage.getUser(requesterUserId);
+          
+          if (adminUser && requester) {
+            // Get calculation and hotel name
+            const hotelName = result.calculation.hotelName || result.approvalRequest.calculationSnapshot?.hotelName || `Request #${requestId}`;
+            
+            // Prepare approval request with user and hotel info
+            const approvalRequestWithData = {
+              ...result.approvalRequest,
+              hotelName,
+              createdByUser: {
+                email: requester.email
+              }
+            };
+            
+            // Send appropriate email based on action
+            if (action === 'approve') {
+              await notifyRequesterApproved(approvalRequestWithData, {
+                firstName: adminUser.firstName || undefined,
+                lastName: adminUser.lastName || undefined,
+                email: adminUser.email
+              }, result.calculation);
+              console.log(`✅ Approval email sent to ${requester.email}`);
+            } else {
+              await notifyRequesterRejected(approvalRequestWithData, {
+                firstName: adminUser.firstName || undefined,
+                lastName: adminUser.lastName || undefined,
+                email: adminUser.email
+              }, result.calculation);
+              console.log(`✅ Rejection email sent to ${requester.email}`);
+            }
+          }
+        }
+      } catch (emailError: any) {
+        console.error('⚠️ Failed to send email notification (decision still processed):', emailError);
+        // Don't fail the request if email fails
+      }
       
       res.json({
         success: true,
