@@ -124,7 +124,7 @@ export default function AppSidebar({ className }: SidebarProps) {
   
   // Filter navigation based on role
   const visibleNavigation = navigation.filter(item => 
-    !item.adminOnly || isAdmin
+    (!item.adminOnly || isAdmin) && item.name !== "Document Intelligence"
   );
 
   const handleLogout = () => {
