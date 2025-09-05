@@ -178,32 +178,16 @@ export default function Register() {
 
               <div>
                 <Label htmlFor="role">Account Role</Label>
-                <Select 
-                  value={formData.role || 'admin'} 
-                  onValueChange={(value) => {
-                    try {
-                      if (value && ['admin', 'manager', 'user'].includes(value)) {
-                        handleInputChange('role', value);
-                      }
-                    } catch (error) {
-                      console.error('Role selection error:', error);
-                      toast({
-                        title: "Error",
-                        description: "Failed to update role selection",
-                        variant: "destructive",
-                      });
-                    }
-                  }}
+                <select
+                  id="role"
+                  value={formData.role}
+                  onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value }))}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="admin">Administrator (Full Access)</SelectItem>
-                    <SelectItem value="manager">Manager (Limited Access)</SelectItem>
-                    <SelectItem value="user">User (Basic Access)</SelectItem>
-                  </SelectContent>
-                </Select>
+                  <option value="admin">Administrator (Full Access)</option>
+                  <option value="manager">Manager (Limited Access)</option>
+                  <option value="user">User (Basic Access)</option>
+                </select>
               </div>
 
               <div>
