@@ -1130,11 +1130,12 @@ export default function CustomerManagement() {
                 />
               </div>
               <div className="flex items-center space-x-2">
-                <Popover>
+                <Popover open={filterOpen} onOpenChange={setFilterOpen}>
                   <PopoverTrigger asChild>
                     <Button 
                       variant="outline" 
                       size="sm"
+                      onClick={() => setFilterOpen(!filterOpen)}
                     >
                       <Filter className="h-4 w-4 mr-2" />
                       Filters
