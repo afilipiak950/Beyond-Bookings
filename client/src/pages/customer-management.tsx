@@ -1269,7 +1269,7 @@ export default function CustomerManagement() {
                             variant="ghost"
                             size="sm"
                             className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
-                            onClick={() => handleDeleteHotel(hotel.id)}
+                            onClick={() => handleDeleteHotel(hotel.id, hotel.name)}
                           >
                             <Trash2 className="h-4 w-4 mr-2" />
                             Delete Hotel
