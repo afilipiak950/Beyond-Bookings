@@ -1263,12 +1263,16 @@ export default function CustomerManagement() {
                       View Details
                     </Button>
                     <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant="outline" size="sm">
+                      <PopoverTrigger>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          type="button"
+                        >
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-48" align="end">
+                      <PopoverContent className="w-48" align="end" side="bottom" sideOffset={4}>
                         <div className="space-y-2">
                           <Button
                             variant="ghost"
