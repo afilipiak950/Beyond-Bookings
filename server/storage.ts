@@ -65,7 +65,7 @@ export interface IStorage {
   scrapeHotelData(url: string): Promise<any>;
 
   // Pricing calculation operations
-  getPricingCalculations(userId: number): Promise<PricingCalculation[]>;
+  getPricingCalculations(userId: number): Promise<(PricingCalculation & { createdBy: string })[]>;
   getAllPricingCalculations(): Promise<(PricingCalculation & { createdBy: string })[]>;
   getPricingCalculation(id: number, userId: number): Promise<PricingCalculation | undefined>;
   createPricingCalculation(calculation: InsertPricingCalculation): Promise<PricingCalculation>;
@@ -379,12 +379,18 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Pricing calculation operations
-  async getPricingCalculations(userId: number): Promise<PricingCalculation[]> {
-    return await db
+  async getPricingCalculations(userId: number): Promise<(PricingCalculation & { createdBy: string })[]> {
+    const result = await db
       .select()
       .from(pricingCalculations)
+      .leftJoin(users, eq(pricingCalculations.userId, users.id))
       .where(eq(pricingCalculations.userId, userId))
       .orderBy(desc(pricingCalculations.createdAt));
+    
+    return result.map(row => ({
+      ...row.pricing_calculations,
+      createdBy: row.users?.email || 'Unknown'
+    })) as (PricingCalculation & { createdBy: string })[];
   }
 
   async getAllPricingCalculations(): Promise<(PricingCalculation & { createdBy: string })[]> {
