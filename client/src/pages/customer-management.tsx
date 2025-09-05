@@ -125,7 +125,7 @@ export default function CustomerManagement() {
   const clearAllFilters = () => {
     const resetFilters = {
       q: '',
-      stars: [],
+      stars: 'any' as string,
       category: [],
       country: '',
       city: '',
@@ -153,7 +153,7 @@ export default function CustomerManagement() {
   const getActiveFilterCount = () => {
     let count = 0;
     if (appliedFilters.q) count++;
-    if (appliedFilters.stars.length > 0) count++;
+    if (appliedFilters.stars && appliedFilters.stars !== 'any') count++;
     if (appliedFilters.category.length > 0) count++;
     if (appliedFilters.country) count++;
     if (appliedFilters.city) count++;
@@ -233,7 +233,7 @@ export default function CustomerManagement() {
   };
 
   const handleFieldChange = (field: string, value: any) => {
-    setUserEditedFields((prev: any) => new Set(prev).add(field));
+    setUserEditedFields((prev: Set<string>) => new Set(prev).add(field));
     setExtractedData((prev: any) => ({ ...prev, [field]: value }));
   };
 
@@ -1295,7 +1295,7 @@ export default function CustomerManagement() {
               <Building2 className="h-16 w-16 mx-auto mb-4 text-gray-400" />
               <h3 className="text-lg font-medium text-gray-800 mb-2">No Hotels Found</h3>
               <p className="text-gray-600 mb-6">
-                {hotels?.length === 0 
+                {hotelData?.length === 0 
                   ? "Add your first hotel to get started with customer management." 
                   : "Try adjusting your search filters to find hotels."
                 }
