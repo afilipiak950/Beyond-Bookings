@@ -1325,8 +1325,8 @@ export default function Calculations() {
             // Use exact Excel reference values from screenshot (Output Calculations section):
             // Looking at the Excel: 10.774 € = Gesamtkosten, 25.000 € = costs, etc.
             
-            // From Excel bottom section values:
-            vertragsvolumenEstimate = 25000; // Vertragsvolumen from Excel "25.000 €" 
+            // From Excel corrected values:
+            vertragsvolumenEstimate = 35776.13; // Vertragsvolumen: 35.776,13 €
             profit = 10774; // From Excel "Marge inkl Neuen" = 10.774 €
             marge = profit;
             
