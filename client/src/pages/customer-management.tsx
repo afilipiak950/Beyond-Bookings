@@ -350,6 +350,11 @@ export default function CustomerManagement() {
       
       // Build query string from applied filters
       Object.entries(appliedFilters).forEach(([key, value]) => {
+        // Skip 'any' values for stars filter - backend expects no parameter for "any"
+        if (key === 'stars' && value === 'any') {
+          return;
+        }
+        
         if (value !== null && value !== undefined && value !== '' && 
             !(Array.isArray(value) && value.length === 0)) {
           if (Array.isArray(value)) {
@@ -1154,8 +1159,8 @@ export default function CustomerManagement() {
                         <Label>Location</Label>
                         <Input 
                           placeholder="Filter by location..."
-                          value={filters.location}
-                          onChange={(e) => setFilters(prev => ({ ...prev, location: e.target.value }))}
+                          value={filters.city}
+                          onChange={(e) => setFilters(prev => ({ ...prev, city: e.target.value }))}
                         />
                       </div>
                     </div>
