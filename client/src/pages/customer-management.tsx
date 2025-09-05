@@ -1164,7 +1164,28 @@ export default function CustomerManagement() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setFilters({ q: '', stars: 'any', location: '' })}
+                  onClick={() => setFilters({
+                    q: '',
+                    stars: 'any',
+                    category: [],
+                    country: '',
+                    city: '',
+                    roomCountMin: '',
+                    roomCountMax: '',
+                    priceMin: '',
+                    priceMax: '',
+                    approvalStatus: [],
+                    dataQuality: [],
+                    dateFrom: '',
+                    dateTo: '',
+                    amenities: [],
+                    amenitiesMode: 'any',
+                    owner: '',
+                    sortBy: 'updatedAt',
+                    sortOrder: 'desc',
+                    page: 1,
+                    limit: 20
+                  })}
                 >
                   Clear
                 </Button>
