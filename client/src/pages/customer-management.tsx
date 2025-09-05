@@ -1145,7 +1145,16 @@ export default function CustomerManagement() {
                     <div className="space-y-4">
                       <div>
                         <Label>Star Rating</Label>
-                        <Select value={filters.stars} onValueChange={(value) => setFilters(prev => ({ ...prev, stars: value }))}>
+                        <Select 
+                          value={filters.stars || 'any'} 
+                          onValueChange={(value) => {
+                            try {
+                              setFilters(prev => ({ ...prev, stars: value }));
+                            } catch (error) {
+                              console.error('Filter update error:', error);
+                            }
+                          }}
+                        >
                           <SelectTrigger>
                             <SelectValue placeholder="Any rating" />
                           </SelectTrigger>
@@ -1163,8 +1172,14 @@ export default function CustomerManagement() {
                         <Label>Location</Label>
                         <Input 
                           placeholder="Filter by location..."
-                          value={filters.city}
-                          onChange={(e) => setFilters(prev => ({ ...prev, city: e.target.value }))}
+                          value={filters.city || ''}
+                          onChange={(e) => {
+                            try {
+                              setFilters(prev => ({ ...prev, city: e.target.value }));
+                            } catch (error) {
+                              console.error('Filter update error:', error);
+                            }
+                          }}
                         />
                       </div>
                     </div>
@@ -1173,28 +1188,34 @@ export default function CustomerManagement() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setFilters({
-                    q: '',
-                    stars: 'any',
-                    category: [],
-                    country: '',
-                    city: '',
-                    roomCountMin: '',
-                    roomCountMax: '',
-                    priceMin: '',
-                    priceMax: '',
-                    approvalStatus: [],
-                    dataQuality: [],
-                    dateFrom: '',
-                    dateTo: '',
-                    amenities: [],
-                    amenitiesMode: 'any',
-                    owner: '',
-                    sortBy: 'updatedAt',
-                    sortOrder: 'desc',
-                    page: 1,
-                    limit: 20
-                  })}
+                  onClick={() => {
+                    try {
+                      setFilters({
+                        q: '',
+                        stars: 'any',
+                        category: [],
+                        country: '',
+                        city: '',
+                        roomCountMin: '',
+                        roomCountMax: '',
+                        priceMin: '',
+                        priceMax: '',
+                        approvalStatus: [],
+                        dataQuality: [],
+                        dateFrom: '',
+                        dateTo: '',
+                        amenities: [],
+                        amenitiesMode: 'any',
+                        owner: '',
+                        sortBy: 'updatedAt',
+                        sortOrder: 'desc',
+                        page: 1,
+                        limit: 20
+                      });
+                    } catch (error) {
+                      console.error('Clear filters error:', error);
+                    }
+                  }}
                 >
                   Clear
                 </Button>
