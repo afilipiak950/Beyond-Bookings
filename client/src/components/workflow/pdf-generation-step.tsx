@@ -358,9 +358,7 @@ export default function PdfGenerationStep({ data, onUpdate, onPrevious }: Props)
           Back to Comparison
         </Button>
         <div className="flex gap-2">
-          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-            Workflow Complete
-          </Badge>
+          {/* Complete badge hidden as requested */}
         </div>
       </div>
     </div>
