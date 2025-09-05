@@ -1131,8 +1131,8 @@ export default function CustomerManagement() {
               </div>
               <div className="flex items-center space-x-2">
                 <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" size="sm">
+                  <PopoverTrigger>
+                    <Button variant="outline" size="sm" type="button">
                       <Filter className="h-4 w-4 mr-2" />
                       Filters
                     </Button>
