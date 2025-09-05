@@ -1300,7 +1300,7 @@ export default function Calculations() {
           
           {selectedCalculation && (() => {
             // Extract real data from calculation using exact workflow formulas
-            const projectCosts = parseFloat(selectedCalculation.operationalCosts || "0");
+            const projectCosts = parseFloat(selectedCalculation.projectCosts || "0");
             const stars = selectedCalculation.stars || 0;
             const actualPrice = parseFloat(selectedCalculation.averagePrice || "0");
             const roomCount = selectedCalculation.roomCount || 0;
@@ -1345,7 +1345,7 @@ export default function Calculations() {
             const discountPercentage = 0; // Not applicable in current business model
             const vatPercentage = parseFloat(selectedCalculation.vatRate || "19");
             const averagePrice = actualPrice;
-            const operationalCosts = projectCosts;
+            const operationalCosts = parseFloat(selectedCalculation.operationalCosts || "0");
             const discountVsMarket = 0;
             const voucherValue = voucherPrice || (stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30);
             
