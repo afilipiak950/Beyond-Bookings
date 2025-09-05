@@ -40,7 +40,7 @@ import {
   AlertCircle,
   Clock
 } from "lucide-react";
-import { formatCurrency, formatPercentage, safeParseFloat, safeParseInt } from "@/lib/pricing";
+import { formatCurrency, formatPercentage, safeParseFloat, safeParseInt, calculateHotelFinancials } from "@/lib/pricing";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -1322,27 +1322,31 @@ export default function Calculations() {
             // Gesamtkosten: 10.774,67 € (not the stored database values)
             // Kostenvorteil: 10.313,67 €
             
-            // Use exact Excel reference values from screenshot (Output Calculations section):
-            // Looking at the Excel: 10.774 € = Gesamtkosten, 25.000 € = costs, etc.
+            // Use dynamic calculation function for all future calculations
+            const calculationResult = calculateHotelFinancials({
+              projectCosts,
+              voucherPrice,
+              roomCount,
+              actualPrice,
+              operationalCosts: parseFloat(selectedCalculation.operationalCosts || "0"),
+              stars
+            });
             
-            // From Excel corrected values:
-            vertragsvolumenEstimate = 35776.13; // Vertragsvolumen: 35.776,13 €
-            profit = 10774; // From Excel "Marge inkl Neuen" = 10.774 €
+            // Extract calculated values
+            vertragsvolumenEstimate = calculationResult.vertragsvolumenEstimate;
+            profit = calculationResult.profit;
             marge = profit;
-            
-            // VAT calculations from Excel Output Calculations:
-            vorsteuerProdukt = 4750; // From Excel workflow
-            vorsteuerTripz = 1563; // From Excel: 1.563 €
-            nettoSteuerzahlung = 5832; // From Excel: 5.832 €
-            
-            profitMarginPercentage = vertragsvolumenEstimate > 0 ? (profit / vertragsvolumenEstimate) * 100 : 0;
+            vorsteuerProdukt = calculationResult.vorsteuerProdukt;
+            vorsteuerTripz = calculationResult.vorsteuerTripz;
+            nettoSteuerzahlung = calculationResult.nettoSteuerzahlung;
+            profitMarginPercentage = calculationResult.profitMarginPercentage;
             
             // Additional metrics for display - all matching Excel exactly
             const totalRevenue = vertragsvolumenEstimate; // 35.776,13 €
             const totalCosts = projectCosts; // 25.000 €
             const netProfit = profit; // 10.774 €
-            const costPerRoom = roomCount > 0 ? totalCosts / roomCount : 0; // 25.000/35 = 714,29 €
-            const revenuePerRoom = roomCount > 0 ? totalRevenue / roomCount : 0; // 35.776,13/35 = 1.022,17 €
+            const costPerRoom = calculationResult.costPerRoom; // Dynamic calculation
+            const revenuePerRoom = calculationResult.revenuePerRoom; // Dynamic calculation
             const discountPercentage = 0; // Not applicable in current business model
             const vatPercentage = parseFloat(selectedCalculation.vatRate || "19");
             const averagePrice = actualPrice; // Should be 59,00 € (actualPrice, not averagePrice)

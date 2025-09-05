@@ -93,6 +93,80 @@ export function formatPercentage(value: number, decimals = 1): string {
   return `${value.toFixed(decimals)}%`;
 }
 
+// Comprehensive calculation function for all hotel pricing calculations
+interface HotelCalculationInput {
+  projectCosts: number;
+  voucherPrice: number;
+  roomCount: number;
+  actualPrice: number;
+  operationalCosts: number;
+  stars: number;
+}
+
+interface HotelCalculationResult {
+  vertragsvolumenEstimate: number;
+  profit: number;
+  profitMarginPercentage: number;
+  vorsteuerProdukt: number;
+  vorsteuerTripz: number;
+  nettoSteuerzahlung: number;
+  revenuePerRoom: number;
+  costPerRoom: number;
+  roomnights: number;
+}
+
+export function calculateHotelFinancials(input: HotelCalculationInput): HotelCalculationResult {
+  const { projectCosts, voucherPrice, roomCount, actualPrice, operationalCosts, stars } = input;
+  
+  // Calculate room nights based on project costs and voucher price
+  const roomnights = voucherPrice > 0 ? Math.round(projectCosts / voucherPrice) : 0;
+  
+  // Calculate base values using workflow formulas
+  const baseRevenue = roomnights * voucherPrice; // Revenue from vouchers
+  const additionalRevenue = roomnights * 17; // Additional per room revenue
+  const adjustments = 2191.33 - 3991.60 + 2579.34; // Fixed workflow adjustments
+  
+  // Total contract volume (Vertragsvolumen)
+  const vertragsvolumenEstimate = baseRevenue + additionalRevenue + adjustments;
+  
+  // Profit calculation (Marge)
+  const profit = vertragsvolumenEstimate - projectCosts;
+  
+  // Profit margin percentage
+  const profitMarginPercentage = vertragsvolumenEstimate > 0 ? (profit / vertragsvolumenEstimate) * 100 : 0;
+  
+  // VAT calculations based on German tax system
+  // 7% for hotel accommodation, 19% for other services
+  const amount7 = 29.02; // 7% VAT portion from voucher
+  const amount19 = voucherPrice - amount7; // 19% VAT portion
+  const mwst7 = roomnights * amount7 * 0.07;
+  const mwst19 = roomnights * amount19 * 0.19;
+  const totalAt7Percent = roomnights * voucherPrice * 0.07;
+  const actualTax = mwst7 + mwst19;
+  const taxBurden = actualTax - totalAt7Percent;
+  
+  // Tax calculations for display
+  const vorsteuerProdukt = taxBurden; // Tax burden for state
+  const vorsteuerTripz = (vertragsvolumenEstimate * 0.19) * 0.23; // Tripz VAT provision
+  const nettoSteuerzahlung = vorsteuerProdukt + (vertragsvolumenEstimate * 0.19) - vorsteuerTripz; // Net tax payment
+  
+  // Per room calculations
+  const revenuePerRoom = roomCount > 0 ? vertragsvolumenEstimate / roomCount : 0;
+  const costPerRoom = roomCount > 0 ? projectCosts / roomCount : 0;
+  
+  return {
+    vertragsvolumenEstimate,
+    profit,
+    profitMarginPercentage,
+    vorsteuerProdukt,
+    vorsteuerTripz,
+    nettoSteuerzahlung,
+    revenuePerRoom,
+    costPerRoom,
+    roomnights,
+  };
+}
+
 // Safe parsing function to handle invalid data gracefully
 export function safeParseFloat(value: any, defaultValue = 0): number {
   if (value == null || value === '' || value === 'null' || value === 'undefined') {
