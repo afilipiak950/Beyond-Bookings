@@ -1199,30 +1199,6 @@ export default function CustomerManagement() {
                       <Eye className="h-4 w-4 mr-2" />
                       View Details
                     </Button>
-                    <Popover>
-                      <PopoverTrigger>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          type="button"
-                        >
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-48" align="end" side="bottom" sideOffset={4}>
-                        <div className="space-y-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
-                            onClick={() => handleDeleteHotel(hotel.id, hotel.name)}
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete Hotel
-                          </Button>
-                        </div>
-                      </PopoverContent>
-                    </Popover>
                   </div>
                 </div>
               </CardContent>
