@@ -1315,21 +1315,28 @@ export default function Calculations() {
             // If we have stored calculated values, use them; otherwise compute
             let vertragsvolumenEstimate, profit, marge, vorsteuerProdukt, vorsteuerTripz, nettoSteuerzahlung, profitMarginPercentage;
             
-            // Calculate using exact Excel formulas to match reference data
+            // Use actual stored calculation values from database
             const roomnights = voucherPrice > 0 ? Math.round(projectCosts / voucherPrice) : 0;
             
-            // Excel calculations:
-            // Vertragsvolumen Estimate: 29.750,00 €
-            vertragsvolumenEstimate = totalPrice > 0 ? totalPrice : 29750;
-            
-            // Profit inkl. Mehrverkauf: 19.655,00 €  
-            profit = profitMargin > 0 ? profitMargin : 19655;
+            // Use stored calculated values from the actual calculation
+            vertragsvolumenEstimate = totalPrice; // Use stored totalPrice
+            profit = profitMargin; // Use stored profitMargin
             marge = profit;
             
-            // Vorsteuer calculations from Excel
-            vorsteuerProdukt = 4750; // From Excel: Vorsteuer Produktkauf 19%
-            vorsteuerTripz = 1092.50; // From Excel: Vorsteuer Tripz Provision  
-            nettoSteuerzahlung = 3657.50; // From Excel: Netto Steuerzahlung
+            // VAT calculations based on stored values
+            vorsteuerProdukt = vatAmount; // Use stored vatAmount
+            
+            // Calculate other VAT values based on the workflow formulas
+            const amount7 = 29.02; // 7% VAT portion from voucher
+            const amount19 = voucherPrice - amount7; // 19% VAT portion
+            const mwst7 = roomnights * amount7 * 0.07;
+            const mwst19 = roomnights * amount19 * 0.19;
+            const totalAt7Percent = roomnights * voucherPrice * 0.07;
+            const actualTax = mwst7 + mwst19;
+            const taxBurden = actualTax - totalAt7Percent;
+            
+            vorsteuerTripz = (vertragsvolumenEstimate * 0.19) * 0.23; // Tripz VAT provision
+            nettoSteuerzahlung = vorsteuerProdukt - vorsteuerTripz; // Net tax payment
             
             profitMarginPercentage = vertragsvolumenEstimate > 0 ? (profit / vertragsvolumenEstimate) * 100 : 0;
             
@@ -1343,8 +1350,8 @@ export default function Calculations() {
             const vatPercentage = parseFloat(selectedCalculation.vatRate || "19");
             const averagePrice = actualPrice;
             const operationalCosts = parseFloat(selectedCalculation.operationalCosts || "0");
-            const discountVsMarket = 0;
-            const voucherValue = voucherPrice || (stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30);
+            const discountVsMarket = parseFloat(selectedCalculation.discountVsMarket || "0");
+            const voucherValue = voucherPrice;
             
             return (
               <div className="space-y-8 p-6">
