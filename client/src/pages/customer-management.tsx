@@ -1131,13 +1131,18 @@ export default function CustomerManagement() {
               </div>
               <div className="flex items-center space-x-2">
                 <Popover>
-                  <PopoverTrigger>
-                    <Button variant="outline" size="sm" type="button">
+                  <PopoverTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                    >
                       <Filter className="h-4 w-4 mr-2" />
                       Filters
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-80">
+                  <PopoverContent className="w-80" side="bottom" align="start" sideOffset={4}>
                     <div className="space-y-4">
                       <div>
                         <Label>Star Rating</Label>
