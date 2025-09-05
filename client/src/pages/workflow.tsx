@@ -896,7 +896,7 @@ export default function Workflow() {
     realCostPerVoucher: 17.00,  // 17€ per voucher for Beyond Bookings
     taxBurden: 1800.90,         // Steuerbelastung
     productType: "Finanzierung Rechnung für Dritte",  // Produkt
-    splitting7: 5.0,            // Amount with 7% VAT from voucher value
+    splitting7: 29.02,          // Amount with 7% VAT from voucher value (hotel accommodation)
     vatRate7: 7.0,              // Mehrwertsteuer 7%
     vatRate19: 19.0             // Mehrwertsteuer 19%
   });
