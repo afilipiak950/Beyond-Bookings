@@ -67,7 +67,7 @@ export default function CustomerManagement() {
   const [filterOpen, setFilterOpen] = useState(false);
   const [filters, setFilters] = useState({
     q: '',
-    stars: [] as string[],
+    stars: 'any' as string,
     category: [] as string[],
     country: '',
     city: '',
@@ -1141,7 +1141,7 @@ export default function CustomerManagement() {
                             <SelectValue placeholder="Any rating" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">Any rating</SelectItem>
+                            <SelectItem value="any">Any rating</SelectItem>
                             <SelectItem value="5">5 Stars</SelectItem>
                             <SelectItem value="4">4 Stars</SelectItem>
                             <SelectItem value="3">3 Stars</SelectItem>
@@ -1164,7 +1164,7 @@ export default function CustomerManagement() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setFilters({ q: '', stars: '', location: '' })}
+                  onClick={() => setFilters({ q: '', stars: 'any', location: '' })}
                 >
                   Clear
                 </Button>
