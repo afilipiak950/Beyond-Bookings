@@ -240,10 +240,38 @@ export default function UserManagementTab() {
   };
 
   const handleRoleChange = (user: User, newRole: 'user' | 'admin') => {
-    updateUserRoleMutation.mutate({ 
-      id: user.id as number, 
-      role: newRole 
-    });
+    try {
+      // Add validation
+      if (!user.id) {
+        toast({
+          title: "Error",
+          description: "User ID is missing",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (user.role === 'admin' && newRole === 'user' && adminCount === 1) {
+        toast({
+          title: "Error",
+          description: "Cannot demote the last administrator",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      updateUserRoleMutation.mutate({ 
+        id: user.id as number, 
+        role: newRole 
+      });
+    } catch (error) {
+      console.error('Role change error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to change user role",
+        variant: "destructive",
+      });
+    }
   };
 
   const getRoleBadge = (role: string) => {
