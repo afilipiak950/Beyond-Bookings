@@ -1049,7 +1049,15 @@ export default function Calculations() {
                                 </h3>
                                 <div className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2">
                                   <Globe className="h-3 w-3" />
-                                  {calculation.hotelUrl ? new URL(calculation.hotelUrl).hostname : "No website"}
+                                  {(() => {
+                                    try {
+                                      return calculation.hotelUrl && calculation.hotelUrl !== 'null' && calculation.hotelUrl !== '' 
+                                        ? new URL(calculation.hotelUrl).hostname 
+                                        : "No website";
+                                    } catch (error) {
+                                      return "Invalid URL";
+                                    }
+                                  })()}
                                 </div>
                               </div>
                             </div>
