@@ -70,6 +70,14 @@ export function validatePricingInput(input: Partial<PricingInput>): string[] {
 }
 
 export function formatCurrency(amount: number, currency = "EUR"): string {
+  // Handle NaN, undefined, null, and infinity values
+  if (isNaN(amount) || !isFinite(amount) || amount == null) {
+    return new Intl.NumberFormat("de-DE", {
+      style: "currency",
+      currency,
+    }).format(0);
+  }
+  
   return new Intl.NumberFormat("de-DE", {
     style: "currency",
     currency,
@@ -77,5 +85,39 @@ export function formatCurrency(amount: number, currency = "EUR"): string {
 }
 
 export function formatPercentage(value: number, decimals = 1): string {
+  // Handle NaN, undefined, null, and infinity values
+  if (isNaN(value) || !isFinite(value) || value == null) {
+    return "0.0%";
+  }
+  
   return `${value.toFixed(decimals)}%`;
+}
+
+// Safe parsing function to handle invalid data gracefully
+export function safeParseFloat(value: any, defaultValue = 0): number {
+  if (value == null || value === '' || value === 'null' || value === 'undefined') {
+    return defaultValue;
+  }
+  
+  const parsed = typeof value === 'number' ? value : parseFloat(value.toString());
+  
+  if (isNaN(parsed) || !isFinite(parsed)) {
+    return defaultValue;
+  }
+  
+  return parsed;
+}
+
+export function safeParseInt(value: any, defaultValue = 0): number {
+  if (value == null || value === '' || value === 'null' || value === 'undefined') {
+    return defaultValue;
+  }
+  
+  const parsed = typeof value === 'number' ? Math.round(value) : parseInt(value.toString());
+  
+  if (isNaN(parsed) || !isFinite(parsed)) {
+    return defaultValue;
+  }
+  
+  return parsed;
 }

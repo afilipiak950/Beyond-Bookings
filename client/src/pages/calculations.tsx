@@ -40,7 +40,7 @@ import {
   AlertCircle,
   Clock
 } from "lucide-react";
-import { formatCurrency, formatPercentage } from "@/lib/pricing";
+import { formatCurrency, formatPercentage, safeParseFloat, safeParseInt } from "@/lib/pricing";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -1144,7 +1144,7 @@ export default function Calculations() {
                               <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Total Price</span>
                             </div>
                             <div className="text-lg font-bold text-emerald-700 dark:text-emerald-400">
-                              {formatCurrency(parseFloat(calculation.totalPrice?.toString() || "0"))}
+                              {formatCurrency(safeParseFloat(calculation.totalPrice))}
                             </div>
                             <div className="text-xs text-gray-500">
                               Base: {formatCurrency(parseFloat(calculation.voucherPrice?.toString() || "0"))}
@@ -1158,10 +1158,10 @@ export default function Calculations() {
                               <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Profit</span>
                             </div>
                             <div className="text-lg font-bold text-blue-700 dark:text-blue-400">
-                              {formatCurrency(parseFloat(calculation.profitMargin?.toString() || "0"))}
+                              {formatCurrency(safeParseFloat(calculation.profitMargin))}
                             </div>
                             <div className="text-xs text-gray-500">
-                              {formatPercentage((parseFloat(calculation.profitMargin?.toString() || "0")) / (parseFloat(calculation.totalPrice?.toString() || "1")) * 100)}
+                              {formatPercentage((safeParseFloat(calculation.profitMargin)) / (safeParseFloat(calculation.totalPrice, 1)) * 100)}
                             </div>
                           </div>
 
@@ -1172,7 +1172,7 @@ export default function Calculations() {
                               <span className="text-xs font-medium text-gray-600 dark:text-gray-400">VAT</span>
                             </div>
                             <div className="text-lg font-bold text-orange-700 dark:text-orange-400">
-                              {formatCurrency(parseFloat(calculation.vatAmount?.toString() || "0"))}
+                              {formatCurrency(safeParseFloat(calculation.vatAmount))}
                             </div>
                             <div className="text-xs text-gray-500">
                               Rate: {calculation.vatRate || 0}%
