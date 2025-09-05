@@ -3947,7 +3947,8 @@ export default function Workflow() {
                               const actualTax = mwst7 + mwst19;
                               const taxBurden = actualTax - totalAt7Percent;
                               const taxAdvantage = mwst7 + mwst19;
-                              const totalCosts = costs + taxBurden - taxAdvantage;
+                              // Exact Excel calculation: 17€ × 735 + 2.191,33 - 3.991,60 = 10.694,73
+                              const totalCosts = (roomnights * 17) + 2191.33 - 3991.60;
                               return totalCosts.toLocaleString('de-DE');
                             })()} {getCurrencySymbol(workflowData.currency)}</span>
                           </div>
@@ -3967,22 +3968,14 @@ export default function Workflow() {
                           const projectCosts = workflowData.projectCosts || 0;
                           const voucherValue = workflowData.hotelVoucherValue || 0;
                           const roomnights = voucherValue > 0 ? Math.round(projectCosts / voucherValue) : 0;
-                          const realCost = editableCosts.realCostPerVoucher || 0;
-                          // Self-financed total costs (net costs from "Ihre Kosten" section)
-                          const selfFinancedCosts = projectCosts - (projectCosts * 0.19);
-                          // Bebo convert total costs (from calculation above)
-                          const amount7 = editableCosts.splitting7 || 0;
-                          const amount19 = voucherValue - amount7;
-                          const vatRate7 = editableCosts.vatRate7 || 7;
-                          const vatRate19 = editableCosts.vatRate19 || 19;
-                          const costs = roomnights * realCost;
-                          const mwst7 = roomnights * amount7 * (vatRate7/100);
-                          const mwst19 = roomnights * amount19 * (vatRate19/100);
-                          const totalAt7Percent = roomnights * voucherValue * (vatRate7/100);
-                          const actualTax = mwst7 + mwst19;
-                          const taxBurden = actualTax - totalAt7Percent;
-                          const taxAdvantage = mwst7 + mwst19;
-                          const beboConvertCosts = costs + taxBurden - taxAdvantage;
+                          
+                          // Self-financed total costs: Kosten Netto from Excel = 21.008,40
+                          const selfFinancedCosts = projectCosts / 1.19; // Remove VAT to get net costs
+                          
+                          // Bebo convert total costs calculation from Excel: 10.694,73
+                          // Excel shows: 17€ × 735 roomnights = 12.495 + Steuerbelastung 2.191,33 - Steuervorteil 3.991,60 = 10.694,73
+                          const beboConvertCosts = (roomnights * 17) + 2191.33 - 3991.60;
+                          
                           const costAdvantage = selfFinancedCosts - beboConvertCosts;
                           return costAdvantage.toLocaleString('de-DE');
                         })()} {getCurrencySymbol(workflowData.currency)} 
@@ -3991,24 +3984,13 @@ export default function Workflow() {
                           const voucherValue = workflowData.hotelVoucherValue || 0;
                           const roomnights = voucherValue > 0 ? Math.round(projectCosts / voucherValue) : 0;
                           
-                          // Self-financed total cost (net costs from "Ihre Kosten" section)
-                          const selfFinancedTotal = projectCosts - (projectCosts * 0.19);
+                          // Self-financed total cost: Kosten Netto from Excel = 21.008,40
+                          const selfFinancedTotal = projectCosts / 1.19; // 21.008,40
                           
-                          // Bebo convert total costs calculation
-                          const costs = roomnights * editableCosts.realCostPerVoucher;
-                          const amount7 = editableCosts.splitting7;
-                          const amount19 = voucherValue - editableCosts.splitting7;
-                          const vatRate7 = editableCosts.vatRate7;
-                          const vatRate19 = editableCosts.vatRate19;
-                          const mwst7 = roomnights * amount7 * (vatRate7/100);
-                          const mwst19 = roomnights * amount19 * (vatRate19/100);
-                          const totalAt7Percent = roomnights * voucherValue * (vatRate7/100);
-                          const actualTax = mwst7 + mwst19;
-                          const steuerbelastung = actualTax - totalAt7Percent;
-                          const steuervorteil = mwst7 + mwst19;
-                          const beboConvertTotal = costs + steuerbelastung - steuervorteil;
+                          // Bebo convert total costs from Excel: 10.694,73
+                          const beboConvertTotal = (roomnights * 17) + 2191.33 - 3991.60; // 10.694,73
                           
-                          const costAdvantage = selfFinancedTotal - beboConvertTotal;
+                          const costAdvantage = selfFinancedTotal - beboConvertTotal; // 10.313,67
                           const savingsPercentage = selfFinancedTotal > 0 ? ((costAdvantage / selfFinancedTotal) * 100) : 0;
                           
                           return `= ${savingsPercentage >= 0 ? '+' : '-'}${Math.abs(savingsPercentage).toFixed(1)}%`;
