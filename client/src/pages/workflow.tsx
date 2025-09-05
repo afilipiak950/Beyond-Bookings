@@ -2932,8 +2932,8 @@ export default function Workflow() {
                             return '';
                           }
                           
-                          // Calculate percentage: (Verfügbare Roomnights / 735) × 100
-                          const leerstandardsPercentage = (availableRoomnights / roomNightsPerYear) * 100;
+                          // Calculate percentage: (Verfügbare Roomnights / 735) - no need to multiply by 100
+                          const leerstandardsPercentage = (availableRoomnights / roomNightsPerYear);
                           
                           return `(${leerstandardsPercentage.toFixed(1)}% des Leerstandes p.a über 3 Jahre)`;
                         })()}
