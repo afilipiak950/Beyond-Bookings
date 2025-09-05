@@ -2888,7 +2888,7 @@ export default function Workflow() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 px-4 sm:px-0">
                   
                   {/* Column C - Finanzierung (Förderung) für Hotelbett */}
-                  <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-blue-50/80 to-indigo-50/60 backdrop-blur-sm border border-blue-200/50 p-4 shadow-md h-24">
+                  <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-blue-50/80 to-indigo-50/60 backdrop-blur-sm border border-blue-200/50 p-4 shadow-md h-28">
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-indigo-400"></div>
                     <div className="flex flex-col space-y-2 h-full justify-between">
                       <div className="flex items-center space-x-2">
@@ -2914,6 +2914,28 @@ export default function Workflow() {
                           const roomNightsPerYear = projectCosts / voucherValue;
                           
                           return Math.round(roomNightsPerYear).toLocaleString('de-DE');
+                        })()}
+                      </div>
+                      <div className="text-xs text-blue-600 mt-1">
+                        {(() => {
+                          const projectCosts = workflowData.projectCosts || 0;
+                          const stars = workflowData.stars || 0;
+                          const voucherValue = (workflowData.hotelVoucherValue && workflowData.hotelVoucherValue > 0) ? workflowData.hotelVoucherValue : (stars === 5 ? 50 : stars === 4 ? 40 : stars === 3 ? 30 : stars === 2 ? 25 : stars === 1 ? 20 : 30);
+                          const roomNightsPerYear = Math.round(projectCosts / voucherValue);
+                          
+                          // Calculate available room nights: roomCount * 365 * (1 - occupancyRate / 100)
+                          const roomCount = workflowData.roomCount || 0;
+                          const occupancyRate = workflowData.occupancyRate || 0;
+                          const availableRoomnights = Math.floor(roomCount * 365 * (1 - occupancyRate / 100));
+                          
+                          if (roomNightsPerYear === 0 || projectCosts === 0) {
+                            return '';
+                          }
+                          
+                          // Calculate percentage: (Verfügbare Roomnights / 735) × 100
+                          const leerstandardsPercentage = (availableRoomnights / roomNightsPerYear) * 100;
+                          
+                          return `(${leerstandardsPercentage.toFixed(1)}% des Leerstandes p.a über 3 Jahre)`;
                         })()}
                       </div>
                     </div>
