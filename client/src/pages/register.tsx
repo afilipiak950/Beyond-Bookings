@@ -94,7 +94,16 @@ export default function Register() {
   };
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    try {
+      setFormData(prev => ({ ...prev, [field]: value }));
+    } catch (error) {
+      console.error('Form update error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update form field",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -170,8 +179,21 @@ export default function Register() {
               <div>
                 <Label htmlFor="role">Account Role</Label>
                 <Select 
-                  value={formData.role} 
-                  onValueChange={(value) => handleInputChange('role', value)}
+                  value={formData.role || 'admin'} 
+                  onValueChange={(value) => {
+                    try {
+                      if (value && ['admin', 'manager', 'user'].includes(value)) {
+                        handleInputChange('role', value);
+                      }
+                    } catch (error) {
+                      console.error('Role selection error:', error);
+                      toast({
+                        title: "Error",
+                        description: "Failed to update role selection",
+                        variant: "destructive",
+                      });
+                    }
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select role" />
