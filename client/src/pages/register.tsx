@@ -14,14 +14,12 @@ export default function Register() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-    confirmPassword: "",
-    firstName: "",
-    lastName: "",
-    role: "admin"
-  });
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [role, setRole] = useState("admin");
   
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -62,7 +60,7 @@ export default function Register() {
     e.preventDefault();
     
     // Basic validation
-    if (!formData.email || !formData.password) {
+    if (!email || !password) {
       toast({
         title: "Validation Error",
         description: "Email and password are required",
@@ -71,7 +69,7 @@ export default function Register() {
       return;
     }
 
-    if (formData.password !== formData.confirmPassword) {
+    if (password !== confirmPassword) {
       toast({
         title: "Validation Error", 
         description: "Passwords do not match",
@@ -80,7 +78,7 @@ export default function Register() {
       return;
     }
 
-    if (formData.password.length < 6) {
+    if (password.length < 6) {
       toast({
         title: "Validation Error",
         description: "Password must be at least 6 characters",
@@ -89,22 +87,11 @@ export default function Register() {
       return;
     }
 
-    const { confirmPassword, ...registrationData } = formData;
+    const registrationData = { email, password, firstName, lastName, role };
     registerMutation.mutate(registrationData);
   };
 
-  const handleInputChange = (field: string, value: string) => {
-    try {
-      setFormData(prev => ({ ...prev, [field]: value }));
-    } catch (error) {
-      console.error('Form update error:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update form field",
-        variant: "destructive",
-      });
-    }
-  };
+  // Remove unused function since we're using direct state setters
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center p-4">
@@ -138,8 +125,8 @@ export default function Register() {
                       id="firstName"
                       type="text"
                       placeholder="John"
-                      value={formData.firstName}
-                      onChange={(e) => handleInputChange('firstName', e.target.value)}
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
                       className="pl-10"
                     />
                   </div>
@@ -152,8 +139,8 @@ export default function Register() {
                       id="lastName"
                       type="text"
                       placeholder="Doe"
-                      value={formData.lastName}
-                      onChange={(e) => handleInputChange('lastName', e.target.value)}
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
                       className="pl-10"
                     />
                   </div>
@@ -168,8 +155,8 @@ export default function Register() {
                     id="email"
                     type="email"
                     placeholder="admin@beboconvert.com"
-                    value={formData.email}
-                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     className="pl-10"
                     required
                   />
@@ -180,8 +167,8 @@ export default function Register() {
                 <Label htmlFor="role">Account Role</Label>
                 <select
                   id="role"
-                  value={formData.role}
-                  onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value }))}
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                 >
                   <option value="admin">Administrator (Full Access)</option>
@@ -198,8 +185,8 @@ export default function Register() {
                     id="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="Enter secure password"
-                    value={formData.password}
-                    onChange={(e) => handleInputChange('password', e.target.value)}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     className="pl-10 pr-10"
                     required
                   />
@@ -222,8 +209,8 @@ export default function Register() {
                     id="confirmPassword"
                     type={showConfirmPassword ? "text" : "password"}
                     placeholder="Confirm your password"
-                    value={formData.confirmPassword}
-                    onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
                     className="pl-10 pr-10"
                     required
                   />
